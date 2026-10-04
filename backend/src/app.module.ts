@@ -9,6 +9,7 @@ import { CurriculumModule } from './curricula/curriculum.module';
 import { DbTestModule } from './db-test/db-test.module';
 import { HealthModule } from './health/health.module';
 import { StudentProfileModule } from './users/student-profile.module';
+import { AnalysisModule } from './analysis/analysis.module';
 
 @Module({
 	imports: [
@@ -33,6 +34,7 @@ import { StudentProfileModule } from './users/student-profile.module';
 		AuthModule,
 		CurriculumModule,
 		StudentProfileModule,
+		AnalysisModule,
 		DbTestModule,
 		HealthModule,
 	],

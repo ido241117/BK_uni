@@ -89,3 +89,65 @@ export interface PageResult<T> {
 	items: T[];
 	page: { limit: number; offset: number; total: number };
 }
+
+export interface AnalysisSummary {
+	eligibleCourses: number;
+	ineligibleCourses: number;
+	missingRequiredCourses: number;
+}
+
+export interface AnalysisRuleReason {
+	ruleId: string;
+	type: 'prerequisite' | 'minimum_credits';
+	passed: boolean;
+	message: string;
+}
+
+export interface AnalysisCourseResult {
+	course: Pick<CurriculumCourse, 'id' | 'code' | 'version' | 'name'>;
+	studentStatus: CourseStatus;
+	eligible: boolean;
+	reasons: AnalysisRuleReason[];
+}
+
+export interface AnalysisElectiveProgress {
+	id: string;
+	name: string;
+	earnedCredits: number;
+	earnedCourses: number;
+	requiredCredits: number | null;
+	requiredCourses: number | null;
+	meetsRequiredCredits: boolean;
+	meetsRequiredCourses: boolean;
+	complete: boolean;
+	missingCourses: Array<{ id: string; code: string; name: string }>;
+}
+
+export interface AnalysisSnapshot {
+	id: string;
+	createdAt: string;
+	curriculum: { id: string; name: string };
+	summary: AnalysisSummary;
+	courseResults: AnalysisCourseResult[];
+	requirements: {
+		requiredCreditsEarned: number;
+		missingRequiredCourses: Array<{
+			id: string;
+			code: string;
+			name: string;
+			credits: number;
+		}>;
+		electiveGroups: AnalysisElectiveProgress[];
+	};
+}
+
+export interface AnalysisHistoryItem {
+	id: string;
+	createdAt: string;
+	curriculum: { id: string; name: string };
+	summary: AnalysisSummary;
+}
+
+export interface AnalysisHistoryDetail extends AnalysisSnapshot {
+	inputSnapshot: Record<string, unknown>;
+}

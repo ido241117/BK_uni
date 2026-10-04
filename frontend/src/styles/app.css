@@ -690,6 +690,34 @@ input {
 	font-size: 12px;
 }
 
+.analysis-reasons {
+	margin: 0;
+	padding-left: 17px;
+	color: #68746b;
+	font-size: 11px;
+}
+
+.analysis-reasons li+li {
+	margin-top: 4px;
+}
+
+.elective-progress {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 14px 0;
+	border-top: 1px solid var(--line);
+	font-size: 11px;
+}
+
+.elective-progress>strong {
+	flex: 1;
+}
+
+.elective-progress>span {
+	color: #778179;
+}
+
 .demo-disclaimer {
 	margin-top: 22px;
 }
@@ -1380,6 +1408,16 @@ input {
 	.missing-row .ant-tag {
 		grid-column: 3;
 		text-align: left;
+	}
+
+	.elective-progress {
+		align-items: flex-start;
+		flex-wrap: wrap;
+		gap: 8px 12px;
+	}
+
+	.elective-progress>strong {
+		flex-basis: 100%;
 	}
 
 	.history-item {

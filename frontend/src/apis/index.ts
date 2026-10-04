@@ -2,6 +2,9 @@ import axios from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import type {
 	AdminCurriculum,
+	AnalysisHistoryDetail,
+	AnalysisHistoryItem,
+	AnalysisSnapshot,
 	CourseRule,
 	CurriculumCourse,
 	CurriculumSource,
@@ -39,6 +42,11 @@ async function getCsrf() {
 async function post<T>(path: string, body: unknown) {
 	await getCsrf();
 	return unwrapApiResponse(await apiClient.post<ApiEnvelope<T>>(path, body));
+}
+
+async function postEmpty<T>(path: string) {
+	await getCsrf();
+	return unwrapApiResponse(await apiClient.post<ApiEnvelope<T>>(path));
 }
 
 async function patch<T>(path: string, body: unknown) {
@@ -182,6 +190,27 @@ export const studentApi = {
 	},
 	updateStatuses(items: Array<{ courseId: string; status: CourseStatus }>) {
 		return patch<{ updated: number }>("/me/profile/course-statuses", { items });
+	},
+};
+
+export const analysisApi = {
+	run() {
+		return postEmpty<AnalysisSnapshot>('/me/profile/analyses');
+	},
+	history(params: { limit?: number; offset?: number } = {}) {
+		return apiClient
+			.get<ApiEnvelope<PageResult<AnalysisHistoryItem>>>(
+				'/me/profile/analyses',
+				{ params },
+			)
+			.then(unwrapApiResponse);
+	},
+	detail(analysisId: string) {
+		return apiClient
+			.get<ApiEnvelope<AnalysisHistoryDetail>>(
+				`/me/profile/analyses/${analysisId}`,
+			)
+			.then(unwrapApiResponse);
 	},
 };
 

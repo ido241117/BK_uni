@@ -4,6 +4,7 @@ import { Client } from 'pg';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
 import { Course } from '../curricula/course.entity';
+import { AnalysisRun } from '../analysis/analysis-run.entity';
 import { CourseRule } from '../curricula/course-rule.entity';
 import { Curriculum } from '../curricula/curriculum.entity';
 import { CurriculumTerm } from '../curricula/curriculum-term.entity';
@@ -56,6 +57,7 @@ async function verifyMigrations() {
 			schema,
 			entities: [
 				DbTestRecord,
+				AnalysisRun,
 				User,
 				AuthSession,
 				StudentProfile,
@@ -103,6 +105,7 @@ async function verifyMigrations() {
 					'auth_sessions',
 					'student_profiles',
 					'student_course_statuses',
+					'analysis_runs',
 					'curricula',
 					'curriculum_terms',
 					'elective_groups',
@@ -187,6 +190,7 @@ async function assertEntityColumns(
 ) {
 	for (const entity of [
 		DbTestRecord,
+		AnalysisRun,
 		User,
 		AuthSession,
 		StudentProfile,
