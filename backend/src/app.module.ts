@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { CurriculumModule } from './curricula/curriculum.module';
 import { DbTestModule } from './db-test/db-test.module';
 import { HealthModule } from './health/health.module';
+import { StudentProfileModule } from './users/student-profile.module';
 
 @Module({
 	imports: [
@@ -31,10 +32,11 @@ import { HealthModule } from './health/health.module';
 		}),
 		AuthModule,
 		CurriculumModule,
+		StudentProfileModule,
 		DbTestModule,
 		HealthModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

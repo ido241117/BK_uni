@@ -9,6 +9,7 @@ import type {
 	CurriculumTerm,
 	ElectiveGroup,
 	PageResult,
+	CourseStatus,
 } from "@/types";
 
 export interface ApiEnvelope<T> {
@@ -43,6 +44,11 @@ async function post<T>(path: string, body: unknown) {
 async function patch<T>(path: string, body: unknown) {
 	await getCsrf();
 	return unwrapApiResponse(await apiClient.patch<ApiEnvelope<T>>(path, body));
+}
+
+async function put<T>(path: string, body: unknown) {
+	await getCsrf();
+	return unwrapApiResponse(await apiClient.put<ApiEnvelope<T>>(path, body));
 }
 
 async function remove(path: string) {
@@ -80,6 +86,16 @@ export interface CourseInput {
 	electiveGroupId?: string | null;
 }
 
+export interface StudentProfile {
+	id: string;
+	displayName: string | null;
+	curriculumId: string | null;
+}
+
+export interface StudentCourse extends CurriculumCourse {
+	status: CourseStatus;
+}
+
 export type CourseRuleInput = Omit<CourseRule, 'id'>;
 
 export const curriculumApi = {
@@ -93,11 +109,16 @@ export const curriculumApi = {
 			.get<ApiEnvelope<CurriculumStructure>>(`/curricula/${curriculumId}/structure`)
 			.then(unwrapApiResponse);
 	},
-	courses(curriculumId: string) {
+	courses(curriculumId: string, params: { limit?: number; offset?: number } = {}) {
 		return apiClient
-			.get<ApiEnvelope<PageResult<CurriculumCourse>>>(`/curricula/${curriculumId}/courses`, {
-				params: { limit: 100 },
+			.get<ApiEnvelope<PageResult<StudentCourse>>>(`/curricula/${curriculumId}/courses`, {
+				params: { limit: 100, ...params },
 			})
+			.then(unwrapApiResponse);
+	},
+	listStudent() {
+		return apiClient
+			.get<ApiEnvelope<PageResult<AdminCurriculum>>>("/curricula", { params: { limit: 100 } })
 			.then(unwrapApiResponse);
 	},
 	createCurriculum(input: CurriculumInput) {
@@ -146,6 +167,21 @@ export const curriculumApi = {
 	},
 	deleteRule(id: string, courseId: string, ruleId: string) {
 		return remove(`/admin/curricula/${id}/courses/${courseId}/rules/${ruleId}`);
+	},
+};
+
+export const studentApi = {
+	profile() {
+		return apiClient.get<ApiEnvelope<StudentProfile>>("/me/profile").then(unwrapApiResponse);
+	},
+	updateProfile(input: { displayName?: string | null; curriculumId?: string | null }) {
+		return put<StudentProfile>("/me/profile", input);
+	},
+	deleteProfile() {
+		return remove("/me/profile");
+	},
+	updateStatuses(items: Array<{ courseId: string; status: CourseStatus }>) {
+		return patch<{ updated: number }>("/me/profile/course-statuses", { items });
 	},
 };
 

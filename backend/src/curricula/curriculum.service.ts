@@ -4,13 +4,16 @@ import {
 	NotFoundException,
 	UnprocessableEntityException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { DataSource } from 'typeorm';
 import { Course } from './course.entity';
 import { CourseRule } from './course-rule.entity';
 import { Curriculum } from './curriculum.entity';
 import { CurriculumTerm } from './curriculum-term.entity';
 import { ElectiveGroup } from './elective-group.entity';
+import { StudentCourseStatus } from '../users/student-course-status.entity';
+import { StudentProfile } from '../users/student-profile.entity';
+import { User } from '../users/user.entity';
 import {
 	CreateCourseDto,
 	CreateCourseRuleDto,
@@ -35,7 +38,7 @@ type SourceInput = {
 
 @Injectable()
 export class CurriculumService {
-	constructor(private readonly dataSource: DataSource) { }
+	constructor(private readonly dataSource: DataSource) {}
 
 	private repo<T extends object>(entity: new () => T): Repository<T> {
 		return this.dataSource.getRepository(entity);
@@ -171,8 +174,19 @@ export class CurriculumService {
 		return this.curriculumRepresentation(item);
 	}
 
-	async getStructure(curriculumId: string) {
+	async getStructure(curriculumId: string, user: User) {
 		const curriculum = await this.getCurriculum(curriculumId);
+		if (user.role === 'student') {
+			const profile = await this.repo(StudentProfile).findOne({
+				where: { userId: user.id },
+			});
+			if (!profile || profile.curriculumId !== curriculumId) {
+				throw new UnprocessableEntityException({
+					message: 'Chỉ có thể xem cấu trúc chương trình đã chọn trong hồ sơ.',
+					code: 'CURRICULUM_NOT_SELECTED',
+				});
+			}
+		}
 		const [terms, groups, courses] = await Promise.all([
 			this.repo(CurriculumTerm).find({
 				where: { curriculumId },
@@ -225,8 +239,24 @@ export class CurriculumService {
 		};
 	}
 
-	async listCourses(curriculumId: string, query: CourseListQueryDto) {
+	async listCourses(
+		curriculumId: string,
+		query: CourseListQueryDto,
+		user: User,
+	) {
 		await this.ensureCurriculum(curriculumId);
+		let profile: StudentProfile | null = null;
+		if (user.role === 'student') {
+			profile = await this.repo(StudentProfile).findOne({
+				where: { userId: user.id },
+			});
+			if (!profile || profile.curriculumId !== curriculumId) {
+				throw new UnprocessableEntityException({
+					message: 'Chỉ có thể xem môn thuộc chương trình đã chọn trong hồ sơ.',
+					code: 'CURRICULUM_NOT_SELECTED',
+				});
+			}
+		}
 		const qb = this.repo(Course)
 			.createQueryBuilder('course')
 			.leftJoinAndSelect('course.term', 'term')
@@ -251,6 +281,19 @@ export class CurriculumService {
 				requirementType: query.requirementType,
 			});
 		const [rows, total] = await qb.getManyAndCount();
+		const statuses =
+			profile && rows.length
+				? await this.repo(StudentCourseStatus).find({
+						where: {
+							profileId: profile.id,
+							curriculumId,
+							courseId: In(rows.map((course) => course.id)),
+						},
+					})
+				: [];
+		const statusByCourseId = new Map(
+			statuses.map((item) => [item.courseId, item.status]),
+		);
 		return {
 			items: rows.map((course) => ({
 				id: course.id,
@@ -268,7 +311,7 @@ export class CurriculumService {
 				electiveGroup: course.electiveGroup
 					? { id: course.electiveGroup.id, name: course.electiveGroup.name }
 					: null,
-				status: 'not_started',
+				status: statusByCourseId.get(course.id) ?? 'not_started',
 			})),
 			page: { limit: query.limit, offset: query.offset, total },
 		};
@@ -557,11 +600,11 @@ export class CurriculumService {
 			}),
 			course.electiveGroupId
 				? this.repo(ElectiveGroup).findOne({
-					where: {
-						id: course.electiveGroupId,
-						curriculumId: course.curriculumId,
-					},
-				})
+						where: {
+							id: course.electiveGroupId,
+							curriculumId: course.curriculumId,
+						},
+					})
 				: Promise.resolve(null),
 		]);
 		if (!term) throw this.notFound();
@@ -618,11 +661,11 @@ export class CurriculumService {
 				rule.minimumCredits === null ? null : Number(rule.minimumCredits),
 			source: hasSource
 				? {
-					documentName: rule.sourceDocumentName,
-					reference: rule.sourceReference,
-					version: rule.sourceVersion,
-					verifiedAt: rule.sourceVerifiedAt,
-				}
+						documentName: rule.sourceDocumentName,
+						reference: rule.sourceReference,
+						version: rule.sourceVersion,
+						verifiedAt: rule.sourceVerifiedAt,
+					}
 				: null,
 		};
 	}

@@ -9,6 +9,8 @@ import { Curriculum } from './curriculum.entity';
 import { CurriculumTerm } from './curriculum-term.entity';
 import { ElectiveGroup } from './elective-group.entity';
 import { CurriculumService } from './curriculum.service';
+import { StudentProfile } from '../users/student-profile.entity';
+import { User } from '../users/user.entity';
 
 describe('CurriculumService', () => {
 	const repositories = new Map<object, Record<string, jest.Mock>>();
@@ -24,6 +26,7 @@ describe('CurriculumService', () => {
 			ElectiveGroup,
 			Course,
 			CourseRule,
+			StudentProfile,
 		]) {
 			repositories.set(entity, {
 				create: jest.fn((value: object) => value),
@@ -152,6 +155,25 @@ describe('CurriculumService', () => {
 				version: '2026',
 			},
 		});
+	});
+
+	it('prevents a student from reading a structure outside their selected curriculum', async () => {
+		repository(Curriculum).findOne.mockResolvedValue({
+			id: 'curriculum-a',
+			name: 'Chương trình A',
+		});
+		repository(StudentProfile).findOne.mockResolvedValue({
+			userId: 'student-a',
+			curriculumId: 'curriculum-b',
+		});
+
+		await expect(
+			service.getStructure('curriculum-a', {
+				id: 'student-a',
+				role: 'student',
+			} as unknown as User),
+		).rejects.toBeInstanceOf(UnprocessableEntityException);
+		expect(repository(CurriculumTerm).find).not.toHaveBeenCalled();
 	});
 
 	it('rejects elective groups without either threshold', async () => {

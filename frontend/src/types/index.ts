@@ -67,6 +67,7 @@ export interface CurriculumCourse {
 	term: Pick<CurriculumTerm, 'id' | 'code' | 'name'> & Partial<Pick<CurriculumTerm, 'sortOrder'>>;
 	requirementType: 'required' | 'elective';
 	electiveGroup: { id: string; name: string } | null;
+	status?: CourseStatus;
 }
 
 export interface CourseRule {

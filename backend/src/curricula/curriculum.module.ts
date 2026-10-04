@@ -8,6 +8,8 @@ import { ElectiveGroup } from './elective-group.entity';
 import { CurriculumController } from './curriculum.controller';
 import { CurriculumReadController } from './curriculum-read.controller';
 import { CurriculumService } from './curriculum.service';
+import { StudentCourseStatus } from '../users/student-course-status.entity';
+import { StudentProfile } from '../users/student-profile.entity';
 
 @Module({
 	imports: [
@@ -17,9 +19,11 @@ import { CurriculumService } from './curriculum.service';
 			ElectiveGroup,
 			Course,
 			CourseRule,
+			StudentProfile,
+			StudentCourseStatus,
 		]),
 	],
 	controllers: [CurriculumController, CurriculumReadController],
 	providers: [CurriculumService],
 })
-export class CurriculumModule { }
+export class CurriculumModule {}

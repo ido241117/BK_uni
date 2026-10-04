@@ -10,6 +10,7 @@ import { CurriculumTerm } from '../curricula/curriculum-term.entity';
 import { ElectiveGroup } from '../curricula/elective-group.entity';
 import { DbTestRecord } from '../db-test/entities/db-test-record.entity';
 import { AuthSession } from '../users/auth-session.entity';
+import { StudentCourseStatus } from '../users/student-course-status.entity';
 import { StudentProfile } from '../users/student-profile.entity';
 import { User } from '../users/user.entity';
 
@@ -58,6 +59,7 @@ async function verifyMigrations() {
 				User,
 				AuthSession,
 				StudentProfile,
+				StudentCourseStatus,
 				Curriculum,
 				CurriculumTerm,
 				ElectiveGroup,
@@ -100,6 +102,7 @@ async function verifyMigrations() {
 					'users',
 					'auth_sessions',
 					'student_profiles',
+					'student_course_statuses',
 					'curricula',
 					'curriculum_terms',
 					'elective_groups',
@@ -187,6 +190,7 @@ async function assertEntityColumns(
 		User,
 		AuthSession,
 		StudentProfile,
+		StudentCourseStatus,
 		Curriculum,
 		CurriculumTerm,
 		ElectiveGroup,
