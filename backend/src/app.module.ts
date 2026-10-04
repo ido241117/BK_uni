@@ -24,6 +24,7 @@ import { AnalysisModule } from './analysis/analysis.module';
 				username: config.get<string>('DB_USERNAME'),
 				password: config.get<string>('DB_PASSWORD'),
 				database: config.get<string>('DB_NAME'),
+				schema: config.get<string>('DB_SCHEMA'),
 				autoLoadEntities: true,
 				migrations: [join(__dirname, 'db/migrations/*{.ts,.js}')],
 				migrationsRun: false,

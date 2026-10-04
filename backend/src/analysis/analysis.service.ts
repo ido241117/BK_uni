@@ -73,23 +73,21 @@ export class AnalysisService {
 				});
 			}
 
-			const [rules, groups, statuses] = await Promise.all([
-				manager.getRepository(CourseRule).find({
-					where: { curriculumId: curriculum.id },
-					order: { createdAt: 'ASC', id: 'ASC' },
-				}),
-				manager.getRepository(ElectiveGroup).find({
-					where: { curriculumId: curriculum.id },
-					order: { sortOrder: 'ASC', name: 'ASC' },
-				}),
-				manager.getRepository(StudentCourseStatus).find({
-					where: {
-						profileId: profile.id,
-						curriculumId: curriculum.id,
-						courseId: In(courses.map((course) => course.id)),
-					},
-				}),
-			]);
+			const rules = await manager.getRepository(CourseRule).find({
+				where: { curriculumId: curriculum.id },
+				order: { createdAt: 'ASC', id: 'ASC' },
+			});
+			const groups = await manager.getRepository(ElectiveGroup).find({
+				where: { curriculumId: curriculum.id },
+				order: { sortOrder: 'ASC', name: 'ASC' },
+			});
+			const statuses = await manager.getRepository(StudentCourseStatus).find({
+				where: {
+					profileId: profile.id,
+					curriculumId: curriculum.id,
+					courseId: In(courses.map((course) => course.id)),
+				},
+			});
 			const statusByCourseId = new Map(
 				statuses.map((status) => [status.courseId, status.status]),
 			);
