@@ -3,6 +3,11 @@ import { randomUUID } from 'crypto';
 import { Client } from 'pg';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
+import { Course } from '../curricula/course.entity';
+import { CourseRule } from '../curricula/course-rule.entity';
+import { Curriculum } from '../curricula/curriculum.entity';
+import { CurriculumTerm } from '../curricula/curriculum-term.entity';
+import { ElectiveGroup } from '../curricula/elective-group.entity';
 import { DbTestRecord } from '../db-test/entities/db-test-record.entity';
 import { AuthSession } from '../users/auth-session.entity';
 import { StudentProfile } from '../users/student-profile.entity';
@@ -48,7 +53,17 @@ async function verifyMigrations() {
 			password: credentials.password,
 			database: credentials.database,
 			schema,
-			entities: [DbTestRecord, User, AuthSession, StudentProfile],
+			entities: [
+				DbTestRecord,
+				User,
+				AuthSession,
+				StudentProfile,
+				Curriculum,
+				CurriculumTerm,
+				ElectiveGroup,
+				Course,
+				CourseRule,
+			],
 			migrations: [join(__dirname, '../db/migrations/*{.ts,.js}')],
 			migrationsTableName: 'typeorm_migrations',
 			synchronize: false,
@@ -58,6 +73,7 @@ async function verifyMigrations() {
 
 		await dataSource.runMigrations();
 		await assertEntityColumns(dataSource, admin, schema);
+		await assertCurriculumConstraints(admin, schema);
 		const adoptedRecord = await admin.query(
 			`SELECT title, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS created_at_utc FROM "${schema}"."db_test_records" WHERE id = '00000000-0000-4000-8000-000000000001'`,
 		);
@@ -79,7 +95,17 @@ async function verifyMigrations() {
 			' SELECT table_name FROM information_schema.tables WHERE table_schema = $1 AND table_name = ANY($2)',
 			[
 				schema,
-				['db_test_records', 'users', 'auth_sessions', 'student_profiles'],
+				[
+					'db_test_records',
+					'users',
+					'auth_sessions',
+					'student_profiles',
+					'curricula',
+					'curriculum_terms',
+					'elective_groups',
+					'courses',
+					'course_rules',
+				],
 			],
 		);
 		if (afterDown.rowCount !== 0) {
@@ -88,6 +114,7 @@ async function verifyMigrations() {
 
 		await dataSource.runMigrations();
 		await assertEntityColumns(dataSource, admin, schema);
+		await assertCurriculumConstraints(admin, schema);
 		console.log(
 			'Migration verification passed: up -> down -> up; entity columns match.',
 		);
@@ -98,12 +125,74 @@ async function verifyMigrations() {
 	}
 }
 
+async function assertCurriculumConstraints(admin: Client, schema: string) {
+	const constraints = await admin.query(
+		'SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_schema = $1',
+		[schema],
+	);
+	const constraintNames = new Set(
+		constraints.rows.map(
+			(row: { constraint_name: string }) => row.constraint_name,
+		),
+	);
+	const requiredConstraints = [
+		'fk_student_profiles_curriculum_id',
+		'fk_courses_term_scope',
+		'fk_courses_elective_group_scope',
+		'fk_course_rules_target_scope',
+		'fk_course_rules_prerequisite_scope',
+		'chk_elective_groups_threshold',
+		'chk_courses_requirement_group',
+		'chk_course_rules_shape',
+		'chk_course_rules_source_override',
+	];
+	const missingConstraints = requiredConstraints.filter(
+		(name) => !constraintNames.has(name),
+	);
+	if (missingConstraints.length) {
+		throw new Error(
+			`Missing curriculum constraints: ${missingConstraints.join(', ')}`,
+		);
+	}
+
+	const indexes = await admin.query(
+		'SELECT indexname FROM pg_indexes WHERE schemaname = $1',
+		[schema],
+	);
+	const indexNames = new Set(
+		indexes.rows.map((row: { indexname: string }) => row.indexname),
+	);
+	const requiredIndexes = [
+		'uq_curricula_active_name',
+		'uq_elective_groups_active_name',
+		'uq_courses_active_identity',
+		'idx_courses_active_curriculum_name',
+		'idx_course_rules_active_curriculum_target',
+	];
+	const missingIndexes = requiredIndexes.filter(
+		(name) => !indexNames.has(name),
+	);
+	if (missingIndexes.length) {
+		throw new Error(`Missing curriculum indexes: ${missingIndexes.join(', ')}`);
+	}
+}
+
 async function assertEntityColumns(
 	dataSource: DataSource,
 	admin: Client,
 	schema: string,
 ) {
-	for (const entity of [DbTestRecord, User, AuthSession, StudentProfile]) {
+	for (const entity of [
+		DbTestRecord,
+		User,
+		AuthSession,
+		StudentProfile,
+		Curriculum,
+		CurriculumTerm,
+		ElectiveGroup,
+		Course,
+		CourseRule,
+	]) {
 		const metadata = dataSource.getMetadata(entity);
 		const expectedColumns = metadata.columns
 			.map((column) => ({

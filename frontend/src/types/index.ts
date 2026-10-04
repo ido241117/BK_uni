@@ -26,3 +26,65 @@ export interface AnalysisRecord {
 	ineligibleCourses: number;
 	missingRequiredCourses: number;
 }
+
+export interface CurriculumSource {
+	documentName: string;
+	reference: string;
+	version: string;
+	verifiedAt: string;
+}
+
+export interface AdminCurriculum {
+	id: string;
+	name: string;
+	description: string | null;
+	source: CurriculumSource;
+	courseCount: number;
+}
+
+export interface CurriculumTerm {
+	id: string;
+	code: string;
+	name: string;
+	sortOrder: number;
+}
+
+export interface ElectiveGroup {
+	id: string;
+	name: string;
+	requiredCredits: number | null;
+	requiredCourses: number | null;
+	sortOrder: number;
+}
+
+export interface CurriculumCourse {
+	id: string;
+	code: string;
+	version: string;
+	name: string;
+	nameEn: string | null;
+	credits: number;
+	term: Pick<CurriculumTerm, 'id' | 'code' | 'name'> & Partial<Pick<CurriculumTerm, 'sortOrder'>>;
+	requirementType: 'required' | 'elective';
+	electiveGroup: { id: string; name: string } | null;
+}
+
+export interface CourseRule {
+	id: string;
+	type: 'prerequisite' | 'minimum_credits';
+	prerequisiteCourseId: string | null;
+	minimumCredits: number | null;
+	source: CurriculumSource | null;
+}
+
+export interface CurriculumStructure {
+	curriculum: Omit<AdminCurriculum, 'courseCount'>;
+	terms: CurriculumTerm[];
+	electiveGroups: ElectiveGroup[];
+	courses: CurriculumCourse[];
+}
+
+export interface PageResult<T> {
+	items: T[];
+	page: { limit: number; offset: number; total: number };
+}

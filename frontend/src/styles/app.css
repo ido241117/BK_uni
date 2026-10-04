@@ -867,6 +867,17 @@ input {
 	font-size: 11px;
 }
 
+.program-detail-heading .curriculum-source {
+	margin-top: 7px;
+	font-size: 10px;
+}
+
+.program-heading-actions {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+}
+
 .program-detail .ant-tabs-nav {
 	margin-bottom: 13px;
 }
@@ -888,6 +899,33 @@ input {
 
 .admin-list-toolbar .ant-btn {
 	height: 32px;
+	font-size: 11px;
+}
+
+.structure-subhead {
+	margin-top: 24px;
+}
+
+.rule-course-select {
+	width: min(340px, 100%);
+}
+
+.row-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 2px;
+}
+
+.form-section-label {
+	display: block;
+	margin: 5px 0 14px;
+	color: var(--ink);
+	font-size: 12px;
+}
+
+.form-hint {
+	margin: -13px 0 12px;
+	color: #778179;
 	font-size: 11px;
 }
 
@@ -1372,6 +1410,24 @@ input {
 
 	.program-detail {
 		padding: 19px 13px;
+	}
+
+	.program-detail-heading {
+		flex-direction: column;
+	}
+
+	.program-heading-actions {
+		align-self: flex-end;
+	}
+
+	.admin-list-toolbar {
+		align-items: flex-start;
+		flex-wrap: wrap;
+		gap: 9px;
+	}
+
+	.rule-course-select {
+		width: 100%;
 	}
 
 	.rule-row {
