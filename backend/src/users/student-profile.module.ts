@@ -8,15 +8,15 @@ import { StudentProfileController } from './student-profile.controller';
 import { StudentProfileService } from './student-profile.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      StudentProfile,
-      StudentCourseStatus,
-      Curriculum,
-      Course,
-    ]),
-  ],
-  controllers: [StudentProfileController],
-  providers: [StudentProfileService],
+	imports: [
+		TypeOrmModule.forFeature([
+			StudentProfile,
+			StudentCourseStatus,
+			Curriculum,
+			Course,
+		]),
+	],
+	controllers: [StudentProfileController],
+	providers: [StudentProfileService],
 })
-export class StudentProfileModule {}
+export class StudentProfileModule { }

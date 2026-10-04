@@ -14,7 +14,7 @@ import { CurriculumService } from './curriculum.service';
 @Controller('curricula')
 @Roles('student', 'admin')
 export class CurriculumReadController {
-	constructor(private readonly curriculumService: CurriculumService) {}
+	constructor(private readonly curriculumService: CurriculumService) { }
 
 	@Get()
 	list(@Query() query: ListCurriculaQueryDto) {

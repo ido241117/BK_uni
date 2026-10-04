@@ -39,4 +39,4 @@ import { StudentProfileModule } from './users/student-profile.module';
 	controllers: [AppController],
 	providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

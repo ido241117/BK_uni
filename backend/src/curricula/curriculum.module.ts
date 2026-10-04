@@ -26,4 +26,4 @@ import { StudentProfile } from '../users/student-profile.entity';
 	controllers: [CurriculumController, CurriculumReadController],
 	providers: [CurriculumService],
 })
-export class CurriculumModule {}
+export class CurriculumModule { }

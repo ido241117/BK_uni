@@ -38,7 +38,7 @@ type SourceInput = {
 
 @Injectable()
 export class CurriculumService {
-	constructor(private readonly dataSource: DataSource) {}
+	constructor(private readonly dataSource: DataSource) { }
 
 	private repo<T extends object>(entity: new () => T): Repository<T> {
 		return this.dataSource.getRepository(entity);
@@ -284,12 +284,12 @@ export class CurriculumService {
 		const statuses =
 			profile && rows.length
 				? await this.repo(StudentCourseStatus).find({
-						where: {
-							profileId: profile.id,
-							curriculumId,
-							courseId: In(rows.map((course) => course.id)),
-						},
-					})
+					where: {
+						profileId: profile.id,
+						curriculumId,
+						courseId: In(rows.map((course) => course.id)),
+					},
+				})
 				: [];
 		const statusByCourseId = new Map(
 			statuses.map((item) => [item.courseId, item.status]),
@@ -600,11 +600,11 @@ export class CurriculumService {
 			}),
 			course.electiveGroupId
 				? this.repo(ElectiveGroup).findOne({
-						where: {
-							id: course.electiveGroupId,
-							curriculumId: course.curriculumId,
-						},
-					})
+					where: {
+						id: course.electiveGroupId,
+						curriculumId: course.curriculumId,
+					},
+				})
 				: Promise.resolve(null),
 		]);
 		if (!term) throw this.notFound();
@@ -661,11 +661,11 @@ export class CurriculumService {
 				rule.minimumCredits === null ? null : Number(rule.minimumCredits),
 			source: hasSource
 				? {
-						documentName: rule.sourceDocumentName,
-						reference: rule.sourceReference,
-						version: rule.sourceVersion,
-						verifiedAt: rule.sourceVerifiedAt,
-					}
+					documentName: rule.sourceDocumentName,
+					reference: rule.sourceReference,
+					version: rule.sourceVersion,
+					verifiedAt: rule.sourceVerifiedAt,
+				}
 				: null,
 		};
 	}
