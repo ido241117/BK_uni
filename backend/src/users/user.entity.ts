@@ -1,9 +1,10 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Check, Column, Entity, Index } from 'typeorm';
 import { BaseEntityCustom } from '../common/entities/base-custom.entity';
 
 export type UserRole = 'student' | 'admin';
 
 @Entity({ name: 'users' })
+@Check('chk_users_role', `"role" IN ('student', 'admin')`)
 export class User extends BaseEntityCustom {
 	@Column({ type: 'text' })
 	@Index('uq_users_email_lower', { synchronize: false })

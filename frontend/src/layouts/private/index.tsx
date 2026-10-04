@@ -4,21 +4,55 @@ import {
 	BookOutlined,
 	HistoryOutlined,
 	LogoutOutlined,
-	SettingOutlined,
 	UserOutlined,
 } from '@ant-design/icons';
 import { Avatar, Button, Dropdown, Layout, Menu, Tag, Typography } from 'antd';
 import type { MenuProps } from 'antd';
 import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useAppContext } from '@/contexts/use-app-context';
+import apiClient, { unwrapApiResponse, type ApiEnvelope } from '@/apis';
 
 const { Header, Sider, Content } = Layout;
 
 export default function PrivateLayout() {
-	const { role, setRole, email } = useAppContext();
+	const { role, setRole, email, setEmail } = useAppContext();
 	const location = useLocation();
 	const navigate = useNavigate();
+	const [sessionChecked, setSessionChecked] = useState(false);
+	const [sessionValid, setSessionValid] = useState(false);
+
+	useEffect(() => {
+		let active = true;
+		apiClient
+			.get<ApiEnvelope<{ id: string; email: string; role: 'student' | 'admin' }>>('/me')
+			.then((response) => {
+				const account = unwrapApiResponse(response);
+				if (!active) return;
+				setRole(account.role);
+				setEmail(account.email);
+				setSessionValid(true);
+			})
+			.catch(() => {
+				if (active) navigate('/login', { replace: true });
+			})
+			.finally(() => {
+				if (active) setSessionChecked(true);
+			});
+		return () => {
+			active = false;
+		};
+	}, [navigate, setEmail, setRole]);
+
+	useEffect(() => {
+		if (!sessionChecked) return;
+		if (role === 'admin' && !location.pathname.startsWith('/admin') && location.pathname !== '/account') {
+			navigate('/admin', { replace: true });
+		} else if (role === 'student' && location.pathname.startsWith('/admin')) {
+			navigate('/student', { replace: true });
+		}
+	}, [location.pathname, navigate, role, sessionChecked]);
 
 	const items = useMemo(() => {
 		if (role === 'admin') {
@@ -36,31 +70,23 @@ export default function PrivateLayout() {
 	const accountMenu: MenuProps['items'] = [
 		{ key: 'account', icon: <UserOutlined />, label: 'Thông tin tài khoản' },
 		{ type: 'divider' },
-		{
-			key: 'student-demo',
-			icon: <BookOutlined />,
-			label: 'Chế độ học sinh demo',
-		},
-		{
-			key: 'admin-demo',
-			icon: <SettingOutlined />,
-			label: 'Chế độ admin demo',
-		},
-		{ type: 'divider' },
 		{ key: 'logout', icon: <LogoutOutlined />, label: 'Đăng xuất' },
 	];
 
 	const handleAccountAction: MenuProps['onClick'] = ({ key }) => {
 		if (key === 'account') navigate('/account');
-		if (key === 'student-demo') {
-			setRole('student');
-			navigate('/student');
+		if (key === 'logout') {
+			void (async () => {
+				try {
+					await apiClient.get('/auth/csrf');
+					await apiClient.post('/auth/logout');
+				} finally {
+					setRole('student');
+					setEmail('');
+					navigate('/login', { replace: true });
+				}
+			})();
 		}
-		if (key === 'admin-demo') {
-			setRole('admin');
-			navigate('/admin');
-		}
-		if (key === 'logout') navigate('/login');
 	};
 
 	const selectedKey = items.some((item) => item.key === location.pathname)
@@ -72,6 +98,10 @@ export default function PrivateLayout() {
 				: location.pathname.startsWith('/admin')
 					? '/admin'
 					: '/student';
+
+	if (!sessionChecked || !sessionValid || !email) {
+		return <div className="route-loading">BK Uni · Đang xác thực phiên</div>;
+	}
 
 	return (
 		<Layout className="workspace-layout">
@@ -106,7 +136,7 @@ export default function PrivateLayout() {
 						<span className="header-title">{role === 'admin' ? 'Quản trị' : 'Không gian học tập'}</span>
 					</div>
 					<div className="header-actions">
-						<Tag variant="filled" className="demo-tag">BẢN DEMO</Tag>
+						<Tag variant="filled" className="demo-tag">PHIÊN BẢO MẬT</Tag>
 						<Dropdown menu={{ items: accountMenu, onClick: handleAccountAction }} trigger={['click']}>
 							<Button type="text" className="account-trigger">
 								<Avatar size={34} icon={<UserOutlined />} />

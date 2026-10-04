@@ -1,18 +1,25 @@
 import { ArrowRightOutlined, BookOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input, Segmented, message } from 'antd';
+import { Button, Form, Input, Segmented, message } from 'antd';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAppContext } from '@/contexts/use-app-context';
+import apiClient, { unwrapApiResponse, type ApiEnvelope } from '@/apis';
 
 interface AuthValues {
 	email: string;
 	password: string;
 }
 
+interface AuthResult {
+	user: { id: string; email: string; role: 'student' | 'admin' };
+	profile: { id: string; displayName: string | null; curriculumId: string | null } | null;
+}
+
 export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'login' | 'register' }) {
 	const [mode, setMode] = useState<'login' | 'register'>(initialMode);
 	const [form] = Form.useForm<AuthValues>();
 	const [messageApi, contextHolder] = message.useMessage();
+	const [submitting, setSubmitting] = useState(false);
 	const { setRole, setEmail } = useAppContext();
 	const navigate = useNavigate();
 
@@ -22,9 +29,26 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
 		navigate(role === 'admin' ? '/admin' : '/student');
 	};
 
-	const submit = (values: AuthValues) => {
-		enterWorkspace('student', values.email);
-		messageApi.success(mode === 'register' ? 'Tài khoản học sinh đã sẵn sàng.' : 'Đăng nhập thành công.');
+	const submit = async (values: AuthValues) => {
+		setSubmitting(true);
+		try {
+			await apiClient.get('/auth/csrf');
+			const response = await apiClient.post<ApiEnvelope<AuthResult>>(
+				`/auth/${mode}`,
+				values,
+			);
+			const { user } = unwrapApiResponse(response);
+			enterWorkspace(user.role, user.email);
+			messageApi.success(mode === 'register' ? 'Tài khoản học sinh đã sẵn sàng.' : 'Đăng nhập thành công.');
+		} catch (error) {
+			const responseMessage =
+				typeof error === 'object' && error !== null && 'response' in error
+					? (error as { response?: { data?: { message?: unknown } } }).response?.data?.message
+					: undefined;
+			messageApi.error(typeof responseMessage === 'string' ? responseMessage : 'Không thể xác thực. Vui lòng kiểm tra thông tin và thử lại.');
+		} finally {
+			setSubmitting(false);
+		}
 	};
 
 	return (
@@ -73,22 +97,15 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
 							<Input.Password size="large" prefix={<LockOutlined />} placeholder="Tối thiểu 8 ký tự" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
 						</Form.Item>
 						{mode === 'login' ? (
-							<div className="auth-options"><Checkbox>Ghi nhớ email</Checkbox><span>Phiên đăng nhập an toàn</span></div>
+							<div className="auth-options"><span>Phiên đăng nhập an toàn</span></div>
 						) : (
 							<p className="student-role-note"><BookOutlined /> Tài khoản đăng ký mới luôn có quyền học sinh.</p>
 						)}
-						<Button type="primary" size="large" htmlType="submit" block className="auth-submit">
+						<Button type="primary" size="large" htmlType="submit" loading={submitting} block className="auth-submit">
 							{mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'} <ArrowRightOutlined />
 						</Button>
 					</Form>
 
-					<div className="auth-demo">
-						<span className="auth-demo-label">KHÁM PHÁ BẢN DEMO</span>
-						<div className="demo-actions">
-							<Button onClick={() => enterWorkspace('student', 'sinhvien@example.test')}>Vào với vai trò học sinh</Button>
-							<Button onClick={() => enterWorkspace('admin', 'admin@example.test')}>Vào với vai trò admin</Button>
-						</div>
-					</div>
 					<p className="auth-terms">Bằng việc tiếp tục, bạn đồng ý sử dụng dữ liệu thử nghiệm của BK Uni.</p>
 					<div className="auth-footer"><span>© 2026 BK Uni</span><Link to="/login">Hỗ trợ đăng nhập</Link></div>
 				</div>

@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { DbTestModule } from './db-test/db-test.module';
 import { HealthModule } from './health/health.module';
 
@@ -27,6 +28,7 @@ import { HealthModule } from './health/health.module';
 				logging: false,
 			}),
 		}),
+		AuthModule,
 		DbTestModule,
 		HealthModule,
 	],

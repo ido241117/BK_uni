@@ -4,6 +4,8 @@ import { Client } from 'pg';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
 import { DbTestRecord } from '../db-test/entities/db-test-record.entity';
+import { AuthSession } from '../users/auth-session.entity';
+import { StudentProfile } from '../users/student-profile.entity';
 import { User } from '../users/user.entity';
 
 async function verifyMigrations() {
@@ -32,6 +34,12 @@ async function verifyMigrations() {
 	await admin.connect();
 	try {
 		await admin.query(`CREATE SCHEMA "${schema}"`);
+		await admin.query(
+			`CREATE TABLE "${schema}"."db_test_records" (id uuid PRIMARY KEY, title varchar(120) NOT NULL, description text, "createdAt" timestamp NOT NULL DEFAULT now(), "updatedAt" timestamp NOT NULL DEFAULT now())`,
+		);
+		await admin.query(
+			`INSERT INTO "${schema}"."db_test_records" (id, title, "createdAt", "updatedAt") VALUES ('00000000-0000-4000-8000-000000000001', 'migration fixture', '2026-10-04 00:00:00', '2026-10-04 00:00:00')`,
+		);
 		dataSource = new DataSource({
 			type: 'postgres',
 			host: credentials.host,
@@ -40,7 +48,7 @@ async function verifyMigrations() {
 			password: credentials.password,
 			database: credentials.database,
 			schema,
-			entities: [DbTestRecord, User],
+			entities: [DbTestRecord, User, AuthSession, StudentProfile],
 			migrations: [join(__dirname, '../db/migrations/*{.ts,.js}')],
 			migrationsTableName: 'typeorm_migrations',
 			synchronize: false,
@@ -50,11 +58,29 @@ async function verifyMigrations() {
 
 		await dataSource.runMigrations();
 		await assertEntityColumns(dataSource, admin, schema);
+		const adoptedRecord = await admin.query(
+			`SELECT title, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS created_at_utc FROM "${schema}"."db_test_records" WHERE id = '00000000-0000-4000-8000-000000000001'`,
+		);
+		const adopted = adoptedRecord.rows[0] as
+			{ title?: unknown; created_at_utc?: unknown } | undefined;
+		const adoptedUtc = adopted?.created_at_utc;
+		if (
+			adoptedRecord.rowCount !== 1 ||
+			adopted?.title !== 'migration fixture' ||
+			adoptedUtc !== '2026-10-04 00:00:00'
+		) {
+			throw new Error('Legacy smoke-test data was not preserved in UTC.');
+		}
 
-		await dataSource.undoLastMigration();
+		for (let index = dataSource.migrations.length; index > 0; index -= 1) {
+			await dataSource.undoLastMigration();
+		}
 		const afterDown = await admin.query(
 			' SELECT table_name FROM information_schema.tables WHERE table_schema = $1 AND table_name = ANY($2)',
-			[schema, ['db_test_records', 'users']],
+			[
+				schema,
+				['db_test_records', 'users', 'auth_sessions', 'student_profiles'],
+			],
 		);
 		if (afterDown.rowCount !== 0) {
 			throw new Error('Migration down did not remove all baseline tables.');
@@ -77,7 +103,7 @@ async function assertEntityColumns(
 	admin: Client,
 	schema: string,
 ) {
-	for (const entity of [DbTestRecord, User]) {
+	for (const entity of [DbTestRecord, User, AuthSession, StudentProfile]) {
 		const metadata = dataSource.getMetadata(entity);
 		const expectedColumns = metadata.columns
 			.map((column) => ({

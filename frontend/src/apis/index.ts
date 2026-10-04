@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { AxiosResponse } from "axios";
+import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 export interface ApiEnvelope<T> {
 	error: false;
@@ -28,6 +28,19 @@ const apiClient = axios.create({
 		Accept: "application/json",
 		"Content-Type": "application/json",
 	},
+});
+
+apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+	if (["POST", "PUT", "PATCH", "DELETE"].includes(config.method?.toUpperCase() ?? "")) {
+		const csrfCookie = document.cookie
+			.split(";")
+			.map((part) => part.trim())
+			.find((part) => part.startsWith("bk_uni_csrf="));
+		if (csrfCookie) {
+			config.headers.set("X-CSRF-Token", decodeURIComponent(csrfCookie.slice("bk_uni_csrf=".length)));
+		}
+	}
+	return config;
 });
 
 export default apiClient;
