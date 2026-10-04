@@ -1,0 +1,106 @@
+{
+	"name": "Synthetic E0 curriculum fixture",
+	"synthetic": true,
+	"curriculum": {
+		"id": "10000000-0000-4000-8000-000000000001",
+		"name": "Synthetic Computer Science",
+		"source": {
+			"documentName": "Synthetic fixture",
+			"reference": "Generated for automated tests; not a real curriculum",
+			"version": "1",
+			"verifiedAt": "2026-10-04"
+		}
+	},
+	"electiveGroup": {
+		"id": "20000000-0000-4000-8000-000000000001",
+		"name": "Synthetic electives",
+		"requiredCredits": 3,
+		"requiredCourses": 1
+	},
+	"courses": [
+		{
+			"id": "30000000-0000-4000-8000-000000000001",
+			"code": "SYN101",
+			"name": "Synthetic Foundations",
+			"credits": 3,
+			"requirementType": "required",
+			"status": "completed",
+			"rules": []
+		},
+		{
+			"id": "30000000-0000-4000-8000-000000000002",
+			"code": "SYN201",
+			"name": "Synthetic Systems",
+			"credits": 3,
+			"requirementType": "required",
+			"status": "not_started",
+			"rules": [
+				{
+					"type": "prerequisite",
+					"courseId": "30000000-0000-4000-8000-000000000001"
+				},
+				{
+					"type": "minimum_credits",
+					"minimumCredits": 3
+				}
+			]
+		},
+		{
+			"id": "30000000-0000-4000-8000-000000000003",
+			"code": "SYN301",
+			"name": "Synthetic Advanced Systems",
+			"credits": 3,
+			"requirementType": "required",
+			"status": "not_started",
+			"rules": [
+				{
+					"type": "prerequisite",
+					"courseId": "30000000-0000-4000-8000-000000000002"
+				},
+				{
+					"type": "minimum_credits",
+					"minimumCredits": 6
+				}
+			]
+		},
+		{
+			"id": "30000000-0000-4000-8000-000000000004",
+			"code": "SYN110",
+			"name": "Synthetic Elective One",
+			"credits": 3,
+			"requirementType": "elective",
+			"electiveGroupId": "20000000-0000-4000-8000-000000000001",
+			"status": "in_progress",
+			"rules": []
+		},
+		{
+			"id": "30000000-0000-4000-8000-000000000005",
+			"code": "SYN120",
+			"name": "Synthetic Elective Two",
+			"credits": 3,
+			"requirementType": "elective",
+			"electiveGroupId": "20000000-0000-4000-8000-000000000001",
+			"status": "not_started",
+			"rules": []
+		}
+	],
+	"expected": {
+		"eligibleCourseCodes": [
+			"SYN101",
+			"SYN201",
+			"SYN110",
+			"SYN120"
+		],
+		"ineligibleCourseCodes": [
+			"SYN301"
+		],
+		"requiredCreditsEarned": 3,
+		"electiveProgress": {
+			"credits": 3,
+			"courses": 1,
+			"meetsRequiredCredits": true,
+			"meetsRequiredCourses": true,
+			"complete": true
+		}
+	}
+}

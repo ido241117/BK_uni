@@ -15,6 +15,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
 		[HttpStatus.FORBIDDEN]: 'Bạn không có quyền thực hiện thao tác này.',
 		[HttpStatus.NOT_FOUND]: 'Không tìm thấy dữ liệu yêu cầu.',
 		[HttpStatus.CONFLICT]: 'Dữ liệu đang xung đột, vui lòng kiểm tra lại.',
+		[HttpStatus.UNPROCESSABLE_ENTITY]:
+			'Dữ liệu không đáp ứng quy tắc nghiệp vụ.',
 		[HttpStatus.TOO_MANY_REQUESTS]:
 			'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.',
 		[HttpStatus.INTERNAL_SERVER_ERROR]:
@@ -22,6 +24,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
 	};
 
 	private normalizeMessage(status: number, rawMessage: string) {
+		if (status >= 500) {
+			return this.fallbackMessages[HttpStatus.INTERNAL_SERVER_ERROR];
+		}
 		const message = (rawMessage || '').trim();
 		if (!message) {
 			return (
@@ -37,8 +42,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 		const response: {
 			status: (code: number) => { json: (body: unknown) => void };
 		} = ctx.getResponse();
-		let status = HttpStatus.INTERNAL_SERVER_ERROR;
+		let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
 		let message = 'Lỗi hệ thống';
+		let code: string | undefined;
+		let details: unknown[] | undefined;
 
 		if (exception instanceof HttpException) {
 			status = exception.getStatus();
@@ -49,20 +56,51 @@ export class AllExceptionsFilter implements ExceptionFilter {
 				result !== null &&
 				'message' in result
 			) {
-				const exceptionMessage = (result as { message?: unknown }).message;
+				const exceptionBody = result as {
+					message?: unknown;
+					code?: unknown;
+					details?: unknown;
+				};
+				const exceptionMessage = exceptionBody.message;
+				if (typeof exceptionBody.code === 'string') code = exceptionBody.code;
+				if (Array.isArray(exceptionBody.details)) {
+					details = exceptionBody.details;
+				}
 				if (typeof exceptionMessage === 'string') {
 					message = exceptionMessage;
 				} else if (
 					Array.isArray(exceptionMessage) &&
 					exceptionMessage.every((item) => typeof item === 'string')
 				) {
-					message = exceptionMessage.join('; ');
+					details = details ?? exceptionMessage;
+					message = this.fallbackMessages[status] ?? 'Yêu cầu không hợp lệ.';
 				}
 			}
 		}
 
+		const defaultCodes: Record<number, string> = {
+			[HttpStatus.BAD_REQUEST]: 'VALIDATION_ERROR',
+			[HttpStatus.UNAUTHORIZED]: 'AUTH_REQUIRED',
+			[HttpStatus.FORBIDDEN]: 'FORBIDDEN',
+			[HttpStatus.NOT_FOUND]: 'NOT_FOUND',
+			[HttpStatus.CONFLICT]: 'CONFLICT',
+			[HttpStatus.UNPROCESSABLE_ENTITY]: 'BUSINESS_RULE_VIOLATION',
+			[HttpStatus.TOO_MANY_REQUESTS]: 'RATE_LIMIT_EXCEEDED',
+			[HttpStatus.INTERNAL_SERVER_ERROR]: 'INTERNAL_SERVER_ERROR',
+		};
+		if (status >= 500) {
+			code = 'INTERNAL_SERVER_ERROR';
+			details = undefined;
+		}
+
 		response
 			.status(status)
-			.json(buildError(this.normalizeMessage(status, message)));
+			.json(
+				buildError(
+					this.normalizeMessage(status, message),
+					code ?? defaultCodes[status] ?? 'REQUEST_FAILED',
+					details,
+				),
+			);
 	}
 }

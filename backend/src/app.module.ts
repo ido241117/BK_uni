@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DbTestModule } from './db-test/db-test.module';
@@ -20,7 +21,9 @@ import { HealthModule } from './health/health.module';
 				password: config.get<string>('DB_PASSWORD'),
 				database: config.get<string>('DB_NAME'),
 				autoLoadEntities: true,
-				synchronize: true,
+				migrations: [join(__dirname, 'db/migrations/*{.ts,.js}')],
+				migrationsRun: false,
+				synchronize: false,
 				logging: false,
 			}),
 		}),
