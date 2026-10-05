@@ -403,6 +403,14 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 			.expect(200);
 		const recommendationData = responseData<{
 			status: string;
+			progress: {
+				accumulatedCredits: number;
+				totalCreditsTarget: number;
+				averageCreditsPerTerm: number;
+				minimumSemesterCredits: number;
+				maximumSemesterCredits: number;
+				effectiveTarget: number;
+			};
 			recommendedCourses: Array<{ course: { code: string }; eligible: boolean }>;
 			deferredRequiredCourses: Array<{
 				course: { code: string };
@@ -432,6 +440,85 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 			.expect((response) =>
 				expect(responseData(response)).toEqual(recommendationData),
 			);
+		expect(await analysisRuns.count({ where: { profileId } })).toBe(runsBefore);
+		expect(await courseStatuses.find({ where: { profileId } })).toEqual(
+			statusesBefore,
+		);
+
+		const otherCurriculumResponse = await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula`)
+			.send({
+				name: `Other recommendation curriculum ${randomUUID().slice(0, 8)}`,
+				source: {
+					documentName: 'Other E2E source',
+					reference: 'https://example.test/other-e2e',
+					version: '1',
+					verifiedAt: '2026-10-05',
+				},
+				recommendationSettings: {
+					totalCreditsTarget: 40,
+					minimumSemesterCredits: 8,
+					maximumSemesterCredits: 12,
+				},
+			})
+			.expect(201);
+		const otherCurriculumId = responseData<{ id: string }>(
+			otherCurriculumResponse,
+		).id;
+		const otherFirstTermResponse = await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${otherCurriculumId}/terms`)
+			.send({ code: 'T1', name: 'Other term 1', sortOrder: 0 })
+			.expect(201);
+		await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${otherCurriculumId}/terms`)
+			.send({ code: 'T2', name: 'Other term 2', sortOrder: 1 })
+			.expect(201);
+		await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${otherCurriculumId}/courses`)
+			.send({
+				code: 'OTHER101',
+				name: 'Other curriculum course',
+				credits: 4,
+				termId: responseData<{ id: string }>(otherFirstTermResponse).id,
+				requirementType: 'required',
+				recommendationPriority: 0,
+			})
+			.expect(201);
+
+		await mutation(studentAgent, studentCsrf)
+			.put(`${api}/me/profile`)
+			.send({ curriculumId: otherCurriculumId })
+			.expect(200);
+		const otherRecommendation = await mutation(studentAgent, studentCsrf)
+			.post(recommendationPath)
+			.send({})
+			.expect(200);
+		const otherRecommendationData = responseData<{
+			progress: typeof recommendationData.progress;
+			recommendedCourses: Array<{ course: { code: string } }>;
+			summary: { recommendedCredits: number };
+		}>(otherRecommendation);
+		expect(otherRecommendationData.progress).toEqual({
+			accumulatedCredits: 0,
+			totalCreditsTarget: 40,
+			averageCreditsPerTerm: 20,
+			minimumSemesterCredits: 8,
+			maximumSemesterCredits: 12,
+			effectiveTarget: 12,
+		});
+		expect(otherRecommendationData.recommendedCourses.map(({ course }) => course.code))
+			.toEqual(['OTHER101']);
+		expect(otherRecommendationData.summary.recommendedCredits).toBe(4);
+
+		await mutation(studentAgent, studentCsrf)
+			.put(`${api}/me/profile`)
+			.send({ curriculumId })
+			.expect(200);
+		const restoredRecommendation = await mutation(studentAgent, studentCsrf)
+			.post(recommendationPath)
+			.send({})
+			.expect(200);
+		expect(responseData(restoredRecommendation)).toEqual(recommendationData);
 		expect(await analysisRuns.count({ where: { profileId } })).toBe(runsBefore);
 		expect(await courseStatuses.find({ where: { profileId } })).toEqual(
 			statusesBefore,

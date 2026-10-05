@@ -1460,6 +1460,14 @@ input {
 		position: fixed !important;
 	}
 
+	.workspace-sider.ant-layout-sider-zero-width .ant-layout-sider-children {
+		display: none;
+	}
+
+	.workspace-sider.ant-layout-sider-zero-width~.workspace-main .page-frame {
+		padding-top: 72px;
+	}
+
 	.analysis-summary {
 		grid-template-columns: 1fr 1fr;
 	}
