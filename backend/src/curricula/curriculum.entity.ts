@@ -1,4 +1,5 @@
 import {
+	Check,
 	Column,
 	DeleteDateColumn,
 	Entity,
@@ -15,12 +16,47 @@ import { ElectiveGroup } from './elective-group.entity';
 
 @Entity({ name: 'curricula' })
 @Index('uq_curricula_active_name', { synchronize: false })
+@Check(
+	'chk_curricula_recommendation_settings_all_or_none',
+	'("total_credits_target" IS NULL AND "minimum_semester_credits" IS NULL AND "maximum_semester_credits" IS NULL) OR ("total_credits_target" IS NOT NULL AND "minimum_semester_credits" IS NOT NULL AND "maximum_semester_credits" IS NOT NULL)',
+)
+@Check(
+	'chk_curricula_recommendation_settings_valid',
+	'"total_credits_target" IS NULL OR ("total_credits_target" > 0 AND "minimum_semester_credits" >= 0 AND "maximum_semester_credits" > 0 AND "minimum_semester_credits" <= "maximum_semester_credits")',
+)
 export class Curriculum extends BaseEntityCustom {
 	@Column({ type: 'text' })
 	name: string;
 
 	@Column({ type: 'text', nullable: true })
 	description: string | null;
+
+	@Column({
+		name: 'total_credits_target',
+		type: 'numeric',
+		precision: 7,
+		scale: 2,
+		nullable: true,
+	})
+	totalCreditsTarget: string | null;
+
+	@Column({
+		name: 'minimum_semester_credits',
+		type: 'numeric',
+		precision: 5,
+		scale: 2,
+		nullable: true,
+	})
+	minimumSemesterCredits: string | null;
+
+	@Column({
+		name: 'maximum_semester_credits',
+		type: 'numeric',
+		precision: 5,
+		scale: 2,
+		nullable: true,
+	})
+	maximumSemesterCredits: string | null;
 
 	@Column({ name: 'created_by', type: 'uuid' })
 	createdBy: string;

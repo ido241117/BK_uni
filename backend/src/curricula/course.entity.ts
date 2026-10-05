@@ -20,6 +20,10 @@ export type CourseRequirementType = 'required' | 'elective';
 @Unique('uq_courses_id_curriculum', ['id', 'curriculumId'])
 @Check('chk_courses_credits_nonnegative', '"credits" >= 0')
 @Check(
+	'chk_courses_recommendation_priority_nonnegative',
+	'"recommendation_priority" >= 0',
+)
+@Check(
 	'chk_courses_requirement_group',
 	'("requirement_type" = \'required\' AND "elective_group_id" IS NULL) OR ("requirement_type" = \'elective\' AND "elective_group_id" IS NOT NULL)',
 )
@@ -66,6 +70,9 @@ export class Course {
 
 	@Column({ name: 'elective_group_id', type: 'uuid', nullable: true })
 	electiveGroupId: string | null;
+
+	@Column({ name: 'recommendation_priority', type: 'integer' })
+	recommendationPriority: number;
 
 	@ManyToOne(() => ElectiveGroup, { nullable: true, onDelete: 'RESTRICT' })
 	@JoinColumn([
