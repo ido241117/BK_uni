@@ -42,14 +42,14 @@ export type CourseRuleReason = {
 const countsTowardProgress = (status: StudentCourseStatus) =>
 	status === 'in_progress' || status === 'completed';
 
-export function analyzeCurriculum(input: AnalyzeCurriculumInput) {
-	const coursesById = new Map(input.courses.map((course) => [course.id, course]));
-	const earnedCredits = input.courses.reduce(
+export function evaluateCourseEligibility(courses: AnalysisCourse[]) {
+	const coursesById = new Map(courses.map((course) => [course.id, course]));
+	const earnedCredits = courses.reduce(
 		(total, course) =>
 			total + (countsTowardProgress(course.status) ? course.credits : 0),
 		0,
 	);
-	const courseResults = input.courses.map((course) => {
+	return courses.map((course) => {
 		const reasons: CourseRuleReason[] = course.rules.map((rule) => {
 			if (rule.type === 'prerequisite') {
 				const prerequisite = rule.prerequisiteCourseId
@@ -81,6 +81,23 @@ export function analyzeCurriculum(input: AnalyzeCurriculumInput) {
 			};
 		});
 		return {
+			courseId: course.id,
+			eligible: reasons.every((reason) => reason.passed),
+			reasons,
+		};
+	});
+}
+
+export function analyzeCurriculum(input: AnalyzeCurriculumInput) {
+	const eligibilityByCourseId = new Map(
+		evaluateCourseEligibility(input.courses).map((result) => [
+			result.courseId,
+			result,
+		]),
+	);
+	const courseResults = input.courses.map((course) => {
+		const eligibility = eligibilityByCourseId.get(course.id)!;
+		return {
 			course: {
 				id: course.id,
 				code: course.code,
@@ -88,8 +105,8 @@ export function analyzeCurriculum(input: AnalyzeCurriculumInput) {
 				name: course.name,
 			},
 			studentStatus: course.status,
-			eligible: reasons.every((reason) => reason.passed),
-			reasons,
+			eligible: eligibility.eligible,
+			reasons: eligibility.reasons,
 		};
 	});
 	const missingRequiredCourses = input.courses
