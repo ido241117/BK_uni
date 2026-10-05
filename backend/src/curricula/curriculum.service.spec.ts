@@ -73,6 +73,125 @@ describe('CurriculumService', () => {
 		);
 	});
 
+	it('creates a curriculum with recommendation settings', async () => {
+		const created = await service.createCurriculum('admin-id', {
+			name: 'CTĐT gợi ý',
+			source: {
+				documentName: 'Tài liệu',
+				reference: 'https://example.test/source',
+				version: '2026',
+				verifiedAt: '2026-10-04',
+			},
+			recommendationSettings: {
+				totalCreditsTarget: 140,
+				minimumSemesterCredits: 11,
+				maximumSemesterCredits: 24,
+			},
+		});
+
+		expect(repository(Curriculum).create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				totalCreditsTarget: '140',
+				minimumSemesterCredits: '11',
+				maximumSemesterCredits: '24',
+			}),
+		);
+		expect(created.recommendationSettings).toEqual({
+			totalCreditsTarget: 140,
+			minimumSemesterCredits: 11,
+			maximumSemesterCredits: 24,
+		});
+	});
+
+	it('merges a partial recommendation settings update with saved values', async () => {
+		repository(Curriculum).findOne.mockResolvedValue({
+			id: 'curriculum-id',
+			name: 'CTĐT',
+			description: null,
+			totalCreditsTarget: '140.00',
+			minimumSemesterCredits: '11.00',
+			maximumSemesterCredits: '24.00',
+			sourceDocumentName: 'Tài liệu',
+			sourceReference: 'https://example.test/source',
+			sourceVersion: '2026',
+			sourceVerifiedAt: '2026-10-04',
+		});
+
+		const updated = await service.updateCurriculum('curriculum-id', {
+			recommendationSettings: { minimumSemesterCredits: 12 },
+		});
+
+		expect(repository(Curriculum).save).toHaveBeenCalledWith(
+			expect.objectContaining({
+				totalCreditsTarget: '140',
+				minimumSemesterCredits: '12',
+				maximumSemesterCredits: '24',
+			}),
+		);
+		expect(updated.recommendationSettings).toEqual({
+			totalCreditsTarget: 140,
+			minimumSemesterCredits: 12,
+			maximumSemesterCredits: 24,
+		});
+	});
+
+	it('clears all recommendation settings when PATCH sends null', async () => {
+		repository(Curriculum).findOne.mockResolvedValue({
+			id: 'curriculum-id',
+			name: 'CTĐT',
+			description: null,
+			totalCreditsTarget: '140.00',
+			minimumSemesterCredits: '11.00',
+			maximumSemesterCredits: '24.00',
+			sourceDocumentName: 'Tài liệu',
+			sourceReference: 'https://example.test/source',
+			sourceVersion: '2026',
+			sourceVerifiedAt: '2026-10-04',
+		});
+
+		const updated = await service.updateCurriculum('curriculum-id', {
+			recommendationSettings: null,
+		});
+
+		expect(repository(Curriculum).save).toHaveBeenCalledWith(
+			expect.objectContaining({
+				totalCreditsTarget: null,
+				minimumSemesterCredits: null,
+				maximumSemesterCredits: null,
+			}),
+		);
+		expect(updated.recommendationSettings).toBeNull();
+	});
+
+	it('rejects incomplete or inconsistent recommendation settings', async () => {
+		await expect(
+			service.createCurriculum('admin-id', {
+				name: 'CTĐT thiếu cấu hình',
+				source: {
+					documentName: 'Tài liệu',
+					reference: 'https://example.test/source',
+					version: '2026',
+					verifiedAt: '2026-10-04',
+				},
+				recommendationSettings: { totalCreditsTarget: 0 },
+			}),
+		).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+		repository(Curriculum).findOne.mockResolvedValue({
+			id: 'curriculum-id',
+			name: 'CTĐT',
+			totalCreditsTarget: '140',
+			minimumSemesterCredits: '11',
+			maximumSemesterCredits: '24',
+		});
+		await expect(
+			service.updateCurriculum('curriculum-id', {
+				recommendationSettings: { minimumSemesterCredits: 25 },
+			}),
+		).rejects.toBeInstanceOf(UnprocessableEntityException);
+		expect(repository(Curriculum).save).not.toHaveBeenCalled();
+	});
+
 	it('maps a successful course create to the documented code/version fields', async () => {
 		repository(Curriculum).findOne.mockResolvedValue({ id: 'curriculum-id' });
 		repository(CurriculumTerm).findOne.mockResolvedValue({

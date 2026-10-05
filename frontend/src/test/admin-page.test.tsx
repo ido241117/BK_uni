@@ -54,6 +54,7 @@ describe('AdminPage', () => {
 
 		expect((await screen.findAllByText('CTĐT thật từ API')).length).toBeGreaterThan(0);
 		expect(screen.getByText(/Quyết định 01/)).toBeInTheDocument();
+		expect(screen.getByText('Gợi ý tải học kỳ: Chưa cấu hình')).toBeInTheDocument();
 		expect(screen.queryByText('Khoa học Máy tính')).not.toBeInTheDocument();
 		expect(api.structure).toHaveBeenCalledWith('curriculum-1');
 	}, 15000);
@@ -71,12 +72,17 @@ describe('AdminPage', () => {
 		fireEvent.change(screen.getByLabelText('URL hoặc thông tin tham chiếu'), { target: { value: 'https://example.test/new' } });
 		fireEvent.change(screen.getByLabelText('Năm/phiên bản'), { target: { value: '2027' } });
 		fireEvent.change(screen.getByLabelText('Ngày xác minh'), { target: { value: '2026-10-04' } });
+		fireEvent.click(screen.getByLabelText('Cấu hình tải gợi ý học kỳ'));
+		fireEvent.change(screen.getByLabelText('Tổng tín chỉ mục tiêu'), { target: { value: '140' } });
+		fireEvent.change(screen.getByLabelText('Tín chỉ tối thiểu/kỳ'), { target: { value: '11' } });
+		fireEvent.change(screen.getByLabelText('Tín chỉ tối đa/kỳ'), { target: { value: '24' } });
 		fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
 
 		await waitFor(() => expect(api.createCurriculum).toHaveBeenCalled());
 		expect(await screen.findByText('Tên chương trình đã tồn tại.')).toBeInTheDocument();
 		expect(name).toHaveValue('CTĐT mới');
 		expect(screen.getByLabelText('Tên tài liệu')).toHaveValue('Nguồn mới');
+		expect(screen.getByLabelText('Tổng tín chỉ mục tiêu')).toHaveValue('140.00');
 
 		api.createCurriculum.mockResolvedValue({ ...curriculum, id: 'curriculum-2' });
 		fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
@@ -91,6 +97,82 @@ describe('AdminPage', () => {
 				version: '2027',
 				verifiedAt: '2026-10-04',
 			},
+			recommendationSettings: {
+				totalCreditsTarget: 140,
+				minimumSemesterCredits: 11,
+				maximumSemesterCredits: 24,
+			},
 		});
+	}, 15000);
+
+	it('preserves configured values during a partial edit and sends null to clear', async () => {
+		const configuredCurriculum = {
+			...curriculum,
+			recommendationSettings: {
+				totalCreditsTarget: 140,
+				minimumSemesterCredits: 11,
+				maximumSemesterCredits: 24,
+			},
+		};
+		api.listAdmin.mockResolvedValue({ items: [configuredCurriculum], page: { limit: 100, offset: 0, total: 1 } });
+		api.structure.mockResolvedValue({ curriculum: configuredCurriculum, terms: [], electiveGroups: [], courses: [] });
+		render(<AdminPage />);
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Sửa chương trình' }));
+		expect(screen.getByLabelText('Tổng tín chỉ mục tiêu')).toHaveValue('140.00');
+		fireEvent.change(screen.getByLabelText('Tín chỉ tối đa/kỳ'), { target: { value: '30' } });
+		fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
+
+		await waitFor(() => expect(api.updateCurriculum).toHaveBeenCalledWith(
+			'curriculum-1',
+			expect.objectContaining({
+				recommendationSettings: {
+					totalCreditsTarget: 140,
+					minimumSemesterCredits: 11,
+					maximumSemesterCredits: 30,
+				},
+			}),
+		));
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Sửa chương trình' }));
+		fireEvent.click(screen.getByLabelText('Cấu hình tải gợi ý học kỳ'));
+		fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
+		await waitFor(() => expect(api.updateCurriculum).toHaveBeenLastCalledWith(
+			'curriculum-1',
+			expect.objectContaining({ recommendationSettings: null }),
+		));
+	}, 15000);
+
+	it('blocks settings with a minimum greater than the maximum', async () => {
+		render(<AdminPage />);
+		fireEvent.click(await screen.findByRole('button', { name: /Tạo chương trình/ }));
+		fireEvent.click(screen.getByLabelText('Cấu hình tải gợi ý học kỳ'));
+		fireEvent.change(screen.getByLabelText('Tổng tín chỉ mục tiêu'), { target: { value: '140' } });
+		fireEvent.change(screen.getByLabelText('Tín chỉ tối thiểu/kỳ'), { target: { value: '20' } });
+		fireEvent.change(screen.getByLabelText('Tín chỉ tối đa/kỳ'), { target: { value: '10' } });
+		fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
+
+		expect(await screen.findByText('Tín chỉ tối đa phải lớn hơn hoặc bằng mức tối thiểu.')).toBeInTheDocument();
+		expect(api.createCurriculum).not.toHaveBeenCalled();
+	}, 15000);
+
+	it('blocks total, minimum, and maximum values outside their valid ranges', async () => {
+		render(<AdminPage />);
+		fireEvent.click(await screen.findByRole('button', { name: /Tạo chương trình/ }));
+		fireEvent.change(screen.getByLabelText('Tên chương trình'), { target: { value: 'CTĐT mới' } });
+		fireEvent.change(screen.getByLabelText('Tên tài liệu'), { target: { value: 'Nguồn' } });
+		fireEvent.change(screen.getByLabelText('URL hoặc thông tin tham chiếu'), { target: { value: 'https://example.test/source' } });
+		fireEvent.change(screen.getByLabelText('Năm/phiên bản'), { target: { value: '2026' } });
+		fireEvent.change(screen.getByLabelText('Ngày xác minh'), { target: { value: '2026-10-04' } });
+		fireEvent.click(screen.getByLabelText('Cấu hình tải gợi ý học kỳ'));
+		fireEvent.change(screen.getByLabelText('Tổng tín chỉ mục tiêu'), { target: { value: '100000' } });
+		fireEvent.change(screen.getByLabelText('Tín chỉ tối thiểu/kỳ'), { target: { value: '1000' } });
+		fireEvent.change(screen.getByLabelText('Tín chỉ tối đa/kỳ'), { target: { value: '1000' } });
+		expect(screen.getByLabelText('Tổng tín chỉ mục tiêu')).toHaveValue('100000');
+		expect(screen.getByLabelText('Tín chỉ tối thiểu/kỳ')).toHaveValue('1000');
+		expect(screen.getByLabelText('Tín chỉ tối đa/kỳ')).toHaveValue('1000');
+		fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
+
+		expect(api.createCurriculum).not.toHaveBeenCalled();
 	}, 15000);
 });

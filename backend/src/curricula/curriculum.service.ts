@@ -36,6 +36,18 @@ type SourceInput = {
 	verifiedAt: string;
 };
 
+type RecommendationSettingsInput = {
+	totalCreditsTarget?: number;
+	minimumSemesterCredits?: number;
+	maximumSemesterCredits?: number;
+} | null;
+
+type RecommendationSettingsValues = {
+	totalCreditsTarget: number;
+	minimumSemesterCredits: number;
+	maximumSemesterCredits: number;
+};
+
 @Injectable()
 export class CurriculumService {
 	constructor(private readonly dataSource: DataSource) { }
@@ -91,6 +103,20 @@ export class CurriculumService {
 			id: curriculum.id,
 			name: curriculum.name,
 			description: curriculum.description,
+			recommendationSettings:
+				curriculum.totalCreditsTarget == null ||
+					curriculum.minimumSemesterCredits == null ||
+					curriculum.maximumSemesterCredits == null
+					? null
+					: {
+						totalCreditsTarget: Number(curriculum.totalCreditsTarget),
+						minimumSemesterCredits: Number(
+							curriculum.minimumSemesterCredits,
+						),
+						maximumSemesterCredits: Number(
+							curriculum.maximumSemesterCredits,
+						),
+					},
 			source: {
 				documentName: curriculum.sourceDocumentName,
 				reference: curriculum.sourceReference,
@@ -98,6 +124,58 @@ export class CurriculumService {
 				verifiedAt: curriculum.sourceVerifiedAt,
 			},
 			courseCount,
+		};
+	}
+
+	private resolveRecommendationSettings(
+		settings: RecommendationSettingsInput | undefined,
+		current?: Curriculum,
+	): RecommendationSettingsValues | null | undefined {
+		if (settings === undefined) return undefined;
+		if (settings === null) return null;
+
+		const resolve = (
+			value: number | undefined,
+			previous: string | null | undefined,
+		) => (value === undefined && previous != null ? Number(previous) : value);
+		const totalCreditsTarget = resolve(
+			settings.totalCreditsTarget,
+			current?.totalCreditsTarget,
+		);
+		const minimumSemesterCredits = resolve(
+			settings.minimumSemesterCredits,
+			current?.minimumSemesterCredits,
+		);
+		const maximumSemesterCredits = resolve(
+			settings.maximumSemesterCredits,
+			current?.maximumSemesterCredits,
+		);
+
+		if (
+			typeof totalCreditsTarget !== 'number' ||
+			typeof minimumSemesterCredits !== 'number' ||
+			typeof maximumSemesterCredits !== 'number' ||
+			!Number.isFinite(totalCreditsTarget) ||
+			!Number.isFinite(minimumSemesterCredits) ||
+			!Number.isFinite(maximumSemesterCredits) ||
+			totalCreditsTarget <= 0 ||
+			totalCreditsTarget > 99999.99 ||
+			minimumSemesterCredits < 0 ||
+			minimumSemesterCredits > 999.99 ||
+			maximumSemesterCredits <= 0 ||
+			maximumSemesterCredits > 999.99 ||
+			minimumSemesterCredits > maximumSemesterCredits
+		) {
+			throw new UnprocessableEntityException({
+				message: 'Cấu hình tín chỉ gợi ý không hợp lệ.',
+				code: 'BUSINESS_RULE_VIOLATION',
+			});
+		}
+
+		return {
+			totalCreditsTarget,
+			minimumSemesterCredits,
+			maximumSemesterCredits,
 		};
 	}
 
@@ -318,9 +396,21 @@ export class CurriculumService {
 	}
 
 	async createCurriculum(adminId: string, input: CreateCurriculumDto) {
+		const recommendationSettings = this.resolveRecommendationSettings(
+			input.recommendationSettings,
+		);
 		const curriculum = this.repo(Curriculum).create({
 			name: this.requiredText(input.name, 'Tên chương trình'),
 			description: input.description?.trim() || null,
+			totalCreditsTarget: recommendationSettings
+				? String(recommendationSettings.totalCreditsTarget)
+				: null,
+			minimumSemesterCredits: recommendationSettings
+				? String(recommendationSettings.minimumSemesterCredits)
+				: null,
+			maximumSemesterCredits: recommendationSettings
+				? String(recommendationSettings.maximumSemesterCredits)
+				: null,
 			createdBy: adminId,
 			...this.normalizeSource(input.source),
 		});
@@ -340,6 +430,25 @@ export class CurriculumService {
 			curriculum.description = input.description?.trim() || null;
 		if (input.source)
 			Object.assign(curriculum, this.normalizeSource(input.source));
+		const recommendationSettings = this.resolveRecommendationSettings(
+			input.recommendationSettings,
+			curriculum,
+		);
+		if (recommendationSettings === null) {
+			curriculum.totalCreditsTarget = null;
+			curriculum.minimumSemesterCredits = null;
+			curriculum.maximumSemesterCredits = null;
+		} else if (recommendationSettings !== undefined) {
+			curriculum.totalCreditsTarget = String(
+				recommendationSettings.totalCreditsTarget,
+			);
+			curriculum.minimumSemesterCredits = String(
+				recommendationSettings.minimumSemesterCredits,
+			);
+			curriculum.maximumSemesterCredits = String(
+				recommendationSettings.maximumSemesterCredits,
+			);
+		}
 		const saved = await this.saveOrConflict(
 			this.repo(Curriculum),
 			curriculum,

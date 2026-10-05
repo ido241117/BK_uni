@@ -150,6 +150,114 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 		}
 	});
 
+	it('manages curriculum recommendation settings through the admin API', async () => {
+		const dataSource = app!.get(DataSource);
+		const server = app!.getHttpServer() as Server;
+		const adminEmail = `settings-admin-${randomUUID()}@example.test`;
+		const adminRepository = dataSource.getRepository(User);
+		await adminRepository.save(
+			adminRepository.create({
+				email: adminEmail,
+				passwordHash: await bcrypt.hash('admin-pass-123', 4),
+				role: 'admin',
+			}),
+		);
+		const adminAgent = request.agent(server);
+		const adminCsrf = await getCsrfToken(adminAgent);
+		await mutation(adminAgent, adminCsrf)
+			.post(`${api}/auth/login`)
+			.send({ email: adminEmail, password: 'admin-pass-123' })
+			.expect(200);
+
+		const curriculumResponse = await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula`)
+			.send({
+				name: `Settings curriculum ${randomUUID().slice(0, 8)}`,
+				source: {
+					documentName: 'E2E source',
+					reference: 'https://example.test/e2e',
+					version: '1',
+					verifiedAt: '2026-10-04',
+				},
+				recommendationSettings: {
+					totalCreditsTarget: 140,
+					minimumSemesterCredits: 11,
+					maximumSemesterCredits: 24,
+				},
+			})
+			.expect(201);
+		const created = responseData<{
+			id: string;
+			recommendationSettings: object;
+		}>(curriculumResponse);
+		const curriculumId = created.id;
+		expect(created.recommendationSettings).toEqual({
+			totalCreditsTarget: 140,
+			minimumSemesterCredits: 11,
+			maximumSemesterCredits: 24,
+		});
+
+		await mutation(adminAgent, adminCsrf)
+			.patch(`${api}/admin/curricula/${curriculumId}`)
+			.send({ recommendationSettings: { minimumSemesterCredits: 12 } })
+			.expect(200);
+		await adminAgent
+			.get(`${api}/curricula/${curriculumId}`)
+			.expect(200)
+			.expect((response) =>
+				expect(
+					responseData<{
+						recommendationSettings: {
+							totalCreditsTarget: number;
+							minimumSemesterCredits: number;
+							maximumSemesterCredits: number;
+						};
+					}>(response).recommendationSettings,
+				).toEqual({
+					totalCreditsTarget: 140,
+					minimumSemesterCredits: 12,
+					maximumSemesterCredits: 24,
+				}),
+			);
+		for (const recommendationSettings of [
+			{ totalCreditsTarget: 0 },
+			{ minimumSemesterCredits: -1 },
+			{ maximumSemesterCredits: 0 },
+		]) {
+			await mutation(adminAgent, adminCsrf)
+				.patch(`${api}/admin/curricula/${curriculumId}`)
+				.send({ recommendationSettings })
+				.expect(400);
+		}
+		await mutation(adminAgent, adminCsrf)
+			.patch(`${api}/admin/curricula/${curriculumId}`)
+			.send({ recommendationSettings: { minimumSemesterCredits: 25 } })
+			.expect(422);
+		await mutation(adminAgent, adminCsrf)
+			.patch(`${api}/admin/curricula/${curriculumId}`)
+			.send({ recommendationSettings: null })
+			.expect(200)
+			.expect((response) =>
+				expect(
+					responseData<{ recommendationSettings: unknown }>(response)
+						.recommendationSettings,
+				).toBeNull(),
+			);
+		await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula`)
+			.send({
+				name: `Invalid settings ${randomUUID().slice(0, 8)}`,
+				source: {
+					documentName: 'E2E source',
+					reference: 'https://example.test/e2e',
+					version: '1',
+					verifiedAt: '2026-10-04',
+				},
+				recommendationSettings: { totalCreditsTarget: 140 },
+			})
+			.expect(400);
+	});
+
 	it('enforces roles and CSRF across admin, profile, status, analysis, and history APIs', async () => {
 		const dataSource = app!.get(DataSource);
 		const server = app!.getHttpServer() as Server;

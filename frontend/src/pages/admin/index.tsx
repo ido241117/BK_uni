@@ -38,6 +38,7 @@ import type {
 	CurriculumStructure,
 	CurriculumTerm,
 	ElectiveGroup,
+	RecommendationSettings,
 } from '@/types';
 
 type DialogState =
@@ -49,7 +50,7 @@ type DialogState =
 	| null;
 
 type RuleRow = CourseRule & { courseId: string; courseCode: string; courseName: string };
-type CurriculumValues = CurriculumInput;
+type CurriculumValues = CurriculumInput & { recommendationEnabled?: boolean };
 type TermValues = TermInput;
 type GroupValues = ElectiveGroupInput;
 type CourseValues = CourseInput;
@@ -209,7 +210,12 @@ export default function AdminPage() {
 			name: item.name,
 			description: item.description,
 			source: item.source,
-		} : { source: {} as CurriculumValues['source'] });
+			recommendationEnabled: Boolean(item.recommendationSettings),
+			recommendationSettings: item.recommendationSettings ?? undefined,
+		} : {
+			source: {} as CurriculumValues['source'],
+			recommendationEnabled: false,
+		});
 		setDialog({ kind: 'curriculum', item });
 	};
 
@@ -249,9 +255,18 @@ export default function AdminPage() {
 	};
 
 	const saveCurriculum = (values: CurriculumValues) => runSave(async () => {
+		const { recommendationEnabled, recommendationSettings, ...curriculumValues } = values;
+		const input: CurriculumInput = {
+			...curriculumValues,
+			recommendationSettings: recommendationEnabled
+				? recommendationSettings as RecommendationSettings
+				: dialog?.kind === 'curriculum' && dialog.item?.recommendationSettings
+					? null
+					: undefined,
+		};
 		const item = dialog?.kind === 'curriculum' && dialog.item
-			? await curriculumApi.updateCurriculum(dialog.item.id, values)
-			: await curriculumApi.createCurriculum(values);
+			? await curriculumApi.updateCurriculum(dialog.item.id, input)
+			: await curriculumApi.createCurriculum(input);
 		return item.id;
 	}, 'Đã lưu chương trình.');
 
@@ -356,7 +371,7 @@ export default function AdminPage() {
 				<section className="program-detail" aria-busy={structureLoading}>
 					{selected ? <>
 						<div className="program-detail-heading">
-							<div><span className="eyebrow">CHƯƠNG TRÌNH ĐANG CHỌN</span><h2>{selected.name}</h2><p>{selected.description || 'Chưa có mô tả cho chương trình này.'}</p><p className="curriculum-source">Nguồn: {selected.source.documentName} · {selected.source.version} · xác minh {selected.source.verifiedAt}</p></div>
+							<div><span className="eyebrow">CHƯƠNG TRÌNH ĐANG CHỌN</span><h2>{selected.name}</h2><p>{selected.description || 'Chưa có mô tả cho chương trình này.'}</p><p className="curriculum-source">Nguồn: {selected.source.documentName} · {selected.source.version} · xác minh {selected.source.verifiedAt}</p><p className="curriculum-source">Gợi ý tải học kỳ: {selected.recommendationSettings ? `${selected.recommendationSettings.totalCreditsTarget} tín chỉ mục tiêu · ${selected.recommendationSettings.minimumSemesterCredits}–${selected.recommendationSettings.maximumSemesterCredits} tín chỉ/kỳ` : 'Chưa cấu hình'}</p></div>
 							<div className="program-heading-actions"><Tag className="tag-success">Đang hoạt động</Tag><Tooltip title="Sửa chương trình"><Button icon={<EditOutlined />} aria-label="Sửa chương trình" onClick={() => openCurriculum(selected)} /></Tooltip></div>
 						</div>
 						<Tabs items={[
@@ -394,6 +409,14 @@ export default function AdminPage() {
 					<Form.Item label="Tên tài liệu" name={['source', 'documentName']} rules={[{ required: true, whitespace: true, message: 'Nhập tên tài liệu nguồn.' }]}><Input /></Form.Item>
 					<Form.Item label="URL hoặc thông tin tham chiếu" name={['source', 'reference']} rules={[{ required: true, whitespace: true, message: 'Nhập nguồn tham chiếu.' }]}><Input /></Form.Item>
 					<div className="form-row"><Form.Item label="Năm/phiên bản" name={['source', 'version']} rules={[{ required: true, whitespace: true, message: 'Nhập phiên bản.' }]}><Input /></Form.Item><Form.Item label="Ngày xác minh" name={['source', 'verifiedAt']} rules={[{ required: true, message: 'Chọn ngày xác minh.' }]}><Input type="date" /></Form.Item></div>
+					<Form.Item name="recommendationEnabled" valuePropName="checked"><Checkbox>Cấu hình tải gợi ý học kỳ</Checkbox></Form.Item>
+					<Form.Item noStyle shouldUpdate={(previous, current) => previous.recommendationEnabled !== current.recommendationEnabled}>{({ getFieldValue }) => getFieldValue('recommendationEnabled') ? <>
+						<div className="form-row">
+							<Form.Item label="Tổng tín chỉ mục tiêu" name={['recommendationSettings', 'totalCreditsTarget']} rules={[{ required: true, message: 'Nhập tổng tín chỉ mục tiêu.' }, { type: 'number', min: 0.01, max: 99999.99, message: 'Nhập số lớn hơn 0, tối đa 99999.99.' }]}><InputNumber min={0.01} max={99999.99} precision={2} className="full-width" /></Form.Item>
+							<Form.Item label="Tín chỉ tối thiểu/kỳ" name={['recommendationSettings', 'minimumSemesterCredits']} rules={[{ required: true, message: 'Nhập tín chỉ tối thiểu.' }, { type: 'number', min: 0, max: 999.99, message: 'Nhập số không âm, tối đa 999.99.' }]}><InputNumber min={0} max={999.99} precision={2} className="full-width" /></Form.Item>
+						</div>
+						<Form.Item label="Tín chỉ tối đa/kỳ" name={['recommendationSettings', 'maximumSemesterCredits']} dependencies={[['recommendationSettings', 'minimumSemesterCredits']]} rules={[{ required: true, message: 'Nhập tín chỉ tối đa.' }, { type: 'number', min: 0.01, max: 999.99, message: 'Nhập số lớn hơn 0, tối đa 999.99.' }, ({ getFieldValue }) => ({ validator: (_, value) => value == null || getFieldValue(['recommendationSettings', 'minimumSemesterCredits']) == null || value >= getFieldValue(['recommendationSettings', 'minimumSemesterCredits']) ? Promise.resolve() : Promise.reject(new Error('Tín chỉ tối đa phải lớn hơn hoặc bằng mức tối thiểu.')) })]}><InputNumber min={0.01} max={999.99} precision={2} className="full-width" /></Form.Item>
+					</> : null}</Form.Item>
 				</Form>}
 				{dialog?.kind === 'term' && <Form form={termForm} layout="vertical" onFinish={saveTerm}>
 					<Form.Item label="Mã học kỳ" name="code" rules={[{ required: true, whitespace: true, message: 'Nhập mã học kỳ.' }]}><Input placeholder="HK1" /></Form.Item>

@@ -34,11 +34,18 @@ export interface CurriculumSource {
 	verifiedAt: string;
 }
 
+export interface RecommendationSettings {
+	totalCreditsTarget: number;
+	minimumSemesterCredits: number;
+	maximumSemesterCredits: number;
+}
+
 export interface AdminCurriculum {
 	id: string;
 	name: string;
 	description: string | null;
 	source: CurriculumSource;
+	recommendationSettings: RecommendationSettings | null;
 	courseCount: number;
 }
 

@@ -13,6 +13,7 @@ import type {
 	ElectiveGroup,
 	PageResult,
 	CourseStatus,
+	RecommendationSettings,
 } from "@/types";
 
 export interface ApiEnvelope<T> {
@@ -68,6 +69,7 @@ export interface CurriculumInput {
 	name: string;
 	description?: string | null;
 	source: CurriculumSource;
+	recommendationSettings?: RecommendationSettings | null;
 }
 
 export interface TermInput {

@@ -12,6 +12,7 @@ import {
 	Max,
 	Min,
 	ValidateNested,
+	ValidateIf,
 } from 'class-validator';
 
 export class CurriculumSourceDto {
@@ -31,6 +32,52 @@ export class CurriculumSourceDto {
 	verifiedAt: string;
 }
 
+export class CreateRecommendationSettingsDto {
+	@IsDefined()
+	@Type(() => Number)
+	@IsNumber({ maxDecimalPlaces: 2 })
+	@Min(0.01)
+	@Max(99999.99)
+	totalCreditsTarget: number;
+
+	@IsDefined()
+	@Type(() => Number)
+	@IsNumber({ maxDecimalPlaces: 2 })
+	@Min(0)
+	@Max(999.99)
+	minimumSemesterCredits: number;
+
+	@IsDefined()
+	@Type(() => Number)
+	@IsNumber({ maxDecimalPlaces: 2 })
+	@Min(0.01)
+	@Max(999.99)
+	maximumSemesterCredits: number;
+}
+
+export class UpdateRecommendationSettingsDto {
+	@ValidateIf((_object, value) => value !== undefined)
+	@Type(() => Number)
+	@IsNumber({ maxDecimalPlaces: 2 })
+	@Min(0.01)
+	@Max(99999.99)
+	totalCreditsTarget?: number;
+
+	@ValidateIf((_object, value) => value !== undefined)
+	@Type(() => Number)
+	@IsNumber({ maxDecimalPlaces: 2 })
+	@Min(0)
+	@Max(999.99)
+	minimumSemesterCredits?: number;
+
+	@ValidateIf((_object, value) => value !== undefined)
+	@Type(() => Number)
+	@IsNumber({ maxDecimalPlaces: 2 })
+	@Min(0.01)
+	@Max(999.99)
+	maximumSemesterCredits?: number;
+}
+
 export class CreateCurriculumDto {
 	@IsString()
 	@Length(1, 160)
@@ -45,6 +92,11 @@ export class CreateCurriculumDto {
 	@ValidateNested()
 	@Type(() => CurriculumSourceDto)
 	source: CurriculumSourceDto;
+
+	@IsOptional()
+	@ValidateNested()
+	@Type(() => CreateRecommendationSettingsDto)
+	recommendationSettings?: CreateRecommendationSettingsDto | null;
 }
 
 export class UpdateCurriculumDto {
@@ -62,6 +114,11 @@ export class UpdateCurriculumDto {
 	@ValidateNested()
 	@Type(() => CurriculumSourceDto)
 	source?: CurriculumSourceDto;
+
+	@IsOptional()
+	@ValidateNested()
+	@Type(() => UpdateRecommendationSettingsDto)
+	recommendationSettings?: UpdateRecommendationSettingsDto | null;
 }
 
 export class ListCurriculaQueryDto {
