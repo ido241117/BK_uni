@@ -15,6 +15,8 @@ import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
 import { TransformResponseInterceptor } from '../src/common/interceptors/transform-response.interceptor';
+import { AnalysisRun } from '../src/analysis/analysis-run.entity';
+import { StudentCourseStatus } from '../src/users/student-course-status.entity';
 import { User } from '../src/users/user.entity';
 
 const api = '/api/v1';
@@ -256,6 +258,210 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 				recommendationSettings: { totalCreditsTarget: 140 },
 			})
 			.expect(400);
+	});
+
+	it('returns student-only recommendations without persisting history or status', async () => {
+		const dataSource = app!.get(DataSource);
+		const server = app!.getHttpServer() as Server;
+		const adminEmail = `recommendation-admin-${randomUUID()}@example.test`;
+		const adminRepository = dataSource.getRepository(User);
+		await adminRepository.save(
+			adminRepository.create({
+				email: adminEmail,
+				passwordHash: await bcrypt.hash('admin-pass-123', 4),
+				role: 'admin',
+			}),
+		);
+		const adminAgent = request.agent(server);
+		const adminCsrf = await getCsrfToken(adminAgent);
+		await mutation(adminAgent, adminCsrf)
+			.post(`${api}/auth/login`)
+			.send({ email: adminEmail, password: 'admin-pass-123' })
+			.expect(200);
+
+		const studentAgent = request.agent(server);
+		const studentCsrf = await getCsrfToken(studentAgent);
+		await mutation(studentAgent, studentCsrf)
+			.post(`${api}/auth/register`)
+			.send({
+				email: `recommendation-student-${randomUUID()}@example.test`,
+				password: 'student-pass-123',
+			})
+			.expect(201);
+		const recommendationPath = `${api}/me/profile/course-recommendations`;
+		await mutation(studentAgent, studentCsrf)
+			.post(recommendationPath)
+			.send({})
+			.expect(422)
+			.expect((response) =>
+				expect(response.body).toMatchObject({ code: 'CURRICULUM_NOT_SELECTED' }),
+			);
+
+		const curriculumResponse = await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula`)
+			.send({
+				name: `Recommendation curriculum ${randomUUID().slice(0, 8)}`,
+				source: {
+					documentName: 'E2E source',
+					reference: 'https://example.test/e2e',
+					version: '1',
+					verifiedAt: '2026-10-05',
+				},
+				recommendationSettings: {
+					totalCreditsTarget: 6,
+					minimumSemesterCredits: 3,
+					maximumSemesterCredits: 6,
+				},
+			})
+			.expect(201);
+		const curriculumId = responseData<{ id: string }>(curriculumResponse).id;
+		const profileResponse = await mutation(studentAgent, studentCsrf)
+			.put(`${api}/me/profile`)
+			.send({ curriculumId })
+			.expect(200);
+		const profileId = responseData<{ id: string; displayName: string | null }>(
+			profileResponse,
+		).id;
+		expect(
+			responseData<{ displayName: string | null }>(profileResponse).displayName,
+		).toBeNull();
+		await adminAgent
+			.post(recommendationPath)
+			.set('Origin', origin)
+			.set('X-CSRF-Token', adminCsrf)
+			.send({})
+			.expect(403);
+		await studentAgent
+			.post(recommendationPath)
+			.set('Origin', origin)
+			.send({})
+			.expect(403);
+
+		await mutation(studentAgent, studentCsrf)
+			.post(recommendationPath)
+			.send({})
+			.expect(422)
+			.expect((response) =>
+				expect(response.body).toMatchObject({
+					code: 'CURRICULUM_HAS_NO_TERMS',
+				}),
+			);
+		const termResponse = await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${curriculumId}/terms`)
+			.send({ code: 'T1', name: 'Term 1', sortOrder: 0 })
+			.expect(201);
+		const termId = responseData<{ id: string }>(termResponse).id;
+		await mutation(studentAgent, studentCsrf)
+			.post(recommendationPath)
+			.send({})
+			.expect(422)
+			.expect((response) =>
+				expect(response.body).toMatchObject({
+					code: 'CURRICULUM_HAS_NO_COURSES',
+				}),
+			);
+
+		const firstCourseResponse = await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${curriculumId}/courses`)
+			.send({
+				code: 'REC101',
+				name: 'Recommendation prerequisite',
+				credits: 3,
+				termId,
+				requirementType: 'required',
+				recommendationPriority: 0,
+			})
+			.expect(201);
+		const firstCourseId = responseData<{ id: string }>(firstCourseResponse).id;
+		const secondCourseResponse = await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${curriculumId}/courses`)
+			.send({
+				code: 'REC102',
+				name: 'Recommendation target',
+				credits: 3,
+				termId,
+				requirementType: 'required',
+				recommendationPriority: 1,
+			})
+			.expect(201);
+		const secondCourseId = responseData<{ id: string }>(secondCourseResponse).id;
+		await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${curriculumId}/courses/${secondCourseId}/rules`)
+			.send({
+				type: 'prerequisite',
+				prerequisiteCourseId: firstCourseId,
+			})
+			.expect(201);
+
+		const analysisRuns = dataSource.getRepository(AnalysisRun);
+		const courseStatuses = dataSource.getRepository(StudentCourseStatus);
+		const runsBefore = await analysisRuns.count({ where: { profileId } });
+		const statusesBefore = await courseStatuses.find({ where: { profileId } });
+		const recommendation = await mutation(studentAgent, studentCsrf)
+			.post(recommendationPath)
+			.send({})
+			.expect(200);
+		const recommendationData = responseData<{
+			status: string;
+			recommendedCourses: Array<{ course: { code: string }; eligible: boolean }>;
+			deferredRequiredCourses: Array<{
+				course: { code: string };
+				reason: string;
+				eligible: boolean;
+			}>;
+			summary: { recommendedCredits: number };
+			warnings: { effectiveTargetNotReached: boolean };
+		}>(recommendation);
+		expect(recommendationData.status).toBe('ready');
+		expect(recommendationData.recommendedCourses).toMatchObject([
+			{ course: { code: 'REC101' }, eligible: true },
+		]);
+		expect(recommendationData.deferredRequiredCourses).toMatchObject([
+			{
+				course: { code: 'REC102' },
+				reason: 'RULE_NOT_SATISFIED',
+				eligible: false,
+			},
+		]);
+		expect(recommendationData.summary.recommendedCredits).toBe(3);
+		expect(recommendationData.warnings.effectiveTargetNotReached).toBe(true);
+		await mutation(studentAgent, studentCsrf)
+			.post(recommendationPath)
+			.send({})
+			.expect(200)
+			.expect((response) =>
+				expect(responseData(response)).toEqual(recommendationData),
+			);
+		expect(await analysisRuns.count({ where: { profileId } })).toBe(runsBefore);
+		expect(await courseStatuses.find({ where: { profileId } })).toEqual(
+			statusesBefore,
+		);
+
+		await mutation(studentAgent, studentCsrf)
+			.patch(`${api}/me/profile/course-statuses`)
+			.send({
+				items: [
+					{ courseId: firstCourseId, status: 'completed' },
+					{ courseId: secondCourseId, status: 'completed' },
+				],
+			})
+			.expect(200);
+		const completedRunsBefore = await analysisRuns.count({ where: { profileId } });
+		const completedStatusesBefore = await courseStatuses.find({ where: { profileId } });
+		const completed = await mutation(studentAgent, studentCsrf)
+			.post(recommendationPath)
+			.send({})
+			.expect(200);
+		expect(responseData<{ status: string; estimatedTerm: unknown; recommendedCourses: unknown[] }>(completed))
+			.toMatchObject({
+				status: 'program_completed',
+				estimatedTerm: null,
+				recommendedCourses: [],
+			});
+		expect(await analysisRuns.count({ where: { profileId } })).toBe(completedRunsBefore);
+		expect(await courseStatuses.find({ where: { profileId } })).toEqual(
+			completedStatusesBefore,
+		);
 	});
 
 	it('enforces roles and CSRF across admin, profile, status, analysis, and history APIs', async () => {
