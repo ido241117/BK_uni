@@ -1,12 +1,12 @@
-import { ArrowRightOutlined, CheckCircleFilled, DeleteOutlined, SaveOutlined, SearchOutlined } from '@ant-design/icons';
-import { Button, Input, message, Modal, Progress, Select, Spin, Table, Tag } from 'antd';
+import { ArrowRightOutlined, CheckCircleFilled, DeleteOutlined, SaveOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { Alert, Button, Input, message, Modal, Progress, Select, Spin, Table, Tag } from 'antd';
 import type { TableProps } from 'antd';
 import { isAxiosError } from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { curriculumApi, studentApi } from '@/apis';
 import type { StudentCourse, StudentProfile } from '@/apis';
-import type { AdminCurriculum, CourseStatus } from '@/types';
+import type { AdminCurriculum, CourseRecommendationResponse, CourseStatus } from '@/types';
 
 type StudentCourseRow = Omit<StudentCourse, 'term'> & { term: string };
 
@@ -15,6 +15,27 @@ const statusOptions = [
 	{ value: 'in_progress', label: 'Đang học' },
 	{ value: 'completed', label: 'Đã học' },
 ];
+
+const deferredReasonLabels = {
+	RULE_NOT_SATISFIED: 'Chưa đạt điều kiện học phần',
+	MAX_CREDITS_REACHED: 'Không còn đủ chỗ trong giới hạn tín chỉ tối đa',
+	TARGET_REACHED: 'Đã đạt tải tín chỉ mục tiêu',
+} as const;
+
+function recommendationErrorMessage(error: unknown) {
+	const code = isAxiosError(error) ? error.response?.data?.code : undefined;
+	const messages: Record<string, string> = {
+		PROFILE_REQUIRED_FIELDS: 'Hãy lưu hồ sơ và chọn chương trình đào tạo trước khi yêu cầu gợi ý.',
+		CURRICULUM_NOT_SELECTED: 'Hồ sơ hiện chưa có chương trình đào tạo hợp lệ.',
+		CURRICULUM_RECOMMENDATION_NOT_CONFIGURED: 'Chương trình chưa cấu hình tải gợi ý học kỳ.',
+		CURRICULUM_RECOMMENDATION_SETTINGS_INVALID: 'Cấu hình tải gợi ý của chương trình không hợp lệ.',
+		CURRICULUM_HAS_NO_TERMS: 'Chương trình chưa có học kỳ hoạt động.',
+		CURRICULUM_HAS_NO_COURSES: 'Chương trình chưa có học phần hoạt động.',
+		COURSE_RECOMMENDATION_PRIORITY_INVALID: 'Có học phần thiếu độ ưu tiên gợi ý hợp lệ.',
+		CURRICULUM_RECOMMENDATION_DATA_INVALID: 'Dữ liệu chương trình chưa đủ hợp lệ để tạo gợi ý.',
+	};
+	return messages[code] ?? 'Không thể tạo gợi ý lúc này. Hồ sơ đang chỉnh sửa vẫn được giữ nguyên.';
+}
 
 export default function StudentPage() {
 	const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -26,6 +47,10 @@ export default function StudentPage() {
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [profileReady, setProfileReady] = useState(false);
+	const [recommendation, setRecommendation] = useState<CourseRecommendationResponse | null>(null);
+	const [recommendationLoading, setRecommendationLoading] = useState(false);
+	const [recommendationError, setRecommendationError] = useState('');
+	const [statusesDirty, setStatusesDirty] = useState(false);
 	const [search, setSearch] = useState('');
 	const [term, setTerm] = useState('all');
 	const [messageApi, contextHolder] = message.useMessage();
@@ -102,6 +127,24 @@ export default function StudentPage() {
 	const inProgress = courses.filter((course) => courseStatuses[course.id] === 'in_progress').length;
 	const notStarted = courses.length - completed - inProgress;
 	const selectedCurriculum = curricula.find((item) => item.id === profile?.curriculumId);
+	const canRecommend = Boolean(profile?.curriculumId && selectedCurriculum?.recommendationSettings && !statusesDirty);
+
+	useEffect(() => {
+		setRecommendation(null);
+		setRecommendationError('');
+	}, [profile?.curriculumId]);
+
+	const requestRecommendation = async () => {
+		setRecommendationLoading(true);
+		setRecommendationError('');
+		try {
+			setRecommendation(await studentApi.courseRecommendations());
+		} catch (error) {
+			setRecommendationError(recommendationErrorMessage(error));
+		} finally {
+			setRecommendationLoading(false);
+		}
+	};
 	const persistCourseStatuses = async () => {
 		const items = courses.map((course) => ({
 			courseId: course.id,
@@ -110,6 +153,7 @@ export default function StudentPage() {
 		for (let offset = 0; offset < items.length; offset += 500) {
 			await studentApi.updateStatuses(items.slice(offset, offset + 500));
 		}
+		setStatusesDirty(false);
 	};
 
 	const saveProfile = async () => {
@@ -175,6 +219,9 @@ export default function StudentPage() {
 				setCurriculumId(null);
 				setCourses([]);
 				setCourseStatuses({});
+				setStatusesDirty(false);
+				setRecommendation(null);
+				setRecommendationError('');
 				messageApi.success('Hồ sơ học tập đã được xóa.');
 			} catch {
 				messageApi.error('Không thể xóa hồ sơ.');
@@ -213,7 +260,10 @@ export default function StudentPage() {
 					options={statusOptions}
 					size="small"
 					className="status-select"
-					onChange={(value: CourseStatus) => setCourseStatuses((current) => ({ ...current, [course.id]: value }))}
+					onChange={(value: CourseStatus) => {
+						setCourseStatuses((current) => ({ ...current, [course.id]: value }));
+						setStatusesDirty(true);
+					}}
 				/>
 			),
 		},
@@ -278,6 +328,57 @@ export default function StudentPage() {
 				/>
 				<p className="section-footnote">Môn chưa cập nhật trạng thái được tính là <strong>chưa học</strong>. Trạng thái đang học vẫn được tính là đã đáp ứng điều kiện tiên quyết.</p>
 			</section>
+
+			<section className="recommendation-section" aria-labelledby="recommendation-title">
+				<div className="section-heading">
+					<div><span className="eyebrow">KẾ HOẠCH HỌC TẬP</span><h2 id="recommendation-title">Gợi ý học kỳ</h2><p>Kỳ ước tính dựa trên tín chỉ tích lũy, không phải lựa chọn kỳ đăng ký.</p></div>
+					<Button type="primary" icon={<ThunderboltOutlined />} loading={recommendationLoading} disabled={!canRecommend || recommendationLoading} onClick={() => void requestRecommendation()}>
+						{recommendation ? 'Tạo gợi ý mới' : 'Tạo gợi ý'}
+					</Button>
+				</div>
+				{!profile?.curriculumId ? <Alert type="info" showIcon title="Tạo hồ sơ và chọn chương trình đào tạo để yêu cầu gợi ý." /> : null}
+				{profile?.curriculumId && !selectedCurriculum?.recommendationSettings ? <Alert type="info" showIcon title="Chương trình chưa cấu hình tải gợi ý học kỳ." /> : null}
+				{statusesDirty ? <Alert type="info" showIcon title="Bạn đã thay đổi trạng thái môn; hãy lưu hồ sơ để gợi ý dùng tiến độ mới nhất." /> : null}
+				{recommendationError ? <Alert className="recommendation-alert" type="error" showIcon title={recommendationError} /> : null}
+				{recommendation ? <RecommendationResult result={recommendation} /> : null}
+			</section>
 		</>
+	);
+}
+
+function RecommendationResult({ result }: { result: CourseRecommendationResponse }) {
+	if (result.status === 'program_completed') {
+		return <Alert className="recommendation-result" type="success" showIcon title="Đã hoàn thành chương trình đào tạo." description={`Đã tích lũy ${result.progress.accumulatedCredits} / ${result.progress.totalCreditsTarget} tín chỉ mục tiêu. Không có môn học nào được đề xuất.`} />;
+	}
+
+	const { progress, warnings } = result;
+	return (
+		<div className="recommendation-result">
+			<div className="recommendation-progress" aria-label="Tải tín chỉ mục tiêu">
+				<div><span>KỲ ƯỚC TÍNH</span><strong>{result.estimatedTerm ? `${result.estimatedTerm.name} (${result.estimatedTerm.code})` : 'Chưa xác định'}</strong></div>
+				<div><span>ĐÃ TÍCH LŨY</span><strong>{progress.accumulatedCredits} / {progress.totalCreditsTarget} tín chỉ</strong></div>
+				<div><span>TRUNG BÌNH / KỲ</span><strong>{progress.averageCreditsPerTerm} tín chỉ</strong></div>
+				<div><span>TẢI KỲ</span><strong>{progress.minimumSemesterCredits}–{progress.maximumSemesterCredits} tín chỉ</strong></div>
+				<div><span>MỤC TIÊU HIỆU LỰC</span><strong>{progress.effectiveTarget} tín chỉ</strong></div>
+			</div>
+			{warnings.minimumSemesterCreditsNotMet ? <Alert className="recommendation-alert" type="warning" showIcon title="Chưa đạt mức tín chỉ tối thiểu của kỳ." /> : null}
+			{warnings.effectiveTargetNotReached ? <Alert className="recommendation-alert" type="warning" showIcon title="Danh sách đề xuất chưa đạt tải tín chỉ mục tiêu; giới hạn và điều kiện môn được giữ nguyên." /> : null}
+			{warnings.noEligibleCandidates ? <Alert className="recommendation-alert" type="warning" showIcon title="Không có học phần đủ điều kiện để đề xuất." /> : null}
+			{warnings.noCoursesRecommended && !warnings.noEligibleCandidates ? <Alert className="recommendation-alert" type="info" showIcon title="Không có học phần nào được đề xuất." /> : null}
+			<div className="recommendation-list-heading"><h3>Học phần đề xuất</h3><strong>{result.summary.recommendedCredits} tín chỉ</strong></div>
+			{result.recommendedCourses.length ? <ol className="recommendation-course-list">
+				{result.recommendedCourses.map((item) => <li key={item.course.id}>
+					<div><span className="course-code">{item.course.code} · {item.course.version}</span><strong>{item.course.name}</strong>{item.reasons.length ? <ul className="recommendation-reasons">{item.reasons.map((reason) => <li key={reason.ruleId}>{reason.message}</li>)}</ul> : <span className="recommendation-reason">Không có điều kiện bổ sung.</span>}</div>
+					<div className="recommendation-course-meta"><Tag className={item.requirementType === 'required' ? 'tag-required' : 'tag-elective'}>{item.requirementType === 'required' ? 'Bắt buộc' : 'Tự chọn'}</Tag><span>{item.credits} tín chỉ</span></div>
+				</li>)}
+			</ol> : <p className="recommendation-empty">Chưa có học phần trong danh sách đề xuất.</p>}
+			{result.deferredRequiredCourses.length ? <div className="deferred-section">
+				<h3>Môn bắt buộc chưa được đề xuất</h3>
+				<ul>{result.deferredRequiredCourses.map((item) => <li key={item.course.id}>
+					<strong>{item.course.code} · {item.course.name}</strong><span>{item.credits} tín chỉ · {deferredReasonLabels[item.reason]}</span>
+					{item.reasons.map((reason) => <small key={reason.ruleId}>{reason.message}</small>)}
+				</li>)}</ul>
+			</div> : null}
+		</div>
 	);
 }

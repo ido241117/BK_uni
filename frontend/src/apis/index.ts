@@ -6,6 +6,7 @@ import type {
 	AnalysisHistoryItem,
 	AnalysisSnapshot,
 	CourseRule,
+	CourseRecommendationResponse,
 	CurriculumCourse,
 	CurriculumSource,
 	CurriculumStructure,
@@ -193,6 +194,9 @@ export const studentApi = {
 	},
 	updateStatuses(items: Array<{ courseId: string; status: CourseStatus }>) {
 		return patch<{ updated: number }>("/me/profile/course-statuses", { items });
+	},
+	courseRecommendations() {
+		return postEmpty<CourseRecommendationResponse>("/me/profile/course-recommendations");
 	},
 };
 

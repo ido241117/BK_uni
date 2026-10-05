@@ -159,3 +159,43 @@ export interface AnalysisHistoryItem {
 export interface AnalysisHistoryDetail extends AnalysisSnapshot {
 	inputSnapshot: Record<string, unknown>;
 }
+
+export type DeferredRequiredReason =
+	| 'RULE_NOT_SATISFIED'
+	| 'MAX_CREDITS_REACHED'
+	| 'TARGET_REACHED';
+
+export interface CourseRecommendationResponse {
+	status: 'ready' | 'program_completed';
+	progress: {
+		accumulatedCredits: number;
+		totalCreditsTarget: number;
+		averageCreditsPerTerm: number;
+		minimumSemesterCredits: number;
+		maximumSemesterCredits: number;
+		effectiveTarget: number;
+	};
+	estimatedTerm: CurriculumTerm | null;
+	summary: { recommendedCredits: number };
+	recommendedCourses: Array<{
+		course: Pick<CurriculumCourse, 'id' | 'code' | 'version' | 'name'>;
+		credits: number;
+		requirementType: CurriculumCourse['requirementType'];
+		recommendationPriority: number;
+		eligible: true;
+		reasons: AnalysisRuleReason[];
+	}>;
+	deferredRequiredCourses: Array<{
+		course: Pick<CurriculumCourse, 'id' | 'code' | 'version' | 'name'>;
+		credits: number;
+		reason: DeferredRequiredReason;
+		eligible: boolean;
+		reasons: AnalysisRuleReason[];
+	}>;
+	warnings: {
+		minimumSemesterCreditsNotMet: boolean;
+		effectiveTargetNotReached: boolean;
+		noEligibleCandidates: boolean;
+		noCoursesRecommended: boolean;
+	};
+}
