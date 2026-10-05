@@ -23,6 +23,7 @@
 			"code": "SYN101",
 			"name": "Synthetic Foundations",
 			"credits": 3,
+			"recommendationPriority": 0,
 			"requirementType": "required",
 			"status": "completed",
 			"rules": []
@@ -32,6 +33,7 @@
 			"code": "SYN201",
 			"name": "Synthetic Systems",
 			"credits": 3,
+			"recommendationPriority": 1,
 			"requirementType": "required",
 			"status": "not_started",
 			"rules": [
@@ -50,6 +52,7 @@
 			"code": "SYN301",
 			"name": "Synthetic Advanced Systems",
 			"credits": 3,
+			"recommendationPriority": 2,
 			"requirementType": "required",
 			"status": "not_started",
 			"rules": [
@@ -68,6 +71,7 @@
 			"code": "SYN110",
 			"name": "Synthetic Elective One",
 			"credits": 3,
+			"recommendationPriority": 0,
 			"requirementType": "elective",
 			"electiveGroupId": "20000000-0000-4000-8000-000000000001",
 			"status": "in_progress",
@@ -78,6 +82,7 @@
 			"code": "SYN120",
 			"name": "Synthetic Elective Two",
 			"credits": 3,
+			"recommendationPriority": 1,
 			"requirementType": "elective",
 			"electiveGroupId": "20000000-0000-4000-8000-000000000001",
 			"status": "not_started",

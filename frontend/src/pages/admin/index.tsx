@@ -236,10 +236,18 @@ export default function AdminPage() {
 			name: item.name,
 			nameEn: item.nameEn,
 			credits: item.credits,
+			recommendationPriority: item.recommendationPriority,
 			termId: item.term.id,
 			requirementType: item.requirementType,
 			electiveGroupId: item.electiveGroup?.id ?? null,
-		} : { credits: 0, requirementType: 'required', termId: terms[0]?.id });
+		} : {
+			credits: 0,
+			recommendationPriority: courses.length
+				? Math.min(2147483647, Math.max(...courses.map((course) => course.recommendationPriority)) + 1)
+				: 0,
+			requirementType: 'required',
+			termId: terms[0]?.id,
+		});
 		setDialog({ kind: 'course', item });
 	};
 
@@ -305,6 +313,7 @@ export default function AdminPage() {
 		{ title: 'TÊN HỌC PHẦN', dataIndex: 'name', key: 'name' },
 		{ title: 'HỌC KỲ', key: 'term', width: 125, render: (_, item) => item.term.name },
 		{ title: 'TÍN CHỈ', dataIndex: 'credits', key: 'credits', width: 75, align: 'center' },
+		{ title: 'ƯU TIÊN', dataIndex: 'recommendationPriority', key: 'recommendationPriority', width: 85, align: 'center' },
 		{ title: 'LOẠI', dataIndex: 'requirementType', key: 'type', width: 105, render: (value: CurriculumCourse['requirementType'], item) => <Tag className={value === 'required' ? 'tag-required' : 'tag-elective'}>{value === 'required' ? 'Bắt buộc' : item.electiveGroup?.name ?? 'Tự chọn'}</Tag> },
 		{ title: '', key: 'actions', width: 86, render: (_, item) => <div className="row-actions"><Tooltip title="Sửa học phần"><Button type="text" icon={<EditOutlined />} aria-label={`Sửa ${item.code}`} onClick={() => openCourse(item)} /></Tooltip><Popconfirm title="Gỡ học phần?" description="Học phần đang được rule tham chiếu sẽ không thể gỡ." okText="Gỡ" cancelText="Hủy" onConfirm={() => runDelete(() => curriculumApi.deleteCourse(selectedId, item.id))}><Tooltip title="Gỡ học phần"><Button danger type="text" icon={<DeleteOutlined />} aria-label={`Gỡ ${item.code}`} /></Tooltip></Popconfirm></div> },
 	];
@@ -434,6 +443,7 @@ export default function AdminPage() {
 					<Form.Item label="Tên học phần" name="name" rules={[{ required: true, whitespace: true, message: 'Nhập tên học phần.' }]}><Input /></Form.Item>
 					<Form.Item label="Tên tiếng Anh" name="nameEn"><Input /></Form.Item>
 					<div className="form-row"><Form.Item label="Tín chỉ" name="credits" rules={[{ required: true, message: 'Nhập số tín chỉ.' }]}><InputNumber min={0} max={999.99} precision={2} className="full-width" /></Form.Item><Form.Item label="Học kỳ" name="termId" rules={[{ required: true, message: 'Chọn học kỳ.' }]}><Select options={terms.map((term) => ({ label: term.name, value: term.id }))} /></Form.Item></div>
+					<Form.Item label="Độ ưu tiên gợi ý" name="recommendationPriority" rules={[{ required: true, message: 'Nhập độ ưu tiên.' }]}><InputNumber min={0} max={2147483647} precision={0} className="full-width" /></Form.Item>
 					<Form.Item label="Phân loại" name="requirementType" rules={[{ required: true, message: 'Chọn phân loại.' }]}><Select options={[{ label: 'Bắt buộc', value: 'required' }, { label: 'Tự chọn', value: 'elective' }]} /></Form.Item>
 					<Form.Item noStyle shouldUpdate={(previous, current) => previous.requirementType !== current.requirementType}>{({ getFieldValue }) => getFieldValue('requirementType') === 'elective' ? <Form.Item label="Nhóm tự chọn" name="electiveGroupId" rules={[{ required: true, message: 'Chọn nhóm tự chọn.' }]}><Select options={groups.map((group) => ({ label: group.name, value: group.id }))} /></Form.Item> : null}</Form.Item>
 				</Form>}

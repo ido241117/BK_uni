@@ -91,6 +91,7 @@ export interface CourseInput {
 	name: string;
 	nameEn?: string | null;
 	credits: number;
+	recommendationPriority: number;
 	termId: string;
 	requirementType: 'required' | 'elective';
 	electiveGroupId?: string | null;

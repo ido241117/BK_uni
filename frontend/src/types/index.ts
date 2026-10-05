@@ -71,6 +71,7 @@ export interface CurriculumCourse {
 	name: string;
 	nameEn: string | null;
 	credits: number;
+	recommendationPriority: number;
 	term: Pick<CurriculumTerm, 'id' | 'code' | 'name'> & Partial<Pick<CurriculumTerm, 'sortOrder'>>;
 	requirementType: 'required' | 'elective';
 	electiveGroup: { id: string; name: string } | null;

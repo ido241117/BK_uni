@@ -208,6 +208,7 @@ describe('CurriculumService', () => {
 			credits: 3,
 			termId: 'term-id',
 			requirementType: 'required',
+			recommendationPriority: 4,
 		});
 
 		expect(created).toMatchObject({
@@ -216,7 +217,11 @@ describe('CurriculumService', () => {
 			termId: 'term-id',
 			term: { code: 'T1', name: 'Học kỳ 1' },
 			electiveGroup: null,
+			recommendationPriority: 4,
 		});
+		expect(repository(Course).create).toHaveBeenCalledWith(
+			expect.objectContaining({ recommendationPriority: 4 }),
+		);
 	});
 
 	it('maps duplicate course identities to a conflict response', async () => {
@@ -233,6 +238,7 @@ describe('CurriculumService', () => {
 				credits: 3,
 				termId: 'term-id',
 				requirementType: 'required',
+				recommendationPriority: 0,
 			})
 			.catch((error: unknown) => error);
 

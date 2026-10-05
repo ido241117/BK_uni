@@ -175,4 +175,37 @@ describe('AdminPage', () => {
 
 		expect(api.createCurriculum).not.toHaveBeenCalled();
 	}, 15000);
+
+	it('loads and saves a course recommendation priority', async () => {
+		const term = { id: 'term-1', code: 'T1', name: 'Học kỳ 1', sortOrder: 0 };
+		const course = {
+			id: 'course-1',
+			code: 'CS101',
+			version: '2026',
+			name: 'Nhập môn lập trình',
+			nameEn: null,
+			credits: 3,
+			recommendationPriority: 4,
+			termId: term.id,
+			requirementType: 'required' as const,
+			electiveGroupId: null,
+			term,
+			electiveGroup: null,
+		};
+		api.structure.mockResolvedValue({ curriculum, terms: [term], electiveGroups: [], courses: [course] });
+		api.updateCourse.mockResolvedValue({ ...course, recommendationPriority: 1 });
+		render(<AdminPage />);
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Sửa CS101' }));
+		const priority = screen.getByLabelText('Độ ưu tiên gợi ý');
+		expect(priority).toHaveValue('4');
+		fireEvent.change(priority, { target: { value: '1' } });
+		fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
+
+		await waitFor(() => expect(api.updateCourse).toHaveBeenCalledWith(
+			'curriculum-1',
+			'course-1',
+			expect.objectContaining({ recommendationPriority: 1 }),
+		));
+	}, 15000);
 });

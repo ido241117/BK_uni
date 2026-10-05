@@ -260,6 +260,12 @@ export class CreateCourseDto {
 	@IsOptional()
 	@IsUUID()
 	electiveGroupId?: string | null;
+
+	@Type(() => Number)
+	@IsInt()
+	@Min(0)
+	@Max(2147483647)
+	recommendationPriority: number;
 }
 
 export class UpdateCourseDto {
@@ -301,6 +307,13 @@ export class UpdateCourseDto {
 	@IsOptional()
 	@IsUUID()
 	electiveGroupId?: string | null;
+
+	@IsOptional()
+	@Type(() => Number)
+	@IsInt()
+	@Min(0)
+	@Max(2147483647)
+	recommendationPriority?: number;
 }
 
 export class CourseRuleSourceDto extends CurriculumSourceDto { }

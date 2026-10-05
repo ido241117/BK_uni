@@ -9,6 +9,7 @@ interface SyntheticCurriculumFixture {
 	courses: Array<{
 		status: 'not_started' | 'in_progress' | 'completed';
 		requirementType: 'required' | 'elective';
+		recommendationPriority: number;
 		rules: SyntheticRule[];
 	}>;
 	expected: {
@@ -31,6 +32,9 @@ describe('synthetic curriculum fixture', () => {
 	it('contains exactly five explicitly synthetic courses and expected results', () => {
 		expect(typedFixture.synthetic).toBe(true);
 		expect(typedFixture.courses).toHaveLength(5);
+		expect(typedFixture.courses.map((course) => course.recommendationPriority)).toEqual([
+			0, 1, 2, 0, 1,
+		]);
 		expect(typedFixture.expected).toEqual({
 			eligibleCourseCodes: ['SYN101', 'SYN201', 'SYN110', 'SYN120'],
 			ineligibleCourseCodes: ['SYN301'],

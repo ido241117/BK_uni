@@ -303,6 +303,7 @@ export class CurriculumService {
 				name: course.name,
 				nameEn: course.nameEn,
 				credits: Number(course.credits),
+				recommendationPriority: course.recommendationPriority,
 				term: {
 					id: course.term.id,
 					code: course.term.termCode,
@@ -380,6 +381,7 @@ export class CurriculumService {
 				name: course.name,
 				nameEn: course.nameEn,
 				credits: Number(course.credits),
+				recommendationPriority: course.recommendationPriority,
 				term: {
 					id: course.term.id,
 					code: course.term.termCode,
@@ -633,6 +635,7 @@ export class CurriculumService {
 				input.requirementType === 'elective'
 					? (input.electiveGroupId ?? null)
 					: null,
+			recommendationPriority: input.recommendationPriority,
 		});
 		const saved = await this.saveOrConflict(
 			this.repo(Course),
@@ -694,6 +697,8 @@ export class CurriculumService {
 		course.requirementType = requirementType;
 		course.electiveGroupId =
 			requirementType === 'elective' ? (electiveGroupId ?? null) : null;
+		if (input.recommendationPriority !== undefined)
+			course.recommendationPriority = input.recommendationPriority;
 		const saved = await this.saveOrConflict(
 			repository,
 			course,
@@ -724,6 +729,7 @@ export class CurriculumService {
 			name: course.name,
 			nameEn: course.nameEn,
 			credits: Number(course.credits),
+			recommendationPriority: course.recommendationPriority,
 			termId: course.termId,
 			requirementType: course.requirementType,
 			electiveGroupId: course.electiveGroupId,

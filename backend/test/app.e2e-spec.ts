@@ -334,6 +334,7 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 				credits: 3,
 				termId,
 				requirementType: 'required',
+				recommendationPriority: 0,
 			})
 			.expect(201);
 		const prerequisiteId = responseData<{ id: string }>(
@@ -347,9 +348,51 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 				credits: 3,
 				termId,
 				requirementType: 'required',
+				recommendationPriority: 0,
 			})
 			.expect(201);
 		const targetId = responseData<{ id: string }>(targetResponse).id;
+		expect(responseData<{ recommendationPriority: number }>(targetResponse))
+			.toHaveProperty('recommendationPriority', 0);
+		const updatedTarget = await mutation(adminAgent, adminCsrf)
+			.patch(`${api}/admin/curricula/${curriculumId}/courses/${targetId}`)
+			.send({ recommendationPriority: 2 })
+			.expect(200);
+		expect(responseData<{ recommendationPriority: number }>(updatedTarget))
+			.toHaveProperty('recommendationPriority', 2);
+		const structureResponse = await adminAgent
+			.get(`${api}/curricula/${curriculumId}/structure`)
+			.expect(200);
+		expect(
+			responseData<{ courses: Array<{ code: string; recommendationPriority: number }> }>(
+				structureResponse,
+			).courses.find((course) => course.code === 'E2E102'),
+		).toMatchObject({ recommendationPriority: 2 });
+		await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${curriculumId}/courses`)
+			.send({
+				code: 'E2E103',
+				name: 'Missing priority',
+				credits: 3,
+				termId,
+				requirementType: 'required',
+			})
+			.expect(400);
+		await mutation(adminAgent, adminCsrf)
+			.patch(`${api}/admin/curricula/${curriculumId}/courses/${targetId}`)
+			.send({ recommendationPriority: 2147483648 })
+			.expect(400);
+		await mutation(adminAgent, adminCsrf)
+			.post(`${api}/admin/curricula/${curriculumId}/courses`)
+			.send({
+				code: 'E2E104',
+				name: 'Negative priority',
+				credits: 3,
+				termId,
+				requirementType: 'required',
+				recommendationPriority: -1,
+			})
+			.expect(400);
 		await mutation(adminAgent, adminCsrf)
 			.post(`${api}/admin/curricula/${curriculumId}/courses/${targetId}/rules`)
 			.send({ type: 'prerequisite', prerequisiteCourseId: prerequisiteId })
