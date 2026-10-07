@@ -139,7 +139,7 @@ export default function AdminPage() {
 	}, [selectedId, structureVersion, messageApi]);
 
 	useEffect(() => {
-		if (!selectedId || !ruleCourseId) {
+		if (!selectedId || !ruleCourseId || structure?.curriculum.id !== selectedId) {
 			setRules([]);
 			return;
 		}

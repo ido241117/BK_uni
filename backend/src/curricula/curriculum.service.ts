@@ -343,8 +343,8 @@ export class CurriculumService {
 			.where('course.curriculum_id = :curriculumId', { curriculumId })
 			.orderBy('term.sort_order', 'ASC')
 			.addOrderBy('course.course_code', 'ASC')
-			.skip(query.offset)
-			.take(query.limit);
+			.offset(query.offset)
+			.limit(query.limit);
 		if (query.q?.trim()) {
 			qb.andWhere(
 				'(lower(course.course_code) LIKE lower(:q) OR lower(course.name) LIKE lower(:q))',

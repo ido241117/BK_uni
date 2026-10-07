@@ -59,6 +59,30 @@ describe('AdminPage', () => {
 		expect(api.structure).toHaveBeenCalledWith('curriculum-1');
 	}, 15000);
 
+	it('does not request rules for the previous curriculum course after switching programs', async () => {
+		const secondCurriculum = { ...curriculum, id: 'curriculum-2', name: 'CTĐT thứ hai' };
+		const firstCourse = {
+			id: 'course-1', code: 'CS101', version: '2026', name: 'Nhập môn', nameEn: null,
+			credits: 3, recommendationPriority: 0, termId: 'term-1', requirementType: 'required' as const,
+			electiveGroupId: null, term: { id: 'term-1', code: 'T1', name: 'Học kỳ 1', sortOrder: 0 }, electiveGroup: null,
+		};
+		const secondCourse = { ...firstCourse, id: 'course-2', code: 'CS201', name: 'Cấu trúc dữ liệu' };
+		api.listAdmin.mockResolvedValue({ items: [curriculum, secondCurriculum], page: { limit: 100, offset: 0, total: 2 } });
+		api.structure.mockImplementation(async (id: string) => ({
+			curriculum: id === curriculum.id ? curriculum : secondCurriculum,
+			terms: [],
+			electiveGroups: [],
+			courses: [id === curriculum.id ? firstCourse : secondCourse],
+		}));
+		render(<AdminPage />);
+
+		await waitFor(() => expect(api.rules).toHaveBeenCalledWith('curriculum-1', 'course-1'));
+		fireEvent.click(await screen.findByRole('button', { name: /CTĐT thứ hai/ }));
+
+		await waitFor(() => expect(api.rules).toHaveBeenCalledWith('curriculum-2', 'course-2'));
+		expect(api.rules).not.toHaveBeenCalledWith('curriculum-2', 'course-1');
+	}, 15000);
+
 	it('keeps entered source and name fields when curriculum creation fails', async () => {
 		api.createCurriculum.mockRejectedValue({
 			response: { data: { message: 'Tên chương trình đã tồn tại.' } },

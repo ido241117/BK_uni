@@ -301,6 +301,34 @@ describe('CurriculumService', () => {
 		expect(repository(CurriculumTerm).find).not.toHaveBeenCalled();
 	});
 
+	it('uses SQL offset and limit when listing courses for a student', async () => {
+		repository(Curriculum).findOne.mockResolvedValue({ id: 'curriculum-a' });
+		repository(StudentProfile).findOne.mockResolvedValue({
+			id: 'profile-a',
+			userId: 'student-a',
+			curriculumId: 'curriculum-a',
+		});
+		const queryBuilder = {
+			leftJoinAndSelect: jest.fn().mockReturnThis(),
+			where: jest.fn().mockReturnThis(),
+			orderBy: jest.fn().mockReturnThis(),
+			addOrderBy: jest.fn().mockReturnThis(),
+			offset: jest.fn().mockReturnThis(),
+			limit: jest.fn().mockReturnThis(),
+			getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+		};
+		repository(Course).createQueryBuilder.mockReturnValue(queryBuilder);
+
+		await service.listCourses(
+			'curriculum-a',
+			{ limit: 100, offset: 0 } as CourseListQueryDto,
+			{ id: 'student-a', role: 'student' } as User,
+		);
+
+		expect(queryBuilder.offset).toHaveBeenCalledWith(0);
+		expect(queryBuilder.limit).toHaveBeenCalledWith(100);
+	});
+
 	it('rejects elective groups without either threshold', async () => {
 		repository(Curriculum).findOne.mockResolvedValue({ id: 'curriculum-id' });
 		await expect(

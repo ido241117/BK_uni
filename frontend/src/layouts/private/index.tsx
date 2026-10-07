@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import { Avatar, Button, Dropdown, Layout, Menu, Tag, Typography } from 'antd';
 import type { MenuProps } from 'antd';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useAppContext } from '@/contexts/use-app-context';
@@ -22,6 +22,7 @@ export default function PrivateLayout() {
 	const navigate = useNavigate();
 	const [sessionChecked, setSessionChecked] = useState(false);
 	const [sessionValid, setSessionValid] = useState(false);
+	const loggingOut = useRef(false);
 
 	useEffect(() => {
 		let active = true;
@@ -46,7 +47,7 @@ export default function PrivateLayout() {
 	}, [navigate, setEmail, setRole]);
 
 	useEffect(() => {
-		if (!sessionChecked) return;
+		if (!sessionChecked || loggingOut.current) return;
 		if (role === 'admin' && !location.pathname.startsWith('/admin') && location.pathname !== '/account') {
 			navigate('/admin', { replace: true });
 		} else if (role === 'student' && location.pathname.startsWith('/admin')) {
@@ -76,14 +77,15 @@ export default function PrivateLayout() {
 	const handleAccountAction: MenuProps['onClick'] = ({ key }) => {
 		if (key === 'account') navigate('/account');
 		if (key === 'logout') {
+			loggingOut.current = true;
 			void (async () => {
 				try {
 					await apiClient.get('/auth/csrf');
 					await apiClient.post('/auth/logout');
 				} finally {
+					await navigate('/login', { replace: true });
 					setRole('student');
 					setEmail('');
-					navigate('/login', { replace: true });
 				}
 			})();
 		}
