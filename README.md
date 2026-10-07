@@ -20,7 +20,7 @@ Copy-Item BK_uni/backend/.env.example BK_uni/backend/.env
 Copy-Item BK_uni/frontend/.env.example BK_uni/frontend/.env
 ```
 
-Set the PostgreSQL credentials in `backend/.env`. Keep `DB_NAME=bk_uni` and `DB_TEST_NAME=bk_uni_test`; they must be different. Set `ADMIN_SEED_EMAIL` and an `ADMIN_SEED_PASSWORD` of at least 8 characters. Do not commit `.env` files or share the demo password.
+Set the PostgreSQL credentials in `backend/.env`. Keep `DB_NAME=bk_uni` and `DB_TEST_NAME=bk_uni_test`; they must be different. Set `ADMIN_SEED_EMAIL` and an `ADMIN_SEED_PASSWORD` of at least 8 characters. The seed also creates synthetic rule-test profiles; set `DEMO_SEED_PASSWORD` to give them a separate password, or leave it blank to use `ADMIN_SEED_PASSWORD`. Do not commit `.env` files or share the demo password.
 
 ## Install and migrate
 
@@ -36,7 +36,7 @@ npm ci
 Pop-Location
 ```
 
-The seed command creates or updates only the admin account from environment variables. It does not insert a real curriculum. The five-course fixture at `backend/src/fixtures/synthetic-curriculum.json` is synthetic test data, not a verified program of study; create demo curriculum data through the admin UI.
+The seed command creates or updates the admin account and inserts three small synthetic rule-test curricula with six student profiles. These are test data, not verified programs of study. The five-course fixture at `backend/src/fixtures/synthetic-curriculum.json` remains the automated engine fixture. See `docs/manual-test/04-rule-testcases.md` for accounts and expected outputs.
 
 ## Run
 

@@ -1,5 +1,9 @@
 import fixture from '../fixtures/synthetic-curriculum.json';
 import {
+	ruleTestCurricula,
+	ruleTestProfiles,
+} from '../fixtures/rule-test-data';
+import {
 	AnalyzeCurriculumInput,
 	analyzeCurriculum,
 } from './analysis.engine';
@@ -146,5 +150,70 @@ describe('analyzeCurriculum', () => {
 		expect(group.earnedCredits).toBe(3);
 		expect(group.earnedCourses).toBe(1);
 		expect(group.complete).toBe(true);
+	});
+});
+
+describe('rule-test seed profiles', () => {
+	test.each([
+		{ email: 'prerequisite-pass@demo.test', eligible: 4, ineligible: 1, missing: 4, target: 'PR102', targetEligible: true, reasons: [true] },
+		{ email: 'prerequisite-fail@demo.test', eligible: 3, ineligible: 2, missing: 5, target: 'PR102', targetEligible: false, reasons: [false] },
+		{ email: 'credits-fail@demo.test', eligible: 4, ineligible: 1, missing: 4, target: 'CR201', targetEligible: false, reasons: [false] },
+		{ email: 'credits-pass@demo.test', eligible: 5, ineligible: 0, missing: 3, target: 'CR201', targetEligible: true, reasons: [true] },
+		{ email: 'combined-rule-fail@demo.test', eligible: 5, ineligible: 1, missing: 3, target: 'AN201', targetEligible: false, reasons: [false, false] },
+		{ email: 'combined-rule-pass@demo.test', eligible: 6, ineligible: 0, missing: 1, target: 'AN201', targetEligible: true, reasons: [true, true] },
+	])('$email matches its documented analysis output', (expected) => {
+		const profile = ruleTestProfiles.find(
+			(candidate) => candidate.email === expected.email,
+		)!;
+		const curriculum = ruleTestCurricula.find(
+			(candidate) => candidate.id === profile.curriculumId,
+		)!;
+		const courses = curriculum.courses.map((course) => ({
+			id: course.id,
+			code: course.code,
+			version: '1',
+			name: course.name,
+			credits: course.credits,
+			requirementType: course.requirementType,
+			electiveGroupId: course.electiveGroup ? curriculum.electiveGroup!.id : null,
+			status: profile.statuses[course.code] ?? 'not_started',
+			rules: course.rules.map((rule, index) => ({
+				id: `${course.id}-rule-${index + 1}`,
+				type: rule.type,
+				prerequisiteCourseId:
+					rule.type === 'prerequisite'
+						? curriculum.courses.find(
+							(candidate) => candidate.code === rule.courseCode,
+						)!.id
+						: null,
+				minimumCredits:
+					rule.type === 'minimum_credits' ? rule.minimumCredits : null,
+			})),
+		}));
+		const result = analyzeCurriculum({
+			curriculum: { id: curriculum.id, name: curriculum.name },
+			courses,
+			electiveGroups: curriculum.electiveGroup
+				? [{
+					id: curriculum.electiveGroup.id,
+					name: curriculum.electiveGroup.name,
+					requiredCredits: curriculum.electiveGroup.requiredCredits,
+					requiredCourses: curriculum.electiveGroup.requiredCourses,
+				}]
+				: [],
+		});
+
+		expect(result.summary).toEqual({
+			eligibleCourses: expected.eligible,
+			ineligibleCourses: expected.ineligible,
+			missingRequiredCourses: expected.missing,
+		});
+		const target = result.courseResults.find(
+			(course) => course.course.code === expected.target,
+		)!;
+		expect(target.eligible).toBe(expected.targetEligible);
+		expect(target.reasons.map((reason) => reason.passed)).toEqual(
+			expected.reasons,
+		);
 	});
 });
