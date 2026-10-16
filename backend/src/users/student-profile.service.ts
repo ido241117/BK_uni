@@ -7,6 +7,7 @@ import { DataSource } from 'typeorm';
 import { Course } from '../curricula/course.entity';
 import { Curriculum } from '../curricula/curriculum.entity';
 import { StudentCourseStatus } from './student-course-status.entity';
+import { StudentConversation } from './student-conversation.entity';
 import { StudentProfile } from './student-profile.entity';
 import {
 	CourseStatusItemDto,
@@ -73,8 +74,17 @@ export class StudentProfileService {
 	}
 
 	async remove(userId: string) {
-		const profile = await this.activeProfile(userId);
-		await this.dataSource.getRepository(StudentProfile).softRemove(profile);
+		await this.dataSource.transaction(async (manager) => {
+			const profile = await manager.findOne(StudentProfile, {
+				where: { userId },
+				lock: { mode: 'pessimistic_write' },
+			});
+			if (!profile) throw this.notFound();
+			await manager
+				.getRepository(StudentConversation)
+				.delete({ profileId: profile.id });
+			await manager.getRepository(StudentProfile).softRemove(profile);
+		});
 	}
 
 	async updateStatuses(userId: string, items: CourseStatusItemDto[]) {

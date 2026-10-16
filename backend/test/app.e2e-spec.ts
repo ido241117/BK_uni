@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import { randomUUID } from 'crypto';
+import { generateKeyPairSync, randomUUID, sign } from 'crypto';
+import type { KeyObject } from 'crypto';
 import type { Server } from 'http';
 import { join } from 'path';
 import * as bcrypt from 'bcryptjs';
@@ -16,6 +17,8 @@ import { NestFactory } from '@nestjs/core';
 import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
 import { TransformResponseInterceptor } from '../src/common/interceptors/transform-response.interceptor';
 import { AnalysisRun } from '../src/analysis/analysis-run.entity';
+import { verifyDelegatedAssertion } from '../src/analysis/internal-tool.guard';
+import { RecommendationService } from '../src/analysis/recommendation.service';
 import { StudentCourseStatus } from '../src/users/student-course-status.entity';
 import { User } from '../src/users/user.entity';
 
@@ -44,6 +47,7 @@ type AnalysisCourseResult = {
 let adminClient: Client | undefined;
 let migrationDataSource: DataSource | undefined;
 let app: INestApplication | undefined;
+let delegatedPrivateKey: KeyObject;
 
 const validationMessages = (errors: ValidationError[], parentPath = '') => {
 	const messages: string[] = [];
@@ -97,6 +101,19 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 		process.env.DB_NAME = testDatabase;
 		process.env.DB_SCHEMA = schema;
 		process.env.CSRF_SECRET = 'bk-uni-e2e-csrf-secret';
+		process.env.AGENT_BASE_URL = 'http://127.0.0.1:1';
+		process.env.AGENT_SERVICE_TOKEN = 'e2e-agent-test-token';
+		process.env.AGENT_SYNTHETIC_USER_IDS = '';
+		process.env.AGENT_GATEWAY_SERVICE_TOKEN = 'e2e-gateway-test-token';
+		const delegatedKeys = generateKeyPairSync('ed25519');
+		delegatedPrivateKey = delegatedKeys.privateKey;
+		process.env.AGENT_BASE_URL = 'http://agent.synthetic.test';
+		process.env.AGENT_DELEGATION_PRIVATE_KEY = delegatedKeys.privateKey
+			.export({ type: 'pkcs8', format: 'pem' })
+			.toString();
+		process.env.AGENT_DELEGATION_PUBLIC_KEY = delegatedKeys.publicKey
+			.export({ type: 'spki', format: 'pem' })
+			.toString();
 
 		adminClient = new Client(connection);
 		await adminClient.connect();
@@ -281,13 +298,14 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 
 		const studentAgent = request.agent(server);
 		const studentCsrf = await getCsrfToken(studentAgent);
-		await mutation(studentAgent, studentCsrf)
+		const studentRegistration = await mutation(studentAgent, studentCsrf)
 			.post(`${api}/auth/register`)
 			.send({
 				email: `recommendation-student-${randomUUID()}@example.test`,
 				password: 'student-pass-123',
 			})
 			.expect(201);
+		const studentUserId = responseData<{ user: { id: string } }>(studentRegistration).user.id;
 		const recommendationPath = `${api}/me/profile/course-recommendations`;
 		await mutation(studentAgent, studentCsrf)
 			.post(recommendationPath)
@@ -444,6 +462,38 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 		expect(await courseStatuses.find({ where: { profileId } })).toEqual(
 			statusesBefore,
 		);
+
+		const correlationId = randomUUID();
+		const now = Math.floor(Date.now() / 1000);
+		const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+		const assertionHeader = encode({ alg: 'EdDSA', typ: 'JWT' });
+		const assertionPayload = encode({
+			iss: 'bk-nest',
+			aud: 'bk-recommendation-tool',
+			sub: studentUserId,
+			profile_id: profileId,
+			scope: 'recommendation:read',
+			correlation_id: correlationId,
+			data_classification: 'synthetic',
+			iat: now,
+			exp: now + 60,
+		});
+		const assertionContent = `${assertionHeader}.${assertionPayload}`;
+		const delegatedAssertion = `${assertionContent}.${sign(
+			null,
+			Buffer.from(assertionContent),
+			delegatedPrivateKey,
+		).toString('base64url')}`;
+		const gatewayRecommendation = await request(server)
+			.post(`${api}/internal/v1/tools/recommendation`)
+			.set('Authorization', 'Bearer e2e-gateway-test-token')
+			.set('X-Delegated-Context', delegatedAssertion)
+			.set('X-Correlation-ID', correlationId)
+			.send({ userId: randomUUID(), profileId: randomUUID() })
+			.expect(200);
+		expect(responseData(gatewayRecommendation)).toEqual(recommendationData);
+		expect(await analysisRuns.count({ where: { profileId } })).toBe(runsBefore);
+		expect(await courseStatuses.find({ where: { profileId } })).toEqual(statusesBefore);
 
 		const otherCurriculumResponse = await mutation(adminAgent, adminCsrf)
 			.post(`${api}/admin/curricula`)
@@ -765,5 +815,238 @@ describe('BK Uni API (PostgreSQL e2e)', () => {
 		await otherAgent
 			.get(`${api}/me/profile/analyses/${firstAnalysisId}`)
 			.expect(404);
+	});
+
+	it('isolates, deletes, and purges conversation transcripts by profile owner', async () => {
+		const server = app!.getHttpServer() as Server;
+		const ownerAgent = request.agent(server);
+		const ownerCsrf = await getCsrfToken(ownerAgent);
+		const ownerRegistration = await mutation(ownerAgent, ownerCsrf)
+			.post(`${api}/auth/register`)
+			.send({ email: `chat-owner-${randomUUID()}@example.test`, password: 'student-pass-123' })
+			.expect(201);
+		const owner = responseData<{ user: { id: string }; profile: { id: string } }>(ownerRegistration);
+		process.env.AGENT_SYNTHETIC_USER_IDS = owner.user.id;
+		const otherAgent = request.agent(server);
+		const otherCsrf = await getCsrfToken(otherAgent);
+		await mutation(otherAgent, otherCsrf)
+			.post(`${api}/auth/register`)
+			.send({ email: `chat-other-${randomUUID()}@example.test`, password: 'student-pass-123' })
+			.expect(201);
+		await ownerAgent
+			.post(`${api}/me/profile/conversations`)
+			.send({})
+			.expect(403);
+
+		const created = await mutation(ownerAgent, ownerCsrf)
+			.post(`${api}/me/profile/conversations`)
+			.send({})
+			.expect(201);
+		const conversationId = responseData<{ id: string }>(created).id;
+		await ownerAgent
+			.get(`${api}/me/profile/conversations`)
+			.expect(200)
+			.expect((response) =>
+				expect(responseData<{ items: unknown[] }>(response).items).toHaveLength(1),
+			);
+		await otherAgent
+			.get(`${api}/me/profile/conversations`)
+			.expect(200)
+			.expect((response) =>
+				expect(responseData<{ items: unknown[] }>(response).items).toHaveLength(0),
+			);
+		await otherAgent.get(`${api}/me/profile/conversations/${conversationId}`).expect(404);
+		await mutation(otherAgent, otherCsrf)
+			.delete(`${api}/me/profile/conversations/${conversationId}`)
+			.expect(404);
+
+		const fetchMock = jest.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+			const headers = new Headers(init?.headers);
+			const correlationId = headers.get('X-Correlation-ID') ?? '';
+			const assertion = headers.get('X-Delegated-Context') ?? '';
+			const delegatedContext = verifyDelegatedAssertion(
+				assertion,
+				process.env.AGENT_DELEGATION_PUBLIC_KEY ?? '',
+				correlationId,
+			);
+			const requestUrl = typeof input === 'string'
+				? input
+				: input instanceof URL
+					? input.href
+					: input.url;
+			expect(requestUrl).toBe('http://agent.synthetic.test/internal/v1/turns');
+			expect(headers.get('Authorization')).toBe('Bearer e2e-agent-test-token');
+			expect(delegatedContext).toMatchObject({
+				sub: owner.user.id,
+				profile_id: owner.profile.id,
+				data_classification: 'synthetic',
+			});
+			if (typeof init?.body !== 'string') throw new Error('Expected JSON string body');
+			const body = JSON.parse(init.body) as Record<string, unknown>;
+			expect(body).toMatchObject({ conversationId });
+			expect(typeof body.message).toBe('string');
+			expect(body).not.toHaveProperty('userId');
+			expect(body).not.toHaveProperty('profileId');
+			if (fetchMock.mock.calls.length === 1) {
+				expect(body).toEqual({
+					conversationId,
+					message: 'Gợi ý học kỳ với dữ liệu thử nghiệm.',
+					history: [],
+				});
+			}
+			const result = {
+				status: 'completed',
+				answer: 'Đây là gợi ý dựa trên fixture synthetic.',
+				recommendation: { status: 'ready', summary: { recommendedCredits: 3 } },
+				toolCalled: true,
+				correlationId,
+			};
+			return Promise.resolve(new Response(
+				JSON.stringify({ error: false, data: result, message: 'Thành công' }),
+				{ status: 200, headers: { 'Content-Type': 'application/json' } },
+			));
+		});
+		await mutation(ownerAgent, ownerCsrf)
+			.post(`${api}/me/profile/conversations/${conversationId}/turns`)
+			.send({ message: 'Gợi ý học kỳ với dữ liệu thử nghiệm.' })
+			.expect(200)
+			.expect((response) => {
+				const body = response.body as {
+					data: { assistantMessage: { status: string; content: string } };
+				};
+				expect(body.data.assistantMessage).toMatchObject({
+					status: 'completed',
+					content: 'Đây là gợi ý dựa trên fixture synthetic.',
+				});
+			});
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		fetchMock.mockRejectedValueOnce(
+			Object.assign(new Error('synthetic timeout'), { name: 'TimeoutError' }),
+		);
+		await mutation(ownerAgent, ownerCsrf)
+			.post(`${api}/me/profile/conversations/${conversationId}/turns`)
+			.send({ message: 'Lượt thử lỗi mạng.' })
+			.expect(504)
+			.expect((response) =>
+				expect(response.body).toMatchObject({ code: 'AGENT_TIMEOUT' }),
+			);
+		const failedConversation = await ownerAgent
+			.get(`${api}/me/profile/conversations/${conversationId}`)
+			.expect(200);
+		expect(responseData<{ messages: Array<{ role: string; status: string | null; content: string | null }> }>(
+			failedConversation,
+		).messages).toMatchObject([
+			{ role: 'user', content: 'Gợi ý học kỳ với dữ liệu thử nghiệm.', status: null },
+			{ role: 'assistant', content: 'Đây là gợi ý dựa trên fixture synthetic.', status: 'completed' },
+			{ role: 'user', content: 'Lượt thử lỗi mạng.', status: null },
+			{ role: 'assistant', content: null, status: 'failed' },
+		]);
+		for (let index = 0; index < 8; index += 1) {
+			await mutation(ownerAgent, ownerCsrf)
+				.post(`${api}/me/profile/conversations/${conversationId}/turns`)
+				.send({ message: `Lượt synthetic ${index + 1}` })
+				.expect(200);
+		}
+		await mutation(ownerAgent, ownerCsrf)
+			.post(`${api}/me/profile/conversations/${conversationId}/turns`)
+			.send({ message: 'Vượt quota' })
+			.expect(429)
+			.expect((response) =>
+				expect(response.body).toMatchObject({ code: 'RATE_LIMIT_EXCEEDED' }),
+			);
+		expect(fetchMock).toHaveBeenCalledTimes(10);
+
+		const oversizedConversation = await mutation(ownerAgent, ownerCsrf)
+			.post(`${api}/me/profile/conversations`)
+			.send({})
+			.expect(201);
+		const oversizedConversationId = responseData<{ id: string }>(oversizedConversation).id;
+		await mutation(ownerAgent, ownerCsrf)
+			.post(`${api}/me/profile/conversations/${oversizedConversationId}/turns`)
+			.send({ message: 'x'.repeat(4001) })
+			.expect(400);
+		await ownerAgent
+			.get(`${api}/me/profile/conversations/${oversizedConversationId}`)
+			.expect(200)
+			.expect((response) =>
+				expect(responseData<{ messages: unknown[] }>(response).messages).toHaveLength(0),
+			);
+		await mutation(ownerAgent, ownerCsrf)
+			.delete(`${api}/me/profile/conversations/${oversizedConversationId}`)
+			.expect(204);
+		fetchMock.mockRestore();
+
+		await mutation(ownerAgent, ownerCsrf)
+			.delete(`${api}/me/profile/conversations/${conversationId}`)
+			.expect(204);
+		await ownerAgent.get(`${api}/me/profile/conversations/${conversationId}`).expect(404);
+
+		const profileConversation = await mutation(ownerAgent, ownerCsrf)
+			.post(`${api}/me/profile/conversations`)
+			.send({})
+			.expect(201);
+		await mutation(ownerAgent, ownerCsrf)
+			.delete(`${api}/me/profile`)
+			.expect(204);
+		await mutation(ownerAgent, ownerCsrf)
+			.put(`${api}/me/profile`)
+			.send({ displayName: 'Restored profile' })
+			.expect(200);
+		await ownerAgent
+			.get(`${api}/me/profile/conversations`)
+			.expect(200)
+			.expect((response) =>
+				expect(responseData<{ items: unknown[] }>(response).items).toHaveLength(0),
+			);
+		await ownerAgent
+			.get(`${api}/me/profile/conversations/${responseData<{ id: string }>(profileConversation).id}`)
+			.expect(404);
+	});
+
+	it('authenticates internal recommendation calls without browser CSRF and forwards verified subject', async () => {
+		const recommendation = jest
+			.spyOn(app!.get(RecommendationService), 'recommend')
+			.mockResolvedValue({ status: 'ready' } as never);
+		const server = app!.getHttpServer() as Server;
+		const userId = randomUUID();
+		const profileId = randomUUID();
+		const correlationId = randomUUID();
+		const signContext = (dataClassification: string) => {
+			const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+			const now = Math.floor(Date.now() / 1000);
+			const header = encode({ alg: 'EdDSA', typ: 'JWT' });
+			const payload = encode({
+				iss: 'bk-nest',
+				aud: 'bk-recommendation-tool',
+				sub: userId,
+				profile_id: profileId,
+				scope: 'recommendation:read',
+				correlation_id: correlationId,
+				data_classification: dataClassification,
+				iat: now,
+				exp: now + 60,
+			});
+			const content = `${header}.${payload}`;
+			return `${content}.${sign(null, Buffer.from(content), delegatedPrivateKey).toString('base64url')}`;
+		};
+
+		const accepted = await request(server)
+			.post(`${api}/internal/v1/tools/recommendation`)
+			.set('Authorization', 'Bearer e2e-gateway-test-token')
+			.set('X-Delegated-Context', signContext('synthetic'))
+			.set('X-Correlation-ID', correlationId)
+			.send({ userId: randomUUID(), profileId: randomUUID() })
+			.expect(200);
+		expect(responseData(accepted)).toEqual({ status: 'ready' });
+		expect(recommendation).toHaveBeenCalledWith(userId);
+
+		await request(server)
+			.post(`${api}/internal/v1/tools/recommendation`)
+			.set('Authorization', 'Bearer e2e-gateway-test-token')
+			.set('X-Delegated-Context', signContext('student'))
+			.set('X-Correlation-ID', correlationId)
+			.send({})
+			.expect(403);
+		recommendation.mockRestore();
 	});
 });

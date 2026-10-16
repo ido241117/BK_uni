@@ -8,7 +8,11 @@ import { Reflector } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import { AuthSession } from '../users/auth-session.entity';
 import { User } from '../users/user.entity';
-import { IS_PUBLIC_KEY } from './auth.decorator';
+import {
+	INTERNAL_SERVICE_KEY,
+	IS_PUBLIC_KEY,
+	ROLES_KEY,
+} from './auth.decorator';
 import { AuthSessionGuard } from './auth-session.guard';
 import { createCsrfToken } from './csrf.util';
 
@@ -27,9 +31,12 @@ describe('AuthSessionGuard', () => {
 		getRepository,
 	} as unknown as DataSource;
 	const reflector = {
-		getAllAndOverride: jest.fn((key: string) =>
-			key === IS_PUBLIC_KEY ? isPublic : allowedRoles,
-		),
+		getAllAndOverride: jest.fn((key: string) => {
+			if (key === INTERNAL_SERVICE_KEY) return false;
+			if (key === IS_PUBLIC_KEY) return isPublic;
+			if (key === ROLES_KEY) return allowedRoles;
+			return undefined;
+		}),
 	} as unknown as Reflector;
 	const config = {
 		get: jest.fn((key: string) =>

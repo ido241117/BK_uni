@@ -2,6 +2,7 @@ import { UnprocessableEntityException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Curriculum } from '../curricula/curriculum.entity';
 import { StudentCourseStatus } from './student-course-status.entity';
+import { StudentConversation } from './student-conversation.entity';
 import { StudentProfile } from './student-profile.entity';
 import { StudentProfileService } from './student-profile.service';
 
@@ -10,6 +11,7 @@ describe('StudentProfileService', () => {
 	let profileRepository: Record<string, jest.Mock>;
 	let curriculumRepository: Record<string, jest.Mock>;
 	let statusRepository: Record<string, jest.Mock>;
+	let conversationRepository: Record<string, jest.Mock>;
 	let courseQuery: Record<string, jest.Mock>;
 	let manager: {
 		findOne: jest.Mock;
@@ -31,6 +33,7 @@ describe('StudentProfileService', () => {
 		statusRepository = {
 			upsert: jest.fn(),
 		};
+		conversationRepository = { delete: jest.fn() };
 		courseQuery = {
 			select: jest.fn().mockReturnThis(),
 			where: jest.fn().mockReturnThis(),
@@ -41,6 +44,8 @@ describe('StudentProfileService', () => {
 			findOne: jest.fn(),
 			getRepository: jest.fn((entity: object) => {
 				if (entity === StudentCourseStatus) return statusRepository;
+				if (entity === StudentConversation) return conversationRepository;
+				if (entity === StudentProfile) return profileRepository;
 				return { createQueryBuilder: () => courseQuery };
 			}),
 		};
@@ -103,15 +108,18 @@ describe('StudentProfileService', () => {
 		);
 	});
 
-	it('soft-deletes only the authenticated student profile', async () => {
+	it('deletes owned conversations before soft-deleting the authenticated profile', async () => {
 		const profile = { id: 'profile-a', userId: 'student-a' };
-		profileRepository.findOne.mockResolvedValue(profile);
+		manager.findOne.mockResolvedValue(profile);
 
 		await service.remove('student-a');
 
-		expect(profileRepository.findOne).toHaveBeenCalledWith({
+		expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+		expect(manager.findOne).toHaveBeenCalledWith(StudentProfile, {
 			where: { userId: 'student-a' },
+			lock: { mode: 'pessimistic_write' },
 		});
+		expect(conversationRepository.delete).toHaveBeenCalledWith({ profileId: 'profile-a' });
 		expect(profileRepository.softRemove).toHaveBeenCalledWith(profile);
 	});
 

@@ -12,7 +12,11 @@ import type { Request } from 'express';
 import { DataSource } from 'typeorm';
 import { AuthSession } from '../users/auth-session.entity';
 import { User } from '../users/user.entity';
-import { IS_PUBLIC_KEY, ROLES_KEY } from './auth.decorator';
+import {
+	INTERNAL_SERVICE_KEY,
+	IS_PUBLIC_KEY,
+	ROLES_KEY,
+} from './auth.decorator';
 import { isValidCsrfToken } from './csrf.util';
 
 export interface AuthenticatedRequest extends Request {
@@ -49,6 +53,12 @@ export class AuthSessionGuard implements CanActivate {
 		const response = context.switchToHttp().getResponse<{
 			setHeader: (name: string, value: string) => void;
 		}>();
+		const isInternalService = this.reflector.getAllAndOverride<boolean>(
+			INTERNAL_SERVICE_KEY,
+			[context.getHandler(), context.getClass()],
+		);
+		if (isInternalService) return true;
+
 		const method = request.method.toUpperCase();
 		if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
 			this.assertOrigin(request);

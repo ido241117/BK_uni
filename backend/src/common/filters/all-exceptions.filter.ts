@@ -53,8 +53,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 			if (typeof result === 'string') message = result;
 			else if (
 				typeof result === 'object' &&
-				result !== null &&
-				'message' in result
+				result !== null
 			) {
 				const exceptionBody = result as {
 					message?: unknown;
@@ -89,7 +88,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
 			[HttpStatus.INTERNAL_SERVER_ERROR]: 'INTERNAL_SERVER_ERROR',
 		};
 		if (status >= 500) {
-			code = 'INTERNAL_SERVER_ERROR';
+			if (!['AGENT_UNAVAILABLE', 'AGENT_TIMEOUT'].includes(code ?? '')) {
+				code = 'INTERNAL_SERVER_ERROR';
+			}
 			details = undefined;
 		}
 
