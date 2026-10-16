@@ -6,6 +6,7 @@ const AccountPage = lazy(() => import('@/pages/account'));
 const AdminPage = lazy(() => import('@/pages/admin'));
 const AnalysisPage = lazy(() => import('@/pages/analysis'));
 const AuthPage = lazy(() => import('@/pages/auth'));
+const ChatPage = lazy(() => import('@/pages/chat'));
 const StudentPage = lazy(() => import('@/pages/student'));
 const HistoryPage = lazy(() => import('@/pages/analysis').then((module) => ({ default: module.HistoryPage })));
 
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
 		element: <PrivateLayout />,
 		children: [
 			{ path: 'student', element: <StudentPage /> },
+			{ path: 'chat', element: <ChatPage /> },
 			{ path: 'analysis', element: <AnalysisPage /> },
 			{ path: 'history', element: <HistoryPage /> },
 			{ path: 'admin', element: <AdminPage /> },

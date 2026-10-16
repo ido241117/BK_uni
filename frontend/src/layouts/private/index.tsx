@@ -4,6 +4,7 @@ import {
 	BookOutlined,
 	HistoryOutlined,
 	LogoutOutlined,
+	MessageOutlined,
 	UserOutlined,
 } from '@ant-design/icons';
 import { Avatar, Button, Dropdown, Layout, Menu, Tag, Typography } from 'antd';
@@ -63,6 +64,7 @@ export default function PrivateLayout() {
 		}
 		return [
 			{ key: '/student', icon: <BookOutlined />, label: 'Hồ sơ học tập' },
+			{ key: '/chat', icon: <MessageOutlined />, label: 'Trợ lý học vụ' },
 			{ key: '/analysis', icon: <AuditOutlined />, label: 'Phân tích' },
 			{ key: '/history', icon: <HistoryOutlined />, label: 'Lịch sử phân tích' },
 		];
@@ -95,11 +97,13 @@ export default function PrivateLayout() {
 		? location.pathname
 		: location.pathname.startsWith('/analysis')
 			? '/analysis'
-			: location.pathname.startsWith('/history')
-				? '/history'
-				: location.pathname.startsWith('/admin')
-					? '/admin'
-					: '/student';
+			: location.pathname.startsWith('/chat')
+				? '/chat'
+				: location.pathname.startsWith('/history')
+					? '/history'
+					: location.pathname.startsWith('/admin')
+						? '/admin'
+						: '/student';
 
 	if (!sessionChecked || !sessionValid || !email) {
 		return <div className="route-loading">BK Uni · Đang xác thực phiên</div>;

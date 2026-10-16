@@ -199,3 +199,34 @@ export interface CourseRecommendationResponse {
 		noCoursesRecommended: boolean;
 	};
 }
+
+export type ConversationMessageStatus =
+	| 'completed'
+	| 'clarification'
+	| 'out_of_scope'
+	| 'failed';
+
+export interface ConversationMessage {
+	id: string;
+	role: 'user' | 'assistant';
+	content: string | null;
+	status: ConversationMessageStatus | null;
+	recommendation: CourseRecommendationResponse | null;
+	createdAt: string;
+}
+
+export interface ConversationSummary {
+	id: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface ConversationDetail extends ConversationSummary {
+	messages: ConversationMessage[];
+}
+
+export interface ConversationTurnResponse {
+	conversation: ConversationSummary;
+	userMessage: ConversationMessage;
+	assistantMessage: ConversationMessage;
+}

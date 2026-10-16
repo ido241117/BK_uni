@@ -15,6 +15,9 @@ import type {
 	PageResult,
 	CourseStatus,
 	RecommendationSettings,
+	ConversationDetail,
+	ConversationSummary,
+	ConversationTurnResponse,
 } from "@/types";
 
 export interface ApiEnvelope<T> {
@@ -197,6 +200,31 @@ export const studentApi = {
 	},
 	courseRecommendations() {
 		return postEmpty<CourseRecommendationResponse>("/me/profile/course-recommendations");
+	},
+	createConversation() {
+		return postEmpty<ConversationDetail>('/me/profile/conversations');
+	},
+	listConversations(params: { limit?: number; offset?: number } = {}) {
+		return apiClient
+			.get<ApiEnvelope<PageResult<ConversationSummary>>>(
+				'/me/profile/conversations',
+				{ params },
+			)
+			.then(unwrapApiResponse);
+	},
+	conversation(conversationId: string) {
+		return apiClient
+			.get<ApiEnvelope<ConversationDetail>>(`/me/profile/conversations/${conversationId}`)
+			.then(unwrapApiResponse);
+	},
+	sendConversationTurn(conversationId: string, message: string) {
+		return post<ConversationTurnResponse>(
+			`/me/profile/conversations/${conversationId}/turns`,
+			{ message },
+		);
+	},
+	deleteConversation(conversationId: string) {
+		return remove(`/me/profile/conversations/${conversationId}`);
 	},
 };
 
