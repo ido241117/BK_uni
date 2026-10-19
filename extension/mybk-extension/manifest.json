@@ -1,0 +1,18 @@
+{
+	"manifest_version": 3,
+	"name": "myBK Study Planner Prototype",
+	"version": "0.1.0",
+	"description": "Đọc trạng thái môn trong trang CTĐT myBK và đối chiếu local với CTĐT KHMT 2023.",
+	"permissions": [
+		"activeTab",
+		"scripting",
+		"storage"
+	],
+	"host_permissions": [
+		"http://127.0.0.1:8787/*"
+	],
+	"action": {
+		"default_title": "myBK Study Planner",
+		"default_popup": "popup.html"
+	}
+}

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>myBK Study Planner</title>
+	<link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+	<main>
+		<header class="topbar">
+			<div class="mark" aria-hidden="true">BK</div>
+			<div>
+				<p class="eyebrow">MYBK · LOCAL PROTOTYPE</p>
+				<h1>Lộ trình học</h1>
+			</div>
+			<button id="clear-data" class="icon-button" type="button" title="Xóa dữ liệu local"
+				aria-label="Xóa dữ liệu local">×</button>
+		</header>
+
+		<p id="status-message" class="status-message" role="status"></p>
+
+		<section id="data-view">
+			<section class="curriculum-strip" aria-label="Chương trình đào tạo">
+				<div><span>CHƯƠNG TRÌNH</span><strong id="curriculum-name">Đang tải...</strong></div>
+				<span id="curriculum-cohort" class="cohort"></span>
+			</section>
+
+			<button id="read-program-page" class="primary-button route-button" type="button" hidden>
+				<span aria-hidden="true">↓</span> Nạp tiến độ từ CTĐT
+			</button>
+			<button id="read-grade-page" class="primary-button route-button" type="button" hidden>
+				<span aria-hidden="true">↓</span> Nạp bảng điểm môn học
+			</button>
+			<p id="route-message" class="status-message" role="status">Mở một trong hai trang myBK được hỗ trợ để nạp dữ
+				liệu.</p>
+			<div class="import-status" aria-label="Trạng thái dữ liệu nguồn">
+				<p id="program-import-status">CTĐT: chưa nạp</p>
+				<p id="grade-import-status">Bảng điểm: chưa nạp</p>
+			</div>
+			<button id="open-chat" class="secondary-button" type="button" hidden>Vào trò chuyện</button>
+
+			<section id="preview-section" class="section" hidden>
+				<div class="section-heading">
+					<div>
+						<p class="eyebrow">KIỂM TRA TRƯỚC KHI LƯU</p>
+						<h2 id="preview-title">Bản đọc từ myBK</h2>
+					</div>
+					<span id="preview-count" class="count"></span>
+				</div>
+				<p id="source-label" class="source-label"></p>
+				<div id="transcript-rows" class="transcript-list"></div>
+				<details class="manual-entry">
+					<summary>Nhập mã môn thủ công</summary>
+					<label for="manual-codes">Mã môn, cách nhau bằng dấu phẩy hoặc xuống dòng</label>
+					<textarea id="manual-codes" rows="2" placeholder="CO1005, MT1003"></textarea>
+					<div class="manual-controls">
+						<select id="manual-status" aria-label="Trạng thái mặc định cho mã môn thủ công">
+							<option value="completed">Đã học</option>
+							<option value="in_progress">Đang học</option>
+							<option value="needs_review" selected>Cần kiểm tra</option>
+						</select>
+						<button id="add-manual-codes" class="secondary-button" type="button">Thêm vào preview</button>
+					</div>
+				</details>
+				<button id="confirm-import" class="secondary-button" type="button">Xác nhận và lưu lần nạp</button>
+			</section>
+
+			<section id="results-section" class="section" hidden>
+				<div class="section-heading">
+					<div>
+						<p class="eyebrow">ĐỐI CHIẾU CTĐT</p>
+						<h2>Môn còn thiếu</h2>
+					</div>
+					<span id="missing-count" class="count"></span>
+				</div>
+				<p class="section-note">Đã học và đang học được xem là đã đáp ứng. Môn có trạng thái chưa rõ cần kiểm
+					tra
+					trong bản đọc phía trên.</p>
+				<p id="curriculum-note" class="section-note" hidden></p>
+				<ol id="missing-list" class="course-list"></ol>
+				<div class="pick-row">
+					<label for="pick-indices">Chọn theo số thứ tự</label>
+					<div class="pick-controls">
+						<input id="pick-indices" type="text" inputmode="numeric" placeholder="Ví dụ: 1, 3, 5"
+							autocomplete="off">
+						<button id="pick-button" class="pick-button" type="button">Thêm</button>
+					</div>
+					<p id="pick-message" class="pick-message" aria-live="polite"></p>
+				</div>
+				<div id="picked-section" class="picked-section" hidden>
+					<div class="section-heading">
+						<h3>Đã chọn</h3><span id="picked-count" class="count"></span>
+					</div>
+					<ul id="picked-list" class="picked-list"></ul>
+				</div>
+			</section>
+
+			<footer>Dữ liệu chỉ được gửi sau khi bạn xác nhận.</footer>
+		</section>
+
+		<section id="chat-section" class="section" hidden>
+			<div class="section-heading">
+				<div>
+					<p class="eyebrow">TƯ VẤN CÁ NHÂN</p>
+					<h2>Trò chuyện học tập</h2>
+				</div>
+				<div class="chat-actions">
+					<button id="back-to-data" class="view-button" type="button" title="Quay lại dữ liệu"
+						aria-label="Quay lại dữ liệu">←</button>
+					<button id="reset-chat" class="view-button" type="button" title="Làm mới cuộc trò chuyện"
+						aria-label="Làm mới cuộc trò chuyện">↺</button>
+				</div>
+			</div>
+			<div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-relevant="additions"></div>
+			<label class="consent-row">
+				<input id="send-consent" type="checkbox">
+				<span>Đồng ý gửi trạng thái CTĐT, điểm liên quan và nội dung chat đến backend local; backend sẽ chuyển
+					context này tới LLM provider đã cấu hình.</span>
+			</label>
+			<label class="question-label" for="question-input">Tin nhắn</label>
+			<div class="chat-compose">
+				<textarea id="question-input" class="question-input" rows="2" maxlength="1200"
+					placeholder="Hỏi về tiến độ hoặc các nhóm tự chọn..."></textarea>
+				<button id="ask-backend" class="primary-button" type="button" aria-label="Gửi tin nhắn"
+					title="Gửi tin nhắn">↑</button>
+			</div>
+		</section>
+	</main>
+	<script type="module" src="popup.mjs"></script>
+</body>
+
+</html>

@@ -101,3 +101,7 @@ The PostgreSQL e2e suite and migration verifier require the dedicated `DB_TEST_N
 ## Demo limits
 
 This workspace is for local/demo use, not production deployment. Curriculum import from PDF/JSON and learner-owned editable curriculum plans are not implemented in the current app; verified real curriculum seed data, email verification, and production operations are also outside the MVP. Student accounts can currently edit their own profile/course statuses, but cannot edit canonical curriculum data. Use only synthetic or manually verified data and do not place real student records in the demo database.
+
+## myBK browser extension prototype
+
+The separate Chrome extension and its local advice backend are packaged under [`extension/`](extension/). Load `extension/mybk-extension` as an unpacked extension and follow its README. The backend setup and test instructions are in [`extension/mybk-backend/README.md`](extension/mybk-backend/README.md). This prototype is independent of the BK Uni web app and does not use its database.

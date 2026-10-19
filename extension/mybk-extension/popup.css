@@ -1,0 +1,566 @@
+:root {
+	color-scheme: light;
+	--ink: #182c2b;
+	--muted: #637572;
+	--line: #d9e3de;
+	--paper: #fbfcf9;
+	--green: #176b57;
+	--green-dark: #10503f;
+	--mint: #e9f3ec;
+	--yellow: #e0b84f;
+	--coral: #bc5844;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	width: 420px;
+	max-height: 620px;
+	margin: 0;
+	background: var(--paper);
+	color: var(--ink);
+	font-family: "Aptos", "Segoe UI", sans-serif;
+	font-size: 13px;
+}
+
+main {
+	max-height: 620px;
+	overflow-y: auto;
+	padding: 18px 18px 12px;
+}
+
+.topbar,
+.section-heading,
+.curriculum-strip,
+.pick-controls {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.topbar {
+	justify-content: flex-start;
+	gap: 11px;
+	margin-bottom: 16px;
+}
+
+.mark {
+	display: grid;
+	width: 38px;
+	height: 38px;
+	place-items: center;
+	background: var(--green);
+	color: white;
+	font-weight: 800;
+}
+
+.eyebrow {
+	margin: 0 0 4px;
+	color: var(--green);
+	font-size: 9px;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+}
+
+h1,
+h2,
+h3,
+p {
+	margin-top: 0;
+}
+
+h1 {
+	margin-bottom: 0;
+	font-size: 21px;
+	line-height: 1.1;
+}
+
+h2 {
+	margin-bottom: 0;
+	font-size: 16px;
+}
+
+h3 {
+	margin: 0;
+	font-size: 13px;
+}
+
+.icon-button {
+	width: 30px;
+	height: 30px;
+	margin-left: auto;
+	border: 1px solid var(--line);
+	background: transparent;
+	color: var(--muted);
+	font-size: 21px;
+	cursor: pointer;
+}
+
+.view-button {
+	display: grid;
+	width: 32px;
+	height: 32px;
+	place-items: center;
+	border: 1px solid var(--line);
+	background: white;
+	color: var(--green-dark);
+	font-size: 19px;
+}
+
+.chat-actions {
+	display: flex;
+	gap: 6px;
+}
+
+.curriculum-strip {
+	min-height: 52px;
+	margin-bottom: 12px;
+	padding: 9px 11px;
+	border-left: 3px solid var(--yellow);
+	background: #f0f4ed;
+}
+
+.curriculum-strip div {
+	display: grid;
+	gap: 3px;
+}
+
+.curriculum-strip span {
+	color: var(--muted);
+	font-size: 9px;
+	font-weight: 700;
+}
+
+.curriculum-strip strong {
+	font-size: 12px;
+}
+
+.curriculum-strip .cohort {
+	padding: 4px 6px;
+	background: white;
+	color: var(--green-dark);
+}
+
+button,
+input,
+select {
+	font: inherit;
+}
+
+button {
+	cursor: pointer;
+}
+
+.primary-button,
+.secondary-button {
+	width: 100%;
+	min-height: 38px;
+	border: 0;
+	font-weight: 700;
+}
+
+.primary-button {
+	background: var(--green);
+	color: white;
+}
+
+.primary-button:hover {
+	background: var(--green-dark);
+}
+
+.primary-button:disabled,
+button:disabled {
+	opacity: 0.55;
+	cursor: wait;
+}
+
+.primary-button span {
+	margin-right: 7px;
+	font-size: 16px;
+}
+
+.secondary-button {
+	margin-top: 10px;
+	border: 1px solid var(--green);
+	background: white;
+	color: var(--green-dark);
+}
+
+.status-message {
+	min-height: 16px;
+	margin: 8px 1px 12px;
+	color: var(--muted);
+	font-size: 11px;
+}
+
+.status-message.error,
+.pick-message.error {
+	color: var(--coral);
+}
+
+.section {
+	margin-top: 12px;
+	padding-top: 13px;
+	border-top: 1px solid var(--line);
+}
+
+.section-heading {
+	align-items: end;
+	margin-bottom: 9px;
+}
+
+.count {
+	min-width: 24px;
+	padding: 4px 7px;
+	background: var(--mint);
+	color: var(--green-dark);
+	text-align: center;
+	font-size: 11px;
+	font-weight: 800;
+}
+
+.source-label,
+.section-note {
+	margin-bottom: 8px;
+	color: var(--muted);
+	font-size: 10px;
+	line-height: 1.4;
+}
+
+.transcript-list {
+	display: grid;
+	gap: 6px;
+	max-height: 210px;
+	overflow-y: auto;
+}
+
+.transcript-row {
+	display: grid;
+	grid-template-columns: 1fr 125px;
+	gap: 7px;
+	align-items: center;
+	padding: 7px 8px;
+	background: white;
+	border: 1px solid var(--line);
+}
+
+.transcript-row strong,
+.course-copy strong {
+	display: block;
+	color: var(--ink);
+	font-size: 11px;
+}
+
+.transcript-row small,
+.course-copy small {
+	display: block;
+	margin-top: 2px;
+	color: var(--muted);
+	font-size: 10px;
+}
+
+.transcript-row select {
+	width: 100%;
+	min-width: 0;
+	padding: 5px 4px;
+	border: 1px solid var(--line);
+	background: white;
+	color: var(--ink);
+	font-size: 10px;
+}
+
+.manual-entry {
+	margin-top: 8px;
+	padding: 8px;
+	border: 1px dashed var(--line);
+	background: white;
+}
+
+.manual-entry summary {
+	color: var(--green-dark);
+	cursor: pointer;
+	font-size: 10px;
+	font-weight: 700;
+}
+
+.manual-entry label {
+	display: block;
+	margin-top: 8px;
+	color: var(--muted);
+	font-size: 10px;
+}
+
+.manual-entry textarea {
+	width: 100%;
+	margin-top: 5px;
+	padding: 6px;
+	resize: vertical;
+	border: 1px solid var(--line);
+	color: var(--ink);
+	font: inherit;
+}
+
+.manual-controls {
+	display: flex;
+	gap: 6px;
+}
+
+.manual-controls select {
+	width: 130px;
+	padding: 0 5px;
+	border: 1px solid var(--line);
+	background: white;
+	font-size: 10px;
+}
+
+.manual-controls .secondary-button {
+	width: auto;
+	flex: 1;
+	min-height: 30px;
+	margin: 0;
+	font-size: 10px;
+}
+
+.course-list {
+	display: grid;
+	gap: 6px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	counter-reset: course-index;
+}
+
+.course-item {
+	display: grid;
+	grid-template-columns: 27px 1fr auto;
+	gap: 8px;
+	align-items: center;
+	min-height: 46px;
+	padding: 6px 8px;
+	border: 1px solid var(--line);
+	background: white;
+	counter-increment: course-index;
+}
+
+.course-item::before {
+	display: grid;
+	width: 24px;
+	height: 24px;
+	place-items: center;
+	background: var(--mint);
+	color: var(--green-dark);
+	content: counter(course-index);
+	font-weight: 800;
+}
+
+.course-copy .code {
+	color: var(--green);
+	font-size: 10px;
+	font-weight: 800;
+}
+
+.course-meta {
+	color: var(--muted);
+	font-size: 10px;
+	text-align: right;
+}
+
+.course-meta span {
+	display: block;
+}
+
+.course-meta .elective {
+	color: #936b11;
+}
+
+.pick-row {
+	margin-top: 12px;
+}
+
+.pick-row label {
+	display: block;
+	margin-bottom: 5px;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.pick-controls {
+	gap: 6px;
+}
+
+.pick-controls input {
+	flex: 1;
+	min-width: 0;
+	height: 34px;
+	padding: 0 9px;
+	border: 1px solid var(--line);
+	background: white;
+	color: var(--ink);
+}
+
+.pick-button {
+	height: 34px;
+	padding: 0 13px;
+	border: 0;
+	background: var(--green-dark);
+	color: white;
+	font-weight: 700;
+}
+
+.pick-message {
+	min-height: 14px;
+	margin: 5px 0 0;
+	color: var(--muted);
+	font-size: 10px;
+}
+
+.picked-section {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px dashed var(--line);
+}
+
+.picked-list {
+	display: grid;
+	gap: 4px;
+	margin: 7px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.picked-list li {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 5px 7px;
+	background: var(--mint);
+	font-size: 10px;
+}
+
+.picked-list button {
+	border: 0;
+	background: transparent;
+	color: var(--coral);
+	font-weight: 800;
+}
+
+footer {
+	margin-top: 12px;
+	padding-top: 8px;
+	border-top: 1px solid var(--line);
+	color: var(--muted);
+	font-size: 9px;
+}
+
+.import-status {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	margin: 4px 0 12px;
+}
+
+.import-status p {
+	margin: 0;
+	padding: 7px;
+	background: #f0f4ed;
+	color: var(--muted);
+	font-size: 10px;
+}
+
+.question-label {
+	display: block;
+	margin: 8px 0 5px;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.question-input {
+	width: 100%;
+	min-width: 0;
+	min-height: 40px;
+	max-height: 100px;
+	padding: 9px;
+	resize: vertical;
+	border: 1px solid var(--line);
+	background: white;
+	color: var(--ink);
+	font: inherit;
+}
+
+.chat-log {
+	display: flex;
+	min-height: 96px;
+	max-height: 250px;
+	flex-direction: column;
+	gap: 8px;
+	overflow-y: auto;
+	padding: 9px;
+	border: 1px solid var(--line);
+	background: #f0f4ed;
+}
+
+.chat-empty {
+	align-self: center;
+	margin: auto;
+	color: var(--muted);
+	font-size: 11px;
+	line-height: 1.5;
+	text-align: center;
+}
+
+.chat-message {
+	max-width: 88%;
+	padding: 8px 10px;
+	border: 1px solid var(--line);
+	background: white;
+}
+
+.chat-message.user {
+	align-self: flex-end;
+	border-color: #b9d6c8;
+	background: #e4f0e7;
+}
+
+.chat-role {
+	color: var(--green-dark);
+	font-size: 9px;
+	font-weight: 800;
+}
+
+.chat-content {
+	margin: 4px 0 0;
+	font-size: 11px;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.chat-compose {
+	display: flex;
+	gap: 6px;
+	align-items: stretch;
+}
+
+.chat-compose .primary-button {
+	width: 40px;
+	min-width: 40px;
+	font-size: 20px;
+}
+
+.consent-row {
+	display: grid;
+	grid-template-columns: 16px 1fr;
+	gap: 8px;
+	align-items: start;
+	margin: 9px 0;
+	color: var(--muted);
+	font-size: 10px;
+	line-height: 1.45;
+}
+
+.consent-row input {
+	margin: 2px 0 0;
+}
+}

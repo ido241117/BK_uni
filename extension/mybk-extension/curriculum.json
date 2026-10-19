@@ -1,0 +1,1987 @@
+{
+  "source": {
+    "fileName": "2023_MT_KHMT.pdf",
+    "faculty": "KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH",
+    "sourceDate": "12/06/2025",
+    "programName": "Khoa học Máy tính",
+    "totalCredits": 128.0,
+    "cohort": 2023,
+    "notesLegend": {
+      "TQ": "Tiên quyết (Prerequisite)",
+      "HT": "Học trước (Learned course)",
+      "SHT": "Song hành/Trước (Co-requisite course)",
+      "KN": "Khuyến nghị (Recommended)"
+    }
+  },
+  "semesterCreditLimits": {
+    "minimum": 12,
+    "maximum": 24,
+    "source": "user_provided"
+  },
+  "semesters": [
+    {
+      "number": 1,
+      "plannedCredits": 16,
+      "requiredCourses": [
+        {
+          "ordinal": "1",
+          "courseCode": "LA1003",
+          "nameVi": "Anh văn 1",
+          "nameEn": "English 1",
+          "credits": 2,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "2",
+          "courseCode": "PE1003",
+          "nameVi": "Giáo dục thể chất 1",
+          "nameEn": "Physical Education 1",
+          "credits": 0,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "3",
+          "courseCode": "MT1003",
+          "nameVi": "Giải tích 1",
+          "nameEn": "Calculus 1",
+          "credits": 4,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "4",
+          "courseCode": "PH1003",
+          "nameVi": "Vật lý 1",
+          "nameEn": "General Physics 1",
+          "credits": 4,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "5",
+          "courseCode": "CO1005",
+          "nameVi": "Nhập môn Điện toán",
+          "nameEn": "Introduction to Computing",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "6",
+          "courseCode": "CO1023",
+          "nameVi": "Hệ thống số",
+          "nameEn": "Digital Systems",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        }
+      ],
+      "electiveGroups": [],
+      "freeElectiveRequirements": []
+    },
+    {
+      "number": 2,
+      "plannedCredits": 17,
+      "requiredCourses": [
+        {
+          "ordinal": "1",
+          "courseCode": "LA1005",
+          "nameVi": "Anh văn 2",
+          "nameEn": "English 2",
+          "credits": 2,
+          "conditionsRaw": "LA1003(TQ)",
+          "conditions": [
+            {
+              "courseCode": "LA1003",
+              "code": "TQ",
+              "type": "prerequisite"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "2",
+          "courseCode": "PE1005",
+          "nameVi": "Giáo dục thể chất 2",
+          "nameEn": "Physical Education 2",
+          "credits": 0,
+          "conditionsRaw": "PE1003(HT)",
+          "conditions": [
+            {
+              "courseCode": "PE1003",
+              "code": "HT",
+              "type": "learned_course"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "3",
+          "courseCode": "MT1005",
+          "nameVi": "Giải tích 2",
+          "nameEn": "Calculus 2",
+          "credits": 4,
+          "conditionsRaw": "MT1003(KN)",
+          "conditions": [
+            {
+              "courseCode": "MT1003",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "4",
+          "courseCode": "MT1007",
+          "nameVi": "Đại số Tuyến tính",
+          "nameEn": "Linear Algebra",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "5",
+          "courseCode": "CO1007",
+          "nameVi": "Cấu trúc Rời rạc cho Khoa học Máy tính",
+          "nameEn": "Discrete Structures for Computing",
+          "credits": 4,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "6",
+          "courseCode": "CO1027",
+          "nameVi": "Kỹ thuật Lập trình",
+          "nameEn": "Programming Fundamentals",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "7",
+          "courseCode": "PH1007",
+          "nameVi": "Thí nghiệm Vật lý",
+          "nameEn": "General Physics Labs",
+          "credits": 1,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "8",
+          "courseCode": "MI1003",
+          "nameVi": "Giáo dục Quốc phòng",
+          "nameEn": "Military Training",
+          "credits": 0,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        }
+      ],
+      "electiveGroups": [],
+      "freeElectiveRequirements": []
+    },
+    {
+      "number": 3,
+      "plannedCredits": 16,
+      "requiredCourses": [
+        {
+          "ordinal": "1",
+          "courseCode": "LA1007",
+          "nameVi": "Anh văn 3",
+          "nameEn": "English 3",
+          "credits": 2,
+          "conditionsRaw": "LA1005(TQ)",
+          "conditions": [
+            {
+              "courseCode": "LA1005",
+              "code": "TQ",
+              "type": "prerequisite"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "2",
+          "courseCode": "SP1031",
+          "nameVi": "Triết học Mác - Lênin",
+          "nameEn": "Marxist - Leninist Philosophy",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "3",
+          "courseCode": "CO2007",
+          "nameVi": "Kiến trúc Máy tính",
+          "nameEn": "Computer Architecture",
+          "credits": 4,
+          "conditionsRaw": "CO1033(KN),\nCO1005(KN)",
+          "conditions": [
+            {
+              "courseCode": "CO1033",
+              "code": "KN",
+              "type": "recommended"
+            },
+            {
+              "courseCode": "CO1005",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": "x",
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "4",
+          "courseCode": "CO2011",
+          "nameVi": "Mô hình hóa Toán học",
+          "nameEn": "MaThematical Modeling",
+          "credits": 3,
+          "conditionsRaw": "CO1007(KN)",
+          "conditions": [
+            {
+              "courseCode": "CO1007",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "5",
+          "courseCode": "CO2003",
+          "nameVi": "Cấu trúc Dữ liệu và Giải Thuật",
+          "nameEn": "Data Structures and AlgoriThms",
+          "credits": 4,
+          "conditionsRaw": "CO1027(KN),\nCO1007(KN)",
+          "conditions": [
+            {
+              "courseCode": "CO1027",
+              "code": "KN",
+              "type": "recommended"
+            },
+            {
+              "courseCode": "CO1007",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": "x",
+          "sourcePage": 1
+        }
+      ],
+      "electiveGroups": [],
+      "freeElectiveRequirements": []
+    },
+    {
+      "number": 4,
+      "plannedCredits": 17,
+      "requiredCourses": [
+        {
+          "ordinal": "1",
+          "courseCode": "LA1009",
+          "nameVi": "Anh văn 4",
+          "nameEn": "English 4",
+          "credits": 2,
+          "conditionsRaw": "LA1007(TQ)",
+          "conditions": [
+            {
+              "courseCode": "LA1007",
+              "code": "TQ",
+              "type": "prerequisite"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "2",
+          "courseCode": "SP1033",
+          "nameVi": "Kinh tế Chính trị Mác - Lênin",
+          "nameEn": "Marxist - Leninist Political Economy",
+          "credits": 2,
+          "conditionsRaw": "SP1031(KN)",
+          "conditions": [
+            {
+              "courseCode": "SP1031",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 1
+        },
+        {
+          "ordinal": "3",
+          "courseCode": "CO2017",
+          "nameVi": "Hệ điều hành",
+          "nameEn": "Operating Systems",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": "x",
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "4",
+          "courseCode": "CO2039",
+          "nameVi": "Lập trình Nâng cao",
+          "nameEn": "Advanced Programming",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": "x",
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "5",
+          "courseCode": "MT2013",
+          "nameVi": "Xác suất và Thống kê",
+          "nameEn": "Probability and Statistics",
+          "credits": 4,
+          "conditionsRaw": "MT1007(KN)",
+          "conditions": [
+            {
+              "courseCode": "MT1007",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 2
+        }
+      ],
+      "electiveGroups": [],
+      "freeElectiveRequirements": [
+        {
+          "nameVi": "Tự chọn tự do 3 tín chỉ",
+          "nameEn": "Free Electives 3 credits",
+          "credits": 3,
+          "courseCode": null,
+          "sourcePage": 2
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "plannedCredits": 16,
+      "requiredCourses": [
+        {
+          "ordinal": "1",
+          "courseCode": "SP1035",
+          "nameVi": "Chủ nghĩa Xã hội Khoa học",
+          "nameEn": "Scientific Socialism",
+          "credits": 2,
+          "conditionsRaw": "SP1033(KN)",
+          "conditions": [
+            {
+              "courseCode": "SP1033",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "2",
+          "courseCode": "CO3093",
+          "nameVi": "Mạng máy tính",
+          "nameEn": "Computer Networks",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": "x",
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "3",
+          "courseCode": "CO2013",
+          "nameVi": "Hệ cơ sở Dữ liệu",
+          "nameEn": "Database Systems",
+          "credits": 4,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": "x",
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "4",
+          "courseCode": "CO3001",
+          "nameVi": "Công nghệ Phần mềm",
+          "nameEn": "Software Engineering",
+          "credits": 3,
+          "conditionsRaw": "CO1027(KN)",
+          "conditions": [
+            {
+              "courseCode": "CO1027",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": "x",
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "5",
+          "courseCode": "CH1003",
+          "nameVi": "Hóa đại cương",
+          "nameEn": "General Chemistry",
+          "credits": 3,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 2
+        }
+      ],
+      "electiveGroups": [
+        {
+          "group": "A",
+          "creditsRequired": 1,
+          "selectionRule": "credits",
+          "courses": [
+            {
+              "ordinal": "6",
+              "courseCode": "CO3101",
+              "nameVi": "Đồ án Tổng hợp - Hướng Trí tuệ Nhân tạo",
+              "nameEn": "Programming Intergration Project",
+              "credits": 1,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": "x",
+              "sourcePage": 2
+            },
+            {
+              "ordinal": "7",
+              "courseCode": "CO3103",
+              "nameVi": "Đồ án Tổng hợp - hướng Công nghệ Phần mềm",
+              "nameEn": "Programming Intergration Project",
+              "credits": 1,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": "x",
+              "sourcePage": 2
+            },
+            {
+              "ordinal": "8",
+              "courseCode": "CO3105",
+              "nameVi": "Đồ án Tổng hợp - Hướng Hệ thống Thông tin",
+              "nameEn": "Programming Intergration Project",
+              "credits": 1,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": "x",
+              "sourcePage": 2
+            },
+            {
+              "ordinal": "9",
+              "courseCode": "CO3119",
+              "nameVi": "Đồ án Mạng máy tính",
+              "nameEn": "Computer Networks Project",
+              "credits": 1,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": "x",
+              "sourcePage": 2
+            },
+            {
+              "ordinal": "10",
+              "courseCode": "CO3127",
+              "nameVi": "Đồ án tổng hợp - hướng kỹ thuật dữ liệu",
+              "nameEn": "Programming Intergration Project - Data Engineering",
+              "credits": 1,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": "x",
+              "sourcePage": 2
+            }
+          ]
+        }
+      ],
+      "freeElectiveRequirements": []
+    },
+    {
+      "number": 6,
+      "plannedCredits": 15,
+      "requiredCourses": [
+        {
+          "ordinal": "1",
+          "courseCode": "SP1039",
+          "nameVi": "Lịch sử Đảng Cộng sản Việt Nam",
+          "nameEn": "History of VieTNamese Communist Party",
+          "credits": 2,
+          "conditionsRaw": "SP1035(KN)",
+          "conditions": [
+            {
+              "courseCode": "SP1035",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "2",
+          "courseCode": "CO2001",
+          "nameVi": "Kỹ năng Chuyên nghiệp cho Kỹ sư",
+          "nameEn": "Professional Skills for Engineers",
+          "credits": 3,
+          "conditionsRaw": "CO1005(TQ)",
+          "conditions": [
+            {
+              "courseCode": "CO1005",
+              "code": "TQ",
+              "type": "prerequisite"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "3",
+          "courseCode": "CO3005",
+          "nameVi": "Nguyên lý Ngôn ngữ Lập trình",
+          "nameEn": "Principles of Programming Languages",
+          "credits": 4,
+          "conditionsRaw": "CO1027(TQ)",
+          "conditions": [
+            {
+              "courseCode": "CO1027",
+              "code": "TQ",
+              "type": "prerequisite"
+            }
+          ],
+          "notesRaw": "x",
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "4",
+          "courseCode": "CO3335",
+          "nameVi": "Thực tập Ngoài trường",
+          "nameEn": "Internship",
+          "credits": 2,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 2
+        }
+      ],
+      "electiveGroups": [
+        {
+          "group": "B",
+          "creditsRequired": 1,
+          "selectionRule": "credits",
+          "courses": [
+            {
+              "ordinal": "5",
+              "courseCode": "CO3107",
+              "nameVi": "Thực tập Đồ án môn học Đa ngành - Hướng Trí tuệ Nhân tạo",
+              "nameEn": "Multidisciplinary Project",
+              "credits": 1,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": "x",
+              "sourcePage": 2
+            },
+            {
+              "ordinal": "6",
+              "courseCode": "CO3109",
+              "nameVi": "Thực tập Đồ án môn học Đa ngành - Hướng công Nghệ phần mềm",
+              "nameEn": "Multidisciplinary Project",
+              "credits": 1,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": "x",
+              "sourcePage": 2
+            },
+            {
+              "ordinal": "7",
+              "courseCode": "CO3111",
+              "nameVi": "Thực tập Đồ án môn học Đa ngành - hướng Hệ thống Thông tin",
+              "nameEn": "Multidisciplinary Project",
+              "credits": 1,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": "x",
+              "sourcePage": 2
+            }
+          ]
+        }
+      ],
+      "freeElectiveRequirements": [
+        {
+          "nameVi": "Tự chọn tự do 3 tín chỉ",
+          "nameEn": "Free Electives 3 credits",
+          "credits": 3,
+          "courseCode": null,
+          "sourcePage": 2
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "plannedCredits": 16,
+      "requiredCourses": [
+        {
+          "ordinal": "1",
+          "courseCode": "SP1037",
+          "nameVi": "Tư tưởng Hồ Chí Minh",
+          "nameEn": "Ho Chi Minh Ideology",
+          "credits": 2,
+          "conditionsRaw": "SP1039(KN)",
+          "conditions": [
+            {
+              "courseCode": "SP1039",
+              "code": "KN",
+              "type": "recommended"
+            }
+          ],
+          "notesRaw": null,
+          "sourcePage": 2
+        },
+        {
+          "ordinal": "2",
+          "courseCode": "CO4029",
+          "nameVi": "Đồ án Chuyên ngành",
+          "nameEn": "Specialized Project",
+          "credits": 2,
+          "conditionsRaw": "CO3335(SHT)",
+          "conditions": [
+            {
+              "courseCode": "CO3335",
+              "code": "SHT",
+              "type": "co_requisite_course"
+            }
+          ],
+          "notesRaw": "x",
+          "sourcePage": 2
+        }
+      ],
+      "electiveGroups": [
+        {
+          "group": "C",
+          "creditsRequired": 6,
+          "selectionRule": "credits",
+          "courses": [
+            {
+              "ordinal": "3",
+              "courseCode": "CO3023",
+              "nameVi": "Cơ sở Dữ liệu Phân tán và Hướng đối tượng",
+              "nameEn": "Distributed and Object-Oriented Databases",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "4",
+              "courseCode": "CO3027",
+              "nameVi": "Thương mại Điện tử",
+              "nameEn": "Electronic Commerce",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "5",
+              "courseCode": "CO3029",
+              "nameVi": "Khai phá Dữ liệu",
+              "nameEn": "Data Mining",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "6",
+              "courseCode": "CO3031",
+              "nameVi": "Phân tích và Thiết kế Giải Thuật",
+              "nameEn": "AlgoriThms-Design and Analysis",
+              "credits": 3,
+              "conditionsRaw": "CO2003(HT)",
+              "conditions": [
+                {
+                  "courseCode": "CO2003",
+                  "code": "HT",
+                  "type": "learned_course"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "7",
+              "courseCode": "CO3033",
+              "nameVi": "Bảo mật Hệ thống Thông tin",
+              "nameEn": "Information System Security",
+              "credits": 3,
+              "conditionsRaw": "CO2013(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2013",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "8",
+              "courseCode": "CO3035",
+              "nameVi": "Hệ thời gian thực",
+              "nameEn": "Real-Time Systems",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "9",
+              "courseCode": "CO3037",
+              "nameVi": "Phát triển Ứng dụng Internet of Things",
+              "nameEn": "Internet of Things Application Development",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "10",
+              "courseCode": "CO3041",
+              "nameVi": "Hệ thống Thông minh",
+              "nameEn": "Intelligent Systems",
+              "credits": 3,
+              "conditionsRaw": "CO3001(TQ)",
+              "conditions": [
+                {
+                  "courseCode": "CO3001",
+                  "code": "TQ",
+                  "type": "prerequisite"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "11",
+              "courseCode": "CO3043",
+              "nameVi": "Phát triển Ứng dụng trên Thiết bị Di động",
+              "nameEn": "Mobile Application Development",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "12",
+              "courseCode": "CO3045",
+              "nameVi": "Lập trình Game",
+              "nameEn": "Game Programming",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "13",
+              "courseCode": "CO3047",
+              "nameVi": "Mạng máy tính nâng cao",
+              "nameEn": "Advanced Computer Networks",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "14",
+              "courseCode": "CO3049",
+              "nameVi": "Lập trình Web",
+              "nameEn": "Web Programming",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "15",
+              "courseCode": "CO3051",
+              "nameVi": "Hệ thống thiết bị di động",
+              "nameEn": "Mobile Systems",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "16",
+              "courseCode": "CO3057",
+              "nameVi": "Xử lý Ảnh số và Thị giác Máy tính",
+              "nameEn": "Digital Image Processing and Computer Vision",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "17",
+              "courseCode": "CO3059",
+              "nameVi": "Đồ họa Máy tính",
+              "nameEn": "Computer Graphics",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "18",
+              "courseCode": "CO3061",
+              "nameVi": "Nhập môn Trí tuệ Nhân tạo",
+              "nameEn": "Introduction to Artificial Intelligence",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "19",
+              "courseCode": "CO3065",
+              "nameVi": "Công nghệ Phần mềm Nâng cao",
+              "nameEn": "Advanced Software Engineering",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "20",
+              "courseCode": "CO3067",
+              "nameVi": "Tính toán Song song",
+              "nameEn": "Parallel Computing",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "21",
+              "courseCode": "CO3069",
+              "nameVi": "Mật mã và An ninh mạng",
+              "nameEn": "Cryptography and Network Security",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "22",
+              "courseCode": "CO3071",
+              "nameVi": "Hệ phân bố",
+              "nameEn": "Distributed Systems",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "23",
+              "courseCode": "CO3083",
+              "nameVi": "Mật mã học và Mã hóa Thông tin",
+              "nameEn": "Advance Cryptography and Coding Theory",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "24",
+              "courseCode": "CO3085",
+              "nameVi": "Xử lý Ngôn ngữ Tự nhiên",
+              "nameEn": "Natural Language Processing",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "25",
+              "courseCode": "CO3089",
+              "nameVi": "Những Chủ đề Nâng cao trong Khoa học Máy tính",
+              "nameEn": "Selected Topics in High Performance Computing",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "26",
+              "courseCode": "CO3115",
+              "nameVi": "Phân tích và Thiết kế Hệ thống",
+              "nameEn": "Systems Analysis and Design",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "27",
+              "courseCode": "CO3117",
+              "nameVi": "Học máy",
+              "nameEn": "Machine Learning",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "28",
+              "courseCode": "CO4025",
+              "nameVi": "Mạng xã hội và Thông tin",
+              "nameEn": "Information and Social Networks",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "29",
+              "courseCode": "CO4031",
+              "nameVi": "Kho dữ Liệu và Hệ hỗ trợ Quyết định",
+              "nameEn": "Data Warehouses and Decision Support Systems",
+              "credits": 3,
+              "conditionsRaw": "CO2013(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2013",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "30",
+              "courseCode": "CO4033",
+              "nameVi": "Phân tích Dữ liệu lớn và Trí tuệ Kinh doanh",
+              "nameEn": "Big Data Analytics and Business Intelligence",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "31",
+              "courseCode": "CO4035",
+              "nameVi": "Hệ hoạch Định tài Nguyên tổ chức",
+              "nameEn": "Enterprise Resource Planning Systems",
+              "credits": 3,
+              "conditionsRaw": "CO2013(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2013",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "32",
+              "courseCode": "CO4037",
+              "nameVi": "Hệ thống thông tin quản lý",
+              "nameEn": "Management Information Systems",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "33",
+              "courseCode": "CO4039",
+              "nameVi": "Bảo mật sinh trắc",
+              "nameEn": "Biometric Security",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 3
+            },
+            {
+              "ordinal": "34",
+              "courseCode": "CO3129",
+              "nameVi": "Bảo mật Phần mềm",
+              "nameEn": "Software Security",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "35",
+              "courseCode": "CO3137",
+              "nameVi": "Dữ liệu lớn",
+              "nameEn": "Big Data",
+              "credits": 3,
+              "conditionsRaw": "CO2017(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2017",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "36",
+              "courseCode": "CO3139",
+              "nameVi": "Chuyển đổi số",
+              "nameEn": "Digital transformation",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "37",
+              "courseCode": "CO3131",
+              "nameVi": "Công nghệ Phần mềm thế hệ mới",
+              "nameEn": "Next-gen Software Engineering",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "38",
+              "courseCode": "CO3151",
+              "nameVi": "Quản trị mạng",
+              "nameEn": "Network management",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "39",
+              "courseCode": "CO3153",
+              "nameVi": "Đánh giá an toàn mạng máy tính",
+              "nameEn": "Computer Network Security Assessment",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "40",
+              "courseCode": "CO3133",
+              "nameVi": "Học sâu và Ứng dụng",
+              "nameEn": "Deep Learning and Its Applications",
+              "credits": 3,
+              "conditionsRaw": "CO3061(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO3061",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "41",
+              "courseCode": "CO3135",
+              "nameVi": "Lập trình cho Trí tuệ nhân tạo và Khoa học dữ liệu",
+              "nameEn": "Programming for Artificial Intelligence and Data Science (P4AI-DS)",
+              "credits": 3,
+              "conditionsRaw": "CO2003(TQ),\nCO1027(TQ)",
+              "conditions": [
+                {
+                  "courseCode": "CO2003",
+                  "code": "TQ",
+                  "type": "prerequisite"
+                },
+                {
+                  "courseCode": "CO1027",
+                  "code": "TQ",
+                  "type": "prerequisite"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "42",
+              "courseCode": "CO3011",
+              "nameVi": "Quản lý Dự án Phần mềm",
+              "nameEn": "Software Project Management",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "43",
+              "courseCode": "CO3013",
+              "nameVi": "Xây dựng Chương trình Dịch",
+              "nameEn": "Compiler Construction",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "44",
+              "courseCode": "CO3015",
+              "nameVi": "Kiểm tra Phần mềm",
+              "nameEn": "Software Testing",
+              "credits": 3,
+              "conditionsRaw": "CO3001(KN),\nCO1027(TQ)",
+              "conditions": [
+                {
+                  "courseCode": "CO3001",
+                  "code": "KN",
+                  "type": "recommended"
+                },
+                {
+                  "courseCode": "CO1027",
+                  "code": "TQ",
+                  "type": "prerequisite"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "45",
+              "courseCode": "CO3017",
+              "nameVi": "Kiến trúc Phần mềm",
+              "nameEn": "Software Architecture",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "46",
+              "courseCode": "CO3021",
+              "nameVi": "Hệ Quản trị Cơ sở Dữ Liệu",
+              "nameEn": "Database Management Systems",
+              "credits": 3,
+              "conditionsRaw": "CO2013(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2013",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 4
+            }
+          ]
+        },
+        {
+          "group": "D",
+          "creditsRequired": 3,
+          "selectionRule": "credits",
+          "courses": [
+            {
+              "ordinal": "47",
+              "courseCode": "IM1013",
+              "nameVi": "Kinh tế học Đại cương",
+              "nameEn": "Economics",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "48",
+              "courseCode": "IM1023",
+              "nameVi": "Quản lý Sản xuất cho Kỹ sư",
+              "nameEn": "Production and Operations Management for Engineers",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "49",
+              "courseCode": "IM1025",
+              "nameVi": "Quản lý Dự án cho Kỹ sư",
+              "nameEn": "Project Management for Engineers",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "50",
+              "courseCode": "IM1027",
+              "nameVi": "Kinh tế Kỹ thuật",
+              "nameEn": "Engineering Economics",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "51",
+              "courseCode": "IM3001",
+              "nameVi": "Quản trị Kinh doanh cho Kỹ sư",
+              "nameEn": "Business Administration for Engineers",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            }
+          ]
+        }
+      ],
+      "freeElectiveRequirements": [
+        {
+          "nameVi": "Tự chọn tự do",
+          "nameEn": "Free Elective",
+          "credits": 3,
+          "courseCode": null,
+          "sourcePage": 2
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "plannedCredits": 15,
+      "requiredCourses": [
+        {
+          "ordinal": "1",
+          "courseCode": "SP1007",
+          "nameVi": "Pháp luật Việt Nam Đại cương",
+          "nameEn": "Introduction to VieTNamese Law",
+          "credits": 2,
+          "conditionsRaw": null,
+          "conditions": [],
+          "notesRaw": null,
+          "sourcePage": 4
+        },
+        {
+          "ordinal": "2",
+          "courseCode": "CO4337",
+          "nameVi": "Đồ án Tốt nghiệp (Khoa học Máy tính)",
+          "nameEn": "Capstone Project",
+          "credits": 4,
+          "conditionsRaw": "CO3335(TQ),\nCO4029(TQ)",
+          "conditions": [
+            {
+              "courseCode": "CO3335",
+              "code": "TQ",
+              "type": "prerequisite"
+            },
+            {
+              "courseCode": "CO4029",
+              "code": "TQ",
+              "type": "prerequisite"
+            }
+          ],
+          "notesRaw": "x",
+          "sourcePage": 4
+        }
+      ],
+      "electiveGroups": [
+        {
+          "group": "C",
+          "creditsRequired": 9,
+          "selectionRule": "credits",
+          "courses": [
+            {
+              "ordinal": "3",
+              "courseCode": "CO3027",
+              "nameVi": "Thương mại Điện tử",
+              "nameEn": "Electronic Commerce",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "4",
+              "courseCode": "CO3029",
+              "nameVi": "Khai phá Dữ liệu",
+              "nameEn": "Data Mining",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "5",
+              "courseCode": "CO3031",
+              "nameVi": "Phân tích và Thiết kế Giải Thuật",
+              "nameEn": "AlgoriThms-Design and Analysis",
+              "credits": 3,
+              "conditionsRaw": "CO2003(HT)",
+              "conditions": [
+                {
+                  "courseCode": "CO2003",
+                  "code": "HT",
+                  "type": "learned_course"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "6",
+              "courseCode": "CO3033",
+              "nameVi": "Bảo mật Hệ thống Thông tin",
+              "nameEn": "Information System Security",
+              "credits": 3,
+              "conditionsRaw": "CO2013(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2013",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "7",
+              "courseCode": "CO3035",
+              "nameVi": "Hệ thời gian thực",
+              "nameEn": "Real-Time Systems",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "8",
+              "courseCode": "CO3037",
+              "nameVi": "Phát triển Ứng dụng Internet of Things",
+              "nameEn": "Internet of Things Application Development",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "9",
+              "courseCode": "CO3041",
+              "nameVi": "Hệ thống Thông minh",
+              "nameEn": "Intelligent Systems",
+              "credits": 3,
+              "conditionsRaw": "CO3001(TQ)",
+              "conditions": [
+                {
+                  "courseCode": "CO3001",
+                  "code": "TQ",
+                  "type": "prerequisite"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "10",
+              "courseCode": "CO3043",
+              "nameVi": "Phát triển Ứng dụng trên Thiết bị Di động",
+              "nameEn": "Mobile Application Development",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "11",
+              "courseCode": "CO3045",
+              "nameVi": "Lập trình Game",
+              "nameEn": "Game Programming",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 4
+            },
+            {
+              "ordinal": "12",
+              "courseCode": "CO3047",
+              "nameVi": "Mạng máy tính nâng cao",
+              "nameEn": "Advanced Computer Networks",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "13",
+              "courseCode": "CO3049",
+              "nameVi": "Lập trình Web",
+              "nameEn": "Web Programming",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "14",
+              "courseCode": "CO3051",
+              "nameVi": "Hệ thống thiết bị di động",
+              "nameEn": "Mobile Systems",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "15",
+              "courseCode": "CO3057",
+              "nameVi": "Xử lý Ảnh số và Thị giác Máy tính",
+              "nameEn": "Digital Image Processing and Computer Vision",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "16",
+              "courseCode": "CO3059",
+              "nameVi": "Đồ họa Máy tính",
+              "nameEn": "Computer Graphics",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "17",
+              "courseCode": "CO3061",
+              "nameVi": "Nhập môn Trí tuệ Nhân tạo",
+              "nameEn": "Introduction to Artificial Intelligence",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "18",
+              "courseCode": "CO3065",
+              "nameVi": "Công nghệ Phần mềm Nâng cao",
+              "nameEn": "Advanced Software Engineering",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "19",
+              "courseCode": "CO3067",
+              "nameVi": "Tính toán Song song",
+              "nameEn": "Parallel Computing",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "20",
+              "courseCode": "CO3069",
+              "nameVi": "Mật mã và An ninh mạng",
+              "nameEn": "Cryptography and Network Security",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "21",
+              "courseCode": "CO3071",
+              "nameVi": "Hệ phân bố",
+              "nameEn": "Distributed Systems",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "22",
+              "courseCode": "CO3083",
+              "nameVi": "Mật mã học và Mã hóa Thông tin",
+              "nameEn": "Advance Cryptography and Coding Theory",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "23",
+              "courseCode": "CO3085",
+              "nameVi": "Xử lý Ngôn ngữ Tự nhiên",
+              "nameEn": "Natural Language Processing",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "24",
+              "courseCode": "CO3089",
+              "nameVi": "Những Chủ đề Nâng cao trong Khoa học Máy tính",
+              "nameEn": "Selected Topics in High Performance Computing",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "25",
+              "courseCode": "CO3115",
+              "nameVi": "Phân tích và Thiết kế Hệ thống",
+              "nameEn": "Systems Analysis and Design",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "26",
+              "courseCode": "CO3117",
+              "nameVi": "Học máy",
+              "nameEn": "Machine Learning",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "27",
+              "courseCode": "CO4025",
+              "nameVi": "Mạng xã hội và Thông tin",
+              "nameEn": "Information and Social Networks",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "28",
+              "courseCode": "CO4031",
+              "nameVi": "Kho dữ Liệu và Hệ hỗ trợ Quyết định",
+              "nameEn": "Data Warehouses and Decision Support Systems",
+              "credits": 3,
+              "conditionsRaw": "CO2013(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2013",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "29",
+              "courseCode": "CO4033",
+              "nameVi": "Phân tích Dữ liệu lớn và Trí tuệ Kinh doanh",
+              "nameEn": "Big Data Analytics and Business Intelligence",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "30",
+              "courseCode": "CO4035",
+              "nameVi": "Hệ hoạch Định tài Nguyên tổ chức",
+              "nameEn": "Enterprise Resource Planning Systems",
+              "credits": 3,
+              "conditionsRaw": "CO2013(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2013",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "31",
+              "courseCode": "CO4037",
+              "nameVi": "Hệ thống thông tin quản lý",
+              "nameEn": "Management Information Systems",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "32",
+              "courseCode": "CO4039",
+              "nameVi": "Bảo mật sinh trắc",
+              "nameEn": "Biometric Security",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "33",
+              "courseCode": "CO3011",
+              "nameVi": "Quản lý Dự án Phần mềm",
+              "nameEn": "Software Project Management",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "34",
+              "courseCode": "CO3129",
+              "nameVi": "Bảo mật Phần mềm",
+              "nameEn": "Software Security",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "35",
+              "courseCode": "CO3137",
+              "nameVi": "Dữ liệu lớn",
+              "nameEn": "Big Data",
+              "credits": 3,
+              "conditionsRaw": "CO2017(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2017",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "36",
+              "courseCode": "CO3139",
+              "nameVi": "Chuyển đổi số",
+              "nameEn": "Digital transformation",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "37",
+              "courseCode": "CO3131",
+              "nameVi": "Công nghệ Phần mềm thế hệ mới",
+              "nameEn": "Next-gen Software Engineering",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "38",
+              "courseCode": "CO3151",
+              "nameVi": "Quản trị mạng",
+              "nameEn": "Network management",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "39",
+              "courseCode": "CO3153",
+              "nameVi": "Đánh giá an toàn mạng máy tính",
+              "nameEn": "Computer Network Security Assessment",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "40",
+              "courseCode": "CO3133",
+              "nameVi": "Học sâu và Ứng dụng",
+              "nameEn": "Deep Learning and Its Applications",
+              "credits": 3,
+              "conditionsRaw": "CO3061(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO3061",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "41",
+              "courseCode": "CO3135",
+              "nameVi": "Lập trình cho Trí tuệ nhân tạo và Khoa học dữ liệu",
+              "nameEn": "Programming for Artificial Intelligence and Data Science (P4AI-DS)",
+              "credits": 3,
+              "conditionsRaw": "CO2003(TQ),\nCO1027(TQ)",
+              "conditions": [
+                {
+                  "courseCode": "CO2003",
+                  "code": "TQ",
+                  "type": "prerequisite"
+                },
+                {
+                  "courseCode": "CO1027",
+                  "code": "TQ",
+                  "type": "prerequisite"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "42",
+              "courseCode": "CO3013",
+              "nameVi": "Xây dựng Chương trình Dịch",
+              "nameEn": "Compiler Construction",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "43",
+              "courseCode": "CO3015",
+              "nameVi": "Kiểm tra Phần mềm",
+              "nameEn": "Software Testing",
+              "credits": 3,
+              "conditionsRaw": "CO3001(KN),\nCO1027(TQ)",
+              "conditions": [
+                {
+                  "courseCode": "CO3001",
+                  "code": "KN",
+                  "type": "recommended"
+                },
+                {
+                  "courseCode": "CO1027",
+                  "code": "TQ",
+                  "type": "prerequisite"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 5
+            },
+            {
+              "ordinal": "44",
+              "courseCode": "CO3017",
+              "nameVi": "Kiến trúc Phần mềm",
+              "nameEn": "Software Architecture",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 6
+            },
+            {
+              "ordinal": "45",
+              "courseCode": "CO3021",
+              "nameVi": "Hệ Quản trị Cơ sở Dữ Liệu",
+              "nameEn": "Database Management Systems",
+              "credits": 3,
+              "conditionsRaw": "CO2013(KN)",
+              "conditions": [
+                {
+                  "courseCode": "CO2013",
+                  "code": "KN",
+                  "type": "recommended"
+                }
+              ],
+              "notesRaw": null,
+              "sourcePage": 6
+            },
+            {
+              "ordinal": "46",
+              "courseCode": "CO3023",
+              "nameVi": "Cơ sở Dữ liệu Phân tán và Hướng đối tượng",
+              "nameEn": "Distributed and Object-Oriented Databases",
+              "credits": 3,
+              "conditionsRaw": null,
+              "conditions": [],
+              "notesRaw": null,
+              "sourcePage": 6
+            }
+          ]
+        }
+      ],
+      "freeElectiveRequirements": []
+    }
+  ],
+  "validation": {
+    "warnings": [],
+    "checks": {
+      "eightSemesters": true,
+      "semesterCreditsSumTo128": true,
+      "programCredits128": true,
+      "allCourseRowsHaveCodeAndCredits": true,
+      "groupAOptions": true,
+      "groupBOptions": true,
+      "groupDOptions": true,
+      "threeFreeElectivePlaceholders": true,
+      "conditionTypesRecognized": true,
+      "allPassed": true,
+      "semesterCount": 8,
+      "courseRowCount": 138,
+      "conditionRowCount": 38,
+      "freeElectivePlaceholderCount": 3,
+      "groupSummaries": [
+        {
+          "semester": 5,
+          "group": "A",
+          "creditsRequired": 1,
+          "optionCount": 5
+        },
+        {
+          "semester": 6,
+          "group": "B",
+          "creditsRequired": 1,
+          "optionCount": 3
+        },
+        {
+          "semester": 7,
+          "group": "C",
+          "creditsRequired": 6,
+          "optionCount": 44
+        },
+        {
+          "semester": 7,
+          "group": "D",
+          "creditsRequired": 3,
+          "optionCount": 5
+        },
+        {
+          "semester": 8,
+          "group": "C",
+          "creditsRequired": 9,
+          "optionCount": 44
+        }
+      ],
+      "semesterCreditLimits": {
+        "minimum": 12,
+        "maximum": 24,
+        "source": "user_provided"
+      }
+    }
+  }
+}
