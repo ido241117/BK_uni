@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "curriculum_id": "cs_2023",
+  "grading_policy": "policy_2020",
+  "requirements": [
+    { "id": "groups", "type": "all_groups_satisfied" },
+    { "id": "credits", "type": "min_total_credits", "value": 128 },
+    { "id": "gpa", "type": "min_cumulative_gpa", "value": "2.50" }
+  ],
+  "external_requirements": [
+    {
+      "id": "social_work_days",
+      "unit": "days",
+      "mode": "cumulative",
+      "enforcement": "blocking",
+      "milestones": [
+        { "deadline": { "type": "end_of_year", "year": 1 }, "min": 3 },
+        { "deadline": { "type": "end_of_year", "year": 2 }, "min": 6 },
+        { "deadline": { "type": "graduation" },            "min": 15 }
+      ]
+    }
+  ]
+}

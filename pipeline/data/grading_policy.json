@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "policy_2020",
+  "effective_for_cohorts": { "from": 2024, "to": null },
+
+  "grade_scale": [
+    { "grade": "A",  "points": "4.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "B+", "points": "3.50", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "B",  "points": "3.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "C+", "points": "2.50", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "C",  "points": "2.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "D",  "points": "1.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "F",  "points": "0.00", "passing": false, "in_gpa": true,  "earns_credit": false },
+    { "grade": "P",  "points": null,   "passing": true,  "in_gpa": false, "earns_credit": true },
+    { "grade": "W",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false },
+    { "grade": "I",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true }
+  ],
+
+  "gpa": {
+    "formula": "credit_weighted_mean",
+    "included_course_kinds": ["regular"],
+    "scale_max": "4.00",
+    "rounding": { "mode": "half_up", "decimals": 2, "applied_to": "final_only" }
+  },
+
+  "retake": {
+    "gpa_attempt_selection": "latest",
+    "credit_counting": "once_per_course",
+    "eligibility": { "only_if_grade_at_most": "C" },
+    "max_attempts": 3,
+    "grade_cap": { "applies_to": "retakes", "max_grade": "B" },
+    "keep_old_attempts_on_transcript": true,
+    "equivalence": "use_course_equivalents"
+  },
+
+  "pipeline_order": [
+    "resolve_equivalents",
+    "select_attempts",
+    "apply_grade_cap",
+    "filter_by_flags",
+    "sum_credits_and_gpa",
+    "round"
+  ]
+}
