@@ -11,7 +11,7 @@ from bk_agent.schemas import HistoryMessage
 
 class IntentDecision(BaseModel):
     intent: Literal["recommendation", "clarification", "out_of_scope"]
-    clarification: str = ""
+    clarification: str | None = None
 
 
 class AnswerStyle(BaseModel):
@@ -60,9 +60,13 @@ class DeepSeekAdapter:
             ]
         )
         try:
-            return IntentDecision.model_validate_json(str(response.content))
+            decision = IntentDecision.model_validate_json(str(response.content))
         except (ValidationError, ValueError) as error:
             raise RuntimeError("MODEL_OUTPUT_INVALID") from error
+        return IntentDecision(
+            intent=decision.intent,
+            clarification=(decision.clarification or "").strip(),
+        )
 
     async def compose(self, message: str, recommendation: dict) -> Literal["concise", "encouraging"]:
         safe_result = {

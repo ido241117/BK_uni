@@ -9,7 +9,7 @@ from bk_agent.config import Settings
 from bk_agent.gateway import GatewayError, RecommendationGateway
 from bk_agent.graph import build_graph, run_turn
 from bk_agent.provider import DeepSeekAdapter, ModelAdapter
-from bk_agent.schemas import TurnRequest, TurnResponse
+from bk_agent.schemas import TurnEnvelope, TurnRequest, TurnResponse
 from bk_agent.security import verify_delegated_context, verify_service_token
 
 
@@ -55,14 +55,14 @@ def create_app(
             raise HTTPException(status_code=503, detail={"code": "AGENT_NOT_CONFIGURED"})
         return {"status": "ready"}
 
-    @app.post("/internal/v1/turns", response_model=TurnResponse)
+    @app.post("/internal/v1/turns", response_model=TurnEnvelope)
     async def turn(
         body: TurnRequest,
         request: Request,
         correlation_id: Annotated[UUID, Header(alias="X-Correlation-ID")],
         authorization: Annotated[str | None, Header()] = None,
         delegated_context: Annotated[str | None, Header(alias="X-Delegated-Context")] = None,
-    ) -> TurnResponse:
+    ) -> TurnEnvelope:
         resolved_settings: Settings = request.app.state.settings
         verify_service_token(authorization, resolved_settings)
         verify_delegated_context(
@@ -90,12 +90,14 @@ def create_app(
                 status_code=502,
                 detail={"code": "AGENT_UNAVAILABLE"},
             ) from None
-        return TurnResponse(
-            status=result["status"],
-            answer=result["answer"],
-            recommendation=result["recommendation"],
-            tool_called=result["tool_called"],
-            correlation_id=correlation_id,
+        return TurnEnvelope(
+            data=TurnResponse(
+                status=result["status"],
+                answer=result["answer"],
+                recommendation=result["recommendation"],
+                tool_called=result["tool_called"],
+                correlation_id=correlation_id,
+            ),
         )
 
     return app

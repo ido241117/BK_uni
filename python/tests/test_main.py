@@ -126,8 +126,10 @@ def test_internal_turn_runs_graph_for_synthetic_context() -> None:
         )
 
     assert response.status_code == 200
-    assert response.json()["status"] == "completed"
-    assert response.json()["recommendation"]["status"] == "ready"
+    body = response.json()
+    assert body["error"] is False
+    assert body["data"]["status"] == "completed"
+    assert body["data"]["recommendation"]["status"] == "ready"
 
 
 def test_internal_turn_maps_gateway_timeout_without_exposing_exception() -> None:

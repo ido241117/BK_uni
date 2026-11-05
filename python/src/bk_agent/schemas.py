@@ -48,3 +48,9 @@ class TurnResponse(ApiModel):
     recommendation: dict[str, Any] | None = None
     tool_called: bool
     correlation_id: UUID
+
+
+class TurnEnvelope(BaseModel):
+    error: bool = False
+    data: TurnResponse
+    message: str = "Thành công"
