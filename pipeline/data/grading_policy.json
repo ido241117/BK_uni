@@ -13,7 +13,9 @@
     { "grade": "F",  "points": "0.00", "passing": false, "in_gpa": true,  "earns_credit": false },
     { "grade": "P",  "points": null,   "passing": true,  "in_gpa": false, "earns_credit": true },
     { "grade": "W",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false },
-    { "grade": "I",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true }
+    { "grade": "I",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true },
+    { "grade": "X",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true },
+    { "grade": "R",  "points": null,   "passing": true, "in_gpa": false, "earns_credit": true}
   ],
 
   "gpa": {
@@ -41,4 +43,6 @@
     "sum_credits_and_gpa",
     "round"
   ]
+
+  
 }

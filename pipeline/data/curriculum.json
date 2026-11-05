@@ -16,7 +16,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -24,14 +25,17 @@
       "name": "Calculus 2",
       "credits": 4,
       "prerequisites": [
-        []
+        [
+          "MT1003"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -46,7 +50,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -54,14 +59,17 @@
       "name": "Probability and Statistics",
       "credits": 4,
       "prerequisites": [
-        []
+        [
+          "MT1007"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -76,7 +84,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -91,7 +100,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -106,12 +116,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO1007",
-      "name": "Discrete Structures",
+      "name": "Discrete Structures for Computing",
       "credits": 4,
       "prerequisites": [
         []
@@ -121,7 +132,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -129,14 +141,17 @@
       "name": "Mathematical Modeling",
       "credits": 3,
       "prerequisites": [
-        ["CO1007"]
+        [
+          "CO1007"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -151,7 +166,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -166,7 +182,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -174,14 +191,17 @@
       "name": "Marxist-Leninist Political Economy",
       "credits": 2,
       "prerequisites": [
-        []
+        [
+          "SP1031"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -189,14 +209,17 @@
       "name": "Scientific Socialism",
       "credits": 2,
       "prerequisites": [
-        []
+        [
+          "SP1033"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -204,14 +227,17 @@
       "name": "Ho Chi Minh Ideology",
       "credits": 2,
       "prerequisites": [
-        []
+        [
+          "SP1039"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -219,14 +245,17 @@
       "name": "History of Vietnamese Communist Party",
       "credits": 2,
       "prerequisites": [
-        []
+        [
+          "SP1035"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -241,7 +270,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -258,7 +288,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -273,7 +304,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -290,7 +322,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -307,7 +340,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -324,7 +358,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -339,7 +374,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -354,7 +390,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -362,14 +399,20 @@
       "name": "Data Structures and Algorithms",
       "credits": 4,
       "prerequisites": [
-        ["CO1007", "CO1027"]
+        [
+          "CO1027"
+        ],
+        [
+          "CO1007"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -377,14 +420,17 @@
       "name": "Computer Architecture",
       "credits": 4,
       "prerequisites": [
-        []
+        [
+          "CO1005"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -399,7 +445,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -414,7 +461,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -429,12 +477,31 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO3001",
       "name": "Software Engineering",
+      "credits": 3,
+      "prerequisites": [
+        [
+          "CO1027"
+        ]
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3093",
+      "name": "Computer Networks",
       "credits": 3,
       "prerequisites": [
         []
@@ -444,12 +511,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO3005",
-      "name": "Computer Networks",
+      "name": "Principles of Programming Languages",
       "credits": 4,
       "prerequisites": [
         [
@@ -461,28 +529,14 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
-      "id": "CO3093",
-      "name": "Principles of Programming Languages",
-      "credits": 3,
-      "prerequisites": [
-        []
-      ],
-      "corequisites": [
-        []
-      ],
-      "offered_terms": [
-        1,
-        2
-      ]
-    },
-    {
-      "id": "CO3021",
+      "id": "CO3101",
       "name": "Programming Integration Project - AI",
-      "credits": 3,
+      "credits": 1,
       "prerequisites": [
         []
       ],
@@ -491,12 +545,125 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3103",
+      "name": "Programming Integration Project - Software Engineering",
+      "credits": 1,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3105",
+      "name": "Programming Integration Project - Information Systems",
+      "credits": 1,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3119",
+      "name": "Computer Networks Project",
+      "credits": 1,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3127",
+      "name": "Programming Integration Project - Data Engineering",
+      "credits": 1,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3107",
+      "name": "Multidisciplinary Project - AI",
+      "credits": 1,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3109",
+      "name": "Multidisciplinary Project - Software Engineering",
+      "credits": 1,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3111",
+      "name": "Multidisciplinary Project - Information Systems",
+      "credits": 1,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
       ]
     },
     {
       "id": "CO3023",
-      "name": "Programming Integration Project - Software Engineering",
+      "name": "Distributed and Object-Oriented Databases",
       "credits": 3,
       "prerequisites": [
         []
@@ -506,27 +673,81 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3027",
+      "name": "Electronic Commerce",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3029",
+      "name": "Data Mining",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3031",
+      "name": "Algorithm Design and Analysis",
+      "credits": 3,
+      "prerequisites": [
+        [
+          "CO2003"
+        ]
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
       ]
     },
     {
       "id": "CO3033",
-      "name": "Data Engineering Project",
+      "name": "Information System Security",
       "credits": 3,
       "prerequisites": [
-        []
+        [
+          "CO2013"
+        ]
       ],
       "corequisites": [
         []
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO3035",
-      "name": "Multidisciplinary Project - AI",
+      "name": "Real-Time Systems",
       "credits": 3,
       "prerequisites": [
         []
@@ -536,12 +757,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO3037",
-      "name": "Multidisciplinary Project - Software Engineering",
+      "name": "Internet of Things Application Development",
       "credits": 3,
       "prerequisites": [
         []
@@ -551,12 +773,31 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
-      "id": "CO3039",
-      "name": "Multidisciplinary Project - Information Systems",
+      "id": "CO3041",
+      "name": "Intelligent Systems",
+      "credits": 3,
+      "prerequisites": [
+        [
+          "CO3001"
+        ]
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3043",
+      "name": "Mobile Application Development",
       "credits": 3,
       "prerequisites": [
         []
@@ -566,7 +807,501 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3045",
+      "name": "Game Programming",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3047",
+      "name": "Advanced Computer Networks",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3049",
+      "name": "Web Programming",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3051",
+      "name": "Mobile Systems",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3057",
+      "name": "Digital Image Processing and Computer Vision",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3059",
+      "name": "Computer Graphics",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3061",
+      "name": "Introduction to Artificial Intelligence",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3065",
+      "name": "Advanced Software Engineering",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3067",
+      "name": "Parallel Computing",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3069",
+      "name": "Cryptography and Network Security",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3071",
+      "name": "Distributed Systems",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3083",
+      "name": "Advanced Cryptography and Coding Theory",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3085",
+      "name": "Natural Language Processing",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3089",
+      "name": "Selected Topics in High Performance Computing",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3115",
+      "name": "Systems Analysis and Design",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3117",
+      "name": "Machine Learning",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO4025",
+      "name": "Information and Social Networks",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO4031",
+      "name": "Data Warehouses and Decision Support Systems",
+      "credits": 3,
+      "prerequisites": [
+        [
+          "CO2013"
+        ]
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO4033",
+      "name": "Big Data Analytics and Business Intelligence",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO4035",
+      "name": "Enterprise Resource Planning Systems",
+      "credits": 3,
+      "prerequisites": [
+        [
+          "CO2013"
+        ]
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO4037",
+      "name": "Management Information Systems",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO4039",
+      "name": "Biometric Security",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3129",
+      "name": "Software Security",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3137",
+      "name": "Big Data",
+      "credits": 3,
+      "prerequisites": [
+        [
+          "CO2017"
+        ]
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3139",
+      "name": "Digital Transformation",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3131",
+      "name": "Next-gen Software Engineering",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3151",
+      "name": "Network Management",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3153",
+      "name": "Computer Network Security Assessment",
+      "credits": 3,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3133",
+      "name": "Deep Learning and Its Applications",
+      "credits": 3,
+      "prerequisites": [
+        [
+          "CO3061"
+        ]
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "CO3135",
+      "name": "Programming for Artificial Intelligence and Data Science (P4AI-DS)",
+      "credits": 3,
+      "prerequisites": [
+        [
+          "CO2003"
+        ],
+        [
+          "CO1027"
+        ]
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
       ]
     },
     {
@@ -581,12 +1316,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO3013",
-      "name": "Software Architecture and Design",
+      "name": "Compiler Construction",
       "credits": 3,
       "prerequisites": [
         []
@@ -596,7 +1332,8 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
@@ -616,12 +1353,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO3017",
-      "name": "Formal Methods",
+      "name": "Software Architecture",
       "credits": 3,
       "prerequisites": [
         []
@@ -631,16 +1369,17 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
-      "id": "CO3031",
-      "name": "Systems Analysis and Design",
+      "id": "CO3021",
+      "name": "Database Management Systems",
       "credits": 3,
       "prerequisites": [
         [
-          "CO2003"
+          "CO2013"
         ]
       ],
       "corequisites": [
@@ -648,59 +1387,13 @@
       ],
       "offered_terms": [
         1,
-        2
-      ]
-    },
-    {
-      "id": "CO3041",
-      "name": "Object-Oriented Analysis and Design",
-      "credits": 3,
-      "prerequisites": [
-        [
-          "CO3001"
-        ]
-      ],
-      "corequisites": [
-        []
-      ],
-      "offered_terms": [
-        1,
-        2
-      ]
-    },
-    {
-      "id": "CO3061",
-      "name": "Artificial Intelligence",
-      "credits": 3,
-      "prerequisites": [
-        []
-      ],
-      "corequisites": [
-        []
-      ],
-      "offered_terms": [
-        1,
-        2
-      ]
-    },
-    {
-      "id": "CO3069",
-      "name": "Data Mining",
-      "credits": 3,
-      "prerequisites": [
-        []
-      ],
-      "corequisites": [
-        []
-      ],
-      "offered_terms": [
-        1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "IM1013",
-      "name": "Principles of Economics",
+      "name": "Economics",
       "credits": 3,
       "prerequisites": [
         []
@@ -710,12 +1403,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "IM1023",
-      "name": "Financial Management",
+      "name": "Production and Operations Management for Engineers",
       "credits": 3,
       "prerequisites": [
         []
@@ -725,12 +1419,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
-      "id": "IM1033",
-      "name": "Marketing",
+      "id": "IM1025",
+      "name": "Project Management for Engineers",
       "credits": 3,
       "prerequisites": [
         []
@@ -740,12 +1435,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
-      "id": "CO3043",
-      "name": "Software Development with Python",
+      "id": "IM1027",
+      "name": "Engineering Economics",
       "credits": 3,
       "prerequisites": [
         []
@@ -755,12 +1451,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
-      "id": "CO3045",
-      "name": "Game Design",
+      "id": "IM3001",
+      "name": "Business Administration for Engineers",
       "credits": 3,
       "prerequisites": [
         []
@@ -770,42 +1467,13 @@
       ],
       "offered_terms": [
         1,
-        2
-      ]
-    },
-    {
-      "id": "CO3047",
-      "name": "Computer Vision",
-      "credits": 3,
-      "prerequisites": [
-        []
-      ],
-      "corequisites": [
-        []
-      ],
-      "offered_terms": [
-        1,
-        2
-      ]
-    },
-    {
-      "id": "CO3057",
-      "name": "Data Visualization",
-      "credits": 3,
-      "prerequisites": [
-        []
-      ],
-      "corequisites": [
-        []
-      ],
-      "offered_terms": [
-        1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO3335",
-      "name": "Specialized Project",
+      "name": "Internship",
       "credits": 2,
       "prerequisites": [
         []
@@ -815,12 +1483,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO4029",
-      "name": "Internship",
+      "name": "Specialized Project",
       "credits": 2,
       "prerequisites": [
         []
@@ -832,12 +1501,13 @@
       ],
       "offered_terms": [
         1,
-        2
+        2,
+        3
       ]
     },
     {
       "id": "CO4337",
-      "name": "Graduation Thesis",
+      "name": "Capstone Project",
       "credits": 4,
       "prerequisites": [
         [
@@ -852,7 +1522,39 @@
       ],
       "offered_terms": [
         1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "SA4001",
+      "name": "Student Activities",
+      "credits": 0,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
         2
+      ]
+    },
+    {
+      "id": "ENG_GC",
+      "name": "English Requirements for Graduation",
+      "credits": 0,
+      "prerequisites": [
+        []
+      ],
+      "corequisites": [
+        []
+      ],
+      "offered_terms": [
+        1,
+        2,
+        3
       ]
     }
   ],
@@ -920,19 +1622,21 @@
       "type": "mandatory",
       "course_ids": [
         "CO3001",
-        "CO3005",
-        "CO3093"
+        "CO3093",
+        "CO3005"
       ]
     },
     {
       "id": "B3.2",
       "type": "elective",
       "course_ids": [
-        "CO3021",
-        "CO3023",
-        "CO3033"
+        "CO3101",
+        "CO3103",
+        "CO3105",
+        "CO3119",
+        "CO3127"
       ],
-      "min_credits": 3,
+      "min_credits": 1,
       "min_courses": 1,
       "max_courses": 1
     },
@@ -940,11 +1644,11 @@
       "id": "B3.3",
       "type": "elective",
       "course_ids": [
-        "CO3035",
-        "CO3037",
-        "CO3039"
+        "CO3107",
+        "CO3109",
+        "CO3111"
       ],
-      "min_credits": 3,
+      "min_credits": 1,
       "min_courses": 1,
       "max_courses": 1
     },
@@ -952,14 +1656,50 @@
       "id": "B3.4",
       "type": "elective",
       "course_ids": [
+        "CO3023",
+        "CO3027",
+        "CO3029",
+        "CO3031",
+        "CO3033",
+        "CO3035",
+        "CO3037",
+        "CO3041",
+        "CO3043",
+        "CO3045",
+        "CO3047",
+        "CO3049",
+        "CO3051",
+        "CO3057",
+        "CO3059",
+        "CO3061",
+        "CO3065",
+        "CO3067",
+        "CO3069",
+        "CO3071",
+        "CO3083",
+        "CO3085",
+        "CO3089",
+        "CO3115",
+        "CO3117",
+        "CO4025",
+        "CO4031",
+        "CO4033",
+        "CO4035",
+        "CO4037",
+        "CO4039",
+        "CO3129",
+        "CO3137",
+        "CO3139",
+        "CO3131",
+        "CO3151",
+        "CO3153",
+        "CO3133",
+        "CO3135",
         "CO3011",
         "CO3013",
         "CO3015",
         "CO3017",
-        "CO3031",
-        "CO3041",
-        "CO3061",
-        "CO3069"
+        "CO3021"
       ],
       "min_credits": 15
     },
@@ -969,7 +1709,9 @@
       "course_ids": [
         "IM1013",
         "IM1023",
-        "IM1033"
+        "IM1025",
+        "IM1027",
+        "IM3001"
       ],
       "min_credits": 3,
       "min_courses": 1,
@@ -979,18 +1721,50 @@
       "id": "C",
       "type": "elective",
       "course_ids": [
+        "CO3023",
+        "CO3027",
+        "CO3029",
+        "CO3031",
+        "CO3033",
+        "CO3035",
+        "CO3037",
+        "CO3041",
         "CO3043",
         "CO3045",
         "CO3047",
+        "CO3049",
+        "CO3051",
         "CO3057",
+        "CO3059",
+        "CO3061",
+        "CO3065",
+        "CO3067",
+        "CO3069",
+        "CO3071",
+        "CO3083",
+        "CO3085",
+        "CO3089",
+        "CO3115",
+        "CO3117",
+        "CO4025",
+        "CO4031",
+        "CO4033",
+        "CO4035",
+        "CO4037",
+        "CO4039",
+        "CO3129",
+        "CO3137",
+        "CO3139",
+        "CO3131",
+        "CO3151",
+        "CO3153",
+        "CO3133",
+        "CO3135",
         "CO3011",
         "CO3013",
         "CO3015",
         "CO3017",
-        "CO3031",
-        "CO3041",
-        "CO3061",
-        "CO3069"
+        "CO3021"
       ],
       "min_credits": 9
     },
@@ -1002,16 +1776,113 @@
         "CO4029",
         "CO4337"
       ]
+    },
+    {
+      "id": "E",
+      "type": "mandatory",
+      "course_ids": [
+        "SA4001",
+        "ENG_GC"
+      ]
     }
   ],
   "majors": [
     {
-      "id": "AI",
-      "name": "Artificial Intelligence",
+      "id": "DSE",
+      "name": "Data, Security Engineering and Business Intelligence Data Engineering",
       "rule": {
         "type": "required_courses",
         "course_ids": [
-          "CO3021"
+          "CO3021",
+          "CO3023",
+          "CO3027",
+          "CO3029",
+          "CO3033",
+          "CO3115",
+          "CO4031",
+          "CO4033",
+          "CO4035",
+          "CO4039",
+          "CO3129",
+          "CO3137",
+          "CO3139"
+        ]
+      }
+    },
+    {
+      "id": "ASE",
+      "name": "Advanced Software Engineering",
+      "rule": {
+        "type": "required_courses",
+        "course_ids": [
+          "CO3011",
+          "CO3013",
+          "CO3015",
+          "CO3017",
+          "CO3065",
+          "CO3089",
+          "CO3115",
+          "CO3041",
+          "CO3131"
+        ]
+      }
+    },
+    {
+      "id": "CYB",
+      "name": "Cybersecurity",
+      "rule": {
+        "type": "required_courses",
+        "course_ids": [
+          "CO3047",
+          "CO3049",
+          "CO3051",
+          "CO3069",
+          "CO3083",
+          "CO3089",
+          "CO3151",
+          "CO3153"
+        ]
+      }
+    },
+    {
+      "id": "AI",
+      "name": "Applied Artificial Intelligence",
+      "rule": {
+        "type": "required_courses",
+        "course_ids": [
+          "CO3029",
+          "CO3035",
+          "CO3037",
+          "CO3041",
+          "CO3043",
+          "CO3045",
+          "CO3049",
+          "CO3051",
+          "CO3061",
+          "CO3085",
+          "CO3089",
+          "CO3117",
+          "CO4025",
+          "CO3133",
+          "CO3135",
+          "CO3137"
+        ]
+      }
+    },
+    {
+      "id": "IPCV",
+      "name": "Image Processing and Computer Vision",
+      "rule": {
+        "type": "required_courses",
+        "course_ids": [
+          "CO3043",
+          "CO3045",
+          "CO3049",
+          "CO3051",
+          "CO3057",
+          "CO3059",
+          "CO3089",
+          "CO3117"
         ]
       }
     }
