@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
-from data_tools.exporters.asp_facts import export_asp_facts
 from data_tools.exporters.chart_export import export_charts
 from data_tools.exporters.csv_export import export_csv
 from data_tools.exporters.table_export import export_tables
@@ -38,8 +35,3 @@ def test_chart_export_writes_pngs(report, tmp_path):
     for path in paths:
         assert path.is_file()
         assert path.stat().st_size > 0
-
-
-def test_asp_facts_is_an_explicit_future_stub(bundle, tmp_path):
-    with pytest.raises(NotImplementedError, match="planned"):
-        export_asp_facts(bundle, tmp_path)

@@ -165,8 +165,8 @@ def _parse_curriculum(raw: dict[str, Any]) -> Curriculum:
         )
         if course.id in courses:
             _fail(item_context, f"duplicate course id {course.id!r}")
-        if course.credits <= 0:
-            _fail(item_context, "credits must be positive")
+        if course.credits < 0:
+            _fail(item_context, "credits must be non-negative")
         courses[course.id] = course
 
     groups: list[Group] = []

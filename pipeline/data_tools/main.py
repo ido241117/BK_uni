@@ -44,13 +44,9 @@ def _display(path: Path) -> str:
         return path.resolve().as_posix()
 
 
-def _load(data_dir: str):
-    return load_data(data_dir)
-
-
 def command_validate(args: argparse.Namespace) -> int:
     try:
-        bundle = _load(args.data)
+        bundle = load_data(args.data)
         audits = audit_all(bundle)
     except DataValidationError as exc:
         print("Validation failed:", file=sys.stderr)
@@ -79,7 +75,7 @@ def command_validate(args: argparse.Namespace) -> int:
 def command_report(args: argparse.Namespace) -> int:
     try:
         formats = _parse_formats(args.formats)
-        bundle = _load(args.data)
+        bundle = load_data(args.data)
         report = build_report(bundle)
     except (DataValidationError, ValueError) as exc:
         if isinstance(exc, DataValidationError):

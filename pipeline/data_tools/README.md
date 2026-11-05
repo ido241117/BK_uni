@@ -22,29 +22,29 @@ python -m pip install -r requirements.txt
 
 ## Quick start
 
-Run from `asp-test-2/`:
+Run from `pipeline/`:
 
 ```powershell
-python engine/main.py validate
-python engine/main.py report
+python data_tools/main.py validate
+python data_tools/main.py report
 ```
 
 The package form also works:
 
 ```powershell
-python -m engine.main validate
-python -m engine.main report
+python -m data_tools.main validate
+python -m data_tools.main report
 ```
 
 Defaults:
 
-- input: `asp-test-2/data/`
-- output: `asp-test-2/output/`
+- input: `pipeline/data/`
+- output: `pipeline/output/`
 
 Override them explicitly:
 
 ```powershell
-python engine/main.py report --data data --out output --formats csv,tables,charts,html
+python data_tools/main.py report --data data --out output --formats csv,tables,charts,html
 ```
 
 `--formats` accepts any combination of `csv`, `tables`, `charts`, `html`, or
@@ -129,24 +129,16 @@ These match the current dataset and README:
   `graduation` deadlines are reported as pending unless the milestone is already
   met.
 
-## ASP facts
+## ASP planning
 
-`exporters/asp_facts.py` is an explicit design stub for the next stage. The
-intended architecture is:
-
-- reuse `loader.py`, `model.py` and validation,
-- add a separate raw-facts exporter,
-- keep ASP predicates stable and sorted,
-- let the ASP engine perform its own retake/GPA reasoning,
-- keep ASP rules and solver scripts in a future sibling folder
-  `asp-test-2/asp/`, not inside the Python loader.
-
-The planned predicates are documented in that module.
+The ASP curriculum and planning pipeline lives separately in
+`pipeline/engine/asp/`. This Python package is limited to validation, policy
+checks, statistics, and report exporters.
 
 ## Tests
 
 ```powershell
-python -m pytest engine/tests -q
+python -m pytest data_tools/tests -q
 ```
 
 The tests cover loading, cross-reference rejection, all seven expected student

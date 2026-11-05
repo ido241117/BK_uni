@@ -77,9 +77,16 @@ def test_external_milestone_is_missed(bundle):
     assert year_one.status == "missed"
 
 
-def test_major_rule_and_default_major(bundle):
+def test_default_major_when_no_speciality_is_complete(bundle):
     audits = audit_all(bundle)
-    ai = _audit(audits, "S006")
+    s006 = _audit(audits, "S006")
     default = _audit(audits, "S007")
-    assert (ai.major_id, ai.major_name) == ("AI", "Artificial Intelligence")
+    assert (s006.major_id, s006.major_name) == (None, "Computer Science")
     assert (default.major_id, default.major_name) == (None, "Computer Science")
+    assert {major.id for major in bundle.curriculum.majors} == {
+        "DSE",
+        "ASE",
+        "CYB",
+        "AI",
+        "IPCV",
+    }

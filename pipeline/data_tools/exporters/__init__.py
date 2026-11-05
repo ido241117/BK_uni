@@ -1,1 +1,1 @@
-"""Report exporters (CSV, tables, charts, and future ASP facts)."""
+"""Report exporters for CSV, Markdown/HTML tables, and charts."""
