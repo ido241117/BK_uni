@@ -1,5 +1,5 @@
 % generate
-{ in(E,s(I)) } :- in(E,m), I=1..n.
+{ in(E,s(I)) } :- in(E,m), I=t+1..n.
 
 % s = s(1) U ... U s(n)
 in(E,s) :- in(E,s(I)).
