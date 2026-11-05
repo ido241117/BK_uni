@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "students": [
+    {
+      "student_id": "S001",
+      "curriculum_id": "cs_2023",
+      "grading_policy": "policy_2020",
+      "cohort": 2024,
+      "enrollment_term": "2024-1",
+      "note": "Baseline case: P and W grades, two retakes capped at B, and external progress.",
+
+      "attempts": [
+        { "attempt_id": "S001-01", "course": "CO1005", "term": "2024-1", "grade": "A",  "course_kind": "regular" },
+        { "attempt_id": "S001-02", "course": "MT1003", "term": "2024-1", "grade": "C",  "course_kind": "regular" },
+        { "attempt_id": "S001-03", "course": "PH1007", "term": "2024-1", "grade": "P",  "course_kind": "regular" },
+        { "attempt_id": "S001-04", "course": "LA1003", "term": "2024-1", "grade": "W",  "course_kind": "regular" },
+        { "attempt_id": "S001-05", "course": "CO2003", "term": "2024-2", "grade": "F",  "course_kind": "regular" },
+        { "attempt_id": "S001-06", "course": "CO2003", "term": "2025-1", "grade": "A",  "course_kind": "regular" },
+        { "attempt_id": "S001-07", "course": "MT1003", "term": "2025-1", "grade": "B+", "course_kind": "regular" }
+      ],
+
+      "external_progress": [
+        { "requirement": "social_work_days", "term": "2024-1", "amount": 2 },
+        { "requirement": "social_work_days", "term": "2024-2", "amount": 2 },
+        { "requirement": "social_work_days", "term": "2025-1", "amount": 3 }
+      ],
+
+      "expected": {
+        "as_of_term": "2025-1",
+        "counted_attempts": ["S001-01", "S001-07", "S001-03", "S001-06"],
+        "effective_grades": { "S001-06": "B", "S001-07": "B" },
+        "gpa_credits": 11,
+        "grade_points": "36.00",
+        "cgpa": "3.27",
+        "credits_earned": 12,
+        "external_totals": { "social_work_days": 7 }
+      }
+    },
+    {
+      "student_id": "S002",
+      "curriculum_id": "cs_2023",
+      "grading_policy": "policy_2020",
+      "cohort": 2024,
+      "enrollment_term": "2024-1",
+      "note": "Rounding case: raw CGPA is 25.00 / 8 = 3.125, which rounds half-up to 3.13.",
+
+      "attempts": [
+        { "attempt_id": "S002-01", "course": "CO1005", "term": "2024-1", "grade": "A", "course_kind": "regular" },
+        { "attempt_id": "S002-02", "course": "CO1027", "term": "2024-1", "grade": "B", "course_kind": "regular" },
+        { "attempt_id": "S002-03", "course": "LA1003", "term": "2024-1", "grade": "C", "course_kind": "regular" }
+      ],
+
+      "external_progress": [
+        { "requirement": "social_work_days", "term": "2024-2", "amount": 3 }
+      ],
+
+      "expected": {
+        "as_of_term": "2024-2",
+        "counted_attempts": ["S002-01", "S002-02", "S002-03"],
+        "effective_grades": {},
+        "gpa_credits": 8,
+        "grade_points": "25.00",
+        "cgpa": "3.13",
+        "credits_earned": 8,
+        "external_totals": { "social_work_days": 3 }
+      }
+    },
+    {
+      "student_id": "S003",
+      "curriculum_id": "cs_2023",
+      "grading_policy": "policy_2020",
+      "cohort": 2024,
+      "enrollment_term": "2024-1",
+      "note": "Max-attempts case: CO1027 has four attempts but max_attempts is 3, so S003-04 is ignored.",
+
+      "attempts": [
+        { "attempt_id": "S003-01", "course": "CO1027", "term": "2024-1", "grade": "F", "course_kind": "regular" },
+        { "attempt_id": "S003-02", "course": "CO1027", "term": "2024-2", "grade": "C", "course_kind": "regular" },
+        { "attempt_id": "S003-03", "course": "CO1027", "term": "2025-1", "grade": "C", "course_kind": "regular" },
+        { "attempt_id": "S003-04", "course": "CO1027", "term": "2025-2", "grade": "A", "course_kind": "regular" }
+      ],
+
+      "external_progress": [
+        { "requirement": "social_work_days", "term": "2024-2", "amount": 3 },
+        { "requirement": "social_work_days", "term": "2025-1", "amount": 3 }
+      ],
+
+      "expected": {
+        "as_of_term": "2025-2",
+        "counted_attempts": ["S003-03"],
+        "effective_grades": { "S003-03": "C" },
+        "gpa_credits": 3,
+        "grade_points": "6.00",
+        "cgpa": "2.00",
+        "credits_earned": 3,
+        "external_totals": { "social_work_days": 6 }
+      }
+    },
+    {
+      "student_id": "S004",
+      "curriculum_id": "cs_2023",
+      "grading_policy": "policy_2020",
+      "cohort": 2024,
+      "enrollment_term": "2024-1",
+      "note": "Ineligible-retake case: CO1005 was already passed with B+, which is above C, so the 2025-1 retake is ignored.",
+
+      "attempts": [
+        { "attempt_id": "S004-01", "course": "CO1005", "term": "2024-1", "grade": "B+", "course_kind": "regular" },
+        { "attempt_id": "S004-02", "course": "CO1005", "term": "2025-1", "grade": "A",  "course_kind": "regular" },
+        { "attempt_id": "S004-03", "course": "MT1007", "term": "2024-1", "grade": "B",  "course_kind": "regular" }
+      ],
+
+      "external_progress": [
+        { "requirement": "social_work_days", "term": "2024-2", "amount": 3 }
+      ],
+
+      "expected": {
+        "as_of_term": "2025-1",
+        "counted_attempts": ["S004-01", "S004-03"],
+        "effective_grades": {},
+        "gpa_credits": 6,
+        "grade_points": "19.50",
+        "cgpa": "3.25",
+        "credits_earned": 6,
+        "external_totals": { "social_work_days": 3 }
+      }
+    },
+    {
+      "student_id": "S005",
+      "curriculum_id": "cs_2023",
+      "grading_policy": "policy_2020",
+      "cohort": 2024,
+      "enrollment_term": "2024-1",
+      "note": "Missed-milestone case: only 1 social-work day by the end of year 1, while the milestone requires 3.",
+
+      "attempts": [
+        { "attempt_id": "S005-01", "course": "CO1005", "term": "2024-1", "grade": "B", "course_kind": "regular" },
+        { "attempt_id": "S005-02", "course": "MT1003", "term": "2024-2", "grade": "B", "course_kind": "regular" },
+        { "attempt_id": "S005-03", "course": "CO1027", "term": "2025-1", "grade": "B", "course_kind": "regular" }
+      ],
+
+      "external_progress": [
+        { "requirement": "social_work_days", "term": "2024-1", "amount": 1 }
+      ],
+
+      "expected": {
+        "as_of_term": "2025-1",
+        "counted_attempts": ["S005-01", "S005-02", "S005-03"],
+        "effective_grades": {},
+        "gpa_credits": 10,
+        "grade_points": "30.00",
+        "cgpa": "3.00",
+        "credits_earned": 10,
+        "external_totals": { "social_work_days": 1 }
+      }
+    },
+    {
+      "student_id": "S006",
+      "curriculum_id": "cs_2023",
+      "grading_policy": "policy_2020",
+      "cohort": 2024,
+      "enrollment_term": "2024-1",
+      "note": "Major-rule case: CO3021 is passed, so this student matches the AI major rule.",
+
+      "attempts": [
+        { "attempt_id": "S006-01", "course": "MT1007", "term": "2024-1", "grade": "B+", "course_kind": "regular" },
+        { "attempt_id": "S006-02", "course": "CO3001", "term": "2024-2", "grade": "A",  "course_kind": "regular" },
+        { "attempt_id": "S006-03", "course": "CO3021", "term": "2025-1", "grade": "B",  "course_kind": "regular" }
+      ],
+
+      "external_progress": [
+        { "requirement": "social_work_days", "term": "2024-2", "amount": 3 },
+        { "requirement": "social_work_days", "term": "2025-1", "amount": 3 }
+      ],
+
+      "expected": {
+        "as_of_term": "2025-1",
+        "counted_attempts": ["S006-01", "S006-02", "S006-03"],
+        "effective_grades": {},
+        "gpa_credits": 9,
+        "grade_points": "31.50",
+        "cgpa": "3.50",
+        "credits_earned": 9,
+        "external_totals": { "social_work_days": 6 }
+      }
+    },
+    {
+      "student_id": "S007",
+      "curriculum_id": "cs_2023",
+      "grading_policy": "policy_2020",
+      "cohort": 2024,
+      "enrollment_term": "2024-1",
+      "note": "Default-major case: CO3021 is not passed, so no major rule matches and default_major applies.",
+
+      "attempts": [
+        { "attempt_id": "S007-01", "course": "MT1007", "term": "2024-1", "grade": "B+", "course_kind": "regular" },
+        { "attempt_id": "S007-02", "course": "CO3001", "term": "2024-2", "grade": "B",  "course_kind": "regular" },
+        { "attempt_id": "S007-03", "course": "CO3023", "term": "2025-1", "grade": "B+", "course_kind": "regular" }
+      ],
+
+      "external_progress": [
+        { "requirement": "social_work_days", "term": "2024-2", "amount": 3 },
+        { "requirement": "social_work_days", "term": "2025-1", "amount": 3 }
+      ],
+
+      "expected": {
+        "as_of_term": "2025-1",
+        "counted_attempts": ["S007-01", "S007-02", "S007-03"],
+        "effective_grades": {},
+        "gpa_credits": 9,
+        "grade_points": "30.00",
+        "cgpa": "3.33",
+        "credits_earned": 9,
+        "external_totals": { "social_work_days": 6 }
+      }
+    }
+  ]
+}
