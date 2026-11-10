@@ -1,0 +1,74 @@
+@layer base {
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        background: var(--bg-page);
+        color: var(--text-primary);
+        font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', sans-serif;
+        font-size: 14px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    #root {
+        min-height: 100vh;
+    }
+
+    a {
+        color: var(--brand);
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: var(--brand-hover);
+    }
+
+    h1,
+    h2,
+    h3 {
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+    }
+
+    ::selection {
+        background: var(--brand-soft-strong);
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border: 2px solid transparent;
+        border-radius: var(--radius-pill);
+        background-clip: content-box;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}

@@ -1,0 +1,78 @@
+/*
+ * Design token của BK Uni — nguồn duy nhất cho màu/khoảng cách/bo góc.
+ * Giá trị phải khớp `config/theme` để antd và CSS không lệch nhau.
+ * Đổi brand: chỉ sửa `--brand*` (+ BRAND trong config/theme).
+ */
+:root {
+    color-scheme: light;
+
+    /* Brand */
+    --brand: #0066cc;
+    --brand-hover: #0057ad;
+    --brand-active: #004a94;
+    --brand-soft: rgba(0, 102, 204, 0.1);
+    --brand-soft-strong: rgba(0, 102, 204, 0.2);
+    --brand-contrast: #ffffff;
+
+    /* Surface */
+    --bg-page: #f5f5f7;
+    --bg-surface: #ffffff;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-inverse: #1d1d1f;
+    --text-inverse: #ffffff;
+
+    /* Text */
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-muted: #86868b;
+
+    /* Border & shadow */
+    --border-soft: #e6e6e8;
+    --border-strong: #d2d2d7;
+    --shadow-soft: 0 8px 24px rgba(20, 20, 22, 0.06);
+    --shadow-raised: 0 16px 40px rgba(20, 20, 22, 0.12);
+    --focus-ring: 0 0 0 3px var(--brand-soft-strong);
+    --scrollbar-thumb: rgba(29, 29, 31, 0.2);
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 999px;
+
+    /* Layout */
+    --sidebar-width: 248px;
+    --sidebar-width-collapsed: 76px;
+    --topbar-height: 64px;
+    --content-max-width: 1440px;
+    --space-page: clamp(16px, 3vw, 32px);
+}
+
+[data-theme='dark'] {
+    color-scheme: dark;
+
+    --brand: #4a9eff;
+    --brand-hover: #6fb1ff;
+    --brand-active: #2f86e0;
+    --brand-soft: rgba(74, 158, 255, 0.14);
+    --brand-soft-strong: rgba(74, 158, 255, 0.26);
+    --brand-contrast: #06121f;
+
+    --bg-page: #0e1116;
+    --bg-surface: #161a20;
+    --bg-elevated: #1b2028;
+    --bg-subtle: #1f242c;
+    --bg-inverse: #f5f5f7;
+    --text-inverse: #0e1116;
+
+    --text-primary: #f5f5f7;
+    --text-secondary: rgba(245, 245, 247, 0.72);
+    --text-muted: rgba(245, 245, 247, 0.54);
+
+    --border-soft: rgba(255, 255, 255, 0.14);
+    --border-strong: rgba(255, 255, 255, 0.22);
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-raised: 0 16px 40px rgba(0, 0, 0, 0.45);
+    --scrollbar-thumb: rgba(245, 245, 247, 0.24);
+}

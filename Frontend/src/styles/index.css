@@ -1,0 +1,6 @@
+@layer theme, base, antd, components, utilities;
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./base.css";
+@import "./layout.css";
+@import "./components.css";

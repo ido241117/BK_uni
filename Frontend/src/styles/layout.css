@@ -1,0 +1,281 @@
+@layer components {
+    /* ---------- App shell ---------- */
+    .app-shell {
+        display: grid;
+        grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+        min-height: 100vh;
+        background: var(--bg-page);
+    }
+
+    .app-shell[data-collapsed='true'] {
+        grid-template-columns: var(--sidebar-width-collapsed) minmax(0, 1fr);
+    }
+
+    .app-sidebar {
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        height: 100vh;
+        padding: 16px 12px;
+        overflow-y: auto;
+        background: var(--bg-surface);
+        border-right: 1px solid var(--border-soft);
+    }
+
+    .app-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 2px 6px;
+        color: var(--text-primary);
+    }
+
+    .app-brand:hover {
+        color: var(--text-primary);
+    }
+
+    .app-brand-mark {
+        display: grid;
+        flex: 0 0 36px;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        background: var(--brand);
+        color: var(--brand-contrast);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+    }
+
+    .app-brand-text {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    .app-brand-text strong {
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .app-brand-text small {
+        color: var(--text-muted);
+        font-size: 11px;
+    }
+
+    .app-shell[data-collapsed='true'] .app-brand-text {
+        display: none;
+    }
+
+    .app-sidebar-menu {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .app-sidebar-footer {
+        display: grid;
+        gap: 8px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-soft);
+    }
+
+    .app-main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 100vh;
+    }
+
+    .app-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: var(--topbar-height);
+        padding: 0 var(--space-page);
+        background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+        border-bottom: 1px solid var(--border-soft);
+        backdrop-filter: blur(10px);
+    }
+
+    .app-topbar-grow {
+        flex: 1;
+    }
+
+    .app-topbar-user {
+        display: none;
+        line-height: 1.2;
+        text-align: right;
+    }
+
+    .app-topbar-user strong {
+        display: block;
+        max-width: 220px;
+        overflow: hidden;
+        font-size: 13px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .app-topbar-user small {
+        color: var(--text-muted);
+        font-size: 11px;
+    }
+
+    .app-content {
+        width: 100%;
+        max-width: var(--content-max-width);
+        padding: var(--space-page);
+    }
+
+    /* ---------- Auth ---------- */
+    .auth-page {
+        display: grid;
+        grid-template-columns: minmax(320px, 0.95fr) 1.05fr;
+        min-height: 100vh;
+    }
+
+    .auth-intro {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 28px;
+        padding: 30px clamp(22px, 4vw, 56px);
+        overflow: hidden;
+        background: var(--bg-inverse);
+        color: var(--text-inverse);
+    }
+
+    .auth-intro .app-brand,
+    .auth-intro .app-brand:hover {
+        color: var(--text-inverse);
+    }
+
+    .auth-intro .app-brand-mark {
+        background: var(--text-inverse);
+        color: var(--bg-inverse);
+    }
+
+    .auth-intro .app-brand-text small {
+        color: color-mix(in srgb, var(--text-inverse) 62%, transparent);
+    }
+
+    .auth-intro h1 {
+        margin: 12px 0 12px;
+        font-size: clamp(28px, 3.2vw, 44px);
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        color: var(--text-inverse);
+    }
+
+    .auth-intro p {
+        max-width: 420px;
+        margin: 0;
+        color: color-mix(in srgb, var(--text-inverse) 70%, transparent);
+    }
+
+    .auth-copy {
+        margin-block: auto;
+    }
+
+    .auth-eyebrow {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--brand);
+    }
+
+    .auth-intro .auth-eyebrow {
+        color: color-mix(in srgb, var(--text-inverse) 76%, transparent);
+    }
+
+    .auth-form-side {
+        display: grid;
+        place-items: center;
+        padding: clamp(24px, 5vw, 56px) 20px;
+        background: var(--bg-surface);
+    }
+
+    .auth-form-wrap {
+        width: min(100%, 400px);
+    }
+
+    .auth-form-wrap h2 {
+        margin: 10px 0 6px;
+        font-size: 30px;
+        letter-spacing: -0.03em;
+    }
+
+    .auth-form-wrap > p {
+        margin: 0 0 4px;
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    .auth-form-wrap .ant-form {
+        margin-top: 22px;
+    }
+
+    .auth-button {
+        min-height: 46px;
+        border-radius: var(--radius-md);
+    }
+
+    .auth-footer {
+        margin-top: 18px;
+        color: var(--text-muted);
+        font-size: 12px;
+        text-align: center;
+    }
+
+    @media (min-width: 1200px) {
+        .app-topbar-user {
+            display: block;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .app-shell,
+        .app-shell[data-collapsed='true'] {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .app-sidebar {
+            display: none;
+        }
+
+        .app-content {
+            padding: 16px;
+        }
+    }
+
+    @media (max-width: 860px) {
+        .auth-page {
+            display: block;
+        }
+
+        .auth-intro {
+            min-height: auto;
+            padding: 22px 20px;
+        }
+
+        .auth-copy {
+            margin: 22px 0;
+        }
+
+        .auth-intro h1 {
+            font-size: 26px;
+        }
+
+        .auth-form-side {
+            padding: 26px 16px 40px;
+        }
+    }
+}

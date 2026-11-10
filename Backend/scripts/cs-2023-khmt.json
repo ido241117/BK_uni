@@ -1,0 +1,1670 @@
+{
+  "curriculum": {
+    "code": "CS-2023-KHMT",
+    "name": "Khoa học Máy tính (Computer Science) - khóa 2023",
+    "major": "Khoa học Máy tính",
+    "faculty": "Khoa học và Kỹ thuật Máy tính",
+    "cohort": 2023,
+    "duration_years": 4,
+    "min_semester_credits": 15,
+    "max_semester_credits": 17,
+    "description": "Trích từ Kế hoạch giảng dạy chương trình cử nhân khóa 2023, ngày 12/06/2025. Tên học phần giữ song ngữ Việt/Anh. Nhóm C: chọn 5 học phần 3 tín chỉ (15 tín chỉ) trong danh sách chung; PDF xếp 6 tín chỉ ở học kỳ 7 và 9 tín chỉ ở học kỳ 8, hệ thống chỉ ràng buộc tổng tín chỉ nên các môn này không gắn kỳ cố định. Tự chọn tự do: 3 tín chỉ mỗi học kỳ 4, 6, 7 (tổng 9 tín chỉ), chọn từ mọi học phần 3 tín chỉ. PDF không nêu mã học phần tự chọn tự do và thiếu lựa chọn nhóm C số 1-2."
+  },
+  "courses": [
+    {
+      "code": "CH1003",
+      "name": "Hóa đại cương / General Chemistry",
+      "credits": 3
+    },
+    {
+      "code": "CO1005",
+      "name": "Nhập môn Điện toán / Introduction to Computing",
+      "credits": 3
+    },
+    {
+      "code": "CO1007",
+      "name": "Cấu trúc Rời rạc cho Khoa học Máy tính / Discrete Structures for Computing",
+      "credits": 4
+    },
+    {
+      "code": "CO1023",
+      "name": "Hệ thống số / Digital Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO1027",
+      "name": "Kỹ thuật Lập trình / Programming Fundamentals",
+      "credits": 3
+    },
+    {
+      "code": "CO2001",
+      "name": "Kỹ năng Chuyên nghiệp cho Kỹ sư / Professional Skills for Engineers",
+      "credits": 3
+    },
+    {
+      "code": "CO2003",
+      "name": "Cấu trúc Dữ liệu và Giải Thuật / Data Structures and AlgoriThms",
+      "credits": 4
+    },
+    {
+      "code": "CO2007",
+      "name": "Kiến trúc Máy tính / Computer Architecture",
+      "credits": 4
+    },
+    {
+      "code": "CO2011",
+      "name": "Mô hình hóa Toán học / MaThematical Modeling",
+      "credits": 3
+    },
+    {
+      "code": "CO2013",
+      "name": "Hệ cơ sở Dữ liệu / Database Systems",
+      "credits": 4
+    },
+    {
+      "code": "CO2017",
+      "name": "Hệ điều hành / Operating Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO2039",
+      "name": "Lập trình Nâng cao / Advanced Programming",
+      "credits": 3
+    },
+    {
+      "code": "CO3001",
+      "name": "Công nghệ Phần mềm / Software Engineering",
+      "credits": 3
+    },
+    {
+      "code": "CO3005",
+      "name": "Nguyên lý Ngôn ngữ Lập trình / Principles of Programming Languages",
+      "credits": 4
+    },
+    {
+      "code": "CO3011",
+      "name": "Quản lý Dự án Phần mềm / Software Project Management",
+      "credits": 3
+    },
+    {
+      "code": "CO3013",
+      "name": "Xây dựng Chương trình Dịch / Compiler Construction",
+      "credits": 3
+    },
+    {
+      "code": "CO3015",
+      "name": "Kiểm tra Phần mềm / Software Testing",
+      "credits": 3
+    },
+    {
+      "code": "CO3017",
+      "name": "Kiến trúc Phần mềm / Software Architecture",
+      "credits": 3
+    },
+    {
+      "code": "CO3021",
+      "name": "Hệ Quản trị Cơ sở Dữ Liệu / Database Management Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO3023",
+      "name": "Cơ sở Dữ liệu Phân tán và Hướng đối tượng / Distributed and Object-Oriented Databases",
+      "credits": 3
+    },
+    {
+      "code": "CO3027",
+      "name": "Thương mại Điện tử / Electronic Commerce",
+      "credits": 3
+    },
+    {
+      "code": "CO3029",
+      "name": "Khai phá Dữ liệu / Data Mining",
+      "credits": 3
+    },
+    {
+      "code": "CO3031",
+      "name": "Phân tích và Thiết kế Giải Thuật / AlgoriThms-Design and Analysis",
+      "credits": 3
+    },
+    {
+      "code": "CO3033",
+      "name": "Bảo mật Hệ thống Thông tin / Information System Security",
+      "credits": 3
+    },
+    {
+      "code": "CO3035",
+      "name": "Hệ thời gian thực / Real-Time Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO3037",
+      "name": "Phát triển Ứng dụng Internet of Things / Internet of Things Application Development",
+      "credits": 3
+    },
+    {
+      "code": "CO3041",
+      "name": "Hệ thống Thông minh / Intelligent Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO3043",
+      "name": "Phát triển Ứng dụng trên Thiết bị Di động / Mobile Application Development",
+      "credits": 3
+    },
+    {
+      "code": "CO3045",
+      "name": "Lập trình Game / Game Programming",
+      "credits": 3
+    },
+    {
+      "code": "CO3047",
+      "name": "Mạng máy tính nâng cao / Advanced Computer Networks",
+      "credits": 3
+    },
+    {
+      "code": "CO3049",
+      "name": "Lập trình Web / Web Programming",
+      "credits": 3
+    },
+    {
+      "code": "CO3051",
+      "name": "Hệ thống thiết bị di động / Mobile Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO3057",
+      "name": "Xử lý Ảnh số và Thị giác Máy tính / Digital Image Processing and Computer Vision",
+      "credits": 3
+    },
+    {
+      "code": "CO3059",
+      "name": "Đồ họa Máy tính / Computer Graphics",
+      "credits": 3
+    },
+    {
+      "code": "CO3061",
+      "name": "Nhập môn Trí tuệ Nhân tạo / Introduction to Artificial Intelligence",
+      "credits": 3
+    },
+    {
+      "code": "CO3065",
+      "name": "Công nghệ Phần mềm Nâng cao / Advanced Software Engineering",
+      "credits": 3
+    },
+    {
+      "code": "CO3067",
+      "name": "Tính toán Song song / Parallel Computing",
+      "credits": 3
+    },
+    {
+      "code": "CO3069",
+      "name": "Mật mã và An ninh mạng / Cryptography and Network Security",
+      "credits": 3
+    },
+    {
+      "code": "CO3071",
+      "name": "Hệ phân bố / Distributed Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO3083",
+      "name": "Mật mã học và Mã hóa Thông tin / Advance Cryptography and Coding Theory",
+      "credits": 3
+    },
+    {
+      "code": "CO3085",
+      "name": "Xử lý Ngôn ngữ Tự nhiên / Natural Language Processing",
+      "credits": 3
+    },
+    {
+      "code": "CO3089",
+      "name": "Những Chủ đề Nâng cao trong Khoa học Máy tính / Selected Topics in High Performance Computing",
+      "credits": 3
+    },
+    {
+      "code": "CO3093",
+      "name": "Mạng máy tính / Computer Networks",
+      "credits": 3
+    },
+    {
+      "code": "CO3101",
+      "name": "Đồ án Tổng hợp - Hướng Trí tuệ Nhân tạo / Programming Intergration Project",
+      "credits": 1
+    },
+    {
+      "code": "CO3103",
+      "name": "Đồ án Tổng hợp - hướng Công nghệ Phần mềm / Programming Intergration Project",
+      "credits": 1
+    },
+    {
+      "code": "CO3105",
+      "name": "Đồ án Tổng hợp - Hướng Hệ thống Thông tin / Programming Intergration Project",
+      "credits": 1
+    },
+    {
+      "code": "CO3107",
+      "name": "Thực tập Đồ án môn học Đa ngành - Hướng Trí tuệ Nhân tạo / Multidisciplinary Project",
+      "credits": 1
+    },
+    {
+      "code": "CO3109",
+      "name": "Thực tập Đồ án môn học Đa ngành - Hướng công Nghệ phần mềm / Multidisciplinary Project",
+      "credits": 1
+    },
+    {
+      "code": "CO3111",
+      "name": "Thực tập Đồ án môn học Đa ngành - hướng Hệ thống Thông tin / Multidisciplinary Project",
+      "credits": 1
+    },
+    {
+      "code": "CO3115",
+      "name": "Phân tích và Thiết kế Hệ thống / Systems Analysis and Design",
+      "credits": 3
+    },
+    {
+      "code": "CO3117",
+      "name": "Học máy / Machine Learning",
+      "credits": 3
+    },
+    {
+      "code": "CO3119",
+      "name": "Đồ án Mạng máy tính / Computer Networks Project",
+      "credits": 1
+    },
+    {
+      "code": "CO3127",
+      "name": "Đồ án tổng hợp - hướng kỹ thuật dữ liệu / Programming Intergration Project - Data Engineering",
+      "credits": 1
+    },
+    {
+      "code": "CO3129",
+      "name": "Bảo mật Phần mềm / Software Security",
+      "credits": 3
+    },
+    {
+      "code": "CO3131",
+      "name": "Công nghệ Phần mềm thế hệ mới / Next-gen Software Engineering",
+      "credits": 3
+    },
+    {
+      "code": "CO3133",
+      "name": "Học sâu và Ứng dụng / Deep Learning and Its Applications",
+      "credits": 3
+    },
+    {
+      "code": "CO3135",
+      "name": "Lập trình cho Trí tuệ nhân tạo và Khoa học dữ liệu / Programming for Artificial Intelligence and Data Science (P4AI-DS)",
+      "credits": 3
+    },
+    {
+      "code": "CO3137",
+      "name": "Dữ liệu lớn / Big Data",
+      "credits": 3
+    },
+    {
+      "code": "CO3139",
+      "name": "Chuyển đổi số / Digital transformation",
+      "credits": 3
+    },
+    {
+      "code": "CO3151",
+      "name": "Quản trị mạng / Network management",
+      "credits": 3
+    },
+    {
+      "code": "CO3153",
+      "name": "Đánh giá an toàn mạng máy tính / Computer Network Security Assessment",
+      "credits": 3
+    },
+    {
+      "code": "CO3335",
+      "name": "Thực tập Ngoài trường / Internship",
+      "credits": 2
+    },
+    {
+      "code": "CO4025",
+      "name": "Mạng xã hội và Thông tin / Information and Social Networks",
+      "credits": 3
+    },
+    {
+      "code": "CO4029",
+      "name": "Đồ án Chuyên ngành / Specialized Project",
+      "credits": 2
+    },
+    {
+      "code": "CO4031",
+      "name": "Kho dữ Liệu và Hệ hỗ trợ Quyết định / Data Warehouses and Decision Support Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO4033",
+      "name": "Phân tích Dữ liệu lớn và Trí tuệ Kinh doanh / Big Data Analytics and Business Intelligence",
+      "credits": 3
+    },
+    {
+      "code": "CO4035",
+      "name": "Hệ hoạch Định tài Nguyên tổ chức / Enterprise Resource Planning Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO4037",
+      "name": "Hệ thống thông tin quản lý / Management Information Systems",
+      "credits": 3
+    },
+    {
+      "code": "CO4039",
+      "name": "Bảo mật sinh trắc / Biometric Security",
+      "credits": 3
+    },
+    {
+      "code": "CO4337",
+      "name": "Đồ án Tốt nghiệp (Khoa học Máy tính) / Capstone Project",
+      "credits": 4
+    },
+    {
+      "code": "IM1013",
+      "name": "Kinh tế học Đại cương / Economics",
+      "credits": 3
+    },
+    {
+      "code": "IM1023",
+      "name": "Quản lý Sản xuất cho Kỹ sư / Production and Operations Management for Engineers",
+      "credits": 3
+    },
+    {
+      "code": "IM1025",
+      "name": "Quản lý Dự án cho Kỹ sư / Project Management for Engineers",
+      "credits": 3
+    },
+    {
+      "code": "IM1027",
+      "name": "Kinh tế Kỹ thuật / Engineering Economics",
+      "credits": 3
+    },
+    {
+      "code": "IM3001",
+      "name": "Quản trị Kinh doanh cho Kỹ sư / Business Administration for Engineers",
+      "credits": 3
+    },
+    {
+      "code": "LA1003",
+      "name": "Anh văn 1 / English 1",
+      "credits": 2
+    },
+    {
+      "code": "LA1005",
+      "name": "Anh văn 2 / English 2",
+      "credits": 2
+    },
+    {
+      "code": "LA1007",
+      "name": "Anh văn 3 / English 3",
+      "credits": 2
+    },
+    {
+      "code": "LA1009",
+      "name": "Anh văn 4 / English 4",
+      "credits": 2
+    },
+    {
+      "code": "MI1003",
+      "name": "Giáo dục Quốc phòng / Military Training",
+      "credits": 0
+    },
+    {
+      "code": "MT1003",
+      "name": "Giải tích 1 / Calculus 1",
+      "credits": 4
+    },
+    {
+      "code": "MT1005",
+      "name": "Giải tích 2 / Calculus 2",
+      "credits": 4
+    },
+    {
+      "code": "MT1007",
+      "name": "Đại số Tuyến tính / Linear Algebra",
+      "credits": 3
+    },
+    {
+      "code": "MT2013",
+      "name": "Xác suất và Thống kê / Probability and Statistics",
+      "credits": 4
+    },
+    {
+      "code": "PE1003",
+      "name": "Giáo dục thể chất 1 / Physical Education 1",
+      "credits": 0
+    },
+    {
+      "code": "PE1005",
+      "name": "Giáo dục thể chất 2 / Physical Education 2",
+      "credits": 0
+    },
+    {
+      "code": "PH1003",
+      "name": "Vật lý 1 / General Physics 1",
+      "credits": 4
+    },
+    {
+      "code": "PH1007",
+      "name": "Thí nghiệm Vật lý / General Physics Labs",
+      "credits": 1
+    },
+    {
+      "code": "SP1007",
+      "name": "Pháp luật Việt Nam Đại cương / Introduction to VieTNamese Law",
+      "credits": 2
+    },
+    {
+      "code": "SP1031",
+      "name": "Triết học Mác - Lênin / Marxist - Leninist Philosophy",
+      "credits": 3
+    },
+    {
+      "code": "SP1033",
+      "name": "Kinh tế Chính trị Mác - Lênin / Marxist - Leninist Political Economy",
+      "credits": 2
+    },
+    {
+      "code": "SP1035",
+      "name": "Chủ nghĩa Xã hội Khoa học / Scientific Socialism",
+      "credits": 2
+    },
+    {
+      "code": "SP1037",
+      "name": "Tư tưởng Hồ Chí Minh / Ho Chi Minh Ideology",
+      "credits": 2
+    },
+    {
+      "code": "SP1039",
+      "name": "Lịch sử Đảng Cộng sản Việt Nam / History of VieTNamese Communist Party",
+      "credits": 2
+    },
+    {
+      "code": "SA4001",
+      "name": "Hoạt động sinh viên / Student Activities",
+      "credits": 0
+    },
+    {
+      "code": "ENG_GC",
+      "name": "Điều kiện tiếng Anh tốt nghiệp / English Requirement for Graduation",
+      "credits": 0
+    }
+  ],
+  "curriculum_courses": [
+    {
+      "course_code": "LA1003",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "PE1003",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "MT1003",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "PH1003",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO1005",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO1023",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "LA1005",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "PE1005",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "MT1005",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "MT1007",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO1007",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO1027",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "PH1007",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "MI1003",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "LA1007",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "SP1031",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO2007",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO2011",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO2003",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "LA1009",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "SP1033",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO2017",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO2039",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "MT2013",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "SP1035",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO3093",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO2013",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO3001",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CH1003",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "SP1039",
+      "recommended_year": 3,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO2001",
+      "recommended_year": 3,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO3005",
+      "recommended_year": 3,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO3335",
+      "recommended_year": 3,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "SP1037",
+      "recommended_year": 4,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "CO4029",
+      "recommended_year": 4,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "SP1007",
+      "recommended_year": 4,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO4337",
+      "recommended_year": 4,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CO3101",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3103",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3105",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3119",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3127",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3107",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3109",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3111",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3023",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3027",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3029",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3031",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3033",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3035",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3037",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3041",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3043",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3045",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3047",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3049",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3051",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3057",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3059",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3061",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3065",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3067",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3069",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3071",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3083",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3085",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3089",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3115",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3117",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO4025",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO4031",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO4033",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO4035",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO4037",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO4039",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3129",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3137",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3139",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3131",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3151",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3153",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3133",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3135",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3011",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3013",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3015",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3017",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CO3021",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM1013",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM1023",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM1025",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM1027",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3001",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "SA4001",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "ENG_GC",
+      "recommended_year": null,
+      "recommended_term": null
+    }
+  ],
+  "groups": [
+    {
+      "name": "Tự chọn nhóm A (học kỳ 5)",
+      "kind": "elective",
+      "required_count": 1,
+      "course_codes": [
+        "CO3101",
+        "CO3103",
+        "CO3105",
+        "CO3119",
+        "CO3127"
+      ],
+      "pool_scope": "listed",
+      "required_credits": 1
+    },
+    {
+      "name": "Tự chọn nhóm B (học kỳ 6)",
+      "kind": "elective",
+      "required_count": 1,
+      "course_codes": [
+        "CO3107",
+        "CO3109",
+        "CO3111"
+      ],
+      "pool_scope": "listed",
+      "required_credits": 1
+    },
+    {
+      "name": "Tự chọn nhóm C (học kỳ 7 và 8)",
+      "kind": "elective",
+      "required_count": 5,
+      "course_codes": [
+        "CO3023",
+        "CO3027",
+        "CO3029",
+        "CO3031",
+        "CO3033",
+        "CO3035",
+        "CO3037",
+        "CO3041",
+        "CO3043",
+        "CO3045",
+        "CO3047",
+        "CO3049",
+        "CO3051",
+        "CO3057",
+        "CO3059",
+        "CO3061",
+        "CO3065",
+        "CO3067",
+        "CO3069",
+        "CO3071",
+        "CO3083",
+        "CO3085",
+        "CO3089",
+        "CO3115",
+        "CO3117",
+        "CO4025",
+        "CO4031",
+        "CO4033",
+        "CO4035",
+        "CO4037",
+        "CO4039",
+        "CO3129",
+        "CO3137",
+        "CO3139",
+        "CO3131",
+        "CO3151",
+        "CO3153",
+        "CO3133",
+        "CO3135",
+        "CO3011",
+        "CO3013",
+        "CO3015",
+        "CO3017",
+        "CO3021"
+      ],
+      "pool_scope": "listed",
+      "required_credits": 15
+    },
+    {
+      "name": "Tự chọn nhóm D (học kỳ 7)",
+      "kind": "elective",
+      "required_count": 1,
+      "course_codes": [
+        "IM1013",
+        "IM1023",
+        "IM1025",
+        "IM1027",
+        "IM3001"
+      ],
+      "pool_scope": "listed",
+      "required_credits": 3
+    },
+    {
+      "name": "Tự chọn tự do",
+      "kind": "elective",
+      "pool_scope": "any",
+      "required_credits": 9,
+      "pool_course_credits": 3,
+      "course_codes": []
+    }
+  ],
+  "specializations": [
+    {
+      "code": "CNDL",
+      "name": "Công nghệ Dữ liệu Bảo mật và Trí tuệ Kinh doanh",
+      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
+          "name": "Tự chọn nhóm C - Công nghệ Dữ liệu Bảo mật và Trí tuệ Kinh doanh",
+          "course_codes": [
+            "CO3021",
+            "CO3023",
+            "CO3027",
+            "CO3029",
+            "CO3033",
+            "CO3115",
+            "CO4031",
+            "CO4033",
+            "CO4035",
+            "CO4039",
+            "CO3129",
+            "CO3137",
+            "CO3139"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CNPM",
+      "name": "Công nghệ Phần mềm",
+      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
+          "name": "Tự chọn nhóm C - Công nghệ Phần mềm",
+          "course_codes": [
+            "CO3011",
+            "CO3013",
+            "CO3015",
+            "CO3017",
+            "CO3065",
+            "CO3089",
+            "CO3115",
+            "CO3041",
+            "CO3131"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "KHMT",
+      "name": "Khoa học Máy tính",
+      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
+          "name": "Tự chọn nhóm C - Khoa học Máy tính",
+          "course_codes": [
+            "CO3021",
+            "CO3027",
+            "CO3029",
+            "CO3033",
+            "CO3115",
+            "CO4031",
+            "CO4033",
+            "CO4035",
+            "CO4037",
+            "CO4039",
+            "CO3011",
+            "CO3015",
+            "CO3017",
+            "CO3065",
+            "CO3041",
+            "CO3089",
+            "CO3049",
+            "CO3051",
+            "CO3069",
+            "CO3061",
+            "CO3117",
+            "CO3129",
+            "CO3137",
+            "CO3139",
+            "CO3131",
+            "CO3151",
+            "CO3153",
+            "CO3133",
+            "CO3135",
+            "CO3013",
+            "CO3023",
+            "CO3031",
+            "CO3035",
+            "CO3047",
+            "CO3071",
+            "CO3083",
+            "CO4025",
+            "CO3085",
+            "CO3057",
+            "CO3045",
+            "CO3059",
+            "CO3067",
+            "CO3037",
+            "CO3043"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MMANM",
+      "name": "Mật mã và An ninh mạng",
+      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
+          "name": "Tự chọn nhóm C - Mật mã và An ninh mạng",
+          "course_codes": [
+            "CO3047",
+            "CO3049",
+            "CO3051",
+            "CO3069",
+            "CO3083",
+            "CO3089",
+            "CO3151",
+            "CO3153"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TTNT",
+      "name": "Trí tuệ nhân tạo ứng dụng",
+      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
+          "name": "Tự chọn nhóm C - Trí tuệ nhân tạo ứng dụng",
+          "course_codes": [
+            "CO3029",
+            "CO3035",
+            "CO3037",
+            "CO3041",
+            "CO3043",
+            "CO3045",
+            "CO3049",
+            "CO3051",
+            "CO3061",
+            "CO3085",
+            "CO3089",
+            "CO3117",
+            "CO4025",
+            "CO3133",
+            "CO3135",
+            "CO3137"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "XLA",
+      "name": "Xử lý ảnh và Thị giác máy tính",
+      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
+          "name": "Tự chọn nhóm C - Xử lý ảnh và Thị giác máy tính",
+          "course_codes": [
+            "CO3043",
+            "CO3045",
+            "CO3049",
+            "CO3051",
+            "CO3057",
+            "CO3059",
+            "CO3089",
+            "CO3117"
+          ]
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "course_code": "LA1005",
+      "prerequisite_course_codes": [
+        "LA1003"
+      ],
+      "recommended_course_codes": []
+    },
+    {
+      "course_code": "MT1005",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "MT1003"
+      ]
+    },
+    {
+      "course_code": "LA1007",
+      "prerequisite_course_codes": [
+        "LA1005"
+      ],
+      "recommended_course_codes": []
+    },
+    {
+      "course_code": "CO2007",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO1005"
+      ]
+    },
+    {
+      "course_code": "CO2011",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO1007"
+      ]
+    },
+    {
+      "course_code": "CO2003",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO1027",
+        "CO1007"
+      ]
+    },
+    {
+      "course_code": "LA1009",
+      "prerequisite_course_codes": [
+        "LA1007"
+      ],
+      "recommended_course_codes": []
+    },
+    {
+      "course_code": "SP1033",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "SP1031"
+      ]
+    },
+    {
+      "course_code": "MT2013",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "MT1007"
+      ]
+    },
+    {
+      "course_code": "SP1035",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "SP1033"
+      ]
+    },
+    {
+      "course_code": "CO3001",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO1027"
+      ]
+    },
+    {
+      "course_code": "SP1039",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "SP1035"
+      ]
+    },
+    {
+      "course_code": "CO2001",
+      "prerequisite_course_codes": [
+        "CO1005"
+      ],
+      "recommended_course_codes": []
+    },
+    {
+      "course_code": "CO3005",
+      "prerequisite_course_codes": [
+        "CO1027"
+      ],
+      "recommended_course_codes": []
+    },
+    {
+      "course_code": "SP1037",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "SP1039"
+      ]
+    },
+    {
+      "course_code": "CO3033",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO2013"
+      ]
+    },
+    {
+      "course_code": "CO3041",
+      "prerequisite_course_codes": [
+        "CO3001"
+      ],
+      "recommended_course_codes": []
+    },
+    {
+      "course_code": "CO4031",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO2013"
+      ]
+    },
+    {
+      "course_code": "CO4035",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO2013"
+      ]
+    },
+    {
+      "course_code": "CO3137",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO2017"
+      ]
+    },
+    {
+      "course_code": "CO3133",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO3061"
+      ]
+    },
+    {
+      "course_code": "CO3135",
+      "prerequisite_course_codes": [
+        "CO2003",
+        "CO1027"
+      ],
+      "recommended_course_codes": []
+    },
+    {
+      "course_code": "CO3015",
+      "prerequisite_course_codes": [
+        "CO1027"
+      ],
+      "recommended_course_codes": [
+        "CO3001"
+      ]
+    },
+    {
+      "course_code": "CO3021",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [
+        "CO2013"
+      ]
+    },
+    {
+      "course_code": "CO4337",
+      "prerequisite_course_codes": [
+        "CO3335",
+        "CO4029"
+      ],
+      "recommended_course_codes": []
+    },
+    {
+      "course_code": "PE1005",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [],
+      "prior_course_codes": [
+        "PE1003"
+      ]
+    },
+    {
+      "course_code": "CO3031",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [],
+      "prior_course_codes": [
+        "CO2003"
+      ]
+    },
+    {
+      "course_code": "CO4029",
+      "prerequisite_course_codes": [],
+      "recommended_course_codes": [],
+      "corequisite_course_codes": [
+        "CO3335"
+      ]
+    }
+  ],
+  "regulations": [
+    {
+      "name": "Chứng chỉ Giáo dục Thể chất",
+      "detail": "Điều kiện tốt nghiệp bắt buộc, 0 tín chỉ. Trên myBK ghi mã CCGDTC."
+    },
+    {
+      "name": "Chứng chỉ Giáo dục Quốc phòng",
+      "detail": "Điều kiện tốt nghiệp bắt buộc, 0 tín chỉ. Trên myBK ghi theo môn MI1003."
+    },
+    {
+      "name": "Đ/kiện tiếng Anh tốt nghiệp ĐH tiêu chuẩn, VLVH",
+      "detail": "Chuẩn tiếng Anh đầu ra để xét tốt nghiệp. Trên myBK ghi mã ENG_GC_600."
+    },
+    {
+      "name": "Hoạt động sinh viên",
+      "detail": "Điều kiện tốt nghiệp bắt buộc, 0 tín chỉ. Trên myBK ghi theo môn SA4001."
+    }
+  ],
+  "categories": [
+    {
+      "name": "A. Các môn bắt buộc",
+      "course_codes": [
+        "MT1003",
+        "MT1005",
+        "MT1007",
+        "MT2013",
+        "CH1003",
+        "PH1003",
+        "PH1007",
+        "CO1007",
+        "CO2011",
+        "SP1007",
+        "SP1031",
+        "SP1033",
+        "SP1035",
+        "SP1037",
+        "SP1039",
+        "CO1005",
+        "CO2001",
+        "LA1003",
+        "LA1005",
+        "LA1007",
+        "LA1009",
+        "CO1023",
+        "CO1027",
+        "CO2003",
+        "CO2007",
+        "CO2013",
+        "CO2039",
+        "CO2017",
+        "PE1003",
+        "PE1005",
+        "MI1003"
+      ]
+    },
+    {
+      "name": "A1. Toán và Khoa học Tự nhiên",
+      "course_codes": [
+        "MT1003",
+        "MT1005",
+        "MT1007",
+        "MT2013",
+        "CH1003",
+        "PH1003",
+        "PH1007",
+        "CO1007",
+        "CO2011"
+      ]
+    },
+    {
+      "name": "A2. Chính trị,Kinh tế,Văn hóa,Xã hội",
+      "course_codes": [
+        "SP1007",
+        "SP1031",
+        "SP1033",
+        "SP1035",
+        "SP1037",
+        "SP1039"
+      ]
+    },
+    {
+      "name": "A3. Nhập môn, Con người và môi trường",
+      "course_codes": [
+        "CO1005",
+        "CO2001"
+      ]
+    },
+    {
+      "name": "A4. Ngoại ngữ",
+      "course_codes": [
+        "LA1003",
+        "LA1005",
+        "LA1007",
+        "LA1009"
+      ]
+    },
+    {
+      "name": "A5. Cơ sở ngành",
+      "course_codes": [
+        "CO1023",
+        "CO1027",
+        "CO2003",
+        "CO2007",
+        "CO2013",
+        "CO2039",
+        "CO2017"
+      ]
+    },
+    {
+      "name": "A6. Giáo dục thể chất",
+      "course_codes": [
+        "PE1003",
+        "PE1005"
+      ]
+    },
+    {
+      "name": "A7. Giáo dục quốc phòng",
+      "course_codes": [
+        "MI1003"
+      ]
+    },
+    {
+      "name": "B. Các môn thuộc chuyên ngành",
+      "course_codes": [
+        "CO3001",
+        "CO3093",
+        "CO3005",
+        "CO3101",
+        "CO3103",
+        "CO3105",
+        "CO3119",
+        "CO3127",
+        "CO3107",
+        "CO3109",
+        "CO3111",
+        "CO3021",
+        "CO3023",
+        "CO3027",
+        "CO3029",
+        "CO3033",
+        "CO3115",
+        "CO4031",
+        "CO4033",
+        "CO4035",
+        "CO4039",
+        "CO3129",
+        "CO3137",
+        "CO3139",
+        "IM1013",
+        "IM1023",
+        "IM1025",
+        "IM1027",
+        "IM3001",
+        "CO3011",
+        "CO3013",
+        "CO3015",
+        "CO3017",
+        "CO3065",
+        "CO3089",
+        "CO3041",
+        "CO3131",
+        "CO4037",
+        "CO3049",
+        "CO3051",
+        "CO3069",
+        "CO3061",
+        "CO3117",
+        "CO3151",
+        "CO3153",
+        "CO3133",
+        "CO3135",
+        "CO3031",
+        "CO3035",
+        "CO3047",
+        "CO3071",
+        "CO3083",
+        "CO4025",
+        "CO3085",
+        "CO3057",
+        "CO3045",
+        "CO3059",
+        "CO3067",
+        "CO3037",
+        "CO3043"
+      ]
+    },
+    {
+      "name": "C. Tự chọn tự do",
+      "course_codes": []
+    },
+    {
+      "name": "D. Học phần tốt nghiệp",
+      "course_codes": [
+        "CO3335",
+        "CO4029",
+        "CO4337"
+      ]
+    },
+    {
+      "name": "E. Điều kiện tốt nghiệp",
+      "course_codes": [
+        "SA4001",
+        "ENG_GC"
+      ]
+    }
+  ]
+}

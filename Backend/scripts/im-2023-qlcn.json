@@ -1,0 +1,1307 @@
+{
+  "curriculum": {
+    "code": "IM-2023-QLCN",
+    "name": "Quản lý Công nghiệp (Industrial Management) - khóa 2023",
+    "major": "Quản lý Công nghiệp",
+    "faculty": "Quản lý Công nghiệp",
+    "cohort": 2023,
+    "duration_years": 4,
+    "min_semester_credits": 15,
+    "max_semester_credits": 18,
+    "description": "Trích từ Chương trình đào tạo và Kế hoạch giảng dạy cử nhân khóa 2023, ngày 16/10/2023. 130 tín chỉ: 100 bắt buộc, tự chọn nhóm A 3, nhóm B 15, kỹ thuật ngoài ngành 3, tự chọn tự do 9. Nhóm A: chọn 3 tín chỉ trong 7 môn khoa học tự nhiên, PDF xếp ở học kỳ 2. Nhóm B: chọn 15 tín chỉ trong 27 môn, PDF xếp 3 TC ở học kỳ 5, 6 TC ở học kỳ 6, 6 TC ở học kỳ 7. Môn nhóm A/B là pool tự chọn nên không gắn kỳ cố định; PDF xếp HK5: IM3021, IM3055, IM3073, IM3077; HK6: IM3023, IM3029, IM3033, IM3041, IM3075, IM3081, IM3085, IM3091, IM3095, IM3097, IM3099; HK7: các môn nhóm B còn lại. Tự chọn kỹ thuật ngoài ngành (học kỳ 6): 3 tín chỉ thuộc học phần cơ sở ngành/ngành/chuyên ngành từ năm hai của ngành khác (hệ thống không lọc được điều kiện này). Tự chọn tự do: 3 tín chỉ học kỳ 7 và 6 tín chỉ học kỳ 8. Ba chuyên ngành chỉ khác nhau ở nhóm B; Chuỗi cung ứng và Quản trị Kinh doanh có 3 môn bắt buộc cộng 6 tín chỉ tự chọn. max_semester_credits = 18 vì chọn môn 4 TC ở nhóm A làm học kỳ 2 lên 18 TC."
+  },
+  "courses": [
+    {
+      "code": "LA1003",
+      "name": "Anh văn 1 / English 1",
+      "credits": 2
+    },
+    {
+      "code": "MT1007",
+      "name": "Đại số tuyến tính / Linear Algebra",
+      "credits": 3
+    },
+    {
+      "code": "IM1001",
+      "name": "Giới thiệu ngành / Orientation to Management Studies",
+      "credits": 3
+    },
+    {
+      "code": "IM1007",
+      "name": "Quản trị đại cương / Fundamentals of Management",
+      "credits": 3
+    },
+    {
+      "code": "IM1003",
+      "name": "Kinh tế học vi mô / Microeconomics",
+      "credits": 3
+    },
+    {
+      "code": "PE1003",
+      "name": "Giáo dục thể chất 1 / Physical Education 1",
+      "credits": 0
+    },
+    {
+      "code": "MT1017",
+      "name": "Giải tích trong kinh doanh / Calculus for Business",
+      "credits": 3
+    },
+    {
+      "code": "LA1005",
+      "name": "Anh văn 2 / English 2",
+      "credits": 2
+    },
+    {
+      "code": "IM1017",
+      "name": "Thống kê trong kinh doanh / Statistics for Business",
+      "credits": 3
+    },
+    {
+      "code": "IM1009",
+      "name": "Kinh tế học vĩ mô / Macroeconomics",
+      "credits": 3
+    },
+    {
+      "code": "IM1015",
+      "name": "Kế toán tài chính / Financial Accounting",
+      "credits": 3
+    },
+    {
+      "code": "PE1005",
+      "name": "Giáo dục thể chất 2 / Physical Education 2",
+      "credits": 0
+    },
+    {
+      "code": "MI1003",
+      "name": "Giáo dục quốc phòng / Military Training",
+      "credits": 0
+    },
+    {
+      "code": "IM1019",
+      "name": "Tiếp thị căn bản / Principle of Marketing",
+      "credits": 3
+    },
+    {
+      "code": "CH1003",
+      "name": "Hóa đại cương / General Chemistry",
+      "credits": 3
+    },
+    {
+      "code": "PH1003",
+      "name": "Vật lý 1 / General Physics 1",
+      "credits": 4
+    },
+    {
+      "code": "MT1009",
+      "name": "Phương pháp tính / Numerical Methods",
+      "credits": 3
+    },
+    {
+      "code": "EN1015",
+      "name": "Vi sinh vật đại cương và thí nghiệm / Microbiology and Experiment",
+      "credits": 4
+    },
+    {
+      "code": "GE1013",
+      "name": "Khoa học trái đất / Earth Science",
+      "credits": 4
+    },
+    {
+      "code": "CH1017",
+      "name": "Sinh học đại cương / General Biology",
+      "credits": 3
+    },
+    {
+      "code": "GE1011",
+      "name": "Địa vật lý đại cương + kiến tập / Basic Geophysics",
+      "credits": 3
+    },
+    {
+      "code": "LA1007",
+      "name": "Anh văn 3 / English 3",
+      "credits": 2
+    },
+    {
+      "code": "SP1031",
+      "name": "Triết học Mác - Lênin / Marxist - Leninist Philosophy",
+      "credits": 3
+    },
+    {
+      "code": "IM2019",
+      "name": "Kế toán quản trị / Managerial Accounting",
+      "credits": 3
+    },
+    {
+      "code": "IM2017",
+      "name": "Hành vi tổ chức / Organizational Behavior",
+      "credits": 3
+    },
+    {
+      "code": "IM1011",
+      "name": "Máy tính trong kinh doanh / Computer in Business",
+      "credits": 3
+    },
+    {
+      "code": "IM1029",
+      "name": "Hệ thống sản xuất / Manufacturing Systems",
+      "credits": 3
+    },
+    {
+      "code": "LA1009",
+      "name": "Anh văn 4 / English 4",
+      "credits": 2
+    },
+    {
+      "code": "SP1033",
+      "name": "Kinh tế chính trị Mác - Lênin / Marxist - Leninist Political Economy",
+      "credits": 2
+    },
+    {
+      "code": "IM2031",
+      "name": "Quản lý sản xuất / Production and Operations Management",
+      "credits": 3
+    },
+    {
+      "code": "IM2033",
+      "name": "Tài chính doanh nghiệp / Corporate Finance",
+      "credits": 3
+    },
+    {
+      "code": "IM2035",
+      "name": "Phương pháp định lượng / Quantitative Methods",
+      "credits": 3
+    },
+    {
+      "code": "IM2029",
+      "name": "Thực tập nhận thức / Field Trip",
+      "credits": 2
+    },
+    {
+      "code": "SP1035",
+      "name": "Chủ nghĩa xã hội khoa học / Scientific Socialism",
+      "credits": 2
+    },
+    {
+      "code": "IM3047",
+      "name": "Giao tiếp trong kinh doanh / Business Communication",
+      "credits": 3
+    },
+    {
+      "code": "IM3087",
+      "name": "Hệ thống thông tin quản lý / Management Information Systems",
+      "credits": 3
+    },
+    {
+      "code": "IM3063",
+      "name": "Quản lý chất lượng / Quality Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3105",
+      "name": "Phương pháp nghiên cứu trong kinh doanh / Research Methods for Business",
+      "credits": 3
+    },
+    {
+      "code": "IM3073",
+      "name": "Điều độ sản xuất / Scheduling and Sequencing",
+      "credits": 3
+    },
+    {
+      "code": "IM3077",
+      "name": "Quản lý sản xuất theo Lean và sáu Sigma / Lean Six Sigma Manufacturing",
+      "credits": 3
+    },
+    {
+      "code": "IM3055",
+      "name": "Quản lý nhân sự / Human Resource Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3021",
+      "name": "Quản lý chuỗi cung ứng / Supply Chain Management",
+      "credits": 3
+    },
+    {
+      "code": "SP1039",
+      "name": "Lịch sử Đảng Cộng sản Việt Nam / History of Vietnamese Communist Party",
+      "credits": 2
+    },
+    {
+      "code": "IM3059",
+      "name": "Quản lý chiến lược / Strategic Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3325",
+      "name": "Thực tập ngoài trường / Internship",
+      "credits": 2
+    },
+    {
+      "code": "IM3029",
+      "name": "Quản lý công nghệ / Management of Technology",
+      "credits": 3
+    },
+    {
+      "code": "IM3075",
+      "name": "An toàn công nghiệp và quản lý rủi ro / Industrial Safety and Risk Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3091",
+      "name": "Phân tích và thiết kế chuỗi cung ứng / Supply Chain Design and Analysis",
+      "credits": 3
+    },
+    {
+      "code": "IM3095",
+      "name": "Quản lý vận hành bán lẻ / Operational Retail Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3097",
+      "name": "Chuyển đổi cung ứng kỹ thuật số / Digital Supply Chain Transformation",
+      "credits": 3
+    },
+    {
+      "code": "IM3099",
+      "name": "Quản lý chuỗi cung ứng theo Lean / Lean Supply Chain Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3023",
+      "name": "Thương mại điện tử / Electronic Commerce",
+      "credits": 3
+    },
+    {
+      "code": "IM3033",
+      "name": "Tiếp thị giữa các tổ chức / Business to Business Marketing",
+      "credits": 3
+    },
+    {
+      "code": "IM3081",
+      "name": "Quản trị kinh doanh quốc tế / International Business Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3085",
+      "name": "Tài chính quốc tế / International Finance",
+      "credits": 3
+    },
+    {
+      "code": "IM3041",
+      "name": "Hệ hỗ trợ quyết định và trí tuệ kinh doanh / Decision Support and Business Intelligence Systems",
+      "credits": 3
+    },
+    {
+      "code": "SP1037",
+      "name": "Tư tưởng Hồ Chí Minh / Ho Chi Minh Ideology",
+      "credits": 2
+    },
+    {
+      "code": "IM3051",
+      "name": "Đạo đức kinh doanh và trách nhiệm xã hội / Business Ethics and Corporate Social Responsibility",
+      "credits": 3
+    },
+    {
+      "code": "IM4033",
+      "name": "Đồ án chuyên ngành / Project",
+      "credits": 2
+    },
+    {
+      "code": "IM4003",
+      "name": "Quản lý dự án / Project Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3035",
+      "name": "Quản lý bảo trì / Maintenance Management",
+      "credits": 3
+    },
+    {
+      "code": "IM4035",
+      "name": "ISO 9000 / ISO 9000",
+      "credits": 3
+    },
+    {
+      "code": "IM3089",
+      "name": "Đổi mới sản phẩm/dịch vụ / Product/Services Innovation",
+      "credits": 3
+    },
+    {
+      "code": "IM3083",
+      "name": "Hành vi người tiêu dùng / Consumer Behavior",
+      "credits": 3
+    },
+    {
+      "code": "IM4007",
+      "name": "Kế hoạch kinh doanh / Business Plan",
+      "credits": 3
+    },
+    {
+      "code": "IM3009",
+      "name": "Hệ thống tài chính / Financial System",
+      "credits": 3
+    },
+    {
+      "code": "IM4019",
+      "name": "Khoa học dữ liệu trong kinh doanh / Data science for Business",
+      "credits": 3
+    },
+    {
+      "code": "IM3093",
+      "name": "Quản lý logistics và vận chuyển quốc tế / Global Transportation and Logistics Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3101",
+      "name": "Quản lý cung ứng và thu mua quốc tế / Global Purchasing and Supply Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3103",
+      "name": "Quản lý rủi ro chuỗi cung ứng / Supply Chain Risk Management",
+      "credits": 3
+    },
+    {
+      "code": "IM3109",
+      "name": "Tiếp thị số / Digital Marketing",
+      "credits": 3
+    },
+    {
+      "code": "SP1007",
+      "name": "Pháp luật Việt Nam đại cương / Introduction to Vietnamese Law",
+      "credits": 2
+    },
+    {
+      "code": "IM3107",
+      "name": "Khởi nghiệp và đổi mới sáng tạo / Entrepreneurship and Innovation",
+      "credits": 3
+    },
+    {
+      "code": "IM4327",
+      "name": "Khóa luận tốt nghiệp / Capstone Project",
+      "credits": 4
+    }
+  ],
+  "curriculum_courses": [
+    {
+      "course_code": "LA1003",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "MT1007",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM1001",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM1007",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM1003",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "PE1003",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "MT1017",
+      "recommended_year": 1,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "LA1005",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM1017",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM1009",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM1015",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "PE1005",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "MI1003",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM1019",
+      "recommended_year": 1,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "CH1003",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "PH1003",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "MT1009",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "EN1015",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "GE1013",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "CH1017",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "GE1011",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "LA1007",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "SP1031",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM2019",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM2017",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM1011",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM1029",
+      "recommended_year": 2,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "LA1009",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "SP1033",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM2031",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM2033",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM2035",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM2029",
+      "recommended_year": 2,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "SP1035",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM3047",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM3087",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM3063",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM3105",
+      "recommended_year": 3,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM3073",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3077",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3055",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3021",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "SP1039",
+      "recommended_year": 3,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM3059",
+      "recommended_year": 3,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM3325",
+      "recommended_year": 3,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM3029",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3075",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3091",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3095",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3097",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3099",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3023",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3033",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3081",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3085",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3041",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "SP1037",
+      "recommended_year": 4,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM3051",
+      "recommended_year": 4,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM4033",
+      "recommended_year": 4,
+      "recommended_term": 1
+    },
+    {
+      "course_code": "IM4003",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3035",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM4035",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3089",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3083",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM4007",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3009",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM4019",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3093",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3101",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3103",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "IM3109",
+      "recommended_year": null,
+      "recommended_term": null
+    },
+    {
+      "course_code": "SP1007",
+      "recommended_year": 4,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM3107",
+      "recommended_year": 4,
+      "recommended_term": 2
+    },
+    {
+      "course_code": "IM4327",
+      "recommended_year": 4,
+      "recommended_term": 2
+    }
+  ],
+  "groups": [
+    {
+      "name": "Tự chọn nhóm A",
+      "kind": "elective",
+      "pool_scope": "listed",
+      "required_credits": 3,
+      "course_codes": [
+        "CH1003",
+        "PH1003",
+        "MT1009",
+        "EN1015",
+        "GE1013",
+        "CH1017",
+        "GE1011"
+      ]
+    },
+    {
+      "name": "Tự chọn nhóm B",
+      "kind": "elective",
+      "pool_scope": "listed",
+      "required_count": 5,
+      "required_credits": 15,
+      "course_codes": [
+        "IM3009",
+        "IM3021",
+        "IM3023",
+        "IM3029",
+        "IM3033",
+        "IM3035",
+        "IM3041",
+        "IM3055",
+        "IM3073",
+        "IM3075",
+        "IM3077",
+        "IM3081",
+        "IM3083",
+        "IM3085",
+        "IM3089",
+        "IM3091",
+        "IM3093",
+        "IM3095",
+        "IM3097",
+        "IM3099",
+        "IM3101",
+        "IM3103",
+        "IM3109",
+        "IM4003",
+        "IM4007",
+        "IM4019",
+        "IM4035"
+      ]
+    },
+    {
+      "name": "Tự chọn kỹ thuật ngoài ngành",
+      "kind": "elective",
+      "pool_scope": "any",
+      "required_credits": 3,
+      "course_codes": []
+    },
+    {
+      "name": "Tự chọn tự do",
+      "kind": "elective",
+      "pool_scope": "any",
+      "required_credits": 9,
+      "course_codes": []
+    }
+  ],
+  "specializations": [
+    {
+      "code": "QLCN",
+      "name": "Quản lý Công nghiệp",
+      "description": "Industrial Management. Chọn 15 tín chỉ bất kỳ trong 27 môn nhóm B.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm B",
+          "name": "Nhóm B - Quản lý Công nghiệp",
+          "course_codes": [
+            "IM3009",
+            "IM3021",
+            "IM3023",
+            "IM3029",
+            "IM3033",
+            "IM3035",
+            "IM3041",
+            "IM3055",
+            "IM3073",
+            "IM3075",
+            "IM3077",
+            "IM3081",
+            "IM3083",
+            "IM3085",
+            "IM3089",
+            "IM3091",
+            "IM3093",
+            "IM3095",
+            "IM3097",
+            "IM3099",
+            "IM3101",
+            "IM3103",
+            "IM3109",
+            "IM4003",
+            "IM4007",
+            "IM4019",
+            "IM4035"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "QLCCU",
+      "name": "Quản lý Chuỗi cung ứng và vận hành",
+      "description": "Operations and Supply Chain Management. Bắt buộc IM3021, IM3091, IM3093 và chọn 6 tín chỉ trong 6 môn.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm B",
+          "name": "Nhóm B - Chuỗi cung ứng và vận hành - bắt buộc",
+          "kind": "required",
+          "required_count": 3,
+          "required_credits": 9,
+          "course_codes": [
+            "IM3021",
+            "IM3091",
+            "IM3093"
+          ]
+        },
+        {
+          "parent_group": "Tự chọn nhóm B",
+          "name": "Nhóm B - Chuỗi cung ứng và vận hành - tự chọn",
+          "kind": "elective",
+          "required_count": 2,
+          "required_credits": 6,
+          "course_codes": [
+            "IM3095",
+            "IM3097",
+            "IM3099",
+            "IM3101",
+            "IM3103",
+            "IM4003"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "QTKD",
+      "name": "Quản trị Kinh doanh",
+      "description": "Business Administration. Bắt buộc IM3023, IM3055, IM3083 và chọn 6 tín chỉ trong 8 môn.",
+      "groups": [
+        {
+          "parent_group": "Tự chọn nhóm B",
+          "name": "Nhóm B - Quản trị Kinh doanh - bắt buộc",
+          "kind": "required",
+          "required_count": 3,
+          "required_credits": 9,
+          "course_codes": [
+            "IM3023",
+            "IM3055",
+            "IM3083"
+          ]
+        },
+        {
+          "parent_group": "Tự chọn nhóm B",
+          "name": "Nhóm B - Quản trị Kinh doanh - tự chọn",
+          "kind": "elective",
+          "required_count": 2,
+          "required_credits": 6,
+          "course_codes": [
+            "IM3009",
+            "IM3033",
+            "IM3041",
+            "IM3081",
+            "IM3085",
+            "IM3109",
+            "IM4007",
+            "IM4019"
+          ]
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "name": "1.1 Toán",
+      "course_codes": [
+        "IM1017",
+        "MT1007",
+        "MT1017"
+      ]
+    },
+    {
+      "name": "1.2 Khoa học tự nhiên (tự chọn nhóm A)",
+      "course_codes": [
+        "CH1003",
+        "PH1003",
+        "MT1009",
+        "EN1015",
+        "GE1013",
+        "CH1017",
+        "GE1011"
+      ]
+    },
+    {
+      "name": "1.3 Kinh tế - Chính trị - Xã hội - Luật",
+      "course_codes": [
+        "SP1007",
+        "SP1031",
+        "SP1033",
+        "SP1035",
+        "SP1037",
+        "SP1039"
+      ]
+    },
+    {
+      "name": "1.4 Nhập môn",
+      "course_codes": [
+        "IM1001"
+      ]
+    },
+    {
+      "name": "1.5 Con người và môi trường",
+      "course_codes": [
+        "IM3051"
+      ]
+    },
+    {
+      "name": "1.6 Ngoại ngữ",
+      "course_codes": [
+        "LA1003",
+        "LA1005",
+        "LA1007",
+        "LA1009"
+      ]
+    },
+    {
+      "name": "2.1 Cơ sở ngành",
+      "course_codes": [
+        "IM1003",
+        "IM1007",
+        "IM1009",
+        "IM1011",
+        "IM1015",
+        "IM1019",
+        "IM1029",
+        "IM2017",
+        "IM2019",
+        "IM2029",
+        "IM2031",
+        "IM2033",
+        "IM2035"
+      ]
+    },
+    {
+      "name": "2.2 Ngành",
+      "course_codes": [
+        "IM3047",
+        "IM3059",
+        "IM3063",
+        "IM3087",
+        "IM3105",
+        "IM3107"
+      ]
+    },
+    {
+      "name": "2.3 Chuyên ngành (tự chọn nhóm B)",
+      "course_codes": [
+        "IM3009",
+        "IM3021",
+        "IM3023",
+        "IM3029",
+        "IM3033",
+        "IM3035",
+        "IM3041",
+        "IM3055",
+        "IM3073",
+        "IM3075",
+        "IM3077",
+        "IM3081",
+        "IM3083",
+        "IM3085",
+        "IM3089",
+        "IM3091",
+        "IM3093",
+        "IM3095",
+        "IM3097",
+        "IM3099",
+        "IM3101",
+        "IM3103",
+        "IM3109",
+        "IM4003",
+        "IM4007",
+        "IM4019",
+        "IM4035"
+      ]
+    },
+    {
+      "name": "2.4 Tốt nghiệp",
+      "course_codes": [
+        "IM3325",
+        "IM4033",
+        "IM4327"
+      ]
+    },
+    {
+      "name": "3. Tự chọn tự do",
+      "course_codes": []
+    },
+    {
+      "name": "4. Chứng chỉ",
+      "course_codes": [
+        "PE1003",
+        "PE1005",
+        "MI1003"
+      ]
+    },
+    {
+      "name": "Cốt lõi tài năng (Honors)",
+      "course_codes": [
+        "IM1011",
+        "IM2017",
+        "IM2019",
+        "IM2031",
+        "IM2033",
+        "IM3059",
+        "IM3063",
+        "IM3087",
+        "IM3105",
+        "IM4033",
+        "IM4327"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "course_code": "LA1005",
+      "prerequisite_course_codes": [
+        "LA1003"
+      ]
+    },
+    {
+      "course_code": "LA1007",
+      "prerequisite_course_codes": [
+        "LA1005"
+      ]
+    },
+    {
+      "course_code": "LA1009",
+      "prerequisite_course_codes": [
+        "LA1007"
+      ]
+    },
+    {
+      "course_code": "MT1009",
+      "recommended_course_codes": [
+        "MT1007",
+        "MT1017"
+      ]
+    },
+    {
+      "course_code": "SP1033",
+      "recommended_course_codes": [
+        "SP1031"
+      ]
+    },
+    {
+      "course_code": "SP1035",
+      "recommended_course_codes": [
+        "SP1033"
+      ]
+    },
+    {
+      "course_code": "SP1037",
+      "recommended_course_codes": [
+        "SP1039"
+      ]
+    },
+    {
+      "course_code": "SP1039",
+      "recommended_course_codes": [
+        "SP1035"
+      ]
+    },
+    {
+      "course_code": "IM1009",
+      "recommended_course_codes": [
+        "IM1003"
+      ]
+    },
+    {
+      "course_code": "IM2017",
+      "recommended_course_codes": [
+        "IM1007"
+      ]
+    },
+    {
+      "course_code": "IM2019",
+      "recommended_course_codes": [
+        "IM1015"
+      ]
+    },
+    {
+      "course_code": "IM2029",
+      "prerequisite_course_codes": [
+        "IM1001"
+      ]
+    },
+    {
+      "course_code": "IM2031",
+      "recommended_course_codes": [
+        "IM1029"
+      ]
+    },
+    {
+      "course_code": "IM2033",
+      "recommended_course_codes": [
+        "IM1003",
+        "IM1009",
+        "IM1015"
+      ]
+    },
+    {
+      "course_code": "IM2035",
+      "recommended_course_codes": [
+        "IM1017"
+      ]
+    },
+    {
+      "course_code": "IM3059",
+      "recommended_course_codes": [
+        "IM1007"
+      ],
+      "prerequisite_course_codes": [
+        "IM1009"
+      ]
+    },
+    {
+      "course_code": "IM3105",
+      "prerequisite_course_codes": [
+        "IM1017",
+        "IM1019"
+      ]
+    },
+    {
+      "course_code": "IM3009",
+      "prerequisite_course_codes": [
+        "IM1009"
+      ]
+    },
+    {
+      "course_code": "IM3021",
+      "recommended_course_codes": [
+        "IM1007",
+        "IM2031"
+      ]
+    },
+    {
+      "course_code": "IM3023",
+      "recommended_course_codes": [
+        "IM1011"
+      ]
+    },
+    {
+      "course_code": "IM3033",
+      "prerequisite_course_codes": [
+        "IM1019"
+      ]
+    },
+    {
+      "course_code": "IM3035",
+      "prerequisite_course_codes": [
+        "IM1017",
+        "IM2031"
+      ]
+    },
+    {
+      "course_code": "IM3041",
+      "recommended_course_codes": [
+        "IM1011"
+      ]
+    },
+    {
+      "course_code": "IM3055",
+      "recommended_course_codes": [
+        "IM1007"
+      ]
+    },
+    {
+      "course_code": "IM3073",
+      "recommended_course_codes": [
+        "IM1029",
+        "IM2031"
+      ]
+    },
+    {
+      "course_code": "IM3083",
+      "prerequisite_course_codes": [
+        "IM1019"
+      ]
+    },
+    {
+      "course_code": "IM3085",
+      "prerequisite_course_codes": [
+        "IM1009"
+      ]
+    },
+    {
+      "course_code": "IM4007",
+      "prerequisite_course_codes": [
+        "IM1019",
+        "IM2033"
+      ]
+    },
+    {
+      "course_code": "IM4035",
+      "recommended_course_codes": [
+        "IM3063"
+      ]
+    },
+    {
+      "course_code": "IM3325",
+      "recommended_course_codes": [
+        "IM2029"
+      ]
+    },
+    {
+      "course_code": "IM4033",
+      "corequisite_course_codes": [
+        "IM3325"
+      ]
+    },
+    {
+      "course_code": "IM4327",
+      "prerequisite_course_codes": [
+        "IM3325",
+        "IM4033"
+      ]
+    }
+  ],
+  "regulations": [
+    {
+      "name": "Chứng chỉ Giáo dục Thể chất",
+      "detail": "Điều kiện tốt nghiệp bắt buộc, 0 tín chỉ (mục 4. Chứng chỉ). Học ở học kỳ 1 và 2."
+    },
+    {
+      "name": "Chứng chỉ Giáo dục Quốc phòng",
+      "detail": "Điều kiện tốt nghiệp bắt buộc, 0 tín chỉ (mục 4. Chứng chỉ). Học ở học kỳ 2, môn MI1003."
+    },
+    {
+      "name": "Tự chọn kỹ thuật ngoài ngành",
+      "detail": "Chọn 3 tín chỉ trong các học phần cơ sở ngành/ngành/chuyên ngành từ năm thứ hai của ngành khác (ngoài ngành Quản lý Công nghiệp). Khuyến nghị học ở học kỳ 6."
+    }
+  ]
+}

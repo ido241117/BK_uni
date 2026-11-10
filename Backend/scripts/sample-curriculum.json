@@ -1,0 +1,66 @@
+{
+  "curriculum": {
+    "code": "CS-2023",
+    "name": "Khoa học máy tính",
+    "major": "Công nghệ thông tin",
+    "faculty": "Công nghệ thông tin",
+    "cohort": 2023,
+    "duration_years": 4,
+    "min_semester_credits": 1,
+    "max_semester_credits": 18,
+    "description": "Chương trình mẫu dùng để kiểm tra luồng tạo dữ liệu chương trình đào tạo."
+  },
+  "courses": [
+    { "code": "MA1001", "name": "Giải tích 1", "credits": 4, "opened_semesters": ["241", "251"] },
+    { "code": "MA2001", "name": "Toán rời rạc", "credits": 3, "opened_semesters": ["241"] },
+    { "code": "CO2003", "name": "Cấu trúc dữ liệu và giải thuật", "credits": 4, "opened_semesters": ["251"] },
+    { "code": "CO2013", "name": "Cơ sở dữ liệu", "credits": 3, "opened_semesters": ["252"] },
+    { "code": "CO3001", "name": "Kỹ thuật phần mềm", "credits": 3, "opened_semesters": ["252"] },
+    { "code": "CO3005", "name": "Mạng máy tính", "credits": 3, "opened_semesters": ["252"] },
+    { "code": "CO3061", "name": "Trí tuệ nhân tạo", "credits": 3, "opened_semesters": ["251", "252"] },
+    { "code": "CO3101", "name": "Phát triển ứng dụng web", "credits": 3, "opened_semesters": ["251"] },
+    { "code": "CO3103", "name": "Kiểm thử phần mềm", "credits": 3, "opened_semesters": ["252"] }
+  ],
+  "curriculum_courses": [
+    { "course_code": "MA1001", "recommended_year": 1, "recommended_term": 1 },
+    { "course_code": "MA2001", "recommended_year": 2, "recommended_term": 1 },
+    { "course_code": "CO2003", "recommended_year": 2, "recommended_term": 1 },
+    { "course_code": "CO2013", "recommended_year": 2, "recommended_term": 2 },
+    { "course_code": "CO3001", "recommended_year": 3, "recommended_term": 2 },
+    { "course_code": "CO3005", "recommended_year": 3, "recommended_term": 2 },
+    { "course_code": "CO3061", "recommended_year": null, "recommended_term": null },
+    { "course_code": "CO3101", "recommended_year": null, "recommended_term": null },
+    { "course_code": "CO3103", "recommended_year": null, "recommended_term": null }
+  ],
+  "groups": [
+    { "name": "Đại cương", "kind": "required", "required_count": 2, "course_codes": ["MA1001", "MA2001"] },
+    { "name": "Cơ sở ngành", "kind": "required", "required_count": 2, "course_codes": ["CO2003", "CO2013"] },
+    { "name": "Chuyên ngành", "kind": "required", "required_count": 2, "course_codes": ["CO3001", "CO3005"] },
+    {
+      "name": "Tự chọn chuyên ngành",
+      "kind": "elective",
+      "pool_scope": "listed",
+      "required_count": 2,
+      "required_credits": 6,
+      "course_codes": ["CO3061", "CO3101", "CO3103"]
+    },
+    {
+      "name": "Tự chọn tự do",
+      "kind": "elective",
+      "pool_scope": "any",
+      "required_credits": 3,
+      "pool_course_credits": 3,
+      "course_codes": []
+    }
+  ],
+  "relations": [
+    { "course_code": "CO3001", "prerequisite_course_codes": ["CO2003"] },
+    { "course_code": "CO3101", "recommended_course_codes": ["CO2013"] }
+  ],
+  "regulations": [
+    {
+      "name": "Chuẩn ngoại ngữ đầu ra",
+      "detail": "Đạt chứng chỉ tiếng Anh theo mức quy định của chương trình."
+    }
+  ]
+}
