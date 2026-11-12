@@ -14,6 +14,8 @@ import { StudentCourse } from './entities/student-course.entity';
 import { StudentPlanCourse } from './entities/student-plan-course.entity';
 import { StudentProfile } from './entities/student-profile.entity';
 import { StudentRegulationStatusEntity } from './entities/student-regulation-status.entity';
+import { StudentCourseStatus } from './enum/student-course-status';
+import { isPhysicalEducationCourse, PE_GENERIC_CODES } from './physical-education';
 
 export type PlanCourseView = {
   id: string;
@@ -108,6 +110,7 @@ export class StudentService {
       if (isPostgresError(error, FOREIGN_KEY_VIOLATION)) throw new BadRequestException('Môn học không tồn tại.');
       throw error;
     }
+    await this.syncPhysicalEducation(userId, [courseId]);
     const saved = await this.studentCourses.findOne({
       where: { user_id: userId, course_id: courseId },
       relations: { course: true },
@@ -143,7 +146,43 @@ export class StudentService {
       });
       if (rows.length) await manager.save(StudentCourse, rows);
     });
+    await this.syncPhysicalEducation(userId, courseIds);
     return this.listMyCourses(userId);
+  }
+
+  /**
+   * Ràng buộc mềm GDTC (xem `physical-education.ts`): chỉ chạy khi lần lưu này có học phần thể thao,
+   * và chỉ nâng PE1003/PE1005 lên "đã hoàn thành", không bao giờ hạ. Sửa tay PE1003/PE1005 thì giữ nguyên.
+   */
+  private async syncPhysicalEducation(userId: string, changedCourseIds: string[]): Promise<void> {
+    if (!changedCourseIds.length) return;
+    const changed = await this.studentCourses.manager.find(Course, { where: { id: In(changedCourseIds) } });
+    if (!changed.some(course => isPhysicalEducationCourse(course.code))) return;
+
+    const completed = await this.studentCourses.find({
+      where: { user_id: userId, status: StudentCourseStatus.COMPLETED },
+      relations: { course: true },
+    });
+    const sportCount = completed.filter(row => isPhysicalEducationCourse(row.course?.code)).length;
+    const targets = PE_GENERIC_CODES.slice(0, Math.min(sportCount, PE_GENERIC_CODES.length));
+    if (!targets.length) return;
+
+    const genericCourses = await this.studentCourses.manager
+      .createQueryBuilder(Course, 'course')
+      .where('UPPER(course.code) IN (:...codes)', { codes: [...targets] })
+      .getMany();
+    const done = new Set(completed.map(row => row.course_id));
+    const pendingIds = genericCourses.map(course => course.id).filter(id => !done.has(id));
+    if (!pendingIds.length) return;
+
+    // Môn chung đã khai trạng thái khác (đang học, chưa đạt…) thì nâng lên; chưa khai thì tạo mới.
+    const existing = await this.studentCourses.find({ where: { user_id: userId, course_id: In(pendingIds) } });
+    const byCourseId = new Map(existing.map(row => [row.course_id, row]));
+    await this.studentCourses.save(pendingIds.map(courseId => {
+      const row = byCourseId.get(courseId) ?? this.studentCourses.create({ user_id: userId, course_id: courseId });
+      row.status = StudentCourseStatus.COMPLETED;
+      return row;
+    }));
   }
 
   async removeMyCourse(userId: string, courseId: string): Promise<null> {

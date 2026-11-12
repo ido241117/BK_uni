@@ -526,14 +526,16 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
         const progress = blocksProgress[index];
         let count = progress.doneCount;
         let credits = progress.doneCredits;
-        const ranked = (electives.find(option => option.group.id === group.id)?.candidates ?? [])
-            .map(check => check.course)
+        // Môn còn thiếu tiên quyết xếp sau môn học được ngay: tránh chọn "học phần 2" khi chưa có "học phần 1".
+        const ranked = [...(electives.find(option => option.group.id === group.id)?.candidates ?? [])]
             .sort((a, b) => (
-                Number(Boolean(b.plannedSemester)) - Number(Boolean(a.plannedSemester))
-                || Number(targetListIds.has(b.id)) - Number(targetListIds.has(a.id))
-                || b.openedSemesters.length - a.openedSemesters.length
-                || a.code.localeCompare(b.code)
-            ));
+                Number(Boolean(b.course.plannedSemester)) - Number(Boolean(a.course.plannedSemester))
+                || Number(a.missing.length > 0) - Number(b.missing.length > 0)
+                || Number(targetListIds.has(b.course.id)) - Number(targetListIds.has(a.course.id))
+                || b.course.openedSemesters.length - a.course.openedSemesters.length
+                || a.course.code.localeCompare(b.course.code)
+            ))
+            .map(check => check.course);
         for (const course of ranked) {
             if (count >= block.needCount && credits >= block.needCredits) break;
             electivePicks.push({ course, groupName: group.name });

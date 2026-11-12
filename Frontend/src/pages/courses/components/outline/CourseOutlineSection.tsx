@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Alert, Card, Descriptions, Empty, Segmented, Select, Space, Spin, Tabs, Tag, Tooltip, Typography } from 'antd';
+import { Alert, Card, Descriptions, Empty, Segmented, Select, Space, Spin, Tabs, Tag, Tooltip, Typography, type TabsProps } from 'antd';
 import { LuCircleAlert, LuCircleCheck } from 'react-icons/lu';
 import { Link } from 'react-router';
 import { getCourseOutline } from '@/apis/outline';
@@ -38,6 +38,8 @@ interface CourseOutlineSectionProps {
     curriculumCode?: string;
     /** Nội dung tab "Học kỳ đã mở" (lấy từ dữ liệu mở lớp của hệ thống); bỏ trống thì không có tab. */
     openedSemesters?: ReactNode;
+    /** Tab thêm vào đầu dãy tab (ví dụ "Các môn thể chất" ở PE1003/PE1005). */
+    extraTabs?: NonNullable<TabsProps['items']>;
 }
 
 const courseLink = (code: string) => <Link to={`/courses/${encodeURIComponent(code)}`}><Text strong>{code}</Text></Link>;
@@ -300,7 +302,9 @@ const sortVersions = (data: CourseOutlineByCode) => [...data.versions].sort((a, 
     || b.version.localeCompare(a.version, 'en', { numeric: true })
 ));
 
-export const CourseOutlineSection = ({ data, curriculumRelations, curriculumCode, openedSemesters }: CourseOutlineSectionProps) => {
+export const CourseOutlineSection = ({
+    data, curriculumRelations, curriculumCode, openedSemesters, extraTabs = [],
+}: CourseOutlineSectionProps) => {
     const versions = useMemo(() => sortVersions(data), [data]);
     const defaultId = data.selected?.id ?? versions[0]?.id;
     const [versionId, setVersionId] = useState(defaultId);
@@ -377,6 +381,7 @@ export const CourseOutlineSection = ({ data, curriculumRelations, curriculumCode
                     <Tabs
                         style={{ marginTop: 12 }}
                         items={[
+                            ...extraTabs,
                             {
                                 key: 'intro',
                                 label: 'Giới thiệu',

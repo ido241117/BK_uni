@@ -20,6 +20,7 @@ import { summarizeCurriculumProgress } from '@/utils/curriculum-credits';
 import CourseEditModal from './components/CourseEditModal';
 import CourseStatusFileActions from './components/CourseStatusFileActions';
 import SemesterSummary from './components/SemesterSummary';
+import { countCoursesWithoutPeDuplicates } from './physical-education';
 import type { CourseRow } from './types';
 
 const { Text } = Typography;
@@ -208,7 +209,7 @@ const CoursesPage = () => {
                 completed.map(item => ({ course_id: item.course_id, credits: item.course.credits })),
             );
             return {
-                declared: declared.length,
+                declared: countCoursesWithoutPeDuplicates(declared),
                 completed: progress.completedCourses,
                 completedCredits: progress.completedCredits,
                 requiredCourses: progress.requiredCourses as number | null,
@@ -217,10 +218,10 @@ const CoursesPage = () => {
             };
         }
 
-        // Chưa chọn chương trình: không có mốc tốt nghiệp, đếm mọi môn đã hoàn thành.
+        // Chưa chọn chương trình: không có mốc tốt nghiệp, đếm mọi môn đã hoàn thành (học phần thể thao không tính trùng PE1003/PE1005).
         return {
-            declared: declared.length,
-            completed: completed.length,
+            declared: countCoursesWithoutPeDuplicates(declared),
+            completed: countCoursesWithoutPeDuplicates(completed),
             completedCredits: completed.reduce((total, item) => total + item.course.credits, 0),
             requiredCourses: null,
             totalCredits: null,

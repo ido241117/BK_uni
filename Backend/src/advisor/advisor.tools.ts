@@ -14,6 +14,7 @@ import { StudentCourse } from '../student/entities/student-course.entity';
 import { StudentPlanCourse } from '../student/entities/student-plan-course.entity';
 import { OutlineService } from '../outline/outline.service';
 import { StudentCourseStatus } from '../student/enum/student-course-status';
+import { isPhysicalEducationCourse, PE_GENERIC_CODES } from '../student/physical-education';
 import {
   ANSWER_SCHEMA,
   type AdvisorRecommendation,
@@ -288,7 +289,9 @@ export class AdvisorTools {
       return {
         code: catalog.code, name: catalog.name, credits: catalog.credits, description: catalog.description,
         in_curriculum: false,
-        note: 'Môn không thuộc chương trình đào tạo của sinh viên; chỉ có thể tính vào khối tự chọn tự do (nếu có).',
+        note: isPhysicalEducationCourse(catalog.code)
+          ? 'Học phần thể chất: tính vào GDTC của chương trình (1 học phần = xong PE1003, 2 học phần = xong PE1005).'
+          : 'Môn không thuộc chương trình đào tạo của sinh viên; chỉ có thể tính vào khối tự chọn tự do (nếu có).',
         offering_next: offering,
       };
     }
@@ -332,7 +335,33 @@ export class AdvisorTools {
       outline: outlineBrief(summary),
       outline_prerequisites: (summary?.prerequisites ?? [])
         .map(item => ({ code: item.related_course_code, type: item.type ? RELATION_LABEL[item.type as CourseRelationType] : null })),
+      ...((PE_GENERIC_CODES as readonly string[]).includes(course.code.toUpperCase())
+        ? { physical_education_options: await this.physicalEducationOptions(ctx) }
+        : {}),
     };
+  }
+
+  /** Các học phần thể chất trong danh mục (thay cho mã chung PE1003/PE1005), kèm trạng thái và dự đoán mở lớp kỳ tới. */
+  private async physicalEducationOptions(ctx: TurnContext) {
+    const catalog = (await this.courses.createQueryBuilder('c').where('UPPER(c.code) LIKE :prefix', { prefix: 'PE%' }).getMany())
+      .filter(course => isPhysicalEducationCourse(course.code))
+      .sort((a, b) => a.code.localeCompare(b.code));
+    if (!catalog.length) return [];
+    const ids = catalog.map(course => course.id);
+    const [statuses, offerings] = await Promise.all([
+      this.studentCourses.find({ where: { user_id: ctx.userId, course_id: In(ids) } }),
+      this.offering(ids, ctx.nextSemester),
+    ]);
+    const statusById = new Map(statuses.map(row => [row.course_id, row.status]));
+    return catalog.map(course => {
+      const status = statusById.get(course.id);
+      return {
+        code: course.code,
+        name: course.name,
+        student_status: status ? STATUS_LABEL[status] : 'chưa khai',
+        offering_next: offerings.get(course.id)?.verdict ?? 'no_data',
+      };
+    });
   }
 
   private async checkOffering(args: Record<string, unknown>, ctx: TurnContext) {

@@ -1,4 +1,4 @@
-import { Alert, Card, Descriptions, Space, Spin, Tag, Typography } from 'antd';
+import { Alert, Card, Descriptions, Space, Spin, Tabs, Tag, Typography } from 'antd';
 import { useMemo } from 'react';
 import { LuArrowLeft } from 'react-icons/lu';
 import { Link, useLocation, useParams } from 'react-router';
@@ -9,6 +9,8 @@ import { getCourseOutlineByCode } from '@/apis/outline';
 import { getMyProfile, listMyCourses } from '@/apis/student';
 import { useApiQuery, useCurrentRole } from '@/hooks';
 import OpenedSemesterChart from './components/OpenedSemesterChart';
+import { PhysicalEducationCourses } from './components/PhysicalEducationCourses';
+import { isGenericPhysicalEducation } from './physical-education';
 import { CourseOutlineSection, type CurriculumRelationView } from './components/outline/CourseOutlineSection';
 import {
     ROLE,
@@ -111,6 +113,19 @@ const CourseDetailPage = () => {
     const displayCode = course?.code ?? outline!.course_code;
     const displayName = course?.name ?? outline?.selected?.name_vi ?? outline?.versions.at(-1)?.name_vi ?? '';
     const credits = course?.credits ?? outline?.selected?.credits ?? outline?.versions.at(-1)?.credits;
+    const noOutline = (
+        <Paragraph type="secondary" style={{ margin: 0 }}>
+            {outlineQuery.isError ? 'Không tải được đề cương.' : 'Môn học này chưa có đề cương trong hệ thống.'}
+        </Paragraph>
+    );
+    // GDTC 1/2 (PE1003/PE1005) là mã chung: thêm tab liệt kê các học phần thể chất thực tế được học.
+    const peTabs = isGenericPhysicalEducation(displayCode)
+        ? [{
+            key: 'physical-education',
+            label: 'Các môn thể chất',
+            children: <PhysicalEducationCourses statuses={isStudent ? myCoursesQuery.data ?? [] : undefined} />,
+        }]
+        : [];
 
     return (
         <section>
@@ -165,26 +180,34 @@ const CourseDetailPage = () => {
                     </Descriptions>
                 </Card>
 
-                {outline
-                    ? (
-                        <CourseOutlineSection
-                            key={outline.course_code}
-                            data={outline}
-                            curriculumRelations={curriculumRelations}
-                            curriculumCode={curriculumQuery.data?.code}
-                            openedSemesters={course ? openedSemesters : undefined}
+                {outline && (
+                    <CourseOutlineSection
+                        key={outline.course_code}
+                        data={outline}
+                        curriculumRelations={curriculumRelations}
+                        curriculumCode={curriculumQuery.data?.code}
+                        openedSemesters={course ? openedSemesters : undefined}
+                        extraTabs={peTabs}
+                    />
+                )}
+
+                {/* Không có đề cương nhưng là GDTC 1/2: gom đề cương trống, học kỳ đã mở và các môn thể chất vào một khung tab. */}
+                {!outline && peTabs.length > 0 && (
+                    <Card>
+                        <Tabs
+                            items={[
+                                ...peTabs,
+                                { key: 'outline', label: 'Đề cương', children: noOutline },
+                                ...(course ? [{ key: 'opened', label: 'Học kỳ đã mở', children: openedSemesters }] : []),
+                            ]}
                         />
-                    )
-                    : (
-                        <Card title="Đề cương môn học">
-                            <Paragraph type="secondary" style={{ margin: 0 }}>
-                                {outlineQuery.isError ? 'Không tải được đề cương.' : 'Môn học này chưa có đề cương trong hệ thống.'}
-                            </Paragraph>
-                        </Card>
-                    )}
+                    </Card>
+                )}
+
+                {!outline && peTabs.length === 0 && <Card title="Đề cương môn học">{noOutline}</Card>}
 
                 {/* Có đề cương thì "Học kỳ đã mở" là một tab trong khung đề cương; không có thì giữ thẻ riêng. */}
-                {course && !outline && <Card title="Học kỳ đã mở">{openedSemesters}</Card>}
+                {course && !outline && peTabs.length === 0 && <Card title="Học kỳ đã mở">{openedSemesters}</Card>}
             </Space>
         </section>
     );
