@@ -195,6 +195,7 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
 
             {!isEmpty && !categoriesQuery.isError && (
                 <ITable<CurriculumCategory>
+                    showIndex={false}
                     columns={columns}
                     dataSource={categories}
                     rowKey="id"

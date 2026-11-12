@@ -339,6 +339,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
 
             {!isEmpty && !groupsQuery.isError && (
                 <ITable<CourseGroup>
+                    showIndex={false}
                     columns={columns}
                     dataSource={groups}
                     rowKey="id"
@@ -360,13 +361,17 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                                 ? <Text type="secondary">Nhóm chưa có môn nào.</Text>
                                 : (
                                     <Space orientation="vertical" size={8} style={{ width: '100%' }}>
-                                        <Space wrap size={[8, 8]}>
-                                            {group.members.map(member => (
-                                                <Tag key={member.course_id} color="blue">
-                                                    {`${member.course.code} · ${member.course.name}`}
-                                                </Tag>
-                                            ))}
-                                        </Space>
+                                        <ol style={{ margin: 0, paddingLeft: 24 }}>
+                                            {[...group.members]
+                                                .sort((a, b) => a.course.code.localeCompare(b.course.code))
+                                                .map(member => (
+                                                    <li key={member.course_id} style={{ padding: '2px 0' }}>
+                                                        <Text strong>{member.course.code}</Text>
+                                                        {` · ${member.course.name} `}
+                                                        <Text type="secondary">({member.course.credits} TC)</Text>
+                                                    </li>
+                                                ))}
+                                        </ol>
 
                                         {group.required_count !== null && group.required_count > group.members.length && (
                                             <Alert

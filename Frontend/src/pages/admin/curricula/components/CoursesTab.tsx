@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import { Alert, Form, InputNumber, Modal, Popconfirm, Select, Space, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
-import { LuPencil, LuPlus, LuTrash2 } from 'react-icons/lu';
-import { EmptyState, ISolidBtn, ITable, ITextBtn } from '@/components';
+import { LuEye, LuPencil, LuPlus, LuTrash2 } from 'react-icons/lu';
+import { Link, useLocation } from 'react-router';
+import { EmptyState, IconBtn, ISolidBtn, ITable } from '@/components';
 import { listCourses } from '@/apis/course';
 import {
     listCourseGroups,
@@ -20,6 +21,18 @@ import { summarizeCurriculumCredits } from '@/utils/curriculum-credits';
 import type { CurriculumTabProps } from '../types';
 
 const { Text } = Typography;
+
+/** Mỗi năm / mỗi kỳ một màu (tránh `purple` vì đã dùng cho nhóm học phần cùng bảng). */
+const YEAR_TAG_COLOR: Record<number, string> = { 1: 'blue', 2: 'green', 3: 'gold', 4: 'volcano' };
+const TERM_TAG_COLOR: Record<number, string> = { 1: 'cyan', 2: 'geekblue', 3: 'magenta' };
+
+/** Sắp theo năm → kỳ → mã môn; môn chưa xếp năm/kỳ xếp sau cùng. */
+const compareSchedule = (a: CurriculumCourse, b: CurriculumCourse): number => {
+    const rank = (value: number | null) => value ?? Number.POSITIVE_INFINITY;
+    return rank(a.recommended_year) - rank(b.recommended_year)
+        || rank(a.recommended_term) - rank(b.recommended_term)
+        || a.course.code.localeCompare(b.course.code);
+};
 
 /** Form sửa một môn trong chương trình: năm/kỳ khuyến nghị (hoặc bỏ xếp kỳ) và nhóm học phần. */
 interface EditCourseForm {
@@ -63,6 +76,7 @@ const schedulePairRule = (otherField: 'recommended_year' | 'recommended_term') =
  */
 const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
     const queryClient = useQueryClient();
+    const location = useLocation();
     const [form] = Form.useForm<AddCourseForm>();
     const [editForm] = Form.useForm<EditCourseForm>();
     const [editing, setEditing] = useState<CurriculumCourse | null>(null);
@@ -282,32 +296,45 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
             },
         },
         {
-            title: 'Năm khuyến nghị',
-            dataIndex: 'recommended_year',
-            key: 'recommended_year',
-            width: 120,
-            render: (year: number | null) => (year === null
-                ? <Tag color="default">Chưa xếp kỳ</Tag>
-                : <Tag color="blue">Năm {year}</Tag>),
-        },
-        {
-            title: 'Kỳ khuyến nghị',
-            dataIndex: 'recommended_term',
-            key: 'recommended_term',
-            width: 110,
-            render: (term: number | null) => (term === null
-                ? <Text type="secondary">—</Text>
-                : <Tag color="cyan">Kỳ {term}</Tag>),
+            title: 'Năm – Kỳ khuyến nghị',
+            key: 'schedule',
+            width: 170,
+            sorter: compareSchedule,
+            defaultSortOrder: 'ascend',
+            sortDirections: ['ascend', 'descend', 'ascend'],
+            render: (_value, record) => {
+                const { recommended_year: year, recommended_term: term } = record;
+                if (year === null) return <Tag color="default">Chưa xếp kỳ</Tag>;
+
+                return (
+                    <Space size={4}>
+                        <Tag color={YEAR_TAG_COLOR[year] ?? 'default'} style={{ marginInlineEnd: 0 }}>Năm {year}</Tag>
+                        {term !== null && (
+                            <Tag color={TERM_TAG_COLOR[term] ?? 'default'} style={{ marginInlineEnd: 0 }}>Kỳ {term}</Tag>
+                        )}
+                    </Space>
+                );
+            },
         },
         {
             title: 'Hành động',
             key: 'actions',
-            width: 160,
+            width: 120,
             render: (_value, record) => (
-                <Space size={8}>
-                    <ITextBtn size="small" icon={<LuPencil />} onClick={() => openEdit(record)}>
-                        Sửa
-                    </ITextBtn>
+                <Space size={4}>
+                    <Link
+                        to={`/courses/${encodeURIComponent(record.course.code)}`}
+                        state={{ from: `${location.pathname}${location.search}` }}
+                    >
+                        <IconBtn size="small" icon={<LuEye />} label={`Xem môn ${record.course.code}`} />
+                    </Link>
+
+                    <IconBtn
+                        size="small"
+                        icon={<LuPencil />}
+                        label={`Sửa môn ${record.course.code}`}
+                        onClick={() => openEdit(record)}
+                    />
 
                     <Popconfirm
                         title="Xoá môn khỏi chương trình?"
@@ -317,14 +344,13 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                         okButtonProps={{ color: 'danger', variant: 'solid' }}
                         onConfirm={() => removeCourse.mutate(record.course_id)}
                     >
-                        <ITextBtn
+                        <IconBtn
                             size="small"
                             color="danger"
                             icon={<LuTrash2 />}
+                            label={`Xoá môn ${record.course.code}`}
                             loading={removeCourse.isPending && removeCourse.variables === record.course_id}
-                        >
-                            Xoá
-                        </ITextBtn>
+                        />
                     </Popconfirm>
                 </Space>
             ),
@@ -381,6 +407,7 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
             {!isEmpty && !coursesQuery.isError && (
                 <>
                     <ITable<CurriculumCourse>
+                        showIndex={false}
                         columns={columns}
                         dataSource={courses}
                         rowKey="id"

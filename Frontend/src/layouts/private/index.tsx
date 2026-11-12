@@ -1,43 +1,28 @@
-import { Suspense, useState } from 'react';
-import { Drawer, Spin } from 'antd';
+import { Suspense } from 'react';
+import { Spin } from 'antd';
 import { Outlet } from 'react-router';
 import { useMediaQuery } from '@/hooks';
+import AppBottomNav from './BottomNav';
 import AppHeader from './Header';
 import AppSider from './Sider';
 
 /**
- * Khung ứng dụng sau đăng nhập: sider (desktop) / drawer (mobile),
+ * Khung ứng dụng sau đăng nhập: sidebar (desktop) / bottom nav chỉ icon (mobile),
  * topbar và vùng nội dung có Suspense riêng cho lazy page.
  */
 const PrivateLayout = () => {
     const isMobile = useMediaQuery('(max-width: 1024px)');
-    const [collapsed, setCollapsed] = useState(false);
-    const [drawerOpen, setDrawerOpen] = useState(false);
 
     return (
-        <div className="app-shell" data-collapsed={!isMobile && collapsed}>
+        <div className="app-shell">
             {!isMobile && (
                 <aside className="app-sidebar">
-                    <AppSider
-                        collapsed={collapsed}
-                        onToggleCollapse={() => setCollapsed(previous => !previous)}
-                    />
+                    <AppSider />
                 </aside>
             )}
 
-            <Drawer
-                open={isMobile && drawerOpen}
-                onClose={() => setDrawerOpen(false)}
-                placement="left"
-                width={264}
-                title="BK Uni"
-                styles={{ body: { padding: 12, display: 'flex', flexDirection: 'column', gap: 14 } }}
-            >
-                <AppSider collapsed={false} onNavigate={() => setDrawerOpen(false)} />
-            </Drawer>
-
             <div className="app-main">
-                <AppHeader onOpenMenu={isMobile ? () => setDrawerOpen(true) : undefined} />
+                <AppHeader showBrand={isMobile} />
                 <main className="app-content">
                     <Suspense
                         fallback={(
@@ -50,6 +35,8 @@ const PrivateLayout = () => {
                     </Suspense>
                 </main>
             </div>
+
+            {isMobile && <AppBottomNav />}
         </div>
     );
 };

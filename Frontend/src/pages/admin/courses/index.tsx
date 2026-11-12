@@ -14,7 +14,9 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link, useLocation } from 'react-router';
 import {
+    LuEye,
     LuPencil,
     LuPlus,
     LuRefreshCw,
@@ -237,6 +239,7 @@ const CourseFormModal = ({ open, course, onClose }: CourseFormModalProps) => {
 const AdminCoursesPage = () => {
     const { page, pageSize, filters } = usePageLocation<{ search?: string }>();
     const queryClient = useQueryClient();
+    const location = useLocation();
 
     const [search, setSearch] = useState(filters?.search ?? '');
     const debouncedSearch = useDebounce(search, 400);
@@ -323,10 +326,16 @@ const AdminCoursesPage = () => {
         {
             title: 'Thao tác',
             key: 'actions',
-            width: 110,
+            width: 140,
             align: 'right',
             render: (_value: unknown, record: Course) => (
                 <Space size={2}>
+                    <Link
+                        to={`/courses/${encodeURIComponent(record.code)}`}
+                        state={{ from: `${location.pathname}${location.search}` }}
+                    >
+                        <IconBtn icon={<LuEye />} label={`Xem môn ${record.code}`} />
+                    </Link>
                     <IconBtn
                         icon={<LuPencil />}
                         label={`Sửa môn ${record.code}`}
@@ -405,6 +414,7 @@ const AdminCoursesPage = () => {
                 </div>
 
                 <ITable<Course>
+                    showIndex={false}
                     rowKey="id"
                     columns={columns}
                     dataSource={courses}

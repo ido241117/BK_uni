@@ -57,7 +57,7 @@ export const sidebarMenu: NavItem[] = [
         path: '/profile',
         icon: <LuUserRound />,
         group: 'TÀI KHOẢN',
-        roles: [ROLE.STUDENT, ROLE.ADMIN],
+        roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.PROFILE),
     },
     {

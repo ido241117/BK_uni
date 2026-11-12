@@ -1,7 +1,7 @@
 import { Alert, Card, Descriptions, Space, Spin, Tag, Typography } from 'antd';
 import { useMemo } from 'react';
 import { LuArrowLeft } from 'react-icons/lu';
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 import { IOutLinedBtn, PageHeader } from '@/components';
 import { getCourseByCode, getOpenedSemesters } from '@/apis/course';
 import { getCurriculum, listCourseRelations, listCurriculumCategories } from '@/apis/curriculum';
@@ -22,6 +22,10 @@ const CourseDetailPage = () => {
     const { code = '' } = useParams<{ code: string }>();
     const role = useCurrentRole();
     const isStudent = role === ROLE.STUDENT;
+    // Trang mở từ chỗ khác (vd. tab Môn học của chương trình ở trang admin) truyền `state.from` để quay về đúng chỗ.
+    const from = (useLocation().state as { from?: string } | null)?.from;
+    const backTo = from ?? '/courses';
+    const backLabel = from ? 'Quay lại' : 'Danh sách môn';
 
     const courseQuery = useApiQuery(['course', code], () => getCourseByCode(code), {
         enabled: Boolean(code),
@@ -93,7 +97,7 @@ const CourseDetailPage = () => {
                 showIcon
                 title="Không tìm thấy môn học"
                 description={`Không có môn học hay đề cương nào với mã "${code}".`}
-                action={<Link to="/courses"><IOutLinedBtn>Về danh sách</IOutLinedBtn></Link>}
+                action={<Link to={backTo}><IOutLinedBtn>{from ? 'Quay lại' : 'Về danh sách'}</IOutLinedBtn></Link>}
             />
         );
     }
@@ -113,7 +117,7 @@ const CourseDetailPage = () => {
             <PageHeader
                 title={`${displayCode} · ${displayName}`}
                 subtitle={outline ? 'Thông tin môn học, đề cương và các học kỳ đã mở.' : 'Thông tin môn học và các học kỳ đã mở.'}
-                extra={<Link to="/courses"><IOutLinedBtn icon={<LuArrowLeft />}>Danh sách môn</IOutLinedBtn></Link>}
+                extra={<Link to={backTo}><IOutLinedBtn icon={<LuArrowLeft />}>{backLabel}</IOutLinedBtn></Link>}
             />
 
             <Space orientation="vertical" size={16} style={{ width: '100%' }}>

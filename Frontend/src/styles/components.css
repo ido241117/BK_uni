@@ -37,6 +37,8 @@
 
     .stack {
         display: grid;
+        /* minmax(0, 1fr): không để nội dung rộng (bảng cuộn ngang) kéo giãn cột và đẩy cả trang. */
+        grid-template-columns: minmax(0, 1fr);
         gap: 16px;
     }
 

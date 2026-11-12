@@ -520,6 +520,7 @@ const AdminCurriculaPage = () => {
                     )}
 
                     <ITable<Curriculum>
+                        showIndex={false}
                         rowKey="id"
                         columns={columns}
                         dataSource={curricula}

@@ -112,7 +112,9 @@ export const buildAntdTheme = (isDark: boolean): ThemeConfig => {
                 headerBg: palette.subtle,
                 headerColor: palette.text,
                 headerSplitColor: palette.border,
-                rowHoverBg: isDark ? 'rgba(74, 158, 255, 0.12)' : BRAND.soft,
+                // Màu đặc (đã trộn sẵn brand lên nền surface: 12% tối / 10% sáng), không dùng rgba:
+                // cột `fixed` cần nền đục, nếu không chữ của cột cuộn bên dưới sẽ lộ qua khi hover.
+                rowHoverBg: isDark ? '#1c2a3b' : '#e6f0fa',
                 borderColor: palette.border,
             },
             Menu: {

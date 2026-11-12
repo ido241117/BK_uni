@@ -164,6 +164,7 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
                 extra={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>Thêm quy định</ISolidBtn>}
             >
                 <ITable<CurriculumRegulation>
+                    showIndex={false}
                     rowKey="id"
                     columns={columns}
                     dataSource={regulations}

@@ -1,5 +1,5 @@
-import { LuLogOut, LuMenu, LuMoon, LuSun } from 'react-icons/lu';
-import { useNavigate } from 'react-router';
+import { LuLogOut, LuMoon, LuSun } from 'react-icons/lu';
+import { Link, useNavigate } from 'react-router';
 import { IOutLinedBtn, IconBtn } from '@/components';
 import { useAppTheme } from '@/contexts';
 import { useAsyncAction, useCurrentUser } from '@/hooks';
@@ -7,10 +7,11 @@ import { useAuthStore } from '@/stores';
 import { ROLE_LABEL } from '@/types';
 
 interface AppHeaderProps {
-    onOpenMenu?: () => void;
+    /** Mobile không có sidebar nên hiện logo trên topbar. */
+    showBrand?: boolean;
 }
 
-export const AppHeader = ({ onOpenMenu }: AppHeaderProps) => {
+export const AppHeader = ({ showBrand = false }: AppHeaderProps) => {
     const account = useCurrentUser();
     const navigate = useNavigate();
     const { isDark, toggleMode } = useAppTheme();
@@ -22,7 +23,11 @@ export const AppHeader = ({ onOpenMenu }: AppHeaderProps) => {
 
     return (
         <header className="app-topbar">
-            {onOpenMenu && <IconBtn icon={<LuMenu />} label="Mở menu" onClick={onOpenMenu} />}
+            {showBrand && (
+                <Link to="/" className="app-brand" aria-label="BK Uni - trang chủ">
+                    <span className="app-brand-mark">bk</span>
+                </Link>
+            )}
 
             <div className="app-topbar-grow" />
 

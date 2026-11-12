@@ -3,7 +3,7 @@ import { Alert, Card, Input, Segmented, Select, Space, Statistic, Tag, Typograph
 import type { ColumnsType } from 'antd/es/table';
 import { LuChartColumn, LuPencil, LuSearch } from 'react-icons/lu';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { IOutLinedBtn, ISolidBtn, ITable, ITextBtn, PageHeader, TablePageSkeleton } from '@/components';
+import { IconBtn, IOutLinedBtn, ISolidBtn, ITable, PageHeader, TablePageSkeleton } from '@/components';
 import { listCourses } from '@/apis/course';
 import { getCurriculum, listCourseGroups, listCurriculumCategories, listCurriculumCourses } from '@/apis/curriculum';
 import { getMyProfile, listMyCourses, listMyPlanCourses } from '@/apis/student';
@@ -248,6 +248,7 @@ const CoursesPage = () => {
             title: 'Mã môn',
             dataIndex: 'code',
             width: 110,
+            fixed: 'left',
             render: (code: string) => (
                 <Link to={`/courses/${encodeURIComponent(code)}`}><Text strong>{code}</Text></Link>
             ),
@@ -315,11 +316,12 @@ const CoursesPage = () => {
                     : <Text type="secondary">—</Text>),
             },
             {
-                title: 'Hành động',
+                title: '',
                 key: 'actions',
-                width: 96,
+                width: 56,
+                align: 'center',
                 render: (_value, row) => (
-                    <ITextBtn size="small" icon={<LuPencil />} onClick={() => setEditing(row)}>Sửa</ITextBtn>
+                    <IconBtn size="small" icon={<LuPencil />} label={`Sửa môn ${row.code}`} onClick={() => setEditing(row)} />
                 ),
             },
         );
@@ -427,6 +429,7 @@ const CoursesPage = () => {
 
                     <ITable<CourseRow>
                         rowKey="courseId"
+                        showIndex={false}
                         columns={columns}
                         dataSource={tableRows}
                         loading={tableLoading}

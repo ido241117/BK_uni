@@ -43,7 +43,7 @@
 
     /* Layout */
     --sidebar-width: 248px;
-    --sidebar-width-collapsed: 76px;
+    --bottom-nav-height: 60px;
     --topbar-height: 64px;
     --content-max-width: 1440px;
     --space-page: clamp(16px, 3vw, 32px);

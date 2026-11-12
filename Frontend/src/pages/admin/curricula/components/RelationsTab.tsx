@@ -356,6 +356,7 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
                     )}
 
                     <ITable<CourseRelation>
+                        showIndex={false}
                         rowKey="id"
                         columns={columns}
                         dataSource={visibleRelations}
