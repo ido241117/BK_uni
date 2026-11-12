@@ -1,107 +1,84 @@
-# BK Uni local/demo
+# BK Uni
 
-## Requirements
+Hệ thống hỗ trợ sinh viên theo dõi chương trình đào tạo, kế hoạch học tập và tư vấn học vụ với AI.
 
-- Node.js 20 or newer and npm.
-- PostgreSQL available locally.
-- Two databases: `bk_uni` for the demo and `bk_uni_test` for tests. Keep the test database separate from any local data you need to preserve.
+| Thư mục | Nội dung |
+| --- | --- |
+| [Backend/](Backend/) | API NestJS + TypeORM + PostgreSQL ([README](Backend/README.md)) |
+| [Frontend/](Frontend/) | React 19 + Vite + antd ([README](Frontend/README.md)) |
+| [pipeline/](pipeline/) | Công cụ Python xử lý dữ liệu học vụ, không cần để chạy web |
 
-Create the databases with PostgreSQL tools, for example:
+## Yêu cầu
 
-```powershell
-createdb -U postgres bk_uni
-createdb -U postgres bk_uni_test
-```
+- Node.js 20.19+ hoặc 22.12+ và npm.
+- Tài khoản database dùng chung (Supabase) do Thiên cấp.
 
-Copy the example environment files from the workspace root:
+> Nếu cần setup `.env` hoặc chưa có tài khoản database, hỏi Thiên.
 
-```powershell
-Copy-Item BK_uni/backend/.env.example BK_uni/backend/.env
-Copy-Item BK_uni/frontend/.env.example BK_uni/frontend/.env
-```
-
-Set the PostgreSQL credentials in `backend/.env`. Keep `DB_NAME=bk_uni` and `DB_TEST_NAME=bk_uni_test`; they must be different. Set `ADMIN_SEED_EMAIL` and an `ADMIN_SEED_PASSWORD` of at least 8 characters. The seed also creates synthetic rule-test profiles; set `DEMO_SEED_PASSWORD` to give them a separate password, or leave it blank to use `ADMIN_SEED_PASSWORD`. Do not commit `.env` files or share the demo password.
-
-## Install and migrate
+## 1. Backend
 
 ```powershell
-Push-Location BK_uni/backend
+cd Backend
 npm ci
-npm run migration:run
-npm run seed
-Pop-Location
+Copy-Item .env.example .env
+```
 
-Push-Location BK_uni/frontend
+Sửa `Backend/.env`:
+
+```env
+PORT=3210
+CORS_ORIGINS=http://localhost:5173,http://localhost:3210
+
+DB_HOST=aws-0-ap-southeast-1.pooler.supabase.com
+DB_PORT=5432
+DB_USERNAME=<tài khoản được cấp>
+DB_PASSWORD=<mật khẩu được cấp>
+DB_NAME=postgres
+DB_SCHEMA=bk_uni
+DB_SSL_MODE=require
+
+JWT_ACCESS_SECRET=<chuỗi ngẫu nhiên, tối thiểu 32 ký tự>
+
+# Chỉ cần nếu dùng trang Tư vấn với AI
+DEEPSEEK_API_KEY=
+```
+
+Database dùng chung đã có sẵn bảng và dữ liệu. Tài khoản dev chỉ được xem, thêm, sửa, xóa dữ liệu, không được tạo, sửa hay xóa bảng, nên **không chạy `npm run migration:run` hay `migration:revert`**. Nếu cần thay đổi schema, báo Thiên để chạy migration.
+
+## 2. Frontend
+
+```powershell
+cd Frontend
 npm ci
-Pop-Location
+Copy-Item .env.example .env     # VITE_API_PROXY_TARGET=http://localhost:3210
 ```
 
-The seed command creates or updates the admin account and inserts three small synthetic rule-test curricula with six student profiles. These are test data, not verified programs of study. The five-course fixture at `backend/src/fixtures/synthetic-curriculum.json` remains the automated engine fixture. See `docs/manual-test/04-rule-testcases.md` for accounts and expected outputs.
+## 3. Chạy
 
-## Run
-
-Start each process in a separate terminal from the workspace root:
+Mở hai terminal:
 
 ```powershell
-Push-Location BK_uni/backend
-npm run dev
+cd Backend
+npm run dev                     # API http://localhost:3210/api, Swagger http://localhost:3210/docs
 ```
 
 ```powershell
-Push-Location BK_uni/frontend
-npm run dev
+cd Frontend
+npm run dev                     # http://localhost:5173
 ```
 
-Open `http://127.0.0.1:5174`. The frontend sends `/api/v1` requests through Vite to the backend on port `3200`. Sign in with the admin email and password configured for the seed, or register a student account.
+Mở `http://localhost:5173` rồi đăng nhập. Tài khoản test có trong [Backend/TEST-ACCOUNTS.md](Backend/TEST-ACCOUNTS.md); bạn cũng có thể tự đăng ký tài khoản sinh viên.
 
-## Agent demo (Sprint 2)
-
-The Python service uses Python 3.13 and runs without database access. Install it in its own virtual environment:
+## Kiểm tra
 
 ```powershell
-Push-Location BK_uni/python
-py -3.13 -m venv .venv
-.venv\Scripts\python.exe -m pip install -e ".[dev]"
-if (!(Test-Path .env)) { Copy-Item .env.example .env }
-Pop-Location
+cd Backend;  npm run build; npm test; npm run lint
+cd Frontend; npm run build; npm run lint
 ```
 
-Keep an existing `BK_uni/python/.env`; add the required values instead of copying over it. Set `SERVICE_TOKEN` to the same value as backend `AGENT_SERVICE_TOKEN`, and `GATEWAY_SERVICE_TOKEN` to backend `AGENT_GATEWAY_SERVICE_TOKEN`. The Python and backend public-key settings must contain the same Ed25519 public key; keep its private key only in backend `.env`. Set `AGENT_SYNTHETIC_USER_IDS` to IDs of synthetic test accounts only. DeepSeek requires `DEEPSEEK_API_KEY`; a configured key alone does not enable non-allowlisted users.
+Test Backend chạy trên PostgreSQL giả lập trong bộ nhớ (`pg-mem`), không chạm vào database dùng chung.
 
-Run the service in a third terminal:
+## Lưu ý
 
-```powershell
-Push-Location BK_uni/python
-.venv\Scripts\python.exe -m uvicorn bk_agent.main:app --app-dir src --reload --port 8001
-```
-
-Open `/chat` as an allowlisted synthetic student. Until DeepSeek processing/retention terms and the allowed data fields are approved, do not add real student IDs to the allowlist. The UI/API remain available, but the agent will return an unavailable status for other accounts.
-
-## Verify
-
-Run backend tests from `BK_uni/backend`:
-
-```powershell
-npm test -- --runInBand
-npm run test:e2e -- --runInBand
-npm run migration:verify
-npm run build
-```
-
-Run frontend checks from `BK_uni/frontend`:
-
-```powershell
-npm test
-npm run lint
-npm run build
-```
-
-The PostgreSQL e2e suite and migration verifier require the dedicated `DB_TEST_NAME`. They reject a missing test database name, a name that does not contain `test`, or a value equal to `DB_NAME`. E2e creates a random schema in that database, runs migrations there, and drops the schema afterward; it does not use or modify the demo database.
-
-## Demo limits
-
-This workspace is for local/demo use, not production deployment. Curriculum import from PDF/JSON and learner-owned editable curriculum plans are not implemented in the current app; verified real curriculum seed data, email verification, and production operations are also outside the MVP. Student accounts can currently edit their own profile/course statuses, but cannot edit canonical curriculum data. Use only synthetic or manually verified data and do not place real student records in the demo database.
-
-## myBK browser extension prototype
-
-The separate Chrome extension and its local advice backend are packaged under [`extension/`](extension/). Load `extension/mybk-extension` as an unpacked extension and follow its README. The backend setup and test instructions are in [`extension/mybk-backend/README.md`](extension/mybk-backend/README.md). This prototype is independent of the BK Uni web app and does not use its database.
+- Không commit file `.env` và không gửi mật khẩu database lên kênh chung.
+- Database dùng chung cho cả nhóm. Không xóa dữ liệu của người khác, và không đưa dữ liệu sinh viên thật vào.
