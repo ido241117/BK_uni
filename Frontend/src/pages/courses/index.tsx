@@ -16,6 +16,7 @@ import {
     type CourseSummary,
     type StudentCourseStatus,
 } from '@/types';
+import { courseSearchRank } from '@/utils/course-search';
 import { summarizeCurriculumProgress } from '@/utils/curriculum-credits';
 import CourseEditModal from './components/CourseEditModal';
 import CourseStatusFileActions from './components/CourseStatusFileActions';
@@ -169,15 +170,15 @@ const CoursesPage = () => {
             : (statusesQuery.data ?? [])
                 .map(item => toRow(item.course_id, item.course))
                 .sort((a, b) => a.code.localeCompare(b.code));
-        const lowerKeyword = keyword.toLowerCase();
-        return source.filter(row => {
-            const matchesKeyword = !lowerKeyword
-                || row.code.toLowerCase().includes(lowerKeyword)
-                || row.name.toLowerCase().includes(lowerKeyword);
-            const matchesStatus = !activeStatusFilter
-                || (activeStatusFilter === 'none' ? row.status === null : row.status === activeStatusFilter);
-            return matchesKeyword && matchesStatus;
-        });
+        const ranked = source
+            .map(row => ({ row, rank: courseSearchRank(row, keyword) }))
+            .filter(({ row, rank }) => rank !== null && (
+                !activeStatusFilter
+                || (activeStatusFilter === 'none' ? row.status === null : row.status === activeStatusFilter)
+            ));
+        // Có từ khoá thì môn khớp mã lên trước; cùng mức giữ thứ tự cũ (sort ổn định).
+        if (keyword) ranked.sort((a, b) => a.rank! - b.rank!);
+        return ranked.map(({ row }) => row);
     }, [serverPaged, scope, curriculumRows, statusesQuery.data, toRow, keyword, activeStatusFilter]);
 
     /** Môn điền sẵn vào file mẫu khai trạng thái: chương trình + đã khai/lên kế hoạch. */

@@ -25,13 +25,26 @@ export class CourseService {
     const search = query.search?.trim();
     if (search) {
       builder.andWhere('(LOWER(course.code) LIKE LOWER(:search) OR LOWER(course.name) LIKE LOWER(:search))', { search: `%${search}%` });
+      // Ưu tiên khớp mã môn: "PE" ra các môn PE trước "Hệ điều hành / oPErating Systems".
+      builder
+        .addSelect(
+          `CASE
+            WHEN LOWER(course.code) = LOWER(:exact) THEN 0
+            WHEN LOWER(course.code) LIKE LOWER(:prefix) THEN 1
+            WHEN LOWER(course.code) LIKE LOWER(:search) THEN 2
+            ELSE 3
+          END`,
+          'search_rank',
+        )
+        .setParameters({ exact: search, prefix: `${search}%` })
+        .orderBy('search_rank', 'ASC');
     }
     if (query.codes?.length) {
       // Dùng được index UQ_courses_code_lower.
       builder.andWhere('LOWER(course.code) IN (:...codes)', { codes: query.codes.map(code => code.toLowerCase()) });
     }
     builder
-      .orderBy('course.code', direction)
+      .addOrderBy('course.code', direction)
       .addOrderBy('course.id', 'ASC')
       .skip(query.skip)
       .take(query.take);
