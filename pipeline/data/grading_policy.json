@@ -4,18 +4,20 @@
   "effective_for_cohorts": { "from": 2024, "to": null },
 
   "grade_scale": [
-    { "grade": "A",  "points": "4.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
-    { "grade": "B+", "points": "3.50", "passing": true,  "in_gpa": true,  "earns_credit": true },
-    { "grade": "B",  "points": "3.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
-    { "grade": "C+", "points": "2.50", "passing": true,  "in_gpa": true,  "earns_credit": true },
-    { "grade": "C",  "points": "2.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
-    { "grade": "D",  "points": "1.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
-    { "grade": "F",  "points": "0.00", "passing": false, "in_gpa": true,  "earns_credit": false },
-    { "grade": "P",  "points": null,   "passing": true,  "in_gpa": false, "earns_credit": true },
-    { "grade": "W",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false },
-    { "grade": "I",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true },
-    { "grade": "X",  "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true },
-    { "grade": "R",  "points": null,   "passing": true, "in_gpa": false, "earns_credit": true}
+    { "grade": "A+", "min_score": 9.5, "max_score": 10.0, "points": "4.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "A",  "min_score": 8.5, "max_score": 9.4,  "points": "4.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "B+", "min_score": 8.0, "max_score": 8.4,  "points": "3.50", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "B",  "min_score": 7.0, "max_score": 7.9,  "points": "3.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "C+", "min_score": 6.5, "max_score": 6.9,  "points": "2.50", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "C",  "min_score": 5.5, "max_score": 6.4,  "points": "2.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "D+", "min_score": 5.0, "max_score": 5.4,  "points": "1.50", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "D",  "min_score": 4.0, "max_score": 4.9,  "points": "1.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
+    { "grade": "F",  "min_score": 0.0, "max_score": 3.9,  "points": "0.00", "passing": false, "in_gpa": true,  "earns_credit": false },
+    { "grade": "P",  "min_score": null, "max_score": null, "points": null,   "passing": true,  "in_gpa": false, "earns_credit": true },
+    { "grade": "W",  "min_score": null, "max_score": null, "points": null,   "passing": false, "in_gpa": false, "earns_credit": false },
+    { "grade": "I",  "min_score": null, "max_score": null, "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true },
+    { "grade": "X",  "min_score": null, "max_score": null, "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true },
+    { "grade": "R",  "min_score": null, "max_score": null, "points": null,   "passing": true,  "in_gpa": false, "earns_credit": true }
   ],
 
   "gpa": {
