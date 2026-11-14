@@ -9,7 +9,9 @@ Bảng dưới là các tài khoản đã tạo trong database cấu hình ở `
 | --- | --- | --- | --- |
 | `ADMIN` | `admin@bkuni.local` | `Admin@123456` | Tạo bằng `npm run admin:create`; đã đăng nhập và gọi được API Admin. |
 
-Chưa có tài khoản Student nào được seed. Tạo bằng API (tự đăng ký), sau đó đăng nhập:
+| `STUDENT` | `khmt.demo@bkuni.local` | `Student@123` | SV demo Khoa học Máy tính (CS-2023-KHMT), khóa 2023, đang học HK 261. Tạo bằng `node scripts/seed-demo-student.mjs` (chạy lại sẽ reset dữ liệu môn học của tài khoản này). |
+
+Tạo thêm tài khoản Student bằng API (tự đăng ký), sau đó đăng nhập:
 
 ```bash
 # Cần header Origin trùng CORS_ORIGINS, ví dụ http://localhost:5173

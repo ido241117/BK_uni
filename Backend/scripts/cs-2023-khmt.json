@@ -1081,7 +1081,7 @@
     {
       "code": "CNDL",
       "name": "Công nghệ Dữ liệu Bảo mật và Trí tuệ Kinh doanh",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "description": "Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách của chuyên ngành. Không đạt chuyên ngành nào thì tốt nghiệp ngành Khoa học Máy tính, không ghi chuyên ngành.",
       "groups": [
         {
           "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
@@ -1107,7 +1107,7 @@
     {
       "code": "CNPM",
       "name": "Công nghệ Phần mềm",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "description": "Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách của chuyên ngành. Không đạt chuyên ngành nào thì tốt nghiệp ngành Khoa học Máy tính, không ghi chuyên ngành.",
       "groups": [
         {
           "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
@@ -1127,66 +1127,9 @@
       ]
     },
     {
-      "code": "KHMT",
-      "name": "Khoa học Máy tính",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
-      "groups": [
-        {
-          "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
-          "name": "Tự chọn nhóm C - Khoa học Máy tính",
-          "course_codes": [
-            "CO3021",
-            "CO3027",
-            "CO3029",
-            "CO3033",
-            "CO3115",
-            "CO4031",
-            "CO4033",
-            "CO4035",
-            "CO4037",
-            "CO4039",
-            "CO3011",
-            "CO3015",
-            "CO3017",
-            "CO3065",
-            "CO3041",
-            "CO3089",
-            "CO3049",
-            "CO3051",
-            "CO3069",
-            "CO3061",
-            "CO3117",
-            "CO3129",
-            "CO3137",
-            "CO3139",
-            "CO3131",
-            "CO3151",
-            "CO3153",
-            "CO3133",
-            "CO3135",
-            "CO3013",
-            "CO3023",
-            "CO3031",
-            "CO3035",
-            "CO3047",
-            "CO3071",
-            "CO3083",
-            "CO4025",
-            "CO3085",
-            "CO3057",
-            "CO3045",
-            "CO3059",
-            "CO3067",
-            "CO3037",
-            "CO3043"
-          ]
-        }
-      ]
-    },
-    {
       "code": "MMANM",
       "name": "Mật mã và An ninh mạng",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "description": "Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách của chuyên ngành. Không đạt chuyên ngành nào thì tốt nghiệp ngành Khoa học Máy tính, không ghi chuyên ngành.",
       "groups": [
         {
           "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
@@ -1207,7 +1150,7 @@
     {
       "code": "TTNT",
       "name": "Trí tuệ nhân tạo ứng dụng",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "description": "Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách của chuyên ngành. Không đạt chuyên ngành nào thì tốt nghiệp ngành Khoa học Máy tính, không ghi chuyên ngành.",
       "groups": [
         {
           "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",
@@ -1236,7 +1179,7 @@
     {
       "code": "XLA",
       "name": "Xử lý ảnh và Thị giác máy tính",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm C đều thuộc danh sách của chuyên ngành.",
+      "description": "Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách của chuyên ngành. Không đạt chuyên ngành nào thì tốt nghiệp ngành Khoa học Máy tính, không ghi chuyên ngành.",
       "groups": [
         {
           "parent_group": "Tự chọn nhóm C (học kỳ 7 và 8)",

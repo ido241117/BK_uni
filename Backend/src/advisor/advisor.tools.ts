@@ -478,7 +478,7 @@ export class AdvisorTools {
   private async specializationDetail(args: Record<string, unknown>, ctx: TurnContext) {
     const code = String(args.code ?? '').trim();
     if (!code) return { error: 'Thiếu code' };
-    const specs = await this.specializations.find({ where: { curriculum_id: ctx.curriculumId } });
+    const specs = await this.specializations.find({ where: { curriculum_id: ctx.curriculumId }, relations: { curriculum: true } });
     const spec = specs.find(item => item.code.toLowerCase() === code.toLowerCase());
     if (!spec) return { error: `Không có chuyên ngành ${code}. Các mã hợp lệ: ${specs.map(item => item.code).join(', ')}` };
 
@@ -493,7 +493,8 @@ export class AdvisorTools {
       code: spec.code,
       name: spec.name,
       description: spec.description,
-      rule: 'Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách chuyên ngành và đủ số môn/tín chỉ của từng khối con.',
+      rule: 'Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách chuyên ngành và đủ số môn/tín chỉ của từng khối con. ' +
+        `Không đạt chuyên ngành nào thì tốt nghiệp ngành ${spec.curriculum.major}, không ghi chuyên ngành (mặc định, không phải một chuyên ngành).`,
       groups: children.map(group => {
         const parent = group.parent_group_id ? groupById.get(group.parent_group_id) : undefined;
         return {

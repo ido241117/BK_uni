@@ -736,37 +736,9 @@
   ],
   "specializations": [
     {
-      "code": "KTMT",
-      "name": "Kỹ thuật Máy tính",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm B đều thuộc danh sách của chuyên ngành.",
-      "groups": [
-        {
-          "parent_group": "Tự chọn nhóm B (học kỳ 5 và 7)",
-          "name": "Tự chọn nhóm B - Kỹ thuật Máy tính",
-          "course_codes": [
-            "CO2035",
-            "CO3035",
-            "CO3037",
-            "CO3049",
-            "CO3069",
-            "CO3071",
-            "CO3117",
-            "CO3143",
-            "CO3145",
-            "CO3147",
-            "CO3149",
-            "CO3021",
-            "CO3141",
-            "CO3067",
-            "CO3051"
-          ]
-        }
-      ]
-    },
-    {
       "code": "HTTTHD",
       "name": "Hệ thống tính toán hiện đại",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm B đều thuộc danh sách của chuyên ngành.",
+      "description": "Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách của chuyên ngành. Không đạt chuyên ngành nào thì tốt nghiệp ngành Kỹ thuật Máy tính, không ghi chuyên ngành.",
       "groups": [
         {
           "parent_group": "Tự chọn nhóm B (học kỳ 5 và 7)",
@@ -787,7 +759,7 @@
     {
       "code": "IOTANM",
       "name": "Internet vạn vật và An ninh mạng",
-      "description": "Đạt chuyên ngành khi các môn tự chọn nhóm B đều thuộc danh sách của chuyên ngành.",
+      "description": "Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách của chuyên ngành. Không đạt chuyên ngành nào thì tốt nghiệp ngành Kỹ thuật Máy tính, không ghi chuyên ngành.",
       "groups": [
         {
           "parent_group": "Tự chọn nhóm B (học kỳ 5 và 7)",

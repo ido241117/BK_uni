@@ -61,6 +61,7 @@ export const buildAdvisorSnapshot = (analysis: Analysis, curriculum: Curriculum,
         curriculum: {
             code: curriculum.code,
             name: curriculum.name,
+            major: curriculum.major,
             min_semester_credits: curriculum.min_semester_credits,
             max_semester_credits: curriculum.max_semester_credits,
         },
