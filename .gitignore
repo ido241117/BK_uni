@@ -24,3 +24,6 @@ Thumbs.db
 .idea/
 .editorconfig
 .gitattributes
+
+# Dữ liệu JSON sinh ra cho scripts backend
+/Backend/scripts/**/*.json
