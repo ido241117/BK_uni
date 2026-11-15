@@ -31,7 +31,9 @@ import { entities } from './database/entities';
         entities,
       }),
     }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
+    // TODO(dev): nới giới hạn chung để import dữ liệu hàng loạt (create-curriculum ~173 request/chương trình).
+    // Trả về { ttl: 60000, limit: 120 } trước khi deploy. Giới hạn riêng của login/advisor/outline vẫn giữ.
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100000 }]),
     AuthModule,
     CourseModule,
     CurriculumModule,

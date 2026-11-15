@@ -129,14 +129,24 @@ class Api {
     if (this.cookie) headers.Cookie = this.cookie;
 
     let response;
-    try {
-      response = await fetch(`${this.baseUrl}${path}`, {
-        method,
-        headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
-      });
-    } catch (cause) {
-      fail(`Khong ket noi duoc ${this.baseUrl}. Backend da chay chua? (${cause.message})`);
+    // Backend gioi han 120 request/phut (dang nhap 10/phut): gap 429 thi cho theo Retry-After roi goi lai.
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        this.requests = (this.requests ?? 0) + 1;
+        response = await fetch(`${this.baseUrl}${path}`, {
+          method,
+          headers,
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+      } catch (cause) {
+        fail(`Khong ket noi duoc ${this.baseUrl}. Backend da chay chua? (${cause.message})`);
+      }
+      if (response.status !== 429 || attempt >= 10) break;
+      const retryAfter = Number(response.headers.get('retry-after'));
+      const waitSeconds = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter + 1 : 61;
+      await response.text();
+      log(`  ~ 429 (gioi han request), doi ${waitSeconds}s roi goi lai ${method} ${path}`);
+      await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
     }
 
     const setCookies = typeof response.headers.getSetCookie === 'function' ? response.headers.getSetCookie() : [];
@@ -883,7 +893,7 @@ async function main() {
   heading('Nghiem thu');
   await verify(api, curriculum.id, plan, courseIds);
 
-  log(`\nXong. Chuong trinh: ${config.baseUrl}/curricula/${curriculum.id}`);
+  log(`\nXong (${api.requests} request). Chuong trinh: ${config.baseUrl}/curricula/${curriculum.id}`);
   log(`Xem tren web: ${config.origin.replace(/\/$/, '')}/admin/curricula/${curriculum.id}`);
   log(`Swagger: ${config.baseUrl.replace(/\/api$/, '')}/docs`);
 
