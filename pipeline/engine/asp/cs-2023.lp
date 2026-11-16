@@ -1,12 +1,13 @@
 % =====================================================================
-% cs-2023.lp : curriculum facts and constraints
-% Generated from curriculum.json by solver.py -- do not edit by hand.
-% Load together with encoding.lp and extension.lp.
+% cs-2023.lp : curriculum data and mappings
+% Generated from curriculum.json by the planner CLI -- do not edit by hand.
+% Load together with policy.lp, encoding.lp, extension.lp and plan.lp.
 % =====================================================================
 
 % Total degree credit requirement: 128
-% Semester load bounds, completion test, display and optimization
-% are in plan.lp, which does not depend on this JSON file.
+% This file contains only curriculum facts and mappings. Generic
+% derivations and constraints live in extension.lp; school-specific
+% loads, tuition, objectives and display live in plan.lp.
 
 % ------------------------------------------------------------------
 % Course groups and membership (in/2)
@@ -36,11 +37,8 @@ in((co4033; co4035; co4037; co4039), c).
 in((co3335; co4029; co4337), d).
 in((eng_gc; sa4001), e).
 
-% A module is any course that belongs to at least one group.
-in(E, m) :- group(G), in(E, G).
-
-% Groups are exactly the entities with lower and upper bounds.
-group(G) :- map(l, G, _), map(u, G, _), G != total_degree.
+% group/1, in(E,m) and in(E,comp) are derived generically in
+% extension.lp from the membership and bound facts below.
 elective_group(b3_2).
 elective_group(b3_3).
 elective_group(b3_4).
@@ -122,14 +120,37 @@ prereq(sp1039, sp1035).
 % ------------------------------------------------------------------
 coreq(co4029, co3335).
 
-:- coreq(C, A), in(X, s(J)), base(X, C), J > t,
-   not in(A, ok(J)), not precred(A, J).
-
 % ------------------------------------------------------------------
 % Offering frequency: freq(E,K,O) = every I with (I+shift) mod K = O
+% v1 maps curriculum terms 1/2 onto odd/even main semesters.
 % ------------------------------------------------------------------
-freq((sa4001), 3, 1).
-freq((sa4001), 3, 2).
+
+% Term-type offering facts (regular/summer).  These take
+% precedence over the legacy freq/3 encoding.
+offered_in((ch1003; co1005; co1007; co1023; co1027; co2001; co2003; co2007), regular).
+offered_in((co2011; co2013; co2017; co2039; co3001; co3005; co3011; co3013), regular).
+offered_in((co3015; co3017; co3021; co3023; co3027; co3029; co3031; co3033), regular).
+offered_in((co3035; co3037; co3041; co3043; co3045; co3047; co3049; co3051), regular).
+offered_in((co3057; co3059; co3061; co3065; co3067; co3069; co3071; co3083), regular).
+offered_in((co3085; co3089; co3093; co3101; co3103; co3105; co3107; co3109), regular).
+offered_in((co3111; co3115; co3117; co3119; co3127; co3129; co3131; co3133), regular).
+offered_in((co3135; co3137; co3139; co3151; co3153; co3335; co4025; co4029), regular).
+offered_in((co4031; co4033; co4035; co4037; co4039; co4337; eng_gc; im1013), regular).
+offered_in((im1023; im1025; im1027; im3001; la1003; la1005; la1007; la1009), regular).
+offered_in((mt1003; mt1005; mt1007; mt2013; ph1003; ph1007; sa4001; sp1007), regular).
+offered_in((sp1031; sp1033; sp1035; sp1037; sp1039), regular).
+offered_in((ch1003; co1005; co1007; co1023; co1027; co2001; co2003; co2007), summer).
+offered_in((co2011; co2013; co2017; co2039; co3001; co3005; co3011; co3013), summer).
+offered_in((co3015; co3017; co3021; co3023; co3027; co3029; co3031; co3033), summer).
+offered_in((co3035; co3037; co3041; co3043; co3045; co3047; co3049; co3051), summer).
+offered_in((co3057; co3059; co3061; co3065; co3067; co3069; co3071; co3083), summer).
+offered_in((co3085; co3089; co3093; co3101; co3103; co3105; co3107; co3109), summer).
+offered_in((co3111; co3115; co3117; co3119; co3127; co3129; co3131; co3133), summer).
+offered_in((co3135; co3137; co3139; co3151; co3153; co3335; co4025; co4029), summer).
+offered_in((co4031; co4033; co4035; co4037; co4039; co4337; eng_gc; im1013), summer).
+offered_in((im1023; im1025; im1027; im3001; la1003; la1005; la1007; la1009), summer).
+offered_in((mt1003; mt1005; mt1007; mt2013; ph1003; ph1007; sp1007; sp1031), summer).
+offered_in((sp1033; sp1035; sp1037; sp1039), summer).
 
 % ------------------------------------------------------------------
 % Group credit bounds: map(l, Group, Lower) and map(u, Group, Upper)
@@ -161,59 +182,28 @@ map(u, d, 8).
 map(l, e, 0).
 map(u, e, 0).
 
-% Total degree requirement
-map(l, total_degree, 128).
-map(u, total_degree, 128).
+% Total degree bounds are a graduation requirement and live in policy.lp.
 
 % ------------------------------------------------------------------
 % Credit accounting
 % ------------------------------------------------------------------
-% extension.lp uses comp to force retakes of failed compulsory courses.
-in(E, comp) :- group(G), in(E, G), not elective_group(G).
-subseteq(comp, ok).
-
-in(E, credit(a1)) :- in(E, a1), in(E, ok).
-in(E, credit(a2)) :- in(E, a2), in(E, ok).
-in(E, credit(a3)) :- in(E, a3), in(E, ok).
-in(E, credit(a4)) :- in(E, a4), in(E, ok).
-in(E, credit(a5)) :- in(E, a5), in(E, ok).
-in(E, credit(b3_1)) :- in(E, b3_1), in(E, ok).
-in(E, credit(d)) :- in(E, d), in(E, ok).
-in(E, credit(e)) :- in(E, e), in(E, ok).
-
-% A credited elective may count towards at most one quota bucket.
-% Extra passed electives are left uncounted instead of violating
-% a group upper bound.
-candidate(E, B) :- elective_group(B), in(E, B).
-{ counted(E, B) : candidate(E, B) } <= 1 :- candidate(E, _), in(E, ok).
-in(E, credit(b3_2)) :- counted(E, b3_2), in(E, ok).
-in(E, credit(b3_3)) :- counted(E, b3_3), in(E, ok).
-in(E, credit(b3_4)) :- counted(E, b3_4), in(E, ok).
-in(E, credit(b3_5)) :- counted(E, b3_5), in(E, ok).
-in(E, credit(c)) :- counted(E, c), in(E, ok).
-
-in(E, credit(total_degree)) :- group(G), in(E, credit(G)).
-% Only courses that count towards a requirement group are scheduled.
-counted_course(E) :- group(G), in(E, credit(G)).
-:- in(E, s(I)), I > t, in(E, m), not counted_course(E).
-sum(credit(G), c, bw, (L, U)) :- group(G), map(l, G, L), map(u, G, U).
-sum(credit(total_degree), c, bw, (L, U)) :- map(l, total_degree, L), map(u, total_degree, U).
+% Group membership, compulsory/elective views, credit sets,
+% selected-elective choices, and credit bounds are derived
+% generically in extension.lp from the facts above.
 
 % ------------------------------------------------------------------
 % Milestone thresholds (credits accumulated before the course)
-% Internship        : 65% of 128 -> 84
-% Specialized project: 70% of 128 -> 90
-% Capstone          : 85% of 128 -> 109
+% Percentages are planner defaults in data.py. plan.lp enforces
+% the generic milestone constraint.
 % ------------------------------------------------------------------
-:- in(X, s(J)), base(X, co3335), J > t,
-   #sum{ C, E : in(E, ok(I)), map(c, E, C), I < J } < 84.
-:- in(X, s(J)), base(X, co4029), J > t,
-   #sum{ C, E : in(E, ok(I)), map(c, E, C), I < J } < 90.
-:- in(X, s(J)), base(X, co4337), J > t,
-   #sum{ C, E : in(E, ok(I)), map(c, E, C), I < J } < 109.
+% co3335: 65% of 128 -> 84
+milestone(co3335, 84).
+% co4029: 70% of 128 -> 90
+milestone(co4029, 90).
+% co4337: 85% of 128 -> 109
+milestone(co4337, 109).
 
 % Capstone additionally requires ENG_GC to be passed beforehand.
 prereq(co4337, eng_gc).
 
-% Curriculum-derived file ends here; see plan.lp for the
-% curriculum-independent load bounds, display and optimization.
+% Curriculum-derived file ends here; see policy.lp and plan.lp.
