@@ -2,9 +2,9 @@
 % extension.lp : curriculum-independent semantic layer
 % Works on top of encoding.lp and policy.lp, and consumes the data facts in
 % cs-2023.lp and student.lp.  It defines the generic calendar, history,
-% status, retake, group/credit, prerequisite/co-requisite, offering and GPA
-% semantics.  School-specific loads, tuition, objectives and display rules
-% live in plan.lp.
+% status, retake, group/credit, major, prerequisite/co-requisite, offering
+% and GPA semantics.  School-specific loads, tuition, objectives and display
+% rules live in plan.lp.
 %
 % Terms for "attempt objects":
 %   E          first attempt of course E (E in m)
@@ -16,21 +16,35 @@
 %   result(X,S)         direct status for pass/fail courses (passed|failed)
 %   course_kind(X,K)    regular / summer / transfer / ...
 %   attempt_count(E,N)  all kept attempts of course E
-%   last_attempt(E,X)   latest attempt used for status/GPA
+%   last_attempt(E,X)   latest non-withdrawn attempt: status / retake logic
+%   gpa_last(E,X)       latest attempt that carries a final, GPA-countable
+%                       grade (skips W, I, X and in-progress attempts)
+%   enroll_part_in(Q)   term part (1/2/3) of the student's enrollment term
+%   student_major(M)    declared major (optional)
 %   request(E)          student explicitly asks to retake E
+%   avoid(E) / pref(E)  elective taste
 %   offer(E,I) / closed(E,I)   student/registrar offering overrides
+%
+% Curriculum input (facts, from cs-2023.lp):
+%   offered_slot(E,P)   course E is offered in term part P (1/2/3)
+%   major(M), major_min(M,K), major_course(M,E)
 %
 % Grade symbols, numeric scales and retake rules are facts in policy.lp.
 % Everything below is scale-agnostic: the engine only asks whether a grade
 % passes, earns credit, is provisional, or carries points on a given scale.
 % =====================================================================
 
-#const t = 0.    % number of studied terms (shift/term_offset are in policy.lp)
+#const t = 0.    % number of studied terms
 
 % ---------- three-term calendar ---------------------------------------
-% term index 1 = first term after the recorded history.  The pattern is
-% regular, regular, summer, regular, regular, summer, ...
-part(I, P) :- I = 1..n, P = ((I + term_offset - 1) \ 3) + 1.
+% Term index 1 is the student's enrollment term, whose part (1 = fall,
+% 2 = spring, 3 = summer) is enroll_part_in(Q).  Without that fact the
+% enrollment is assumed to be in part 1.  Parts then cycle 1, 2, 3, 1, ...
+enroll_part(Q) :- enroll_part_in(Q).
+enroll_part(1) :- not enroll_part_in(_).
+:- enroll_part_in(Q1), enroll_part_in(Q2), Q1 != Q2.
+
+part(I, P) :- I = 1..n, enroll_part(Q), P = ((I + Q - 2) \ 3) + 1.
 semester_type(I, summer)  :- part(I, 3).
 semester_type(I, regular) :- part(I, P), P != 3.
 
@@ -47,6 +61,9 @@ withdrawn_attempt(X)   :- grade_present(X, w).
 
 grade_at_most(G, Cap) :-
     grade_rank(G, R), grade_rank(Cap, RC), R >= RC.
+
+% A grade that carries points on the default scale (so P/R/W/I/X are not).
+gpa_graded(G) :- default_scale(S), grade_in_gpa(S, G).
 
 effective_grade(X, Raw) :-
     taken(X, _), map(g, X, Raw), not retake_attempt(X).
@@ -87,26 +104,34 @@ hist(rt(E, K), E) :- taken(rt(E, K), _).
 % ---------- retake eligibility -----------------------------------------
 has_retake_eligibility :- retake_eligibility(_).
 
-elig(E, improve) :-
-    last_attempt(E,X), status(X,passed), effective_grade(X,G),
-    default_scale(S), grade_in_gpa(S,G),
-    retake_eligibility(Cap), grade_at_most(G,Cap),
-    attempt_count(E,N), N < maxtries.
-elig(E, improve) :-
-    last_attempt(E,X), status(X,passed), effective_grade(X,G),
-    default_scale(S), grade_in_gpa(S,G),
-    attempt_count(E,N), N < maxtries, not has_retake_eligibility.
-
 elig(E, failed) :-
     last_attempt(E, X), status(X, failed),
     attempt_count(E, N), N < maxtries.
 elig(E, failed) :-
     last_attempt(E, X), status(X, withdrawn),
     attempt_count(E, N), N < maxtries.
+% Improvement retakes: only for GPA-bearing grades (P and R never qualify,
+% even though their rank sorts after C).  The *effective* grade is used so
+% that a capped retake is judged on what is actually on record.
+elig(E, improve) :-
+    last_attempt(E, X), status(X, passed), effective_grade(X, G),
+    gpa_graded(G),
+    retake_eligibility(Cap), grade_at_most(G, Cap),
+    attempt_count(E, N), N < maxtries.
+elig(E, improve) :-
+    last_attempt(E, X), status(X, passed), effective_grade(X, G),
+    gpa_graded(G),
+    attempt_count(E, N), N < maxtries,
+    not has_retake_eligibility.
 elig(E) :- elig(E, _).
 
-% A retake is a scheduled "retaken version" of the course.
-{ in(rt(E, N), s(I)) } :- elig(E), attempt_count(E, N), I = t+1..n.
+% A retake is a scheduled "retaken version" of the course.  Only retakes
+% that can actually happen are generated: a failed/withdrawn course may be
+% retaken freely (the objective penalises a voluntary one), an improvement
+% retake only on request.  Not generating the others keeps grounding small
+% and the search free of dead choices for every C-or-lower course.
+{ in(rt(E, N), s(I)) } :- elig(E, failed), attempt_count(E, N), I = t+1..n.
+{ in(rt(E, N), s(I)) } :- elig(E, improve), request(E), attempt_count(E, N), I = t+1..n.
 map(c, rt(E, K), C) :- map(c, E, C), taken(rt(E, K), _).
 map(c, rt(E, N), C) :- map(c, E, C), elig(E), attempt_count(E, N).
 
@@ -116,19 +141,31 @@ base(E, E)       :- in(E, m).
 base(rt(E, N), E) :- elig(E), attempt_count(E, N).
 
 % ---------- obligation to retake ---------------------------------------
-must(E) :- elig(E, failed), in(E, comp), not earned(E).      % failed compulsory
+% A failed compulsory course must be retaken unless credit was already
+% earned by an earlier attempt (credit counts once per course).
+must(E) :- elig(E, failed), in(E, comp), not earned(E).
 must(E) :- elig(E), request(E).               % explicit request
 :- must(E), attempt_count(E, N), not in(rt(E, N), s).
-
 rejected_request(E) :- request(E), not elig(E).
 
-% An improvement retake only happens on request; a voluntary retake of a
-% failed elective is allowed but the school's objective penalises it.
-:- in(rt(E, N), s), attempt_count(E, N), not elig(E, failed), not request(E).
+% Diagnosis: a compulsory course that is not passed and has no attempts
+% left can never be credited.  The program is then unsatisfiable; the
+% Python boundary reports the same condition before solving.
+exhausted(E) :-
+    last_attempt(E, X), attempt_count(E, N), N >= maxtries,
+    status(X, failed), in(E, comp), not earned(E).
+exhausted(E) :-
+    last_attempt(E, X), attempt_count(E, N), N >= maxtries,
+    status(X, withdrawn), in(E, comp), not earned(E).
+
+% (An improvement retake only happens on request and a voluntary retake of
+% a failed elective is penalised by the objective: both follow from the
+% choice rules above, so no extra constraint is needed.)
 
 % ---------- credited sets (credits count once) -------------------------
-% Past: passed with a credit-earning grade.  Unknown (in progress) is
-% treated optimistically, matching the planner's planning assumption.
+% Past: passed with a credit-earning grade.  Unknown (in progress) and
+% pending (I/X: provisional) attempts are treated optimistically, matching
+% the planner's planning assumption; assumed_pass/1 reports them.
 % Future: a scheduled base/retake attempt is assumed passed.
 in(E, ok(I)) :- in(X, s(I)), base(X, E), I > t.
 in(E, ok(I)) :-
@@ -136,6 +173,7 @@ in(E, ok(I)) :-
     effective_grade(X, G), grade_earns_credit(G).
 in(E, ok(I)) :- taken(X, I), base(X, E), result(X, passed).
 in(E, ok(I)) :- taken(X, I), base(X, E), status(X, unknown).
+in(E, ok(I)) :- taken(X, I), base(X, E), status(X, pending).
 in(E, ok) :- in(E, ok(I)).
 
 credited(E) :- in(E, ok).
@@ -148,6 +186,9 @@ earned(E) :-
     taken(X, _), base(X, E), status(X, passed),
     effective_grade(X, G), grade_earns_credit(G).
 earned(E) :- taken(X, _), base(X, E), result(X, passed).
+
+assumed_pass(E) :- taken(X, _), base(X, E), status(X, pending), not earned(E).
+assumed_pass(E) :- taken(X, _), base(X, E), status(X, unknown), not earned(E).
 
 % Backwards-compatible display atom.  It now means "passed in the
 % transcript", not "credited optimistically by the future plan".
@@ -191,6 +232,15 @@ sum(credit(total_degree), c, bw, (L, U)) :-
 :- map(min_courses, G, M), #count{ E : in(E, credit(G)) } < M.
 card(credit(G), leq, M) :- map(max_courses, G, M).
 
+% ---------- majors -------------------------------------------------------
+% A major is earned by crediting at least major_min(M,K) courses from its
+% list; the courses may sit in any elective bucket (or none).  When the
+% student declares a major the plan must earn it; major_earned/1 reports
+% every major the final transcript happens to qualify for.
+major_count(M, N) :- major(M), N = #count{ E : major_course(M, E), in(E, ok) }.
+major_earned(M)   :- major_min(M, K), major_count(M, N), N >= K.
+:- student_major(M), not major_earned(M).
+
 % ---------- prerequisite and co-requisite constraints ------------------
 % prereq(B,A): A must be credited in an earlier semester than B.
 :- prereq(B, A), in(X, s(J)), base(X, B), J > t, not precred(A, J).
@@ -207,18 +257,13 @@ coreq_met(C, G, J) :- coreq_option(C, G, A), precred(A, J).
 :- coreq(C, A), in(X, s(J)), base(X, C), J > t,
    not in(A, ok(J)), not precred(A, J).
 
-% ---------- offering frequency -----------------------------------------
-% offered_in/2 (term type) is preferred when present.  freq/3 remains for
-% older curricula that only describe fall/spring parity.
-freq(E, 2, 1) :- map(s, E, w).
-freq(E, 2, 0) :- map(s, E, s).
-freq(E, 1, 0) :- map(s, E, e).
-offered(E, I) :- offered_in(E, T), semester_type(I, T), I = 1..n.
-offered(E, I) :- freq(E, K, O), I = 1..n, (I + shift) \ K == O,
-                 not offered_in(E, _).
+% ---------- offering ----------------------------------------------------
+% offered_slot(E,P): the course runs in term part P of every academic
+% year (1 = fall, 2 = spring, 3 = summer), so a fall-only course is not
+% available in spring.  A course with no declaration is always offered.
+offered(E, I) :- offered_slot(E, P), part(I, P), I = 1..n.
 offered(E, I) :- offer(E, I).
-declared(E) :- offered_in(E, _).
-declared(E) :- freq(E, _, _).
+declared(E) :- offered_slot(E, _).
 declared(E) :- offer(E, _).
 offered(E, I) :- in(E, m), not declared(E), I = 1..n.
 avail(E, I) :- offered(E, I), not closed(E, I).
@@ -234,8 +279,15 @@ empty(int(noff(I), s(I))) :- I = t+1..n.
 % default from course_kind/2 itself: that would be a negative self-cycle.
 course_kind(X, regular) :- taken(X, _), not kind_known(X).
 
+% The GPA attempt of a course is its latest *finally graded* attempt, so an
+% in-progress or provisional retake does not hide an earlier F.  Inputs
+% that predate gpa_last/2 fall back to last_attempt/2.
+gpa_input :- gpa_last(_, _).
+gpa_sel(E, X) :- gpa_last(E, X).
+gpa_sel(E, X) :- last_attempt(E, X), not gpa_input.
+
 gpa_attempt(E, X, Scale) :-
-    last_attempt(E, X), effective_grade(X, G),
+    gpa_sel(E, X), effective_grade(X, G),
     grade_in_gpa(Scale, G), grade_points(Scale, G, _),
     course_kind(X, K), included_course_kind(K),
     not provisional_attempt(X).
@@ -246,10 +298,10 @@ effective_points(Scale, X, P) :-
 
 gpa_den(Scale, D) :-
     scale(Scale, _, _),
-    D = #sum{ C, E : last_attempt(E, X), gpa_attempt(E, X, Scale), map(c, E, C) }.
+    D = #sum{ C, E : gpa_sel(E, X), gpa_attempt(E, X, Scale), map(c, E, C) }.
 gpa_num(Scale, N) :-
     scale(Scale, _, _),
-    N = #sum{ C*P, E : last_attempt(E, X), gpa_attempt(E, X, Scale),
+    N = #sum{ C*P, E : gpa_sel(E, X), gpa_attempt(E, X, Scale),
                         map(c, E, C), effective_points(Scale, X, P) }.
 gpa(Scale, G) :-
     gpa_den(Scale, D), D > 0, gpa_num(Scale, N),

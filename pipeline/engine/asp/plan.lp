@@ -11,8 +11,8 @@
 % student.lp.
 % =====================================================================
 
-#const n = 12.         % planning horizon; engine.py overrides this with -c n=...
-% min_load, max_load, summer bounds and shift are policy constants in policy.lp.
+#const n = 12.         % planning horizon; the engine passes -c n=<t + planning.horizon>
+% min_load, max_load and the summer bounds are constants in policy.lp.
 
 % ---------------------------------------------------------------------
 % Generic elective view.  cs-2023.lp marks every elective quota group
@@ -45,6 +45,9 @@ total_attempted(T) :- total_planned(T).
 % original node; failed courses must use a retake object instead.
 empty(int(s(I), s(J))) :- I = 1..n, J = 1..n, I < J.
 
+% Last used future semester (guarded so an empty plan has no #inf).
+max_used(M) :- used(_), M = #max{ I : used(I) }.
+
 % Semester load bounds, using the generic sum/4 constraints from encoding.lp.
 % Only future semesters are bounded: history is fixed input, not a plan.
 load_bearing(I) :- used(I), semester_credits(I, C), C > 0.
@@ -53,11 +56,12 @@ sum(s(I), c, bw, (0, max_load)) :-
     I = t+1..n, semester_type(I, regular).
 sum(s(I), c, bw, (0, max_load_summer)) :-
     I = t+1..n, semester_type(I, summer).
+% The minimum load applies to every used semester except the last one: the
+% final term may be light because only the remaining credits are left.
+sum(s(I), c, geq, min_load) :-
+    load_bearing(I), semester_type(I, regular), max_used(M), I < M.
 sum(s(I), c, geq, min_load_summer) :-
-    load_bearing(I), semester_type(I, summer).
-
-max_used(M) :- used(_), M = #max{ I : used(I) }.     % also fixes #max over an empty set (#inf in the objective)
-sum(s(I), c, geq, min_load) :- load_bearing(I), semester_type(I,regular), max_used(M), I < M.
+    load_bearing(I), semester_type(I, summer), max_used(M), I < M.
 
 % Regular semesters form one contiguous block.  Summer terms are optional:
 % a student may skip summer, but cannot skip a regular term and then resume.
@@ -80,10 +84,10 @@ next_regular(I, J) :-
 %   2. every curriculum group has reached its lower bound.
 %
 % The earliest-graduation objective below minimises the last used
-% semester; the minimum load is only applied to used semesters, so
-% trailing empty semesters are never forced.
+% semester; the minimum load is not applied to the last used semester, so
+% a short final term is allowed and trailing empty semesters are never
+% forced.
 % ---------------------------------------------------------------------
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 group_met(G) :- group(G), map(l, G, L),
     L <= #sum{ C, E : in(E, credit(G)), map(c, E, C) }.
 group_unmet(G) :- group(G), not group_met(G).
@@ -95,56 +99,123 @@ total_met :- map(l, total_degree, L), total_credit(S), S >= L.
 
 degree_complete :- total_met, not any_group_unmet.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Minimum cumulative GPA requirement.
-planned_course(E) :- in(X, s(I)), I > t, base(X, E).
-planned_retake(E) :- in(rt(E,_), s(I)), I > t.
+% ---------------------------------------------------------------------
+% Minimum cumulative GPA (reachability gate)
+%
+% Future grades are unknown, so the gate does not compare the *current* GPA
+% with the minimum (that would reject every student who is below it today
+% and still has terms to improve).  It asks whether the minimum is still
+% reachable: every course that is planned or still in progress is assumed
+% to earn the best GPA-bearing grade (the retake cap for retakes), and old
+% grades of courses that will be retaken are replaced.  The gate is a
+% necessary condition, not a promise; gpa_required_avg/1 reports what
+% average the remaining credits must reach.
+% ---------------------------------------------------------------------
+planned_course(E)  :- in(X, s(I)), I > t, base(X, E).
+planned_retake(E)  :- in(rt(E, _), s(I)), I > t.
 
-max_points(S,M)  :- default_scale(S), M = #max{ P : grade_in_gpa(S,G), grade_points(S,G,P) }.
-retake_best(S,P) :- default_scale(S), retake_grade_cap(Cap), grade_points(S,Cap,P).
-retake_best(S,P) :- default_scale(S), not retake_grade_cap(_), max_points(S,P).
-future_best(E,P) :- planned_course(E), not planned_retake(E), default_scale(S), max_points(S,P).
-future_best(E,P) :- planned_retake(E), default_scale(S), retake_best(S,P).
+open_course(E)  :- taken(X, _), base(X, E), status(X, unknown).
+open_course(E)  :- taken(X, _), base(X, E), status(X, pending).
+open_retake(E)  :- taken(rt(E, K), _), status(rt(E, K), unknown).
+open_retake(E)  :- taken(rt(E, K), _), status(rt(E, K), pending).
+
+optimistic(E)   :- planned_course(E).
+optimistic(E)   :- open_course(E).
+retake_flag(E)  :- planned_retake(E).
+retake_flag(E)  :- open_retake(E).
+
+max_points(S, M)  :- default_scale(S),
+    M = #max{ P : grade_in_gpa(S, G), grade_points(S, G, P) }.
+retake_best(S, P) :- default_scale(S), retake_grade_cap(Cap), grade_points(S, Cap, P).
+retake_best(S, P) :- default_scale(S), not retake_grade_cap(_), max_points(S, P).
+
+future_best(E, P) :- optimistic(E), not retake_flag(E), default_scale(S), max_points(S, P).
+future_best(E, P) :- optimistic(E), retake_flag(E), default_scale(S), retake_best(S, P).
 
 kept_num(N) :- default_scale(S),
-    N = #sum{ C*P,E : gpa_attempt(E,X,S), map(c,E,C), effective_points(S,X,P), not planned_course(E) }.
+    N = #sum{ C*P, E : gpa_sel(E, X), gpa_attempt(E, X, S), map(c, E, C),
+                       effective_points(S, X, P), not optimistic(E) }.
 kept_den(D) :- default_scale(S),
-    D = #sum{ C,E : gpa_attempt(E,X,S), map(c,E,C), not planned_course(E) }.
-best_num(N) :- kept_num(K), N = K + #sum{ C*P,E : planned_course(E), map(c,E,C), future_best(E,P) }.
-best_den(D) :- kept_den(K), D = K + #sum{ C,E : planned_course(E), map(c,E,C) }.
+    D = #sum{ C, E : gpa_sel(E, X), gpa_attempt(E, X, S), map(c, E, C),
+                     not optimistic(E) }.
+fut_num(F) :- F = #sum{ C*P, E : optimistic(E), map(c, E, C), future_best(E, P) }.
+fut_den(F) :- F = #sum{ C, E : optimistic(E), map(c, E, C) }.
 
-:- min_gpa(S,Min), default_scale(S), best_den(D), D > 0, best_num(N), (2*N+D)/(2*D) < Min.
+best_num(N) :- kept_num(K), fut_num(F), N = K + F.
+best_den(D) :- kept_den(K), fut_den(F), D = K + F.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- min_gpa(S, Min), default_scale(S), best_den(D), D > 0, best_num(N),
+   (2*N + D) / (2*D) < Min.
 
+gpa_best_case(G) :- best_den(D), D > 0, best_num(N), G = (2*N + D) / (2*D).
+
+% Average (same fixed-point scale as the GPA) that all remaining credits
+% must reach so that the rounded cumulative GPA meets the minimum.
+gpa_required_avg(R) :-
+    min_gpa(S, Min), default_scale(S), kept_num(K), kept_den(KD),
+    fut_den(F), F > 0,
+    Need = (2*Min*(KD + F) - (KD + F) + 1) / 2,
+    R = (Need - K + F - 1) / F.
+
+% ---------------------------------------------------------------------
 % Milestone courses (e.g. internship, project, capstone) require a minimum
 % number of credits accumulated strictly before the milestone semester.
 % cs-2023.lp supplies milestone(Course, MinimumCredits).
+% ---------------------------------------------------------------------
 :- milestone(C, Min), in(X, s(J)), base(X, C), J > t,
    #sum{ Cr, E : credited_before(E, J), map(c, E, Cr) } < Min.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ---------------------------------------------------------------------
+% External requirements (reported, not scheduled)
+%
+% Such requirements (e.g. social work days) cannot be planned like courses,
+% but a blocking one must not be hidden behind degree_complete.  Deadlines
+% "end_of_year Y" fall on the summer term (part 3) of the Y-th academic
+% year counted from the enrollment year.
+% ---------------------------------------------------------------------
+ext_have(R, J, S) :- external_requirement(R, _, _, _), J = 0..n,
+    S = #sum{ A, I : external_progress(R, I, A), I <= J }.
+ext_deadline(R, Y, 3*Y - (Q - 1), Min) :-
+    external_milestone(R, end_of_year, Y, Min), enroll_part(Q).
+
+ext_missed(R, Y) :- external_requirement(R, _, _, blocking),
+    ext_deadline(R, Y, J, Min), J <= t, ext_have(R, J, S), S < Min.
+ext_pending(R, Y, Min - S) :- external_requirement(R, _, _, blocking),
+    ext_deadline(R, Y, J, Min), J > t, ext_have(R, t, S), S < Min.
+graduation_blocked(R) :- external_requirement(R, _, _, blocking),
+    external_milestone(R, graduation, Min), ext_have(R, t, S), S < Min.
+
+ready_to_graduate :- degree_complete, not graduation_blocked(_), not ext_missed(_, _).
 
 % ---------------------------------------------------------------------
 % Tuition and budget
 % ---------------------------------------------------------------------
-% Only future terms are billed; history is fixed input.  fee_rule/5 is
-% deterministic per term after the load bounds are fixed.  The uniqueness
-% constraint keeps one fee per term if a policy accidentally overlaps tiers.
+% Only future terms are billed; history is fixed input.
+%   fee_rule(Type, Min, Max, Base, Rate, Over): for Min <= credits <= Max
+%   the fee is Base + Rate * max(0, credits - Over).
+% A flat tier has Rate 0; a per-credit-on-everything tier has Base 0 and
+% Over 0; a surcharge tier has Base = the flat fee and Over = the credit
+% count that the flat fee already covers.
 fee(I, F) :-
     I = t+1..n, semester_type(I, Type), semester_credits(I, C), C > 0,
-    fee_rule(Type, flat, Min, Max, F), C >= Min, C <= Max.
+    fee_rule(Type, Min, Max, Base, _, Over), C >= Min, C <= Max, C <= Over,
+    F = Base.
 fee(I, F) :-
     I = t+1..n, semester_type(I, Type), semester_credits(I, C), C > 0,
-    fee_rule(Type, per_credit, Min, Max, Rate), C >= Min, C <= Max,
-    F = C * Rate.
+    fee_rule(Type, Min, Max, Base, Rate, Over), C >= Min, C <= Max, C > Over,
+    F = Base + Rate * (C - Over).
 semester_fee(I, F) :- fee(I, F).
 :- semester_fee(I, F1), semester_fee(I, F2), F1 < F2.
+
+% A billed semester without a matching rule would silently cost 0 and make
+% every plan look affordable; refuse instead.
+:- used(I), I > t, semester_credits(I, C), C > 0, not fee(I, _).
 
 % Keep cost as an aggregate in the objective and budget constraint.  A
 % materialized total_cost/1 set makes grounding enumerate every possible
 % intermediate sum, which is too large for a 12-term horizon.  The Python
-% renderer sums semester_fee/2 when it needs the reported total.
+% renderer sums semester_fee/2 when it needs the reported total.  The
+% budget is in the same fixed-point unit as the fees (money_scale).
 :- budget(B), #sum{ F, I : fee(I, F) } > B.
 
 % ---------------------------------------------------------------------
@@ -155,6 +226,10 @@ semester_fee(I, F) :- fee(I, F).
 %   @6 last_semester, @5 retakes, @4 cost, @3 level_order, @2 balance,
 %   @1 taste.
 % ---------------------------------------------------------------------
+
+% earliest graduation: minimise the last used semester.  Together with the
+% regular-term contiguity constraint this also minimises planned terms.
+#minimize{ M@6 : max_used(M) }.
 
 % fail-recovery first: retake failed compulsory courses as early as possible.
 #minimize{ I@5,E : in(rt(E,N), s(I)), attempt_count(E,N), must(E) }.
@@ -189,13 +264,23 @@ maxload(M) :- M = #max{ L : load(I, L) }.
 #show total_attempted/1.
 #show total_credit/1.
 #show degree_complete.
+#show ready_to_graduate/0.
 #show pass/1.
 #show passed_course/1.
 #show credited/1.
 #show pending/1.
+#show assumed_pass/1.
 #show must/1.
 #show elig/2.
+#show exhausted/1.
 #show rejected_request/1.
 #show gpa/2.
 #show gpa/1.
+#show gpa_best_case/1.
+#show gpa_required_avg/1.
+#show major_earned/1.
+#show major_count/2.
+#show ext_missed/2.
+#show ext_pending/3.
+#show graduation_blocked/1.
 #show semester_type/2.

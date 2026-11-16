@@ -105,6 +105,7 @@ prereq(co4031, co2013).
 prereq(co4035, co2013).
 prereq(co4337, co3335).
 prereq(co4337, co4029).
+prereq(co4337, eng_gc).
 prereq(la1005, la1003).
 prereq(la1007, la1005).
 prereq(la1009, la1007).
@@ -116,41 +117,50 @@ prereq(sp1037, sp1039).
 prereq(sp1039, sp1035).
 
 % ------------------------------------------------------------------
-% Co-requisites: co/2 must be credited in the same or an earlier term
+% Co-requisites: coreq(C, A): A credited in the same or an earlier term
 % ------------------------------------------------------------------
 coreq(co4029, co3335).
 
 % ------------------------------------------------------------------
-% Offering frequency: freq(E,K,O) = every I with (I+shift) mod K = O
-% v1 maps curriculum terms 1/2 onto odd/even main semesters.
+% Offering: offered_slot(E, P) = course E runs in term part P
+% (1 = fall, 2 = spring, 3 = summer) of every academic year.
 % ------------------------------------------------------------------
-
-% Term-type offering facts (regular/summer).  These take
-% precedence over the legacy freq/3 encoding.
-offered_in((ch1003; co1005; co1007; co1023; co1027; co2001; co2003; co2007), regular).
-offered_in((co2011; co2013; co2017; co2039; co3001; co3005; co3011; co3013), regular).
-offered_in((co3015; co3017; co3021; co3023; co3027; co3029; co3031; co3033), regular).
-offered_in((co3035; co3037; co3041; co3043; co3045; co3047; co3049; co3051), regular).
-offered_in((co3057; co3059; co3061; co3065; co3067; co3069; co3071; co3083), regular).
-offered_in((co3085; co3089; co3093; co3101; co3103; co3105; co3107; co3109), regular).
-offered_in((co3111; co3115; co3117; co3119; co3127; co3129; co3131; co3133), regular).
-offered_in((co3135; co3137; co3139; co3151; co3153; co3335; co4025; co4029), regular).
-offered_in((co4031; co4033; co4035; co4037; co4039; co4337; eng_gc; im1013), regular).
-offered_in((im1023; im1025; im1027; im3001; la1003; la1005; la1007; la1009), regular).
-offered_in((mt1003; mt1005; mt1007; mt2013; ph1003; ph1007; sa4001; sp1007), regular).
-offered_in((sp1031; sp1033; sp1035; sp1037; sp1039), regular).
-offered_in((ch1003; co1005; co1007; co1023; co1027; co2001; co2003; co2007), summer).
-offered_in((co2011; co2013; co2017; co2039; co3001; co3005; co3011; co3013), summer).
-offered_in((co3015; co3017; co3021; co3023; co3027; co3029; co3031; co3033), summer).
-offered_in((co3035; co3037; co3041; co3043; co3045; co3047; co3049; co3051), summer).
-offered_in((co3057; co3059; co3061; co3065; co3067; co3069; co3071; co3083), summer).
-offered_in((co3085; co3089; co3093; co3101; co3103; co3105; co3107; co3109), summer).
-offered_in((co3111; co3115; co3117; co3119; co3127; co3129; co3131; co3133), summer).
-offered_in((co3135; co3137; co3139; co3151; co3153; co3335; co4025; co4029), summer).
-offered_in((co4031; co4033; co4035; co4037; co4039; co4337; eng_gc; im1013), summer).
-offered_in((im1023; im1025; im1027; im3001; la1003; la1005; la1007; la1009), summer).
-offered_in((mt1003; mt1005; mt1007; mt2013; ph1003; ph1007; sp1007; sp1031), summer).
-offered_in((sp1033; sp1035; sp1037; sp1039), summer).
+offered_slot((ch1003; co1005; co1007; co1023; co1027; co2001; co2003; co2007), 1).
+offered_slot((co2011; co2013; co2017; co2039; co3001; co3005; co3011; co3013), 1).
+offered_slot((co3015; co3017; co3021; co3023; co3027; co3029; co3031; co3033), 1).
+offered_slot((co3035; co3037; co3041; co3043; co3045; co3047; co3049; co3051), 1).
+offered_slot((co3057; co3059; co3061; co3065; co3067; co3069; co3071; co3083), 1).
+offered_slot((co3085; co3089; co3093; co3101; co3103; co3105; co3107; co3109), 1).
+offered_slot((co3111; co3115; co3117; co3119; co3127; co3129; co3131; co3133), 1).
+offered_slot((co3135; co3137; co3139; co3151; co3153; co3335; co4025; co4029), 1).
+offered_slot((co4031; co4033; co4035; co4037; co4039; co4337; eng_gc; im1013), 1).
+offered_slot((im1023; im1025; im1027; im3001; la1003; la1005; la1007; la1009), 1).
+offered_slot((mt1003; mt1005; mt1007; mt2013; ph1003; ph1007; sa4001; sp1007), 1).
+offered_slot((sp1031; sp1033; sp1035; sp1037; sp1039), 1).
+offered_slot((ch1003; co1005; co1007; co1023; co1027; co2001; co2003; co2007), 2).
+offered_slot((co2011; co2013; co2017; co2039; co3001; co3005; co3011; co3013), 2).
+offered_slot((co3015; co3017; co3021; co3023; co3027; co3029; co3031; co3033), 2).
+offered_slot((co3035; co3037; co3041; co3043; co3045; co3047; co3049; co3051), 2).
+offered_slot((co3057; co3059; co3061; co3065; co3067; co3069; co3071; co3083), 2).
+offered_slot((co3085; co3089; co3093; co3101; co3103; co3105; co3107; co3109), 2).
+offered_slot((co3111; co3115; co3117; co3119; co3127; co3129; co3131; co3133), 2).
+offered_slot((co3135; co3137; co3139; co3151; co3153; co3335; co4025; co4029), 2).
+offered_slot((co4031; co4033; co4035; co4037; co4039; co4337; eng_gc; im1013), 2).
+offered_slot((im1023; im1025; im1027; im3001; la1003; la1005; la1007; la1009), 2).
+offered_slot((mt1003; mt1005; mt1007; mt2013; ph1003; ph1007; sa4001; sp1007), 2).
+offered_slot((sp1031; sp1033; sp1035; sp1037; sp1039), 2).
+offered_slot((ch1003; co1005; co1007; co1023; co1027; co2001; co2003; co2007), 3).
+offered_slot((co2011; co2013; co2017; co2039; co3001; co3005; co3011; co3013), 3).
+offered_slot((co3015; co3017; co3021; co3023; co3027; co3029; co3031; co3033), 3).
+offered_slot((co3035; co3037; co3041; co3043; co3045; co3047; co3049; co3051), 3).
+offered_slot((co3057; co3059; co3061; co3065; co3067; co3069; co3071; co3083), 3).
+offered_slot((co3085; co3089; co3093; co3101; co3103; co3105; co3107; co3109), 3).
+offered_slot((co3111; co3115; co3117; co3119; co3127; co3129; co3131; co3133), 3).
+offered_slot((co3135; co3137; co3139; co3151; co3153; co3335; co4025; co4029), 3).
+offered_slot((co4031; co4033; co4035; co4037; co4039; co4337; eng_gc; im1013), 3).
+offered_slot((im1023; im1025; im1027; im3001; la1003; la1005; la1007; la1009), 3).
+offered_slot((mt1003; mt1005; mt1007; mt2013; ph1003; ph1007; sp1007; sp1031), 3).
+offered_slot((sp1033; sp1035; sp1037; sp1039), 3).
 
 % ------------------------------------------------------------------
 % Group credit bounds: map(l, Group, Lower) and map(u, Group, Upper)
@@ -185,25 +195,43 @@ map(u, e, 0).
 % Total degree bounds are a graduation requirement and live in policy.lp.
 
 % ------------------------------------------------------------------
-% Credit accounting
+% Majors: earned by crediting at least major_min(M, K) courses
+% from major_course(M, E).
 % ------------------------------------------------------------------
-% Group membership, compulsory/elective views, credit sets,
-% selected-elective choices, and credit bounds are derived
-% generically in extension.lp from the facts above.
+% AI: Applied Artificial Intelligence
+major(ai).
+major_min(ai, 5).
+major_course(ai, (co3029; co3035; co3037; co3041; co3043; co3045; co3049; co3051)).
+major_course(ai, (co3061; co3085; co3089; co3117; co3133; co3135; co3137; co4025)).
+% ASE: Advanced Software Engineering
+major(ase).
+major_min(ase, 5).
+major_course(ase, (co3011; co3013; co3015; co3017; co3041; co3065; co3089; co3115)).
+major_course(ase, (co3131)).
+% CYB: Cybersecurity
+major(cyb).
+major_min(cyb, 5).
+major_course(cyb, (co3047; co3049; co3051; co3069; co3083; co3089; co3151; co3153)).
+% DSE: Data, Security Engineering and Business Intelligence Data Engineering
+major(dse).
+major_min(dse, 5).
+major_course(dse, (co3021; co3023; co3027; co3029; co3033; co3115; co3129; co3137)).
+major_course(dse, (co3139; co4031; co4033; co4035; co4039)).
+% IPCV: Image Processing and Computer Vision
+major(ipcv).
+major_min(ipcv, 5).
+major_course(ipcv, (co3043; co3045; co3049; co3051; co3057; co3059; co3089; co3117)).
 
 % ------------------------------------------------------------------
 % Milestone thresholds (credits accumulated before the course)
-% Percentages are planner defaults in data.py. plan.lp enforces
-% the generic milestone constraint.
+% from curriculum.json 'milestones'. plan.lp enforces the generic
+% milestone constraint.
 % ------------------------------------------------------------------
-% co3335: 65% of 128 -> 84
+% CO3335: 65% of 128 -> 84
 milestone(co3335, 84).
-% co4029: 70% of 128 -> 90
+% CO4029: 70% of 128 -> 90
 milestone(co4029, 90).
-% co4337: 85% of 128 -> 109
+% CO4337: 85% of 128 -> 109
 milestone(co4337, 109).
-
-% Capstone additionally requires ENG_GC to be passed beforehand.
-prereq(co4337, eng_gc).
 
 % Curriculum-derived file ends here; see policy.lp and plan.lp.
