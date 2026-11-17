@@ -8,8 +8,10 @@ Bảng dưới là các tài khoản đã tạo trong database cấu hình ở `
 | Vai trò | Email | Mật khẩu | Ghi chú |
 | --- | --- | --- | --- |
 | `ADMIN` | `admin@bkuni.local` | `Admin@123456` | Tạo bằng `npm run admin:create`; đã đăng nhập và gọi được API Admin. |
+| `STUDENT` | `khmt.demo@bkuni.local` | `Student@123` | SV demo Khoa học Máy tính (CS-2023-KHMT), khóa 2023, đang học HK 261, **đúng tiến độ**. Tạo bằng `node scripts/seed-demo-student.mjs` (chạy lại sẽ reset dữ liệu môn học của tài khoản này). |
+| `STUDENT` | `khmt.cham@bkuni.local` | `Student@123` | SV Khoa học Máy tính (CS-2023-KHMT), khóa 2023, đang học HK 261, **chậm khoảng 1 năm** (xong ~54% chương trình, 4 môn quá hạn trong đó 1 môn chưa đạt). Tạo bằng `node scripts/seed-demo-student.mjs --scenario=behind`. |
 
-| `STUDENT` | `khmt.demo@bkuni.local` | `Student@123` | SV demo Khoa học Máy tính (CS-2023-KHMT), khóa 2023, đang học HK 261. Tạo bằng `node scripts/seed-demo-student.mjs` (chạy lại sẽ reset dữ liệu môn học của tài khoản này). |
+Trạng thái chi tiết của hai tài khoản Student và các câu hỏi test tương ứng: xem mục 2.1 của [ADVISOR-QUESTIONS.md](ADVISOR-QUESTIONS.md).
 
 Tạo thêm tài khoản Student bằng API (tự đăng ký), sau đó đăng nhập:
 
