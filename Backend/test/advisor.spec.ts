@@ -32,6 +32,8 @@ import { StudentProfile } from '../src/student/entities/student-profile.entity';
 import { StudentCourseStatus } from '../src/student/enum/student-course-status';
 import { User } from '../src/user/entities/user.entity';
 import { ROLE } from '../src/user/enum/role';
+import { ElasticsearchClient } from '../src/outline/search/elasticsearch.client';
+import { OutlineSearchService } from '../src/outline/search/outline-search.service';
 
 const origin = 'http://localhost:5173';
 const studentId = randomUUID();
@@ -84,7 +86,7 @@ const call = (id: string, name: string, args: unknown) => ({
     TypeOrmModule.forFeature(entities),
   ],
   controllers: [AdvisorController],
-  providers: [AdvisorService, AdvisorTools, DeepSeekClient, OutlineService],
+  providers: [AdvisorService, AdvisorTools, DeepSeekClient, OutlineService, { provide: ElasticsearchClient, useValue: { enabled: false, index: 'bkuni-outlines-test' } }, OutlineSearchService],
 })
 class AdvisorTestModule {}
 
@@ -242,6 +244,8 @@ describe('Advisor API', () => {
           call('o2', 'search_curriculum_courses', { query: 'de quy' }),
           call('o3', 'get_course_detail', { code: 'CO2003' }),
           call('o4', 'get_course_outline', { code: 'CO3001' }),
+          call('o6', 'search_outlines', { query: 'de quy' }),
+          call('o7', 'find_similar_courses', { code: 'CO2003' }),
         ],
       },
       {
@@ -269,6 +273,11 @@ describe('Advisor API', () => {
     });
     expect((tool('o1').assessment as { weights: unknown }).weights).toEqual({ lab: 10, assignment: 30, midterm: 10, final_exam: 50 });
     expect(tool('o2')).toMatchObject({ total: 1, results: [{ code: 'CO2003', matched_in: 'nội dung đề cương' }] });
+    // Elasticsearch tắt: search_outlines lùi về tìm bằng PostgreSQL, find_similar_courses báo lỗi để model tự xử lý.
+    expect(tool('o6')).toMatchObject({
+      engine: 'postgresql (dự phòng)', total: 1, results: [{ code: 'CO2003', matched_in: 'nội dung đề cương' }],
+    });
+    expect(tool('o7')).toMatchObject({ error: expect.stringContaining('cần Elasticsearch') });
     expect(tool('o3')).toMatchObject({
       outline: { version: '14.1', study_hours: 182.5, has_lab: true, final_exam: { format: 'Trắc nghiệm (chấm máy)', duration_minutes: 90 } },
       outline_prerequisites: [{ code: 'CO1023', type: expect.stringContaining('học trước') }],

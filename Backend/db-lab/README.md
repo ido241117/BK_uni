@@ -20,3 +20,13 @@ Chạy mọi lệnh trong thư mục `Backend`. Kết quả ghi vào `db-lab/res
 | `bash db-lab/pitr.sh` | Point-in-time recovery: pg_basebackup + pg_receivewal + recovery_target_xid | PostgreSQL cục bộ; instance tạm cổng 5499, slot `bk_lab_pitr`; dọn hết khi kết thúc |
 
 `run.sh` và `concurrency.mjs` chạy lên CSDL trong `Backend/.env`. `backup.sh` và `pitr.sh` cần PostgreSQL 17 cục bộ.
+
+## Tìm kiếm toàn văn: PostgreSQL và Elasticsearch
+
+Cần Elasticsearch đang chạy (`docker compose up -d elasticsearch`) và đã có index (`npm run search:reindex`).
+
+| Lệnh | Nội dung | Tác động |
+|---|---|---|
+| `npx ts-node -T db-lab/search-lab.ts` | Các truy vấn mẫu qua đúng `OutlineSearchService` mà tool AI gọi (không dấu, đồng nghĩa, lỗi gõ, lọc, môn tương tự) | Chỉ đọc |
+| `bash db-lab/run.sh 47-fts-postgres` | Phía PostgreSQL: tsvector có trọng số + GIN + unaccent trên cùng nội dung | Chỉ `bk_lab` |
+| `npx ts-node -T db-lab/es-bench.ts` | Phía Elasticsearch: dung lượng, thời gian truy vấn, độ trễ nhất quán (refresh) | Ghi rồi xóa 1 tài liệu thử `ZZPROBE` |

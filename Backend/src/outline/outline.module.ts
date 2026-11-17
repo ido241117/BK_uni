@@ -10,6 +10,8 @@ import { CourseOutline } from './entities/course-outline.entity';
 import { OutlineImportService } from './outline-import.service';
 import { OutlineController } from './outline.controller';
 import { OutlineService } from './outline.service';
+import { ElasticsearchClient } from './search/elasticsearch.client';
+import { OutlineSearchService } from './search/outline-search.service';
 
 @Module({
   imports: [
@@ -19,7 +21,7 @@ import { OutlineService } from './outline.service';
     AuthModule,
   ],
   controllers: [OutlineController],
-  providers: [OutlineService, OutlineImportService],
-  exports: [OutlineService],
+  providers: [OutlineService, OutlineImportService, ElasticsearchClient, OutlineSearchService],
+  exports: [OutlineService, OutlineSearchService],
 })
 export class OutlineModule {}

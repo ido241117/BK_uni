@@ -31,6 +31,16 @@ export function validateEnvironment(env: Record<string, unknown>): Record<string
   if (env.DEEPSEEK_THINKING !== undefined && !['enabled', 'disabled'].includes(String(env.DEEPSEEK_THINKING))) {
     throw new Error('DEEPSEEK_THINKING must be enabled or disabled');
   }
+  if (typeof env.ELASTICSEARCH_URL === 'string' && env.ELASTICSEARCH_URL.trim()) {
+    try {
+      if (!['http:', 'https:'].includes(new URL(env.ELASTICSEARCH_URL.trim()).protocol)) throw new Error();
+    } catch {
+      throw new Error('ELASTICSEARCH_URL must be an http(s) URL');
+    }
+  }
+  if (env.ELASTICSEARCH_INDEX !== undefined && !/^[a-z0-9][a-z0-9_-]{0,100}$/.test(String(env.ELASTICSEARCH_INDEX))) {
+    throw new Error('ELASTICSEARCH_INDEX must be a lowercase Elasticsearch index name');
+  }
   if (env.NODE_ENV && !['development', 'test', 'production'].includes(String(env.NODE_ENV))) {
     throw new Error('Invalid NODE_ENV');
   }

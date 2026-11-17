@@ -20,6 +20,8 @@ import { OutlineController } from '../src/outline/outline.controller';
 import { OutlineService } from '../src/outline/outline.service';
 import { User } from '../src/user/entities/user.entity';
 import { ROLE } from '../src/user/enum/role';
+import { ElasticsearchClient } from '../src/outline/search/elasticsearch.client';
+import { OutlineSearchService } from '../src/outline/search/outline-search.service';
 
 const origin = 'http://localhost:5173';
 const adminId = randomUUID();
@@ -47,7 +49,7 @@ const entities = [
     TypeOrmModule.forFeature(entities),
   ],
   controllers: [OutlineController],
-  providers: [OutlineService, OutlineImportService],
+  providers: [OutlineService, OutlineImportService, { provide: ElasticsearchClient, useValue: { enabled: false, index: 'bkuni-outlines-test' } }, OutlineSearchService],
 })
 class OutlineTestModule {}
 

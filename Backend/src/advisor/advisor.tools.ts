@@ -13,6 +13,7 @@ import { CourseRelationType } from '../curriculum/enum/course-relation-type';
 import { StudentCourse } from '../student/entities/student-course.entity';
 import { StudentPlanCourse } from '../student/entities/student-plan-course.entity';
 import { OutlineService } from '../outline/outline.service';
+import { OutlineSearchService } from '../outline/search/outline-search.service';
 import { StudentCourseStatus } from '../student/enum/student-course-status';
 import { isPhysicalEducationCourse, PE_GENERIC_CODES } from '../student/physical-education';
 import {
@@ -156,6 +157,55 @@ export const TOOL_DEFINITIONS: ChatToolDefinition[] = [
   {
     type: 'function',
     function: {
+      name: 'search_outlines',
+      description:
+        'Tìm kiếm toàn văn (Elasticsearch, xếp hạng BM25) trong TOÀN BỘ nội dung đề cương: tên, mục tiêu, tóm tắt, nội dung ' +
+        'từng buổi, chuẩn đầu ra, hình thức đánh giá, tài liệu. Hiểu tiếng Việt không dấu, viết tắt/đồng nghĩa (CSDL, AI, OOP, ' +
+        'HĐH...), tự sửa lỗi gõ. Trả về điểm liên quan, đoạn trích có **từ khớp**, khớp theo cách nào, và thống kê theo khoa, ' +
+        'hình thức thi. Dùng khi sinh viên hỏi theo chủ đề/kỹ năng/công cụ ("môn nào học Docker", "môn có đồ án nhóm") ' +
+        'hoặc muốn lọc môn có thí nghiệm/đồ án.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Chủ đề hoặc từ khóa, ví dụ "kiểm thử phần mềm", "docker container", "xu ly anh"' },
+          scope: {
+            type: 'string', enum: ['curriculum', 'all'],
+            description: 'curriculum (mặc định): chỉ môn trong chương trình của sinh viên; all: mọi đề cương của trường',
+          },
+          has_lab: { type: 'boolean', description: 'Chỉ lấy môn có (true) / không có (false) thí nghiệm' },
+          has_project: { type: 'boolean', description: 'Chỉ lấy môn có (true) / không có (false) đồ án, luận văn, thực tập' },
+          final_exam_format: {
+            type: 'string',
+            description: 'Lọc đúng hình thức thi cuối kỳ, lấy nguyên văn một giá trị trong facets.final_exam_format của lần tìm trước ' +
+              '(ví dụ "Tự luận", "Trắc nghiệm (chấm máy)", "Vấn đáp")',
+          },
+          limit: { type: 'integer', description: 'Số kết quả (mặc định 6, tối đa 10)' },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'find_similar_courses',
+      description:
+        'Tìm các môn có nội dung đề cương gần giống một môn cho trước (Elasticsearch more_like_this), kèm các từ khóa đặc ' +
+        'trưng của môn gốc. Dùng khi sinh viên hỏi môn tương tự, môn thay thế trong khối tự chọn, hoặc học tiếp gì sau một môn.',
+      parameters: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', description: 'Mã môn gốc, ví dụ CO3001' },
+          scope: { type: 'string', enum: ['curriculum', 'all'], description: 'Mặc định curriculum' },
+          limit: { type: 'integer', description: 'Số kết quả (mặc định 5, tối đa 10)' },
+        },
+        required: ['code'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: SUBMIT_ANSWER_TOOL,
       description:
         'Gửi câu trả lời cuối cho sinh viên dưới dạng JSON có cấu trúc. Bắt buộc gọi đúng một lần để kết thúc lượt trả lời.',
@@ -252,6 +302,7 @@ export class AdvisorTools {
     @InjectRepository(StudentCourse) private readonly studentCourses: Repository<StudentCourse>,
     @InjectRepository(StudentPlanCourse) private readonly planCourses: Repository<StudentPlanCourse>,
     private readonly outlineService: OutlineService,
+    private readonly search: OutlineSearchService,
   ) {}
 
   /** Chạy một tool; lỗi nghiệp vụ trả về `{ error }` để model tự xử lý thay vì làm hỏng cả lượt. */
@@ -263,6 +314,8 @@ export class AdvisorTools {
       case 'search_curriculum_courses': return this.searchCourses(args, ctx);
       case 'get_specialization_detail': return this.specializationDetail(args, ctx);
       case 'get_course_outline': return this.courseOutline(args, ctx);
+      case 'search_outlines': return this.searchOutlines(args, ctx);
+      case 'find_similar_courses': return this.similarCourses(args, ctx);
       default: return { error: `Không có tool "${name}"` };
     }
   }
@@ -418,6 +471,78 @@ export class AdvisorTools {
         elective_groups: course.groups,
         specializations: course.specializations,
       })),
+    };
+  }
+
+  /**
+   * Tìm toàn văn trong đề cương bằng Elasticsearch. ES chưa bật hoặc lỗi thì lùi về `search_curriculum_courses`
+   * (PostgreSQL) và ghi rõ trong kết quả, để lượt tư vấn không bị hỏng.
+   */
+  private async searchOutlines(args: Record<string, unknown>, ctx: TurnContext) {
+    const query = String(args.query ?? '').trim();
+    if (!query) return { error: 'Thiếu query' };
+    const limit = Math.min(10, Math.max(1, Number(args.limit) || 6));
+    const scope = args.scope === 'all' ? 'all' : 'curriculum';
+    const index = await this.index(ctx);
+    const fallback = async (reason: string) => ({
+      engine: 'postgresql (dự phòng)',
+      note: `${reason}; đã tìm bằng search_curriculum_courses (chỉ tên, mục tiêu, tóm tắt; không xếp hạng).`,
+      ...await this.searchCourses({ query, limit }, ctx),
+    });
+    if (!this.search.enabled) return fallback('Elasticsearch chưa được bật');
+    try {
+      const result = await this.search.search(query, {
+        codes: scope === 'all' ? null : [...index.byCode.keys()],
+        limit,
+        filters: {
+          has_lab: typeof args.has_lab === 'boolean' ? args.has_lab : undefined,
+          has_project: typeof args.has_project === 'boolean' ? args.has_project : undefined,
+          final_exam_format: typeof args.final_exam_format === 'string' && args.final_exam_format.trim()
+            ? args.final_exam_format.trim() : undefined,
+        },
+      });
+      return {
+        ...result,
+        scope,
+        results: result.results.map(hit => ({ ...hit, ...this.curriculumInfo(index, hit.code) })),
+      };
+    } catch (error) {
+      return fallback(`Elasticsearch lỗi (${(error as Error).message})`);
+    }
+  }
+
+  private async similarCourses(args: Record<string, unknown>, ctx: TurnContext) {
+    const code = String(args.code ?? '').trim().toUpperCase();
+    if (!code) return { error: 'Thiếu code' };
+    if (!this.search.enabled) return { error: 'Tìm môn tương tự cần Elasticsearch, hiện chưa bật. Hãy dùng search_outlines hoặc get_course_outline.' };
+    const scope = args.scope === 'all' ? 'all' : 'curriculum';
+    const index = await this.index(ctx);
+    try {
+      const result = await this.search.similar(code, {
+        codes: scope === 'all' ? null : [...index.byCode.keys()],
+        limit: Math.min(10, Math.max(1, Number(args.limit) || 5)),
+      });
+      if (!result) return { error: `Môn ${code} chưa có đề cương trong index tìm kiếm` };
+      return {
+        ...result,
+        scope,
+        results: result.results.map(hit => ({ ...hit, ...this.curriculumInfo(index, hit.code) })),
+      };
+    } catch (error) {
+      return { error: `Elasticsearch lỗi: ${(error as Error).message}` };
+    }
+  }
+
+  /** Vị trí của một môn trong chương trình của sinh viên, gắn vào kết quả tìm kiếm. */
+  private curriculumInfo(index: CurriculumIndex, code: string) {
+    const course = index.byCode.get(code.toUpperCase());
+    if (!course) return { in_curriculum: false };
+    return {
+      in_curriculum: true,
+      recommended: course.recommended,
+      student_status: course.status ? STATUS_LABEL[course.status] : 'chưa khai',
+      elective_groups: course.groups,
+      specializations: course.specializations,
     };
   }
 
