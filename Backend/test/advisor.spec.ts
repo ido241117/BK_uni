@@ -320,4 +320,28 @@ describe('Advisor API', () => {
     expect(detail.body.data.steps).toHaveLength(15);
     expect(detail.body.data.snapshot).toBeUndefined();
   });
+
+  it('streams each step as a server-sent event, and still answers validation errors with plain HTTP', async () => {
+    await request(server()).post('/api/advisor/messages/stream').set('Origin', origin)
+      .send({ message: 'Thiếu snapshot' }).expect(400);
+
+    fake.calls.length = 0;
+    fake.script({
+      toolCalls: [call('s1', 'submit_answer', { message: 'Học lại **CO2003**.', recommendations: [], choices: [], suggestions: [] })],
+    });
+    const response = await request(server()).post('/api/advisor/messages/stream').set('Origin', origin)
+      .send({ message: 'Stream thử', snapshot }).expect(200).expect('Content-Type', /text\/event-stream/);
+
+    const events = response.text.split('\n\n').filter(block => block.startsWith('event:')).map(block => {
+      const [eventLine, dataLine] = block.split('\n');
+      return { event: eventLine.slice('event: '.length), data: JSON.parse(dataLine.slice('data: '.length)) as Record<string, unknown> };
+    });
+    expect(events.map(event => event.event)).toEqual(['session', 'step', 'step', 'step', 'step', 'step', 'step', 'done']);
+    expect(events.slice(1, -1).map(event => event.data.role)).toEqual(['system', 'context', 'user', 'assistant', 'tool', 'answer']);
+    const sessionId = events[0].data.id as string;
+    expect(events.at(-1)?.data).toMatchObject({ session: { id: sessionId } });
+
+    const detail = await request(server()).get(`/api/advisor/sessions/${sessionId}`).expect(200);
+    expect(detail.body.data.steps).toHaveLength(6);
+  });
 });

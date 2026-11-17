@@ -38,6 +38,17 @@ export interface AdvisorTurnResult {
   steps: AdvisorStep[];
 }
 
+export type StepListener = (step: AdvisorStep) => void;
+
+/** Lượt đã qua kiểm tra và đang giữ khóa của cuộc trò chuyện. */
+export interface PreparedTurn {
+  userId: string;
+  session: AdvisorSession;
+  curriculumId: string;
+  snapshot: Record<string, unknown>;
+  dto: SendAdvisorMessageDto;
+}
+
 @Injectable()
 export class AdvisorService {
   private readonly logger = new Logger(AdvisorService.name);
@@ -69,7 +80,18 @@ export class AdvisorService {
     return null;
   }
 
-  async sendMessage(userId: string, dto: SendAdvisorMessageDto): Promise<AdvisorTurnResult> {
+  /** Chạy trọn một lượt rồi trả về các bước mới (endpoint JSON). */
+  async sendMessage(userId: string, dto: SendAdvisorMessageDto, onStep?: StepListener): Promise<AdvisorTurnResult> {
+    const turn = await this.beginTurn(userId, dto);
+    return this.runPrepared(turn, onStep);
+  }
+
+  /**
+   * Kiểm tra điều kiện, tạo cuộc trò chuyện nếu cần và giữ khóa của cuộc trò chuyện. Mọi lỗi ở đây đều xảy ra
+   * trước khi chạy agent nên endpoint stream vẫn trả được mã HTTP bình thường.
+   * Sau khi gọi, bắt buộc phải gọi `runPrepared` hoặc `releaseTurn` để nhả khóa.
+   */
+  async beginTurn(userId: string, dto: SendAdvisorMessageDto): Promise<PreparedTurn> {
     if (!this.deepseek.isConfigured) {
       throw new ServiceUnavailableException('Backend chưa cấu hình DEEPSEEK_API_KEY nên chưa dùng được Tư vấn với AI');
     }
@@ -92,11 +114,20 @@ export class AdvisorService {
     }
     if (this.running.has(session.id)) throw new ConflictException('AI đang trả lời tin nhắn trước, hãy đợi một chút');
     this.running.add(session.id);
+    return { userId, session, curriculumId: profile.curriculum_id, snapshot, dto };
+  }
+
+  /** Chạy agent cho lượt đã chuẩn bị; `onStep` được gọi ngay khi mỗi bước được lưu. Luôn nhả khóa khi xong. */
+  async runPrepared(turn: PreparedTurn, onStep?: StepListener): Promise<AdvisorTurnResult> {
     try {
-      return await this.runTurn(session, profile.curriculum_id, snapshot, dto, userId);
+      return await this.runTurn(turn.session, turn.curriculumId, turn.snapshot, turn.dto, turn.userId, onStep);
     } finally {
-      this.running.delete(session.id);
+      this.releaseTurn(turn);
     }
+  }
+
+  releaseTurn(turn: PreparedTurn): void {
+    this.running.delete(turn.session.id);
   }
 
   /* ------------------------------- Một lượt ------------------------------- */
@@ -107,6 +138,7 @@ export class AdvisorService {
     snapshot: Record<string, unknown>,
     dto: SendAdvisorMessageDto,
     userId: string,
+    onStep?: StepListener,
   ): Promise<AdvisorTurnResult> {
     const previous = await this.steps.find({ where: { session_id: session.id }, order: { seq: 'ASC' } });
     let seq = previous.at(-1)?.seq ?? 0;
@@ -116,6 +148,14 @@ export class AdvisorService {
       seq += 1;
       const step = await this.steps.save(this.steps.create({ ...input, session_id: session.id, turn, seq }));
       created.push(step);
+      if (onStep) {
+        try {
+          onStep(step);
+        } catch (error) {
+          // Lỗi khi đẩy sự kiện (client đã ngắt...) không được làm hỏng lượt đang chạy.
+          this.logger.warn(`Advisor step listener failed: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
       return step;
     };
 

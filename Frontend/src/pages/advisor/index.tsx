@@ -4,9 +4,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { LuArrowLeft, LuMessageSquarePlus, LuSend, LuSparkles, LuTrash2 } from 'react-icons/lu';
 import { Link, useSearchParams } from 'react-router';
 import { IOutLinedBtn, ISolidBtn, PageHeader, TablePageSkeleton } from '@/components';
-import { deleteAdvisorSession, getAdvisorSession, listAdvisorSessions, sendAdvisorMessage } from '@/apis/advisor';
+import { deleteAdvisorSession, getAdvisorSession, listAdvisorSessions, streamAdvisorMessage } from '@/apis/advisor';
 import { useApiMutation, useApiQuery } from '@/hooks';
-import type { AdvisorAnswer, AdvisorChoiceAnswer, AdvisorSessionDetail, AdvisorStep, SendAdvisorMessagePayload } from '@/types';
+import type { AdvisorAnswer, AdvisorChoiceAnswer, AdvisorSession, AdvisorSessionDetail, AdvisorStep, SendAdvisorMessagePayload } from '@/types';
 import { semesterLabel } from '@/pages/courses/analysis/semester';
 import { useStudentAnalysis } from '@/pages/courses/analysis/useStudentAnalysis';
 import { AnswerView } from './components/AnswerView';
@@ -24,6 +24,44 @@ const STARTERS = [
 ];
 
 const sessionKey = (id: string | null) => ['advisor-session', id];
+
+const TOOL_LABELS: Record<string, string> = {
+    get_analysis_section: 'đọc kết quả phân tích học tập',
+    get_course_detail: 'tra cứu môn học',
+    check_offering: 'kiểm tra lịch mở lớp',
+    get_course_outline: 'đọc đề cương',
+    search_curriculum_courses: 'tìm môn trong chương trình',
+    get_specialization_detail: 'xem chuyên ngành',
+    search_outlines: 'tìm trong đề cương',
+    find_similar_courses: 'tìm môn tương tự',
+    submit_answer: 'soạn câu trả lời',
+};
+
+/** Mô tả việc AI đang làm, dựa trên bước mới nhất vừa nhận qua stream. */
+const describeActivity = (step: AdvisorStep | null): string => {
+    const calls = step?.role === 'assistant' ? step.tool_calls ?? [] : [];
+    if (calls.length) {
+        const labels = [...new Set(calls.map(call => TOOL_LABELS[call.name] ?? call.name))];
+        return `AI đang ${labels.join(', ')}…`;
+    }
+    if (step?.role === 'tool') return 'AI đang đọc kết quả tra cứu…';
+    return 'AI đang suy nghĩ…';
+};
+
+/** Gộp các bước đã tải từ server với các bước vừa nhận qua stream (bỏ trùng theo id, xếp theo seq). */
+const mergeSteps = (saved: AdvisorStep[], streamed: AdvisorStep[]): AdvisorStep[] => {
+    if (!streamed.length) return saved;
+    const ids = new Set(saved.map(step => step.id));
+    return [...saved, ...streamed.filter(step => !ids.has(step.id))].sort((a, b) => a.seq - b.seq);
+};
+
+interface PendingTurn {
+    /** Câu hỏi vừa gửi, hiện tạm cho tới khi nhận được bước `user` của lượt. */
+    text: string;
+    userSaved: boolean;
+    sessionId: string | null;
+    steps: AdvisorStep[];
+}
 
 /** Phần tin nhắn sinh viên tự gõ (bỏ khối "[Trả lời lựa chọn]" do backend ghép thêm). */
 const UserBubble = ({ step }: { step: AdvisorStep }) => {
@@ -49,14 +87,22 @@ const AdvisorPage = () => {
     const [params, setParams] = useSearchParams();
     const sessionId = params.get('session');
     const [draft, setDraft] = useState('');
-    const [pending, setPending] = useState<string | null>(null);
+    const [pending, setPending] = useState<PendingTurn | null>(null);
     const [tab, setTab] = useState('chat');
     const bottomRef = useRef<HTMLDivElement>(null);
+    const abortRef = useRef<AbortController | null>(null);
+
+    // Rời trang thì ngừng đọc stream; backend vẫn chạy nốt lượt và lưu kết quả.
+    useEffect(() => () => abortRef.current?.abort(), []);
 
     const { profileLoading, profile, curriculumId, curriculum, isError, analysis } = useStudentAnalysis();
     const sessionsQuery = useApiQuery(['advisor-sessions'], listAdvisorSessions);
     const sessionQuery = useApiQuery(sessionKey(sessionId), () => getAdvisorSession(sessionId!), { enabled: Boolean(sessionId) });
-    const steps = useMemo(() => (sessionId ? sessionQuery.data?.steps ?? [] : []), [sessionId, sessionQuery.data]);
+    const steps = useMemo(() => {
+        if (!sessionId) return [];
+        const streamed = pending?.sessionId === sessionId ? pending.steps : [];
+        return mergeSteps(sessionQuery.data?.steps ?? [], streamed);
+    }, [sessionId, sessionQuery.data, pending]);
 
     const snapshot = useMemo(
         () => (analysis && curriculum ? buildAdvisorSnapshot(analysis, curriculum, profile?.credit_target ?? null) : null),
@@ -64,13 +110,30 @@ const AdvisorPage = () => {
     );
 
     const send = useApiMutation({
-        mutationFn: (payload: SendAdvisorMessagePayload) => sendAdvisorMessage(payload),
-        onSuccess: async result => {
-            queryClient.setQueryData<AdvisorSessionDetail>(sessionKey(result.session.id), old => ({
-                ...result.session,
-                steps: [...(old?.steps ?? []), ...result.steps],
-            }));
-            if (result.session.id !== sessionId) setParams({ session: result.session.id });
+        mutationFn: (payload: SendAdvisorMessagePayload) => {
+            abortRef.current?.abort();
+            const controller = new AbortController();
+            abortRef.current = controller;
+            return streamAdvisorMessage(payload, {
+                onSession: (session: AdvisorSession) => {
+                    setPending(current => current && { ...current, sessionId: session.id });
+                    if (session.id !== sessionId) {
+                        // Cuộc trò chuyện mới: đặt sẵn cache để không hiện skeleton khi đổi URL.
+                        queryClient.setQueryData<AdvisorSessionDetail>(sessionKey(session.id), old => old ?? { ...session, steps: [] });
+                        setParams({ session: session.id });
+                    }
+                    void queryClient.invalidateQueries({ queryKey: ['advisor-sessions'] });
+                },
+                onStep: step => setPending(current => current && {
+                    ...current,
+                    steps: [...current.steps, step],
+                    userSaved: current.userSaved || step.role === 'user',
+                }),
+            }, controller.signal);
+        },
+        onSettled: async session => {
+            // Lấy lại bản đầy đủ từ CSDL rồi mới bỏ các bước tạm nhận qua stream.
+            if (session) await queryClient.invalidateQueries({ queryKey: sessionKey(session.id) });
             await queryClient.invalidateQueries({ queryKey: ['advisor-sessions'] });
         },
     });
@@ -92,7 +155,7 @@ const AdvisorPage = () => {
     const ask = (message: string, answers?: AdvisorChoiceAnswer[]) => {
         const text = message.trim();
         if (!text || !snapshot || send.isPending) return;
-        setPending(text);
+        setPending({ text, userSaved: false, sessionId, steps: [] });
         setDraft('');
         send.mutate(
             { session_id: sessionId ?? undefined, message: text, snapshot, answers },
@@ -176,12 +239,16 @@ const AdvisorPage = () => {
                 })}
                 {pending && (
                     <>
-                        <div className="advisor-msg is-user"><div className="advisor-bubble"><RichText text={pending} /></div></div>
-                        <div className="advisor-msg">
-                            <div className="advisor-bubble is-ai">
-                                <Space><Spin size="small" /><Text type="secondary">AI đang đọc dữ liệu và gọi tool… có thể mất 10–60 giây.</Text></Space>
+                        {!pending.userSaved && (
+                            <div className="advisor-msg is-user"><div className="advisor-bubble"><RichText text={pending.text} /></div></div>
+                        )}
+                        {!pending.steps.some(step => step.role === 'answer' || step.role === 'error') && (
+                            <div className="advisor-msg">
+                                <div className="advisor-bubble is-ai">
+                                    <Space><Spin size="small" /><Text type="secondary">{describeActivity(pending.steps.at(-1) ?? null)}</Text></Space>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </>
                 )}
                 <div ref={bottomRef} />
