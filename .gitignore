@@ -28,3 +28,6 @@ Thumbs.db
 
 # Dữ liệu JSON sinh ra cho scripts backend
 /Backend/scripts/**/*.json
+
+# Báo cáo thực nghiệm CSDL (bản nháp cá nhân)
+/database.md

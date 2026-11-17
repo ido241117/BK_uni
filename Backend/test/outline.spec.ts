@@ -37,6 +37,8 @@ const entities = [
         db.public.registerFunction({ name: 'current_database', returns: DataType.text, implementation: () => 'test' });
         db.public.registerFunction({ name: 'version', returns: DataType.text, implementation: () => 'PostgreSQL 17' });
         db.public.registerFunction({ name: 'gen_random_uuid', returns: DataType.uuid, implementation: randomUUID, impure: true });
+        // pg-mem chạy một luồng, không có advisory lock: thay bằng hàm rỗng.
+        db.public.registerFunction({ name: 'pg_advisory_xact_lock', args: [DataType.text], returns: DataType.text, implementation: () => '', impure: true });
         return db.adapters.createTypeormDataSource({
           type: 'postgres', entities, synchronize: true, uuidExtension: 'pgcrypto', installExtensions: false,
         }).initialize();

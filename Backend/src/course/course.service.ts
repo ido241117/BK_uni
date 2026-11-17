@@ -106,11 +106,22 @@ export class CourseService {
     return this.openedSemesterRows.find({ where: { course_id: courseId }, order: { semester_code: 'ASC' } });
   }
 
-  /** Thay toàn bộ danh sách học kỳ đã mở của môn học. */
+  /**
+   * Thay toàn bộ danh sách học kỳ đã mở của môn học.
+   *
+   * Hai lần thay đồng thời cho cùng một môn ở READ COMMITTED sẽ hỏng: DELETE của transaction B không thấy
+   * các dòng A vừa INSERT (chưa commit), nên sau khi A commit, INSERT của B vi phạm UQ_course_opened_semester.
+   * Khóa dòng môn học (`SELECT ... FOR UPDATE`) ở đầu transaction tuần tự hóa các lần thay của cùng một môn;
+   * các môn khác vẫn chạy song song.
+   */
   async replaceOpenedSemesters(courseId: string, dto: ReplaceOpenedSemestersDto): Promise<CourseOpenedSemester[]> {
-    await this.findOne(courseId);
     const codes = [...new Set(dto.semester_codes.map((code) => code.trim()).filter((code) => code.length > 0))];
     await this.courses.manager.transaction(async (manager) => {
+      const locked = await manager.createQueryBuilder(Course, 'course')
+        .setLock('pessimistic_write')
+        .where('course.id = :courseId', { courseId })
+        .getOne();
+      if (!locked) throw new NotFoundException('Không tìm thấy môn học.');
       await manager.delete(CourseOpenedSemester, { course_id: courseId });
       if (codes.length) {
         await manager.insert(

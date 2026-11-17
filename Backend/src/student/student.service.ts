@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { FOREIGN_KEY_VIOLATION, isPostgresError, UNIQUE_VIOLATION } from '../common/database/postgres-error';
 import { Course } from '../course/entities/course.entity';
 import { CurriculumRegulation } from '../curriculum/entities/curriculum-regulation.entity';
@@ -95,22 +95,14 @@ export class StudentService {
 
   async upsertMyCourse(userId: string, courseId: string, dto: UpsertStudentCourseDto): Promise<StudentCourse> {
     try {
-      const existing = await this.studentCourses.findOne({ where: { user_id: userId, course_id: courseId } });
-      if (existing) {
-        existing.status = dto.status;
-        await this.studentCourses.save(existing);
-      } else {
-        await this.studentCourses.save(this.studentCourses.create({
-          user_id: userId,
-          course_id: courseId,
-          status: dto.status,
-        }));
-      }
+      await this.studentCourses.manager.transaction(async (manager) => {
+        await this.upsertStatuses(manager, userId, [{ course_id: courseId, status: dto.status }]);
+        await this.syncPhysicalEducation(manager, userId, [courseId]);
+      });
     } catch (error) {
       if (isPostgresError(error, FOREIGN_KEY_VIOLATION)) throw new BadRequestException('Môn học không tồn tại.');
       throw error;
     }
-    await this.syncPhysicalEducation(userId, [courseId]);
     const saved = await this.studentCourses.findOne({
       where: { user_id: userId, course_id: courseId },
       relations: { course: true },
@@ -122,6 +114,7 @@ export class StudentService {
   /**
    * Khai trạng thái nhiều môn cùng lúc, tất cả hoặc không gì cả (một transaction).
    * Môn chưa khai thì tạo mới, đã khai thì cập nhật; môn không có trong danh sách giữ nguyên.
+   * Việc tự nâng PE1003/PE1005 cũng nằm trong transaction này, nên lỗi ở bước đó hủy cả lần lưu.
    */
   async bulkUpsertMyCourses(userId: string, dto: BulkUpsertStudentCoursesDto): Promise<StudentCourse[]> {
     const courseIds = dto.items.map((item) => item.course_id);
@@ -134,32 +127,42 @@ export class StudentService {
     }
 
     await this.studentCourses.manager.transaction(async (manager) => {
-      const existing = courseIds.length
-        ? await manager.find(StudentCourse, { where: { user_id: userId, course_id: In(courseIds) } })
-        : [];
-      const byCourseId = new Map(existing.map((row) => [row.course_id, row]));
-      const rows = dto.items.map((item) => {
-        const row = byCourseId.get(item.course_id)
-          ?? manager.create(StudentCourse, { user_id: userId, course_id: item.course_id });
-        row.status = item.status;
-        return row;
-      });
-      if (rows.length) await manager.save(StudentCourse, rows);
+      await this.upsertStatuses(manager, userId, dto.items);
+      await this.syncPhysicalEducation(manager, userId, courseIds);
     });
-    await this.syncPhysicalEducation(userId, courseIds);
     return this.listMyCourses(userId);
+  }
+
+  /**
+   * Ghi trạng thái bằng một câu `INSERT ... ON CONFLICT (user_id, course_id) DO UPDATE` duy nhất.
+   * Cách cũ (đọc xem đã có chưa rồi mới INSERT/UPDATE) bị race: hai request đồng thời cùng không thấy
+   * dòng nào, cùng INSERT, và request sau vi phạm UQ_student_course. ON CONFLICT để PostgreSQL tự quyết
+   * định chèn hay cập nhật một cách nguyên tử dựa trên unique index.
+   */
+  private async upsertStatuses(
+    manager: EntityManager,
+    userId: string,
+    items: { course_id: string; status: StudentCourseStatus }[],
+  ): Promise<void> {
+    if (!items.length) return;
+    await manager.upsert(
+      StudentCourse,
+      items.map((item) => ({ user_id: userId, course_id: item.course_id, status: item.status })),
+      { conflictPaths: ['user_id', 'course_id'] },
+    );
   }
 
   /**
    * Ràng buộc mềm GDTC (xem `physical-education.ts`): chỉ chạy khi lần lưu này có học phần thể thao,
    * và chỉ nâng PE1003/PE1005 lên "đã hoàn thành", không bao giờ hạ. Sửa tay PE1003/PE1005 thì giữ nguyên.
+   * Chạy bằng `manager` của transaction gọi nó để đọc được chính các dòng vừa ghi và commit/rollback cùng.
    */
-  private async syncPhysicalEducation(userId: string, changedCourseIds: string[]): Promise<void> {
+  private async syncPhysicalEducation(manager: EntityManager, userId: string, changedCourseIds: string[]): Promise<void> {
     if (!changedCourseIds.length) return;
-    const changed = await this.studentCourses.manager.find(Course, { where: { id: In(changedCourseIds) } });
+    const changed = await manager.find(Course, { where: { id: In(changedCourseIds) } });
     if (!changed.some(course => isPhysicalEducationCourse(course.code))) return;
 
-    const completed = await this.studentCourses.find({
+    const completed = await manager.find(StudentCourse, {
       where: { user_id: userId, status: StudentCourseStatus.COMPLETED },
       relations: { course: true },
     });
@@ -167,22 +170,19 @@ export class StudentService {
     const targets = PE_GENERIC_CODES.slice(0, Math.min(sportCount, PE_GENERIC_CODES.length));
     if (!targets.length) return;
 
-    const genericCourses = await this.studentCourses.manager
+    const genericCourses = await manager
       .createQueryBuilder(Course, 'course')
       .where('UPPER(course.code) IN (:...codes)', { codes: [...targets] })
       .getMany();
     const done = new Set(completed.map(row => row.course_id));
     const pendingIds = genericCourses.map(course => course.id).filter(id => !done.has(id));
-    if (!pendingIds.length) return;
 
     // Môn chung đã khai trạng thái khác (đang học, chưa đạt…) thì nâng lên; chưa khai thì tạo mới.
-    const existing = await this.studentCourses.find({ where: { user_id: userId, course_id: In(pendingIds) } });
-    const byCourseId = new Map(existing.map(row => [row.course_id, row]));
-    await this.studentCourses.save(pendingIds.map(courseId => {
-      const row = byCourseId.get(courseId) ?? this.studentCourses.create({ user_id: userId, course_id: courseId });
-      row.status = StudentCourseStatus.COMPLETED;
-      return row;
-    }));
+    await this.upsertStatuses(
+      manager,
+      userId,
+      pendingIds.map(courseId => ({ course_id: courseId, status: StudentCourseStatus.COMPLETED })),
+    );
   }
 
   async removeMyCourse(userId: string, courseId: string): Promise<null> {

@@ -13,6 +13,9 @@ import { DropCourseStandardSemester1794900000000 } from './migrations/1794900000
 import { MultipleSpecializationGroups1795000000000 } from './migrations/1795000000000-multiple-specialization-groups';
 import { Advisor1795100000000 } from './migrations/1795100000000-advisor';
 import { CourseOutlines1795200000000 } from './migrations/1795200000000-course-outlines';
+import { StorageTuning1795300000000 } from './migrations/1795300000000-storage-tuning';
+import { SearchIndexes1795400000000 } from './migrations/1795400000000-search-indexes';
+import { AuditLog1795500000000 } from './migrations/1795500000000-audit-log';
 import { getDatabaseOptions } from './database-options';
 
 export default new DataSource({
@@ -31,5 +34,8 @@ export default new DataSource({
     MultipleSpecializationGroups1795000000000,
     Advisor1795100000000,
     CourseOutlines1795200000000,
+    StorageTuning1795300000000,
+    SearchIndexes1795400000000,
+    AuditLog1795500000000,
   ],
 });

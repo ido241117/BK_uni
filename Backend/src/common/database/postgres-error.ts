@@ -2,8 +2,11 @@ import { QueryFailedError } from 'typeorm';
 
 export const UNIQUE_VIOLATION = '23505';
 export const FOREIGN_KEY_VIOLATION = '23503';
+export const CHECK_VIOLATION = '23514';
+export const SERIALIZATION_FAILURE = '40001';
+export const DEADLOCK_DETECTED = '40P01';
 
-function postgresErrorCode(error: unknown): string | undefined {
+export function postgresErrorCode(error: unknown): string | undefined {
   const driver = (error as { driverError?: { code?: string } }).driverError;
   const code = driver?.code ?? (error as { code?: string }).code;
   return typeof code === 'string' ? code : undefined;

@@ -18,6 +18,8 @@ export interface OutlineImportResult {
 
 const INSERT_CHUNK = 100;
 const MAX_STORED_ISSUES = 200;
+/** Khóa advisory (số tùy chọn, cố định) dành riêng cho việc nhập đề cương. */
+export const OUTLINE_IMPORT_LOCK = 7_420_001;
 
 const chunks = <T>(list: T[], size: number): T[][] =>
   Array.from({ length: Math.ceil(list.length / size) }, (_, index) => list.slice(index * size, (index + 1) * size));
@@ -68,6 +70,10 @@ export class OutlineImportService {
     });
 
     return this.dataSource.transaction(async manager => {
+      // Hai lần nhập chạy song song (vd. hai phần của cùng một bộ file) cùng đọc "chưa có" rồi cùng INSERT
+      // một (course_code, version) -> lần sau vi phạm UQ_course_outline_version và mất cả transaction.
+      // Advisory lock cấp transaction tuần tự hóa các lần nhập; tự nhả khi COMMIT/ROLLBACK.
+      await manager.query('SELECT pg_advisory_xact_lock($1)', [OUTLINE_IMPORT_LOCK]);
       const log = await manager.save(manager.create(CourseOutlineImport, {
         created_by: options.userId ?? null,
         channel: options.channel,
