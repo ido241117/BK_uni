@@ -2,7 +2,8 @@
 % student.lp : simple example student record for cs-2023.lp
 %
 % Run from this folder with:
-%   clingo encoding.lp policy.lp extension.lp cs-2023.lp student.lp plan.lp -c t=2
+%   clingo encoding.lp extension.lp policy.lp cs-2023.lp translate.lp \
+%          student.lp optimize.lp -c t=2            (add -c extra_sem=1 for summer)
 %
 % The student has finished semester 1 and is currently in semester 2.
 % Courses in semester 2 without a grade are treated as "unknown" (in
@@ -33,7 +34,7 @@ result(pe1003, passed).
 result(pe1005, passed).
 
 % ---------- boundary metadata ----------------------------------------
-% This hand-written examp?le has one attempt per course.  A real loader keeps
+% This hand-written example has one attempt per course.  A real loader keeps
 % W attempts in the attempt count, renumbers retakes, then emits these two
 % facts.  W is a withdrawn status, not a failed grade.
 attempt_count(la1003, 1).

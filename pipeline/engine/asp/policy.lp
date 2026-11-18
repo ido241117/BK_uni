@@ -16,6 +16,21 @@
 #const max_load_summer = 12.
 
 % ------------------------------------------------------------------
+% Academic calendar and term loads
+% ------------------------------------------------------------------
+% An academic year has three parts; part 3 (summer) is an optional
+% "extra" term, used by the plan only when run with -c extra_sem=1.
+term_parts(3).
+term_part_type(1, regular).
+term_part_type(2, regular).
+term_part_type(3, summer).
+extra_semester_type(summer).
+
+% load_bound(Type, MinCredits, MaxCredits) per term type.
+load_bound(regular, min_load, max_load).
+load_bound(summer,  min_load_summer, max_load_summer).
+
+% ------------------------------------------------------------------
 % Numeric scales (all values are fixed-point integers)
 % ------------------------------------------------------------------
 scale(gpa_4, 0, 400).

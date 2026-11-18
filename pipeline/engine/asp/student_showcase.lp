@@ -25,9 +25,11 @@
 % and 2027-1 (regular).  n=12 is the full curriculum horizon; the plan ends
 % in term 10, so --semesters 10 is also enough.
 %
-% Solve from this folder (an optimality proof takes roughly 80 seconds):
-%   python cli.py --solve student_showcase.lp --t 8 --semesters 12 --plans 1 \
-%       --time-limit 120
+% Solve from this folder (optimum in well under a second):
+%   clingo encoding.lp extension.lp policy.lp cs-2023.lp translate.lp \
+%          student_showcase.lp optimize.lp -c t=8 -c extra_sem=1
+% Summer terms are off by default (extra_sem=0); without -c extra_sem=1 the
+% whole 17 credits land in term 10 (2027-1).
 %
 % The tight-budget variant drops the summer term and fits all 17 attempted
 % credits into one regular term:
