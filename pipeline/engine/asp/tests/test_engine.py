@@ -35,6 +35,9 @@ def _run(
     time_limit: float | None = None,
     progress: bool = False,
     extra_args: tuple[str, ...] = (),
+    # The tiny fixture keeps the historical three-part year (term 3 is
+    # summer), so its golden plans need the opt-in extra term.
+    allow_summer: bool = True,
 ):
     directory.mkdir(parents=True, exist_ok=True)
     policy = policy or tiny_policy()
@@ -60,6 +63,7 @@ def _run(
             time_limit=time_limit,
             progress=progress,
             extra_args=extra_args,
+            allow_summer=allow_summer,
         ),
     )
     return solutions, curriculum, policy
@@ -78,6 +82,27 @@ def test_golden_case_matches_python_brute_force(tmp_path: Path) -> None:
     assert plan.optimal is True
     assert plan.last_semester == 3
     assert check_plan(plan) == []
+
+
+def test_extra_terms_are_off_by_default(tmp_path: Path) -> None:
+    """Without extra_sem=1 the tiny summer term cannot carry load."""
+    solutions, curriculum, policy = _run(tmp_path, allow_summer=False)
+    plans = plans_from_solutions(solutions, curriculum, policy)
+    assert plans
+    assert all(
+        semester.semester_type != "summer"
+        for plan in plans
+        for semester in plan.semesters
+    )
+    assert plans[0].last_semester > 3
+
+    plans = _solve(tmp_path / "with-summer")
+    assert plans
+    assert plans[0].last_semester == 3
+    assert any(
+        semester.semester_type == "summer"
+        for semester in plans[0].semesters
+    )
 
 
 def test_config_invariance_across_seeds_and_plan_counts(tmp_path: Path) -> None:
@@ -113,7 +138,9 @@ def test_tuition_is_reported_from_semester_fees(tmp_path: Path) -> None:
         curriculum_path,
         policy_path,
         student_path,
-        SolverOptions(horizon=5, plans=1, min_load=6, max_load=9),
+        SolverOptions(
+            horizon=5, plans=1, min_load=6, max_load=9, allow_summer=True
+        ),
     )
     plan = plans_from_solutions(solutions, TINY_CURRICULUM, policy)[0]
     fees = [semester.fee for semester in plan.semesters if semester.fee is not None]
@@ -125,7 +152,14 @@ def test_tuition_is_reported_from_semester_fees(tmp_path: Path) -> None:
         curriculum_path,
         policy_path,
         student_path,
-        SolverOptions(horizon=5, plans=1, min_load=6, max_load=9, budget=174),
+        SolverOptions(
+            horizon=5,
+            plans=1,
+            min_load=6,
+            max_load=9,
+            budget=174,
+            allow_summer=True,
+        ),
     )
     assert too_cheap
     assert all(solution.status == "UNSATISFIABLE" for solution in too_cheap)

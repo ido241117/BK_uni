@@ -21,7 +21,7 @@ except ImportError:  # script/test import
     from translation import asp_name
 
 # clingo orders the optimization vector by descending priority.  These labels
-# mirror the #minimize statements in plan.lp / extension.lp (@6 .. @1).
+# mirror the #minimize statements in core/optimize.lp (@6 .. @1).
 OBJECTIVE_LEVELS: tuple[str, ...] = (
     "last_semester",
     "retakes",
@@ -535,8 +535,10 @@ class SolverOptions:
     process with a hard wall clock.  Any model found before the limit is
     returned with ``optimal=False`` unless optimality was already proven.
     ``extra_facts`` and ``extra_program`` append scenario facts or rules (for
-    example a temporary objective) after plan.lp.  ``progress`` prints improving
-    objectives to stderr while the search runs.
+    example a temporary objective) after the core program.  ``allow_summer``
+    opts into extra terms (summer) with ``-c extra_sem=1``; they are off by
+    default.  ``progress`` prints improving objectives to stderr while the
+    search runs.
     """
 
     horizon: int | None = None
@@ -546,6 +548,7 @@ class SolverOptions:
     max_load: int | None = None
     summer_min_load: int | None = None
     summer_max_load: int | None = None
+    allow_summer: bool = False
     shift: int | None = None
     seed: int | None = None
     budget: int | None = None
@@ -600,7 +603,11 @@ def solve(
     student_path: Path,
     options: SolverOptions | None = None,
 ) -> list[Solution]:
-    """Run clingo on encoding + policy + extension + curriculum + student + plan."""
+    """Run clingo on encoding + extension + policy + curriculum + student.
+
+    Student facts are interpreted by ``core/translate.lp``; preferences and
+    display atoms come from ``core/optimize.lp``.
+    """
     options = options or SolverOptions()
     if options.opt_mode not in {"optN", "opt", "ignore"}:
         raise ValueError(
@@ -640,6 +647,9 @@ def solve(
         common_arguments.append(f"-c min_load_summer={summer_min}")
     if summer_max is not None:
         common_arguments.append(f"-c max_load_summer={summer_max}")
+    if options.allow_summer:
+        # extension.lp keeps extra terms (summer) empty unless extra_sem != 0.
+        common_arguments.append("-c extra_sem=1")
     if options.shift is not None:
         common_arguments.append(f"-c shift={options.shift}")
     if options.seed is not None:
@@ -648,13 +658,18 @@ def solve(
 
     # Pass source text instead of file paths: clingo's native loader can fail
     # on Windows paths containing non-ASCII characters.
+    #
+    # Layer order mirrors pipeline/engine/asp/README.md: the generic core,
+    # then the generated policy/curriculum, then the student input through
+    # translate.lp, and finally the preferences/output in optimize.lp.
     sources = [
-        ASP_DIR / "encoding.lp",
+        ASP_DIR / "core" / "encoding.lp",
+        ASP_DIR / "core" / "extension.lp",
         Path(policy_path),
-        ASP_DIR / "extension.lp",
         Path(curriculum_path),
+        ASP_DIR / "core" / "translate.lp",
         Path(student_path),
-        ASP_DIR / "plan.lp",
+        ASP_DIR / "core" / "optimize.lp",
     ]
 
     def build_control(

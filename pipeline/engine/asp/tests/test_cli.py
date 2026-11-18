@@ -5,16 +5,19 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from cli import (
     _diagnostic_rows,
     _format_plan_text,
     _hard_timeout_grace,
     _supervise_solve,
     build_parser,
+    infer_studied_terms,
     main,
     render_solutions,
 )
-from engine import Plan, PlannedSemester, SolverOptions, solve
+from engine import Plan, PlannedSemester, Solution, SolverOptions, solve
 from support import TINY_CURRICULUM, tiny_policy, write_programs
 
 DATA_DIR = Path(__file__).resolve().parents[3] / "data"
@@ -54,13 +57,21 @@ def test_cli_writes_curriculum_and_policy_facts(tmp_path: Path) -> None:
     assert "grade_rank(a_plus, 0)." in policy
     assert "#const min_load_summer = 0." in policy
     assert "#const max_load_summer = 12." in policy
+    assert "term_parts(3)." in policy
+    assert "term_part_type(1, regular)." in policy
+    assert "term_part_type(3, summer)." in policy
+    assert "extra_semester_type(summer)." in policy
+    assert "load_bound(regular, min_load, max_load)." in policy
+    assert "load_bound(summer, min_load_summer, max_load_summer)." in policy
     assert "#const shift" not in policy
     assert "grade_points(a, 400)." in policy
     assert "grade_points(score_10, a, 900)." in policy
     assert "min_gpa(gpa_4, 250)." in policy
     assert "map(l, total_degree, 128)." in policy
     assert "money_scale(1000)." in policy
-    assert "fee_rule(regular, 0, 6, 11688, 0, 0)." in policy
+    assert "fee_rule(regular, 0, 6, 7563, 0, 0)." in policy
+    assert "fee_rule(regular, 7, 9, 9625, 0, 0)." in policy
+    assert "fee_rule(regular, 10, 12, 11688, 0, 0)." in policy
     assert "fee_rule(regular, 13, 18, 13750, 0, 0)." in policy
     assert "fee_rule(regular, 19, 999, 13750, 805, 18)." in policy
     assert "fee_rule(summer, 0, 999, 0, 1230, 0)." in policy
@@ -104,7 +115,9 @@ def test_render_labels_the_full_objective(tmp_path: Path) -> None:
         curriculum_path,
         policy_path,
         student_path,
-        SolverOptions(horizon=5, plans=1, min_load=6, max_load=9),
+        SolverOptions(
+            horizon=5, plans=1, min_load=6, max_load=9, allow_summer=True
+        ),
     )
 
     text = render_solutions(solutions, TINY_CURRICULUM, policy, "text")
@@ -237,3 +250,202 @@ def test_hard_timeout_only_wraps_real_cli_runs(monkeypatch) -> None:
     assert _supervise_solve(None, None, True) is None
     monkeypatch.setenv("ASP_HARD_TIMEOUT_CHILD", "1")
     assert _supervise_solve(None, 5.0, True) is None
+
+
+def test_infer_studied_terms_uses_last_recorded_attempt() -> None:
+    text = (
+        "% taken(nope, 99).\n"
+        "taken(co1005, 1).\n"
+        "taken(rt(co1027, 2), 4).\n"
+        "taken(co2001,3).  % trailing comment\n"
+    )
+    assert infer_studied_terms(text) == 4
+
+
+def test_infer_studied_terms_without_attempts() -> None:
+    assert infer_studied_terms("% no history yet\nbudget(20000).\n") is None
+
+
+def _student_with_attempts(tmp_path: Path) -> Path:
+    path = tmp_path / "student.lp"
+    path.write_text(
+        "taken(co1005, 1).\nmap(g, co1005, a).\n"
+        "taken(co1027, 4).\nmap(g, co1027, b).\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_cli_infers_studied_terms_from_student_file(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    student = _student_with_attempts(tmp_path)
+    captured: dict[str, int | None] = {}
+
+    def fake_solve(curriculum_path, policy_path, student_path, options):
+        captured["t"] = options.studied_terms
+        captured["horizon"] = options.horizon
+        return [Solution(status="SATISFIABLE", runtime=0.01)]
+
+    monkeypatch.setattr("cli.solve", fake_solve)
+    monkeypatch.setattr("cli.render_solutions", lambda *args, **kwargs: "plan")
+
+    code = main(
+        ["--solve", str(student), "--future-terms", "3", "--no-report"]
+    )
+
+    assert code == 0
+    assert captured["t"] == 4
+    assert captured["horizon"] == 7
+    assert "t=4" in capsys.readouterr().err
+
+
+def test_cli_accepts_t_after_the_last_recorded_attempt(
+    tmp_path: Path, monkeypatch
+) -> None:
+    student = _student_with_attempts(tmp_path)
+    captured: dict[str, int | None] = {}
+
+    def fake_solve(curriculum_path, policy_path, student_path, options):
+        captured["t"] = options.studied_terms
+        return [Solution(status="SATISFIABLE", runtime=0.01)]
+
+    monkeypatch.setattr("cli.solve", fake_solve)
+    monkeypatch.setattr("cli.render_solutions", lambda *args, **kwargs: "plan")
+
+    # A student between terms may have studied more terms than the last
+    # recorded attempt.
+    code = main(
+        ["--solve", str(student), "--t", "6", "--future-terms", "3", "--no-report"]
+    )
+
+    assert code == 0
+    assert captured["t"] == 6
+
+
+def test_cli_rejects_t_before_the_last_recorded_attempt(
+    tmp_path: Path, capsys
+) -> None:
+    student = _student_with_attempts(tmp_path)
+
+    with pytest.raises(SystemExit) as excinfo:
+        main(
+            [
+                "--solve",
+                str(student),
+                "--t",
+                "2",
+                "--semesters",
+                "9",
+                "--no-report",
+            ]
+        )
+
+    assert excinfo.value.code == 2
+    err = capsys.readouterr().err
+    assert "--t 2" in err
+    assert "term 4" in err
+    assert "omit --t" in err
+
+
+def test_cli_summer_terms_are_opt_in(
+    tmp_path: Path, monkeypatch
+) -> None:
+    student = _student_with_attempts(tmp_path)
+    seen: dict[str, bool] = {}
+
+    def fake_solve(curriculum_path, policy_path, student_path, options):
+        seen["allow_summer"] = options.allow_summer
+        return [Solution(status="SATISFIABLE", runtime=0.01)]
+
+    monkeypatch.setattr("cli.solve", fake_solve)
+    monkeypatch.setattr("cli.render_solutions", lambda *args, **kwargs: "plan")
+
+    code = main(
+        ["--solve", str(student), "--future-terms", "3", "--no-report"]
+    )
+    assert code == 0
+    assert seen["allow_summer"] is False
+
+    code = main(
+        [
+            "--solve",
+            str(student),
+            "--future-terms",
+            "3",
+            "--summer",
+            "--no-report",
+        ]
+    )
+    assert code == 0
+    assert seen["allow_summer"] is True
+
+
+def test_cli_max_terms_caps_the_horizon(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    student = _student_with_attempts(tmp_path)
+    seen: dict[str, int | None] = {}
+
+    def fake_solve(curriculum_path, policy_path, student_path, options):
+        seen["horizon"] = options.horizon
+        return [Solution(status="SATISFIABLE", runtime=0.01)]
+
+    monkeypatch.setattr("cli.solve", fake_solve)
+    monkeypatch.setattr("cli.render_solutions", lambda *args, **kwargs: "plan")
+
+    code = main(
+        [
+            "--solve",
+            str(student),
+            "--future-terms",
+            "10",
+            "--max-terms",
+            "8",
+            "--no-report",
+        ]
+    )
+
+    assert code == 0
+    assert seen["horizon"] == 8
+    assert "horizon capped at 8" in capsys.readouterr().err
+
+
+def test_cli_rejects_max_terms_before_the_last_studied_term(
+    tmp_path: Path, capsys
+) -> None:
+    student = _student_with_attempts(tmp_path)
+
+    with pytest.raises(SystemExit) as excinfo:
+        main(
+            [
+                "--solve",
+                str(student),
+                "--max-terms",
+                "3",
+                "--no-report",
+            ]
+        )
+
+    assert excinfo.value.code == 2
+    assert "last studied term" in capsys.readouterr().err
+
+
+def test_cli_rejects_conflicting_summer_flags(
+    tmp_path: Path, capsys
+) -> None:
+    student = _student_with_attempts(tmp_path)
+
+    with pytest.raises(SystemExit) as excinfo:
+        main(
+            [
+                "--solve",
+                str(student),
+                "--summer",
+                "--no-summer",
+                "--no-report",
+            ]
+        )
+
+    assert excinfo.value.code == 2
+    assert "mutually exclusive" in capsys.readouterr().err

@@ -151,9 +151,9 @@ def test_tuition_facts_use_fixed_point_and_surcharge_tier() -> None:
     assert "money_scale(1000)." in program
     assert "money_currency(vnd)." in program
     assert "money_unit(million)." in program
-    assert "fee_rule(regular, 0, 6, 11688, 0, 0)." in program
+    assert "fee_rule(regular, 0, 6, 7563, 0, 0)." in program
     assert "fee_rule(regular, 7, 9, 9625, 0, 0)." in program
-    assert "fee_rule(regular, 10, 12, 7563, 0, 0)." in program
+    assert "fee_rule(regular, 10, 12, 11688, 0, 0)." in program
     assert "fee_rule(regular, 13, 18, 13750, 0, 0)." in program
     assert "fee_rule(regular, 19, 999, 13750, 805, 18)." in program
     assert "fee_rule(summer, 0, 999, 0, 1230, 0)." in program

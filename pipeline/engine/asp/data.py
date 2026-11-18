@@ -157,12 +157,18 @@ class Policy:
     internship_pct: int = 65
     specialized_project_pct: int = 70
     capstone_pct: int = 85
-    # Semester load bounds used by plan.lp when the CLI does not override them.
+    # Semester load bounds used by the ASP layer when the CLI does not
+    # override them.
     default_min_load: int = 14
     default_max_load: int = 21
     summer_min_load: int = 0
     summer_max_load: int = 9
     default_horizon: int = 12
+    # Academic calendar: term parts cycle 1..term_parts, each named by
+    # term_part_types; the listed types are optional "extra" terms (summer).
+    term_parts: int = 3
+    term_part_types: tuple[str, ...] = ("regular", "regular", "summer")
+    extra_semester_types: tuple[str, ...] = ("summer",)
     # Calendar shift/offset of the semester index (kept as clingo constants).
     calendar_shift: int = 0
     term_offset: int = 0
@@ -1133,12 +1139,17 @@ def parse_tuition(raw: dict[str, Any]) -> TuitionPolicy:
                 flat_fee = _tuition_decimal(
                     _tuition_need(tier, "flat_fee", tier_context), f"{tier_context}.flat_fee"
                 )
-                percentage = _tuition_decimal(
-                    tier.get("percentage", 0), f"{tier_context}.percentage"
+                # ``discount`` is the current key; ``percentage`` is the
+                # legacy name for the fraction off the full-load flat fee.
+                discount_value = tier.get("discount")
+                if discount_value is None:
+                    discount_value = tier.get("percentage", 0)
+                discount = _tuition_decimal(
+                    discount_value, f"{tier_context}.discount"
                 )
-                if flat_fee < 0 or not (0 <= percentage <= 1):
-                    raise TuitionError(f"{tier_context}: invalid flat fee/percentage")
-                amount = flat_fee * (Decimal(1) - percentage)
+                if flat_fee < 0 or not (0 <= discount <= 1):
+                    raise TuitionError(f"{tier_context}: invalid flat fee/discount")
+                amount = flat_fee * (Decimal(1) - discount)
             elif fee_type == "per_credit":
                 amount = _tuition_decimal(
                     _tuition_need(tier, "rate_per_credit", tier_context),

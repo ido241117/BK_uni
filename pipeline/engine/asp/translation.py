@@ -632,6 +632,36 @@ def build_policy(
     lines.append("")
 
     lines.append("% " + "-" * 66)
+    lines.append("% Academic calendar and term loads")
+    lines.append("% " + "-" * 66)
+    lines.append(
+        f"% An academic year has {policy.term_parts} parts, "
+        "named by term_part_type/2."
+    )
+    lines.append("% Types listed as extra_semester_type/1 are optional and used")
+    lines.append("% by the plan only when run with -c extra_sem=1.")
+    lines.append(f"term_parts({policy.term_parts}).")
+    for index, part_type in enumerate(policy.term_part_types, start=1):
+        lines.append(_fact("term_part_type", index, asp_name(part_type)))
+    for part_type in policy.extra_semester_types:
+        lines.append(_fact("extra_semester_type", asp_name(part_type)))
+    lines.append("")
+    lines.append("% load_bound(Type, MinCredits, MaxCredits) per term type.")
+    load_constants = {
+        "regular": ("min_load", "max_load"),
+        "summer": ("min_load_summer", "max_load_summer"),
+    }
+    for part_type in dict.fromkeys(policy.term_part_types):
+        bounds = load_constants.get(part_type)
+        if bounds is None:
+            continue
+        lines.append(
+            f"load_bound({asp_name(part_type)}, "
+            f"{bounds[0]}, {bounds[1]})."
+        )
+    lines.append("")
+
+    lines.append("% " + "-" * 66)
     lines.append("% Numeric scales (all values are fixed-point integers)")
     lines.append("% " + "-" * 66)
     for scale in policy.scales:
@@ -1359,7 +1389,17 @@ def _compile_tiers(
                 f"ended at {previous_max} (gap or overlap)"
             )
         kind = tier.get("fee_type", model.get("type"))
-        discount = Decimal(str(tier.get("percentage", 0)))
+        # ``discount`` is the current key; ``percentage`` is the legacy name
+        # for the same fraction off the flat fee.
+        discount_value = tier.get("discount")
+        if discount_value is None:
+            discount_value = tier.get("percentage", 0)
+        discount = Decimal(str(discount_value))
+        if discount < 0 or discount > 1:
+            raise TuitionError(
+                f"tuition tier #{position}: discount {discount} is not a "
+                "fraction between 0 and 1"
+            )
         if kind == "flat":
             base = Decimal(str(tier["flat_fee"])) * (1 - discount)
             base_scaled = int((base * scale).to_integral_value(ROUND_HALF_UP))

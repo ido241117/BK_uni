@@ -30,6 +30,14 @@ REPORT_EXTENSIONS = {
     "raw": "txt",
 }
 
+# ``taken(Attempt, Term).``.  The attempt may itself be a term such as
+# ``rt(co1027, 2)``, so the first group is greedy and the term is the last
+# integer argument before the closing parenthesis.
+_TAKEN_FACT = re.compile(
+    r"(?m)^[ \t]*taken[ \t]*\((.*),[ \t]*(\d+)[ \t]*\)[ \t]*\."
+    r"[ \t]*(?:%.*)?$"
+)
+
 
 def _credit_label(credits: int) -> str:
     return f"{credits} credit" if credits == 1 else f"{credits} credits"
@@ -511,7 +519,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "absolute last term index passed to clingo as -c n=... "
-            "(default: --t + --future-terms)"
+            "(default: --t + curriculum planning.horizon)"
         ),
     )
     parser.add_argument(
@@ -565,7 +573,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--t",
         type=int,
         default=None,
-        help="number of semesters already studied (passed as -c t=...)",
+        help=(
+            "number of semesters already studied (passed as -c t=...); "
+            "default: inferred from the last taken/2 term in --solve files, "
+            "or from expected.as_of_term with --student-json"
+        ),
     )
     parser.add_argument(
         "--plans",
@@ -628,16 +640,32 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--summer",
+        "--allow-summer",
+        dest="allow_summer",
+        action="store_true",
+        help=(
+            "allow optional extra terms (summer) in the plan; off by default "
+            "(passed as -c extra_sem=1)"
+        ),
+    )
+    parser.add_argument(
         "--no-summer",
         action="store_true",
-        help="forbid future summer terms",
+        help=(
+            "deprecated no-op: summer terms are already off by default; "
+            "kept so old command lines keep working"
+        ),
     )
     parser.add_argument(
         "--max-terms",
         type=int,
         default=None,
         metavar="N",
-        help="forbid future courses after absolute semester index N",
+        help=(
+            "forbid future courses after absolute semester index N "
+            "(implemented by lowering the horizon n to at most N)"
+        ),
     )
     parser.add_argument(
         "--fact",
@@ -781,10 +809,10 @@ def explain_unsat(
         "a prerequisite/offering conflict",
         "group quotas that cannot be filled",
     ]
-    if any("max_term(" in fact for fact in options.extra_facts):
-        reasons.append("--max-terms is set; raise it or remove it")
-    if any("no_summer" in fact for fact in options.extra_facts):
-        reasons.append("--no-summer is set; the plan may need a summer term")
+    if not options.allow_summer:
+        reasons.append(
+            "summer terms are disabled (extra_sem=0); retry with --summer"
+        )
     if any(item.status == "UNKNOWN" for item in solutions):
         reasons.append("the wider-horizon check timed out; raise --time-limit")
     return (
@@ -871,6 +899,19 @@ def _supervise_solve(
         raise
 
 
+def infer_studied_terms(text: str) -> int | None:
+    """Return the last term with a recorded attempt, or ``None``.
+
+    ``t`` must be at least the highest ``taken/2`` term: ``extension.lp``
+    rejects history in a term after ``t`` (``:- taken(_, I), I > t.``), so a
+    smaller ``t`` turns past courses into future ones and makes every plan
+    unsatisfiable.  Files with no attempts carry no evidence and return
+    ``None`` so the caller can fall back to ``0``.
+    """
+    terms = [int(match.group(2)) for match in _TAKEN_FACT.finditer(text)]
+    return max(terms) if terms else None
+
+
 def main(argv: list[str] | None = None) -> int:
     # The workspace path may contain non-ASCII characters.  Line buffering
     # keeps diagnostics visible even when stdout is redirected to a file.
@@ -883,12 +924,16 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--plans must be >= 0")
     if args.time_limit is not None and args.time_limit < 0:
         parser.error("--time-limit must be >= 0")
+    if args.t is not None and args.t < 0:
+        parser.error("--t must be >= 0")
     if args.future_terms is not None and args.future_terms < 0:
         parser.error("--future-terms must be >= 0")
     if args.max_terms is not None and args.max_terms < 0:
         parser.error("--max-terms must be >= 0")
     if args.max_budget is not None and args.max_budget < 0:
         parser.error("--max-budget must be >= 0")
+    if args.no_summer and args.allow_summer:
+        parser.error("--no-summer and --summer are mutually exclusive")
     if args.student_json is not None and args.solve is not None:
         parser.error("--student-json and --solve are mutually exclusive")
     if args.student_id is not None and args.student_json is None:
@@ -944,6 +989,31 @@ def main(argv: list[str] | None = None) -> int:
                 f"as_of_term implies t={facts.studied_terms}"
             )
         t = facts.studied_terms
+    elif args.solve is not None:
+        try:
+            student_text = args.solve.read_text(encoding="utf-8")
+        except OSError as exc:
+            print(f"error: {exc}", file=sys.stderr, flush=True)
+            return 1
+        inferred = infer_studied_terms(student_text)
+        if args.t is None:
+            t = inferred or 0
+            if inferred is not None:
+                print(
+                    f"studied terms: t={t} (inferred from taken/2)",
+                    file=sys.stderr,
+                    flush=True,
+                )
+        else:
+            t = args.t
+            if inferred is not None and args.t < inferred:
+                parser.error(
+                    f"--t {args.t} is smaller than term {inferred}, the last "
+                    "term with a taken/2 attempt; those attempts would be "
+                    "treated as future courses and the instance would be "
+                    f"unsatisfiable. Use --t {inferred} or omit --t to infer "
+                    "it from the transcript."
+                )
     else:
         t = args.t
 
@@ -961,6 +1031,21 @@ def main(argv: list[str] | None = None) -> int:
         horizon = planning_horizon(t or 0, bundle.curriculum)
     if horizon <= 0:
         parser.error("the planning horizon must be positive")
+
+    if args.max_terms is not None:
+        studied = t or 0
+        if args.max_terms < studied:
+            parser.error(
+                f"--max-terms {args.max_terms} is before the last studied term "
+                f"t={studied}; it must be at least t"
+            )
+        if horizon > args.max_terms:
+            print(
+                f"horizon capped at {args.max_terms} by --max-terms",
+                file=sys.stderr,
+                flush=True,
+            )
+            horizon = args.max_terms
 
     with ExitStack() as stack:
         tmpdir: Path | None = None
@@ -1011,22 +1096,8 @@ def main(argv: list[str] | None = None) -> int:
             assert args.solve is not None
             student_path = args.solve
             report_stem = args.solve.stem
-            if t is None:
-                student_text = student_path.read_text(encoding="utf-8")
-                if re.search(r"(?m)^\s*taken\s*\(", student_text):
-                    print(
-                        "warning: the student file has taken/2 facts but --t "
-                        "was not given; the planner treats them as future. "
-                        "Pass --t <studied terms>.",
-                        file=sys.stderr,
-                        flush=True,
-                    )
 
         extra_facts: list[str] = []
-        if args.no_summer:
-            extra_facts.append("no_summer.")
-        if args.max_terms is not None:
-            extra_facts.append(f"max_term({args.max_terms}).")
         for raw_fact in args.fact or []:
             fact = raw_fact.strip()
             if not fact:
@@ -1046,7 +1117,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(
             f"solving {student_path} (opt-mode={args.opt_mode}, "
-            f"plans={args.plans}, t={t or 0}, horizon={horizon}{limit})...",
+            f"plans={args.plans}, t={t or 0}, horizon={horizon}{limit}"
+            f"{', summer=on' if args.allow_summer else ''})...",
             file=sys.stderr,
             flush=True,
         )
@@ -1056,6 +1128,7 @@ def main(argv: list[str] | None = None) -> int:
             plans=args.plans,
             min_load=args.min_load,
             max_load=args.max_load,
+            allow_summer=args.allow_summer,
             shift=args.shift,
             seed=args.seed,
             budget=budget,

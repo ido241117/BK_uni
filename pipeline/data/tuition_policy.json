@@ -18,19 +18,19 @@
           {
             "condition": { "min_credits": 0, "max_credits": 6 },
             "fee_type": "flat",
-            "percentage": 0.15,
+            "discount": 0.45,
             "flat_fee": 13.75
           },
           {
             "condition": { "min_credits": 7, "max_credits": 9 },
             "fee_type": "flat",
-            "percentage": 0.30,
+            "discount": 0.30,
             "flat_fee": 13.75
           },
           {
             "condition": { "min_credits": 10, "max_credits": 12 },
             "fee_type": "flat",
-            "percentage": 0.45,
+            "discount": 0.15,
             "flat_fee": 13.75
           },
           {

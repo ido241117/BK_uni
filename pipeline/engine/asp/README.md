@@ -19,10 +19,10 @@ plans and reports.
 JSON data ──> data.py ──> translation.py ──> *.lp facts
                                                 │
                                                 ▼
-                             clingo: encoding.lp
-                                     extension.lp
-                                     plan.lp
-                                     + generated data files
+                        clingo: encoding.lp + extension.lp
+                                + generated policy/curriculum files
+                                + core/translate.lp + student.lp
+                                + core/optimize.lp
                                                 │
                                                 ▼
                               engine.py ──> Solution / Plan
@@ -38,10 +38,11 @@ JSON data ──> data.py ──> translation.py ──> *.lp facts
 | File | Role | May contain |
 | --- | --- | --- |
 | `encoding.lp` | Stable, generic ASP core. Defines the set/map representation and generic `empty`, `subseteq`, `equal`, `card`, `sum`, `int` and `before` constraints. **Do not change.** | Rules only; no curriculum or school data. |
-| `extension.lp` | Shared semantic base for any curriculum. Calendar, attempt history, retake/status rules, group and credit accounting, majors, prerequisites/corequisites, offering, external requirements and GPA. | Rules and constraints that use the data predicates below. No concrete course codes. |
-| `plan.lp` | The school's planning model. Load bounds, regular-term contiguity, degree completion, a redundant credit-capacity pruning constraint, milestone/GPA-target reporting, external-readiness gate, tuition/budget, optimization order and display atoms. | School-specific rules and objective weights. No concrete course codes or credit values. |
+| `extension.lp` | Shared semantic base for any curriculum. Calendar and term parts, attempt history, retake/status rules, load bounds and regular-term contiguity, group and credit accounting, majors, prerequisites/corequisites, offering, milestones, degree completion, external requirements/readiness, GPA and tuition. | Rules and constraints that use the data predicates below. No concrete course codes. |
+| `core/translate.lp` | Student-input boundary. The only file that reads the raw student record; it converts transcript facts into the attempt/set vocabulary used by `extension.lp` and `core/optimize.lp`. | Rules only; no curriculum or school data. |
+| `core/optimize.lp` | The school's optimization order (six weighted `#minimize` levels) and the stable `#show` display surface. | Objective weights and display rules. No concrete course codes or credit values. |
 | `<curriculum-id>.lp` | Generated curriculum data. The file name follows `curriculum.json`'s `id` (`cs_2023` → `cs-2023.lp`); the current dataset is `cs-2023.lp`. | Facts only. No rules and no constraints. |
-| `policy.lp` | Generated university policy data: grading scales, grade rules, retake policy, graduation requirements, external requirements and the tuition schedule selected for one program. | Facts only. No rules and no constraints. |
+| `policy.lp` | Generated university policy data: academic calendar and term types, load bounds, grading scales, grade rules, retake policy, graduation requirements, external requirements and the tuition schedule selected for one program. | Facts only. No rules and no constraints. |
 | `student.lp` | Hand-written or generated student facts. | Facts only. |
 | `data.py` | Typed input models, JSON loaders and validation. | Python. |
 | `translation.py` | JSON / student record → ASP facts. | Python. |
@@ -51,11 +52,14 @@ JSON data ──> data.py ──> translation.py ──> *.lp facts
 The intended load order is:
 
 ```text
-encoding.lp  policy.lp  extension.lp  <curriculum-id>.lp  student.lp  plan.lp
+encoding.lp  extension.lp  policy.lp  <curriculum-id>.lp
+core/translate.lp  student.lp  core/optimize.lp
 ```
 
-`plan.lp` is last because it is the instance-level planning policy on top of the
-generic core and the shared extension.
+The generic core and shared semantics come first, followed by the generated
+policy and curriculum facts. `core/translate.lp` then turns the raw student
+record into the engine vocabulary, and `core/optimize.lp` supplies the objective
+order and display atoms.
 
 ---
 
@@ -185,9 +189,13 @@ either a ready-made `.lp` file through `--solve` or a record from
 | `last_attempt(E, X).` | Latest attempt; drives pass/fail status and retake generation. |
 
 `t` is the number of studied terms; the ASP file's `taken/2` facts must use
-indices `1..t` only. An in-progress history attempt is `taken/2` without
-`map(g,...)`; `extension.lp` treats it as unknown and optimistically credited.
-Future attempts are not input: the planner generates `in/2` for them.
+indices `1..t` only. The CLI infers `t` from the largest `taken/2` term, so
+`--t` is optional; an explicit value smaller than that term is rejected because
+those attempts would be treated as future courses (the `taken(_, I), I > t`
+constraint makes the instance unsatisfiable). An in-progress history attempt is
+`taken/2` without `map(g,...)`; `extension.lp` treats it as unknown and
+optimistically credited. Future attempts are not input: the planner generates
+`in/2` for them.
 
 #### Attempt-object convention
 
@@ -249,6 +257,7 @@ to fixed-point money with the tuition policy's `precision`.
 | `studied_terms` | `t` | Number of fixed history terms (`--t`). |
 | `min_load`, `max_load` | `min_load`, `max_load` | Regular-term credit bounds. |
 | `summer_min_load`, `summer_max_load` | `min_load_summer`, `max_load_summer` | Summer bounds; when unset they follow `min_load` / `max_load`. |
+| `allow_summer` | `extra_sem` | Opt into optional extra terms (summer) with `-c extra_sem=1`. Off by default: extra terms stay empty unless enabled. |
 | `budget` | `budget/1` fact | Hard tuition cap. |
 | `plans` | — | Number of distinct plans to return (`--plans`; CLI default 1, `SolverOptions` default 3; 0 = all models). Optimized mode fills missing slots only with `fill=True`. |
 | `opt_mode` | `--opt-mode` | `optN` proves optimality and enumerates up to `plans` optimal plans (default), `opt` is a compatibility alias for `optN`, `ignore` returns up to `plans` models without optimizing. |
@@ -257,12 +266,14 @@ to fixed-point money with the tuition policy's `precision`.
 | `progress` | `--progress` | Print candidate/optimal objectives, grounding time and time-limit events to stderr. |
 | `seed` | `--seed` | Clingo random seed. |
 | `shift` | `shift` | Legacy calendar shift. It is accepted and passed through, but no current rule consumes it. |
-| `objective_scale` | `objective_scale/1` fact | Accepted but not consumed by `plan.lp`; see [Current limitations](#8-current-limitations). |
+| `objective_scale` | `objective_scale/1` fact | Accepted but not consumed by `core/optimize.lp`; see [Current limitations](#8-current-limitations). |
 | `extra_args` | — | Additional raw clingo arguments. Set `opt_mode` through `SolverOptions`, not here. |
 
 Defaults come from `policy.lp`; an explicit `SolverOptions` value overrides the
-corresponding `#const`. The calendar is now derived from `enroll_part_in(Q)`
-rather than from a global term offset.
+corresponding `#const`. The calendar is derived from `enroll_part_in(Q)`,
+`term_parts/1` and `term_part_type/2` rather than from a global term offset.
+Terms whose type is in `extra_semester_type/1` are additionally gated by
+`extra_sem`, which only `allow_summer=True` raises to `1`.
 
 Only `opt_mode="optN"` and its alias `opt_mode="opt"` can set
 `Solution.optimal` to `True`; both require an optimality proof. They return up
@@ -312,13 +323,18 @@ header records the curriculum id, display name and default file name.
 
 The generated curriculum file deliberately contains **no** `in(E, m)`, `group/1`, credit
 accounting, prerequisite constraints or milestone constraints. Those are
-generic and live in `extension.lp` / `plan.lp`.
+generic and live in `extension.lp`; the objectives that consume them live in
+`core/optimize.lp`.
 
 ### 3.2 `policy.lp` — university policy facts
 
 | Predicate | Meaning |
 | --- | --- |
 | `#const min_load`, `max_load`, `min_load_summer`, `max_load_summer` | Load bounds from `curriculum.planning`. |
+| `term_parts(N).` | Number of parts in an academic year (currently 3). |
+| `term_part_type(Part, Type).` | Term type at each part (`regular`, `regular`, `summer`). |
+| `extra_semester_type(Type).` | Term types that are optional extra terms. They stay empty unless the run passes `-c extra_sem=1`. |
+| `load_bound(Type, MinConstant, MaxConstant).` | Per-term-type load bounds, referencing the load constants. |
 | `scale(Scale, Min, Max).` | Fixed-point numeric scale. |
 | `scale_precision(Scale, P).` / `scale_role(Scale, Role).` | Scale metadata. |
 | `default_scale(Scale).` | Scale used for GPA target reporting and the compatibility `gpa/1` atom. |
@@ -342,9 +358,9 @@ generic and live in `extension.lp` / `plan.lp`.
 The current regular schedule is compiled as:
 
 ```prolog
-fee_rule(regular,  0,   6, 11688,   0,  0).
+fee_rule(regular,  0,   6,  7563,   0,  0).
 fee_rule(regular,  7,   9,  9625,   0,  0).
-fee_rule(regular, 10,  12,  7563,   0,  0).
+fee_rule(regular, 10,  12, 11688,   0,  0).
 fee_rule(regular, 13,  18, 13750,   0,  0).
 fee_rule(regular, 19, 999, 13750, 805, 18).
 fee_rule(summer,   0, 999,     0, 1230, 0).
@@ -353,15 +369,22 @@ fee_rule(summer,   0, 999,     0, 1230, 0).
 With `money_scale(1000)`, the last regular tier means
 `13.750 + 0.805 × (credits − 18)` for 19 or more credits.
 
+The calendar facts describe the default three-part year: parts 1 and 2 are
+regular, part 3 is summer, and summer is an extra term that the planner uses
+only with `-c extra_sem=1`.
+
 ### 3.3 `student.lp` — student facts
 
 The current file is a sample record for the `cs_2023` curriculum. Real student
 records should preserve the same predicate contract. In particular:
 
 - history attempts are immutable input; they are not rescheduled;
-- every `taken/2`, `result/2` and `map(g,...)` course must exist in the
-  generated curriculum file; a course outside the curriculum derives no
-  `base/2` atom and is silently ignored by the planner;
+- `taken/2`, `result/2` and `map(g,...)` normally reference courses in the
+  generated curriculum file. A course outside the curriculum derives no
+  `base/2` atom and is silently ignored by the planner, so only genuinely
+  external attempts should be listed that way (the sample's
+  `pe1003`/`pe1005` physical-education records are an example); otherwise a
+  typo in a course code is hidden;
 - `last_attempt/2` points at the latest attempt;
 - `gpa_last/2` points at the latest attempt with a final letter grade;
 - failed courses remain load-bearing and tuition-bearing but do not earn
@@ -375,7 +398,8 @@ records should preserve the same predicate contract. In particular:
 ### Calendar
 
 Term `1` is the student's enrollment term. Its part is
-`enroll_part_in(Q)` (default `1`), and parts then cycle:
+`enroll_part_in(Q)` (default `1`), and parts then cycle through
+`term_parts/1`:
 
 ```text
 enroll part 1: 1, 2, 3, 1, 2, 3, ...
@@ -383,11 +407,16 @@ enroll part 2: 2, 3, 1, 2, 3, 1, ...
 enroll part 3: 3, 1, 2, 3, 1, 2, ...
 ```
 
-Parts `1` and `2` are regular terms; part `3` is summer. Regular terms must
-form one contiguous block: a student may skip summer, but cannot skip a
-regular term and then resume. History terms are fixed and never selected.
-A used regular term before the last one must meet `min_load`; the last used
-term may be lighter because only the remaining credits are left.
+`term_part_type/2` names each part (`regular`, `regular`, `summer`). Parts whose
+type appears in `extra_semester_type/1` are optional **extra** terms: with the
+default `#const extra_sem = 0` they stay empty, and only `-c extra_sem=1`
+(`--summer` on the CLI) lets the planner use them. History is unaffected.
+
+Core (non-extra) terms must form one contiguous block: a student may skip
+summer, but cannot skip a regular term and then resume. History terms are fixed
+and never selected. A used regular term before the last one must meet its
+`load_bound/3` minimum; the last used term may be lighter because only the
+remaining credits are left.
 
 ### Attempts, status and retakes
 
@@ -524,7 +553,7 @@ Clingo objectives are lexicographic by level, highest first:
 
 ### 5.1 Clingo answer-set atoms
 
-The stable display surface is declared at the bottom of `plan.lp`:
+The stable display surface is declared at the bottom of `core/optimize.lp`:
 
 | Atom | Meaning |
 | --- | --- |
@@ -625,14 +654,20 @@ Inputs and scenario controls:
 --solve STUDENT_LP          hand-written student facts
 --student-json FILE         load a record from student_history.json instead
 --student-id ID             select one record (default: first)
---t N                       number of studied terms (required for --solve)
+--t N                       number of studied terms (default: inferred from
+                            the last taken/2 term; --student-json uses
+                            expected.as_of_term)
 --curriculum/--grading-policy/--graduation/--tuition-policy PATH
 --program NAME              tuition program (default: student, then curriculum)
 --semesters N               absolute last term index
 --future-terms N            terms after --t (default: curriculum planning.horizon)
 --max-budget MONEY          extra tuition cap in money units, e.g. 14 = 14M VND
---no-summer                 forbid future summer terms
---max-terms N               forbid future courses after absolute term N
+--summer, --allow-summer    allow optional extra terms (summer) via -c extra_sem=1;
+                            off by default
+--max-terms N               cap the horizon at absolute term N (lowers n to at
+                            most N; must be >= --t)
+--no-summer                 deprecated no-op kept for old command lines (summer is
+                            already off unless --summer is given)
 --fact 'ASP.'               append a scenario fact or rule (repeatable)
 --min-load / --max-load N   override load bounds
 --seed N                    clingo random seed
@@ -700,15 +735,17 @@ These are the invariants the files are expected to maintain.
 1. `encoding.lp` remains generic and unchanged.
 2. The generated curriculum file and `policy.lp` contain **facts only**.
 3. `extension.lp` contains generic rules; no concrete course codes.
-4. `plan.lp` contains school-specific rules and may use policy constants, but
-   no concrete course codes or credit values.
-5. Any predicate read by `extension.lp` or `plan.lp` must be emitted by the
-   data files:
+4. `core/translate.lp` is the only file that reads raw student facts.
+   `core/optimize.lp` contains only the objective order and display atoms; it
+   must not add concrete course codes or credit values.
+5. Any predicate read by `extension.lp`, `core/translate.lp` or
+   `core/optimize.lp` must be emitted by the data files:
    - group membership, bounds, `map(c,...)`, `elective_group/1`, `prereq*`,
      `coreq*`, `offered_slot/2`, `major*`, `milestone/2` from the generated
      curriculum file
-   - scales, grades, `min_gpa/2`, load constants, `fee_rule/6` and money facts
-     from `policy.lp`
+   - scales, grades, `min_gpa/2`, load constants, `term_parts/1`,
+     `term_part_type/2`, `extra_semester_type/1`, `load_bound/3`, `fee_rule/6`
+     and money facts from `policy.lp`
    - `taken/2`, `map(g,...)`, `attempt_count/2`, `last_attempt/2` and the
      optional `gpa_last/2`, `enroll_part_in/1`, `student_major/1`,
      `external_progress/3` from `student.lp`
@@ -723,14 +760,18 @@ These are the invariants the files are expected to maintain.
 
 ### 7.1 Quick sample: `student.lp`
 
-The small hand-written sample has two studied terms (`t=2`) and a 33-credit
-history. Seven planned terms are enough (`--semesters 9`). For a fast,
-unoptimized feasibility plan:
+The small hand-written sample has two studied terms (`t=2`, inferred from its
+`taken/2` facts) and a 33-credit history. Summer terms are off by default, so
+only the regular terms in the horizon can carry the remaining 95 credits;
+`--semesters 12` leaves enough regular terms and produces a plan ending in term
+11. For a fast, unoptimized feasibility plan:
 
 ```powershell
 python -m pipeline.engine.asp.cli --solve pipeline/engine/asp/student.lp `
-  --t 2 --semesters 9 --plans 1 --opt-mode ignore --time-limit 20 --no-report
+  --semesters 12 --plans 1 --opt-mode ignore --time-limit 20 --no-report
 ```
+
+The CLI prints `studied terms: t=2 (inferred from taken/2)` before solving.
 
 The text report labels the plan `unoptimized` and includes the diagnostic
 summary:
@@ -739,17 +780,27 @@ summary:
 Planned credits : 95 (attempted)
 Total credits   : 128 / 128 (earned)
 Status          : COMPLETE
-GPA             : 3.16
+GPA             : 3.00
 Graduation      : DEGREE COMPLETE (external requirements outstanding)
 Major           : Computer Science (default; no major declared)
-External        : social_work_days is below the graduation minimum
+GPA best case   : 3.98
+GPA needed      : 2.49 on remaining credits
+Assumed passes  : CO1005, CO1007, CO1023, CO1027, LA1005, MT1003,
+                  MT1005, MT1007, PH1003, PH1007
+External        : social_work_days needs 3 more by year 1; social_work_days
+                  needs 6 more by year 2; social_work_days is below the
+                  graduation minimum
+Future tuition  : 81.143 million VND
 ```
+
+With `--semesters 9` the sample is UNSAT when summer is disabled, because only
+four regular terms remain in the horizon. Add `--summer` if the plan should be
+allowed to use the extra terms.
 
 The exact course mix can vary between runs. For an optimality proof instead of
 a quick answer, replace `--opt-mode ignore` with `--time-limit 120` (or add
-`--progress` to watch improving objectives). The sample's proof can take around
-a minute; the default 30-second limit may return a valid candidate marked
-`not proven optimal`.
+`--progress` to watch improving objectives). A 30-second run returned a valid
+candidate marked `not proven optimal`; raise the limit when the proof matters.
 
 ### 7.2 Showcase: `student_showcase.lp`
 
@@ -760,29 +811,31 @@ retake that is capped at `B`, and a 20M VND budget. The fixture closes the remai
 to CO3057 and CO3061 so the showcase is deterministic; remove the scenario rule
 near the top to search the full 44-course B3.4/C pool (noticeably slower).
 
-Run from the repository root (about 80 seconds on the reference machine for
-the tight-budget variant):
+Run from the repository root; with the current ASP layer the optimality proof
+finishes in about a second:
 
 ```powershell
 python -m pipeline.engine.asp.cli --solve pipeline/engine/asp/student_showcase.lp `
-  --t 8 --semesters 12 --plans 1 --time-limit 120 --no-report
+  --semesters 12 --plans 1 --time-limit 120 --no-report
 ```
 
-The tight-budget variant drops the summer term and fits the 17 attempted
-credits into one regular term:
+`t` is inferred as `8` from the transcript; pass `--t 8` explicitly if you
+prefer. Summer is off by default, so the 17 remaining credits are compressed
+into one regular term. `--max-budget 14` (14 million VND) is still satisfied and
+returns the same optimal plan:
 
 ```powershell
 python -m pipeline.engine.asp.cli --solve pipeline/engine/asp/student_showcase.lp `
-  --t 8 --semesters 12 --plans 1 --max-budget 14 --time-limit 120 --no-report
+  --semesters 12 --plans 1 --max-budget 14 --time-limit 120 --no-report
 ```
 
 Its key output is:
 
 ```text
 objective: last_semester=10, retakes=20, cost=13750, level_order=10, balance=17, taste=0 (proven optimal)
-Solve time      : 81.00 s
+Solve time      : 0.34 s
 
-Semester 10  (regular, 17 credits, scheduled total 137, fee 13.750 million VND)
+Semester 10  (regular, 17 credits, scheduled total 135, fee 13.750 million VND)
   CO3035    Real-Time Systems (retake 1)                            3
   CO3057    Digital Image Processing and Computer Vision            3
   CO3061    Introduction to Artificial Intelligence                 3
@@ -802,12 +855,19 @@ Retakes needed  : CO3035, MT2013
 Future tuition  : 13.750 million VND
 ```
 
+Add `--summer` to let the showcase use the extra term. The optimal proof then
+moves one 3-credit retake into a summer term and is slightly more expensive:
+
+```text
+objective: last_semester=10, retakes=19, cost=17440, level_order=10, balance=14, taste=0 (proven optimal)
+Semester 9  (summer, 3 credits, scheduled total 121, fee 3.690 million VND)
+Semester 10 (regular, 14 credits, scheduled total 135, fee 13.750 million VND)
+Future tuition  : 17.440 million VND
+```
+
 `--max-budget` is in tuition money units, so `14` means 14 million VND. It is
 applied together with any `budget/1` fact in the student file; the tighter cap
-wins. The showcase needs `--time-limit 120` because grounding plus the
-optimality proof does not fit in the default 30-second limit. With a shorter
-limit the supervisor kills the child and exits `4`; `--progress` shows grounding
-and search timing.
+wins. `--progress` shows grounding and search timing.
 
 ### 7.3 JSON student record
 
@@ -843,27 +903,28 @@ index instead of `--future-terms`.
   A future deadline that is currently unmet is only reported as
   `ext_pending/3`; it does not make the plan UNSAT.
 - **`objective_scale` is accepted by `SolverOptions` but not consumed by
-  `plan.lp`.** GPA selection and the retake cap affect the reported historical
-  GPA, the best-case figure and the target; they do not add an optimization
-  objective.
+  `core/optimize.lp`.** GPA selection and the retake cap affect the reported
+  historical GPA, the best-case figure and the target; they do not add an
+  optimization objective.
 - **`shift` is legacy and has no effect.** It is still accepted by
   `SolverOptions` and the CLI, but the calendar comes from `enroll_part_in(Q)`.
 - **Tuition has no program dimension in ASP.** `policy.lp` materializes one
   fee schedule for the selected `--program` (default: `default_major`).
   Divergent programs need one generated policy per program or a `program/1` +
   program-keyed fee contract.
-- **The horizon is absolute in `plan.lp`.** `--semesters` is the last term
+- **The horizon is absolute in the ASP layer.** `--semesters` is the last term
   index; the CLI default is `--t + curriculum.planning.horizon` (currently 15).
   A larger horizon increases grounding and search even when the chosen plan
-  ends earlier. The showcase uses `--semesters 12`; its plan ends in term 10,
-  and `--semesters 10` is feasible but does not materially shorten the proof.
-- **Real-data solving can be expensive.** For the full 128-credit curriculum
-  and a 12-term horizon, grounding is roughly 40 seconds and an optimality
-  proof roughly 80 seconds on the reference machine. The sample at `n=9`
-  grounds in about two seconds but its proof can still take a minute. Use
-  `--opt-mode ignore` for a quick feasibility check, `--time-limit` for a
-  bound, `--progress` to see whether the search is advancing, and the showcase's
-  scenario rule when you need a deterministic fast example.
+  ends earlier. `--max-terms N` caps the horizon at `N` and must be at least
+  `--t`. The showcase uses `--semesters 12`; its plan ends in term 10.
+- **Real-data solving is much faster than it used to be, but proofs vary.**
+  The showcase at `n=12` grounds in about 0.5 seconds and proves optimality in
+  about 0.3 seconds on the reference machine. The small sample at `n=12`
+  grounds in about 0.4 seconds and finds an unoptimized model in about
+  1.5 seconds, but its optimality proof exceeded the 30-second limit in a test
+  run. Use `--opt-mode ignore` for a quick feasibility check, `--time-limit` for
+  a bound, `--progress` to see whether the search is advancing, and the
+  showcase's scenario rule when you need a deterministic fast example.
 - **GPA-needed values are clamped to zero.** `gpa_required_avg` is the
   mathematical target average on remaining GPA credits; non-positive targets
   are reported as `0` and flagged with `gpa_already_satisfied`. If even the

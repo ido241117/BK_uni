@@ -156,7 +156,7 @@ def write_programs(
     )
     policy_text = build_policy(policy)
     if fees:
-        # plan.lp refuses a billed semester without a matching fee rule, so
+        # extension.lp refuses a billed semester without a matching fee rule, so
         # every tiny fixture needs a (free) schedule unless a test overrides
         # it.  Keep the shape identical to build_tuition output.
         policy_text += (
@@ -195,7 +195,7 @@ def brute_force_tiny(
         }
         last = max(used)
         # The final used semester may be below min_load: only the remaining
-        # credits have to fit, so plan.lp does not force a full last term.
+        # credits have to fit, so the ASP layer does not force a full last term.
         if any(
             load > max_load or (value < last and load < min_load)
             for value, load in loads.items()

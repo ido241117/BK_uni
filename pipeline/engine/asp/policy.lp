@@ -18,8 +18,9 @@
 % ------------------------------------------------------------------
 % Academic calendar and term loads
 % ------------------------------------------------------------------
-% An academic year has three parts; part 3 (summer) is an optional
-% "extra" term, used by the plan only when run with -c extra_sem=1.
+% An academic year has 3 parts, named by term_part_type/2.
+% Types listed as extra_semester_type/1 are optional and used
+% by the plan only when run with -c extra_sem=1.
 term_parts(3).
 term_part_type(1, regular).
 term_part_type(2, regular).
@@ -28,7 +29,7 @@ extra_semester_type(summer).
 
 % load_bound(Type, MinCredits, MaxCredits) per term type.
 load_bound(regular, min_load, max_load).
-load_bound(summer,  min_load_summer, max_load_summer).
+load_bound(summer, min_load_summer, max_load_summer).
 
 % ------------------------------------------------------------------
 % Numeric scales (all values are fixed-point integers)
@@ -183,9 +184,9 @@ external_milestone(social_work_days, graduation, 15).
 money_scale(1000).
 money_currency(vnd).
 money_unit(million).
-fee_rule(regular, 0, 6, 11688, 0, 0).
+fee_rule(regular, 0, 6, 7563, 0, 0).
 fee_rule(regular, 7, 9, 9625, 0, 0).
-fee_rule(regular, 10, 12, 7563, 0, 0).
+fee_rule(regular, 10, 12, 11688, 0, 0).
 fee_rule(regular, 13, 18, 13750, 0, 0).
 fee_rule(regular, 19, 999, 13750, 805, 18).
 fee_rule(summer, 0, 999, 0, 1230, 0).

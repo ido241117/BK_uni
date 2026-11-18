@@ -86,8 +86,10 @@ def test_loads_ground_truth_tuition_policy() -> None:
     summer = next(rule for rule in tuition.rules if "summer" in rule.semester_types)
     assert [tier.min_credits for tier in regular.tiers] == [0, 7, 10, 13, 19]
     assert [tier.max_credits for tier in regular.tiers] == [6, 9, 12, 18, 999]
-    assert regular.tiers[0].amount == Decimal("11.6875")
-    assert tuition.scaled(regular.tiers[0].amount) == 11688
+    assert regular.tiers[0].amount == Decimal("7.5625")
+    assert tuition.scaled(regular.tiers[0].amount) == 7563
+    assert regular.tiers[2].amount == Decimal("11.6875")
+    assert tuition.scaled(regular.tiers[2].amount) == 11688
     assert regular.tiers[3].amount == Decimal("13.75")
     assert regular.tiers[4].amount == Decimal("0.805")
     assert summer.tiers[0].amount == Decimal("1.23")
