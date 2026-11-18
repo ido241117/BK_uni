@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "policy_2020",
-  "effective_for_cohorts": { "from": 2024, "to": null },
+  "effective_for_cohorts": { "from": 2023, "to": null },
 
   "grade_scale": [
     { "grade": "A+", "min_score": 9.5, "max_score": 10.0, "points": "4.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
@@ -12,12 +12,7 @@
     { "grade": "C",  "min_score": 5.5, "max_score": 6.49,  "points": "2.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
     { "grade": "D+", "min_score": 5.0, "max_score": 5.49,  "points": "1.50", "passing": true,  "in_gpa": true,  "earns_credit": true },
     { "grade": "D",  "min_score": 4.0, "max_score": 4.99,  "points": "1.00", "passing": true,  "in_gpa": true,  "earns_credit": true },
-    { "grade": "F",  "min_score": 0.0, "max_score": 3.99,  "points": "0.00", "passing": false, "in_gpa": true,  "earns_credit": false },
-    { "grade": "P",  "min_score": null, "max_score": null, "points": null,   "passing": true,  "in_gpa": false, "earns_credit": true },
-    { "grade": "W",  "min_score": null, "max_score": null, "points": null,   "passing": false, "in_gpa": false, "earns_credit": false },
-    { "grade": "I",  "min_score": null, "max_score": null, "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true },
-    { "grade": "X",  "min_score": null, "max_score": null, "points": null,   "passing": false, "in_gpa": false, "earns_credit": false, "provisional": true },
-    { "grade": "R",  "min_score": null, "max_score": null, "points": null,   "passing": true,  "in_gpa": false, "earns_credit": true }
+    { "grade": "F",  "min_score": 0.0, "max_score": 3.99,  "points": "0.00", "passing": false, "in_gpa": true,  "earns_credit": false }
   ],
 
   "gpa": {
@@ -29,11 +24,10 @@
 
   "retake": {
     "gpa_attempt_selection": "latest",
-    "credit_counting": "once_per_course",
-    "eligibility": { "only_if_grade_at_most": "C" },
-    "max_attempts": 3,
-    "count_withdrawals_as_attempts": true,
-    "grade_cap": { "applies_to": "retakes", "max_grade": "B" },
+    "grade_cap": {
+      "applies_to": "retakes",
+      "max_grade": "B"
+    },
     "keep_old_attempts_on_transcript": true,
     "equivalence": "use_course_equivalents"
   },
@@ -41,11 +35,7 @@
   "pipeline_order": [
     "resolve_equivalents",
     "select_attempts",
-    "apply_grade_cap",
-    "filter_by_flags",
     "sum_credits_and_gpa",
     "round"
   ]
-
-  
 }
