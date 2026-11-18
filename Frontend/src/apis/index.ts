@@ -4,3 +4,4 @@ export * as courseApi from './course';
 export * as curriculumApi from './curriculum';
 export * as studentApi from './student';
 export * as outlineApi from './outline';
+export * as plannerApi from './planner';

@@ -7,3 +7,4 @@ export * from './curriculum';
 export * from './student';
 export type * from './theme';
 export type * from './outline';
+export type * from './planner';

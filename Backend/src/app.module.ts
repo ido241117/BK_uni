@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { CourseModule } from './course/course.module';
 import { CurriculumModule } from './curriculum/curriculum.module';
 import { OutlineModule } from './outline/outline.module';
+import { PlannerModule } from './planner/planner.module';
 import { StudentModule } from './student/student.module';
 import { validateEnvironment } from './config/environment';
 import { getDatabaseOptions } from './database/database-options';
@@ -38,6 +39,7 @@ import { entities } from './database/entities';
     StudentModule,
     AdvisorModule,
     OutlineModule,
+    PlannerModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
