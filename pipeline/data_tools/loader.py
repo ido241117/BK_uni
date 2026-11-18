@@ -276,9 +276,6 @@ def _parse_policy(raw: dict[str, Any]) -> GradingPolicy:
             earns_credit=_bool(
                 _need(item, "earns_credit", item_context), f"{item_context}.earns_credit"
             ),
-            provisional=_bool(
-                item.get("provisional", False), f"{item_context}.provisional"
-            ),
         )
 
     gpa_raw = _dict(_need(raw, "gpa", context), f"{context}.gpa")
@@ -289,46 +286,57 @@ def _parse_policy(raw: dict[str, Any]) -> GradingPolicy:
     rounding = _dict(_need(gpa_raw, "rounding", f"{context}.gpa"), f"{context}.gpa.rounding")
 
     retake_raw = _dict(_need(raw, "retake", context), f"{context}.retake")
-    eligibility = _dict(
-        _need(retake_raw, "eligibility", f"{context}.retake"), f"{context}.retake.eligibility"
+
+    selection = _str(
+        _need(retake_raw, "gpa_attempt_selection", f"{context}.retake"),
+        f"{context}.retake.gpa_attempt_selection",
     )
-    eligibility_max_grade_raw = _need(
-        eligibility, "only_if_grade_at_most", f"{context}.retake.eligibility"
-    )
-    eligibility_max_grade = (
-        None
-        if eligibility_max_grade_raw is None
-        else _str(
-            eligibility_max_grade_raw,
-            f"{context}.retake.eligibility.only_if_grade_at_most",
-        )
-    )
-    if eligibility_max_grade is not None and eligibility_max_grade not in grade_scale:
+    if selection in {"highest", "highest_grade"}:
+        selection = "best"
+    if selection not in {"latest", "best"}:
         _fail(
-            f"{context}.retake.eligibility",
-            f"unknown grade {eligibility_max_grade!r}",
+            f"{context}.retake.gpa_attempt_selection",
+            f"unsupported value {selection!r}; use 'latest' or 'best'",
         )
 
-    grade_cap = _dict(
-        _need(retake_raw, "grade_cap", f"{context}.retake"), f"{context}.retake.grade_cap"
+    grade_cap_raw = retake_raw.get("grade_cap")
+    grade_cap = (
+        {}
+        if grade_cap_raw is None
+        else _dict(grade_cap_raw, f"{context}.retake.grade_cap")
     )
-    grade_cap_max_grade_raw = _need(
-        grade_cap, "max_grade", f"{context}.retake.grade_cap"
+    grade_cap_applies_to = _str(
+        grade_cap.get("applies_to", "retakes"),
+        f"{context}.retake.grade_cap.applies_to",
     )
+    if grade_cap_applies_to != "retakes":
+        _fail(
+            f"{context}.retake.grade_cap.applies_to",
+            f"unsupported value {grade_cap_applies_to!r}; only 'retakes' is implemented",
+        )
+    grade_cap_max_grade_raw = grade_cap.get("max_grade")
     grade_cap_max_grade = (
         None
         if grade_cap_max_grade_raw is None
         else _str(grade_cap_max_grade_raw, f"{context}.retake.grade_cap.max_grade")
     )
-    if grade_cap_max_grade is not None and grade_cap_max_grade not in grade_scale:
-        _fail(f"{context}.retake.grade_cap", f"unknown grade {grade_cap_max_grade!r}")
-
-    maximum_attempts = _int(
-        _need(retake_raw, "max_attempts", f"{context}.retake"),
-        f"{context}.retake.max_attempts",
-    )
-    if maximum_attempts <= 0:
-        _fail(f"{context}.retake", "max_attempts must be positive")
+    if grade_cap_max_grade is not None:
+        if grade_cap_max_grade not in grade_scale:
+            _fail(
+                f"{context}.retake.grade_cap.max_grade",
+                f"unknown grade {grade_cap_max_grade!r}",
+            )
+        cap_rule = grade_scale[grade_cap_max_grade]
+        if not cap_rule.in_gpa or cap_rule.points is None:
+            _fail(
+                f"{context}.retake.grade_cap.max_grade",
+                f"grade {grade_cap_max_grade!r} must carry GPA points",
+            )
+        if not cap_rule.passing or not cap_rule.earns_credit:
+            _fail(
+                f"{context}.retake.grade_cap.max_grade",
+                f"grade {grade_cap_max_grade!r} must be passing and earn credit",
+            )
 
     return GradingPolicy(
         schema_version=schema_version,
@@ -348,27 +356,9 @@ def _parse_policy(raw: dict[str, Any]) -> GradingPolicy:
             _need(rounding, "applied_to", f"{context}.gpa.rounding"),
             f"{context}.gpa.rounding.applied_to",
         ),
-        gpa_attempt_selection=_str(
-            _need(retake_raw, "gpa_attempt_selection", f"{context}.retake"),
-            f"{context}.retake.gpa_attempt_selection",
-        ),
-        credit_counting=_str(
-            _need(retake_raw, "credit_counting", f"{context}.retake"),
-            f"{context}.retake.credit_counting",
-        ),
-        eligibility_max_grade=eligibility_max_grade,
-        eligibility_max_points=(
-            grade_scale[eligibility_max_grade].points
-            if eligibility_max_grade is not None
-            else None
-        ),
-        max_attempts=maximum_attempts,
-        grade_cap_applies_to=_str(
-            _need(grade_cap, "applies_to", f"{context}.retake.grade_cap"),
-            f"{context}.retake.grade_cap.applies_to",
-        ),
-        grade_cap_max_grade=grade_cap_max_grade,
-        grade_cap_max_points=(
+        gpa_attempt_selection=selection,
+        retake_grade_cap=grade_cap_max_grade,
+        retake_grade_cap_points=(
             grade_scale[grade_cap_max_grade].points
             if grade_cap_max_grade is not None
             else None
@@ -476,8 +466,75 @@ def _parse_graduation(raw: dict[str, Any]) -> GraduationRequirements:
     )
 
 
+_STUDENT_TABLES = ("attempts", "external_progress", "expected")
+
+
+def _normalize_student_history(raw: dict[str, Any]) -> dict[str, Any]:
+    """Fold schema-v2 table rows into the nested per-student records."""
+    context = "student_history.json"
+    if not isinstance(raw, dict):
+        _fail(context, "expected an object")
+    students_raw = _list(_need(raw, "students", context), f"{context}.students")
+    if not any(key in raw for key in _STUDENT_TABLES):
+        return raw
+
+    students: dict[str, dict[str, Any]] = {}
+    for index, row in enumerate(students_raw):
+        item_context = f"{context}.students[{index}]"
+        item = _dict(row, item_context)
+        student_id = _str(
+            _need(item, "student_id", item_context), f"{item_context}.student_id"
+        )
+        if student_id in students:
+            _fail(item_context, f"duplicate student id {student_id!r}")
+        if any(key in item for key in _STUDENT_TABLES):
+            _fail(
+                item_context,
+                f"cannot mix table rows with nested {_STUDENT_TABLES} fields",
+            )
+        student = dict(item)
+        student["attempts"] = []
+        student["external_progress"] = []
+        students[student_id] = student
+
+    for key in _STUDENT_TABLES:
+        if key not in raw:
+            continue
+        for index, row in enumerate(_list(raw[key], f"{context}.{key}")):
+            item_context = f"{context}.{key}[{index}]"
+            item = _dict(row, item_context)
+            student_id = _str(
+                _need(item, "student_id", item_context),
+                f"{item_context}.student_id",
+            )
+            if student_id not in students:
+                _fail(
+                    item_context,
+                    f"student id {student_id!r} has no students[] row",
+                )
+            value = {
+                name: field_value
+                for name, field_value in item.items()
+                if name != "student_id"
+            }
+            if key == "expected":
+                if "expected" in students[student_id]:
+                    _fail(
+                        item_context,
+                        f"duplicate expected row for student {student_id!r}",
+                    )
+                students[student_id]["expected"] = value
+            else:
+                students[student_id][key].append(value)
+
+    normalized = dict(raw)
+    normalized["students"] = list(students.values())
+    return normalized
+
+
 def _parse_students(raw: dict[str, Any], policy: GradingPolicy) -> tuple[Student, ...]:
     context = "student_history.json"
+    raw = _normalize_student_history(raw)
     students: list[Student] = []
     student_ids: set[str] = set()
     attempt_ids: set[str] = set()
@@ -500,9 +557,27 @@ def _parse_students(raw: dict[str, Any], policy: GradingPolicy) -> tuple[Student
             if attempt_id in attempt_ids:
                 _fail(attempt_context, f"duplicate attempt id {attempt_id!r}")
             attempt_ids.add(attempt_id)
-            grade = _str(_need(attempt_raw, "grade", attempt_context), f"{attempt_context}.grade")
-            if grade not in policy.grade_scale:
+            grade_raw = attempt_raw.get("grade")
+            result_raw = attempt_raw.get("result")
+            if grade_raw is not None and result_raw is not None:
+                _fail(
+                    attempt_context,
+                    "an attempt may have grade or result, not both",
+                )
+            grade = (
+                _str(grade_raw, f"{attempt_context}.grade")
+                if grade_raw is not None
+                else None
+            )
+            if grade is not None and grade not in policy.grade_scale:
                 _fail(attempt_context, f"unknown grade {grade!r}")
+            result = (
+                _str(result_raw, f"{attempt_context}.result")
+                if result_raw is not None
+                else None
+            )
+            if result is not None and result not in {"passed", "failed"}:
+                _fail(attempt_context, f"unknown result {result!r}")
             attempts.append(
                 Attempt(
                     attempt_id=attempt_id,
@@ -515,6 +590,7 @@ def _parse_students(raw: dict[str, Any], policy: GradingPolicy) -> tuple[Student
                         f"{attempt_context}.term",
                     ),
                     grade=grade,
+                    result=result,
                     course_kind=_str(
                         _need(attempt_raw, "course_kind", attempt_context),
                         f"{attempt_context}.course_kind",

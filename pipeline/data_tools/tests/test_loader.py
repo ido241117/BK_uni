@@ -44,7 +44,7 @@ def test_invalid_course_reference_is_rejected(tmp_path, data_dir):
 
     history_path = data_copy / "student_history.json"
     history = json.loads(history_path.read_text(encoding="utf-8"))
-    history["students"][0]["attempts"][0]["course"] = "NOT_A_COURSE"
+    history["attempts"][0]["course"] = "NOT_A_COURSE"
     history_path.write_text(json.dumps(history, indent=2), encoding="utf-8")
 
     with pytest.raises(DataValidationError, match="unknown course"):

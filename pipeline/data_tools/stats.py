@@ -11,9 +11,9 @@ import pandas as pd
 from data_tools.model import DataBundle, Report, StudentAudit
 from data_tools.policy import (
     audit_all,
+    evaluation_earns_credit,
     expected_summary,
     format_decimal,
-    policy_grade_earns_credit,
     round_half_up,
 )
 
@@ -91,13 +91,15 @@ def _attempt_rows(bundle: DataBundle, audits: list[StudentAudit]) -> pd.DataFram
                     "credits": evaluation.course.credits,
                     "term": evaluation.attempt.term,
                     "course_kind": evaluation.attempt.course_kind,
-                    "raw_grade": evaluation.attempt.grade,
+                    "raw_grade": (
+                        evaluation.attempt.grade or evaluation.attempt.result
+                    ),
                     "attempt_number": evaluation.attempt_number,
-                    "valid": evaluation.valid,
                     "selected": evaluation.selected,
                     "retake": evaluation.is_retake,
-                    "cap_applied": evaluation.cap_applied,
-                    "effective_grade": evaluation.effective_grade,
+                    "effective_grade": (
+                        evaluation.effective_grade or evaluation.attempt.result or ""
+                    ),
                     "effective_points": (
                         format_decimal(evaluation.effective_points)
                         if evaluation.effective_points is not None
@@ -120,10 +122,8 @@ def _attempt_rows(bundle: DataBundle, audits: list[StudentAudit]) -> pd.DataFram
             "course_kind",
             "raw_grade",
             "attempt_number",
-            "valid",
             "selected",
             "retake",
-            "cap_applied",
             "effective_grade",
             "effective_points",
             "counts_for_gpa",
@@ -168,7 +168,7 @@ def _course_rows(bundle: DataBundle, audits: list[StudentAudit]) -> pd.DataFrame
             if evaluation.counts_for_gpa:
                 item["gpa_attempts"] += 1
             item["students"].add(audit.student.student_id)
-            if evaluation.valid and policy_grade_earns_credit(bundle, evaluation.effective_grade):
+            if evaluation_earns_credit(bundle, evaluation):
                 item["passed_students"].add(audit.student.student_id)
 
     rows: list[dict[str, Any]] = []
@@ -222,8 +222,10 @@ def _grade_rows(bundle: DataBundle, audits: list[StudentAudit]) -> pd.DataFrame:
     selected_counts: dict[str, int] = defaultdict(int)
     for audit in audits:
         for evaluation in audit.evaluations:
+            if evaluation.attempt.grade is None:
+                continue
             raw_counts[evaluation.attempt.grade] += 1
-            if evaluation.selected:
+            if evaluation.selected and evaluation.effective_grade is not None:
                 selected_counts[evaluation.effective_grade] += 1
 
     raw_total = sum(raw_counts.values())

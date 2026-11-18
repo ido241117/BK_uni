@@ -47,7 +47,13 @@ class ScaleRule:
             return minimum
         if self.representative == "max":
             return maximum
-        return (minimum + maximum) / 2
+        # Score bands are written with as many decimals as the source
+        # transcript needs (``8.5``..``9.49``), so the midpoint can have one
+        # more decimal than the scale.  Round only the midpoint to the scale
+        # precision; an explicit min/max must already fit it.
+        value = (minimum + maximum) / 2
+        quantum = Decimal(1).scaleb(-self.precision)
+        return value.quantize(quantum, rounding=ROUND_HALF_UP)
 
 
 @dataclass(frozen=True)
@@ -59,7 +65,6 @@ class GradeRule:
     passing: bool
     in_gpa: bool
     earns_credit: bool
-    provisional: bool = False
     min_score: Decimal | None = None
     max_score: Decimal | None = None
     scale_points: tuple[tuple[str, Decimal], ...] = ()
@@ -135,9 +140,6 @@ class Policy:
     rounding_mode: str = "half_up"
     rounding_decimals: int = 2
     gpa_attempt_selection: str = "latest"
-    credit_counting: str = "once_per_course"
-    retake_eligibility_max_grade: str | None = None
-    max_attempts: int = 3
     retake_grade_cap: str | None = None
     keep_old_attempts: bool = True
     equivalence: str = "use_course_equivalents"
@@ -507,9 +509,6 @@ def _parse_grade_scale(grading: dict[str, Any]) -> tuple[GradeRule, ...]:
                     _need(item, "earns_credit", item_context),
                     f"{item_context}.earns_credit",
                 ),
-                provisional=_bool(
-                    item.get("provisional", False), f"{item_context}.provisional"
-                ),
                 min_score=min_score,
                 max_score=max_score,
                 scale_points=tuple(scale_points),
@@ -714,42 +713,54 @@ def parse_policy(
     gpa = _dict(_need(grading, "gpa", context), f"{context}.gpa")
     rounding = _dict(_need(gpa, "rounding", f"{context}.gpa"), f"{context}.gpa.rounding")
     retake = _dict(_need(grading, "retake", context), f"{context}.retake")
-    eligibility = _dict(
-        _need(retake, "eligibility", f"{context}.retake"),
-        f"{context}.retake.eligibility",
-    )
-    eligibility_max_grade = eligibility.get("only_if_grade_at_most")
-    if eligibility_max_grade is not None:
-        eligibility_max_grade = _str(
-            eligibility_max_grade,
-            f"{context}.retake.eligibility.only_if_grade_at_most",
-        )
-        if eligibility_max_grade not in grade_map:
-            raise DataError(
-                f"{context}.retake.eligibility: unknown grade "
-                f"{eligibility_max_grade!r}"
-            )
-    grade_cap = _dict(
-        _need(retake, "grade_cap", f"{context}.retake"),
-        f"{context}.retake.grade_cap",
-    )
-    grade_cap_max_grade = grade_cap.get("max_grade")
-    if grade_cap_max_grade is not None:
-        grade_cap_max_grade = _str(
-            grade_cap_max_grade, f"{context}.retake.grade_cap.max_grade"
-        )
-        if grade_cap_max_grade not in grade_map:
-            raise DataError(
-                f"{context}.retake.grade_cap: unknown grade "
-                f"{grade_cap_max_grade!r}"
-            )
 
-    max_attempts = _int(
-        _need(retake, "max_attempts", f"{context}.retake"),
-        f"{context}.retake.max_attempts",
+    selection = _str(
+        _need(retake, "gpa_attempt_selection", f"{context}.retake"),
+        f"{context}.retake.gpa_attempt_selection",
     )
-    if max_attempts <= 0:
-        raise DataError(f"{context}.retake.max_attempts: must be positive")
+    if selection in {"highest", "highest_grade"}:
+        selection = "best"
+    if selection not in {"latest", "best"}:
+        raise DataError(
+            f"{context}.retake.gpa_attempt_selection: unsupported value "
+            f"{selection!r}; use 'latest' or 'best'"
+        )
+
+    grade_cap = retake.get("grade_cap")
+    grade_cap = {} if grade_cap is None else _dict(grade_cap, f"{context}.retake.grade_cap")
+    applies_to = _str(
+        grade_cap.get("applies_to", "retakes"),
+        f"{context}.retake.grade_cap.applies_to",
+    )
+    if applies_to != "retakes":
+        raise DataError(
+            f"{context}.retake.grade_cap.applies_to: unsupported value "
+            f"{applies_to!r}; only 'retakes' is implemented"
+        )
+    max_grade = grade_cap.get("max_grade")
+    if max_grade is not None:
+        max_grade = _str(max_grade, f"{context}.retake.grade_cap.max_grade")
+        if max_grade not in grade_map:
+            raise DataError(
+                f"{context}.retake.grade_cap.max_grade: unknown grade {max_grade!r}"
+            )
+        cap_rule = grade_map[max_grade]
+        if not cap_rule.in_gpa:
+            raise DataError(
+                f"{context}.retake.grade_cap.max_grade: grade {max_grade!r} "
+                "does not carry GPA points"
+            )
+        if not cap_rule.passing or not cap_rule.earns_credit:
+            raise DataError(
+                f"{context}.retake.grade_cap.max_grade: grade {max_grade!r} "
+                "must be passing and earn credit"
+            )
+        default_scale_rule = next(row for row in scales if row.id == default_scale)
+        if cap_rule.value_for(default_scale_rule, default_scale) is None:
+            raise DataError(
+                f"{context}.retake.grade_cap.max_grade: grade {max_grade!r} "
+                f"has no value on the default scale {default_scale!r}"
+            )
 
     grad_context = "graduation_requirements.json"
     _int(
@@ -845,17 +856,8 @@ def parse_policy(
             _need(rounding, "decimals", f"{context}.gpa.rounding"),
             f"{context}.gpa.rounding.decimals",
         ),
-        gpa_attempt_selection=_str(
-            _need(retake, "gpa_attempt_selection", f"{context}.retake"),
-            f"{context}.retake.gpa_attempt_selection",
-        ),
-        credit_counting=_str(
-            _need(retake, "credit_counting", f"{context}.retake"),
-            f"{context}.retake.credit_counting",
-        ),
-        retake_eligibility_max_grade=eligibility_max_grade,
-        max_attempts=max_attempts,
-        retake_grade_cap=grade_cap_max_grade,
+        gpa_attempt_selection=selection,
+        retake_grade_cap=max_grade,
         keep_old_attempts=_bool(
             _need(
                 retake,
@@ -1048,6 +1050,9 @@ def parse_tuition(raw: dict[str, Any]) -> TuitionPolicy:
     )
     currency = _tuition_str(_tuition_need(raw, "currency", context), f"{context}.currency")
     money_unit = _tuition_str(_tuition_need(raw, "money_unit", context), f"{context}.money_unit")
+    precision = _tuition_int(raw.get("precision", 3), f"{context}.precision")
+    if precision < 0 or precision > 6:
+        raise TuitionError(f"{context}.precision: unsupported precision")
     calculation_basis = _tuition_str(
         _tuition_need(raw, "calculation_basis", context), f"{context}.calculation_basis"
     )
@@ -1170,7 +1175,7 @@ def parse_tuition(raw: dict[str, Any]) -> TuitionPolicy:
         policy_id=policy_id,
         currency=currency,
         money_unit=money_unit,
-        precision=3,
+        precision=precision,
         effective_from=effective_from,
         effective_to=effective_to,
         rules=tuple(rules),

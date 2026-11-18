@@ -110,70 +110,90 @@ def _evaluate_attempts(
             grouped[attempt.course].append(attempt)
 
     evaluations: dict[str, AttemptEvaluation] = {}
+    grade_order = {
+        symbol: index for index, symbol in enumerate(policy.grade_scale)
+    }
     for course_id, attempts in grouped.items():
         course = curriculum.course(course_id)
         ordered = sorted(attempts, key=lambda item: (term_key(item.term), item.order))
-        valid_attempts: list[Attempt] = []
-        valid_flags: list[bool] = []
+        prepared: list[dict[str, object]] = []
 
-        for attempt in ordered:
-            if not valid_attempts:
-                valid = True
-            else:
-                previous = valid_attempts[-1]
-                previous_rule = policy.grade(previous.grade)
-                eligible = (
-                    policy.eligibility_max_points is None
-                    or previous_rule.points is None
-                    or previous_rule.points <= policy.eligibility_max_points
-                )
-                valid = len(valid_attempts) < policy.max_attempts and eligible
-
-            valid_flags.append(valid)
-            if valid:
-                valid_attempts.append(attempt)
-
-        selected_id = valid_attempts[-1].attempt_id if valid_attempts else None
         for index, attempt in enumerate(ordered):
             attempt_number = index + 1
-            selected = attempt.attempt_id == selected_id
-            is_retake = selected and attempt_number > 1
-            rule = policy.grade(attempt.grade)
+            is_retake = attempt_number > 1
+            rule = (
+                policy.grade(attempt.grade)
+                if attempt.grade is not None
+                else None
+            )
             effective_grade = attempt.grade
-            effective_points = rule.points
+            effective_points = rule.points if rule is not None else None
             cap_applied = False
 
             if (
                 is_retake
-                and policy.grade_cap_max_points is not None
-                and policy.grade_cap_max_grade is not None
-                and rule.points is not None
-                and rule.points > policy.grade_cap_max_points
+                and policy.retake_grade_cap is not None
+                and attempt.grade is not None
+                and attempt.grade in grade_order
+                and grade_order[attempt.grade]
+                < grade_order[policy.retake_grade_cap]
             ):
-                capped_rule = policy.grade(policy.grade_cap_max_grade)
+                capped_rule = policy.grade(policy.retake_grade_cap)
                 effective_grade = capped_rule.grade
                 effective_points = capped_rule.points
                 cap_applied = True
 
-            counts_for_gpa = (
-                selected
+            gpa_candidate = (
+                effective_grade is not None
                 and effective_points is not None
                 and policy.grade(effective_grade).in_gpa
                 and attempt.course_kind in policy.included_course_kinds
             )
-            earns_credit = selected and policy.grade(effective_grade).earns_credit
+            prepared.append(
+                {
+                    "attempt": attempt,
+                    "attempt_number": attempt_number,
+                    "is_retake": is_retake,
+                    "cap_applied": cap_applied,
+                    "effective_grade": effective_grade,
+                    "effective_points": effective_points,
+                    "gpa_candidate": gpa_candidate,
+                }
+            )
+
+        candidates = [item for item in prepared if item["gpa_candidate"]]
+        if policy.gpa_attempt_selection == "best" and candidates:
+            selected_item = max(
+                candidates,
+                key=lambda item: (
+                    item["effective_points"],
+                    item["attempt_number"],
+                ),
+            )
+        else:
+            selected_item = prepared[-1]
+
+        for item in prepared:
+            attempt = item["attempt"]
+            selected = item is selected_item
+            effective_grade = item["effective_grade"]
+            counts_for_gpa = selected and bool(item["gpa_candidate"])
+            if effective_grade is not None:
+                credit_rule = policy.grade(str(effective_grade)).earns_credit
+            else:
+                credit_rule = attempt.result == "passed"
+            earns_credit = selected and credit_rule
             counted = counts_for_gpa or earns_credit
 
             evaluations[attempt.attempt_id] = AttemptEvaluation(
                 attempt=attempt,
                 course=course,
-                attempt_number=attempt_number,
-                valid=valid_flags[index],
+                attempt_number=int(item["attempt_number"]),
                 selected=selected,
-                is_retake=is_retake,
-                cap_applied=cap_applied,
+                is_retake=bool(item["is_retake"]),
+                cap_applied=bool(item["cap_applied"]),
                 effective_grade=effective_grade,
-                effective_points=effective_points,
+                effective_points=item["effective_points"],
                 counts_for_gpa=counts_for_gpa,
                 earns_credit=earns_credit,
                 counted=counted,
@@ -258,7 +278,7 @@ def audit_student(bundle: DataBundle, student: Student) -> StudentAudit:
     effective_grades = {
         item.attempt.attempt_id: item.effective_grade
         for item in evaluations
-        if item.selected and item.is_retake
+        if item.selected and item.is_retake and item.effective_grade is not None
     }
     gpa_credits = sum(
         item.course.credits for item in evaluations if item.counts_for_gpa
@@ -280,7 +300,7 @@ def audit_student(bundle: DataBundle, student: Student) -> StudentAudit:
     earned_courses = {
         item.attempt.course
         for item in evaluations
-        if item.valid and policy_grade_earns_credit(bundle, item.effective_grade)
+        if evaluation_earns_credit(bundle, item)
     }
     credits_earned = sum(bundle.curriculum.course(course_id).credits for course_id in earned_courses)
 
@@ -289,7 +309,7 @@ def audit_student(bundle: DataBundle, student: Student) -> StudentAudit:
     passed_courses = {
         item.attempt.course
         for item in evaluations
-        if item.valid and policy_grade_earns_credit(bundle, item.effective_grade)
+        if evaluation_earns_credit(bundle, item)
     }
     major_id, major_name = _determine_major(bundle, passed_courses)
 
@@ -325,6 +345,13 @@ def audit_student(bundle: DataBundle, student: Student) -> StudentAudit:
 
 def policy_grade_earns_credit(bundle: DataBundle, grade_symbol: str) -> bool:
     return bundle.policy.grade(grade_symbol).earns_credit
+
+
+def evaluation_earns_credit(bundle: DataBundle, evaluation: AttemptEvaluation) -> bool:
+    """Return whether an attempt earns credit, including pass/fail results."""
+    if evaluation.effective_grade is not None:
+        return policy_grade_earns_credit(bundle, evaluation.effective_grade)
+    return evaluation.attempt.result == "passed"
 
 
 def audit_all(bundle: DataBundle) -> list[StudentAudit]:

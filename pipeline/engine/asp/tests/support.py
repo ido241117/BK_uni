@@ -102,8 +102,6 @@ TINY_GRADING: dict[str, Any] = {
         {"grade": "C", "points": "2.00", "passing": True, "in_gpa": True, "earns_credit": True},
         {"grade": "D", "points": "1.00", "passing": True, "in_gpa": True, "earns_credit": True},
         {"grade": "F", "points": "0.00", "passing": False, "in_gpa": True, "earns_credit": False},
-        {"grade": "P", "points": None, "passing": True, "in_gpa": False, "earns_credit": True},
-        {"grade": "W", "points": None, "passing": False, "in_gpa": False, "earns_credit": False},
     ],
     "gpa": {
         "formula": "credit_weighted_mean",
@@ -113,9 +111,6 @@ TINY_GRADING: dict[str, Any] = {
     },
     "retake": {
         "gpa_attempt_selection": "latest",
-        "credit_counting": "once_per_course",
-        "eligibility": {"only_if_grade_at_most": "C"},
-        "max_attempts": 3,
         "grade_cap": {"applies_to": "retakes", "max_grade": "B"},
         "keep_old_attempts_on_transcript": True,
         "equivalence": "use_course_equivalents",
@@ -123,8 +118,6 @@ TINY_GRADING: dict[str, Any] = {
     "pipeline_order": [
         "resolve_equivalents",
         "select_attempts",
-        "apply_grade_cap",
-        "filter_by_flags",
         "sum_credits_and_gpa",
         "round",
     ],
@@ -152,6 +145,8 @@ def write_programs(
     directory: Path,
     policy: Policy,
     curriculum: dict[str, Any] | None = None,
+    *,
+    fees: bool = True,
 ) -> tuple[Path, Path]:
     curriculum = curriculum or TINY_CURRICULUM
     curriculum_path = directory / "tiny-curriculum.lp"
@@ -159,7 +154,19 @@ def write_programs(
     curriculum_path.write_text(
         build_curriculum(curriculum, policy), encoding="utf-8"
     )
-    policy_path.write_text(build_policy(policy), encoding="utf-8")
+    policy_text = build_policy(policy)
+    if fees:
+        # plan.lp refuses a billed semester without a matching fee rule, so
+        # every tiny fixture needs a (free) schedule unless a test overrides
+        # it.  Keep the shape identical to build_tuition output.
+        policy_text += (
+            "\nmoney_scale(1).\n"
+            "money_currency(vnd).\n"
+            "money_unit(unit).\n"
+            "fee_rule(regular, 0, 999, 0, 0, 0).\n"
+            "fee_rule(summer, 0, 999, 0, 0, 0).\n"
+        )
+    policy_path.write_text(policy_text, encoding="utf-8")
     return curriculum_path, policy_path
 
 
@@ -186,7 +193,13 @@ def brute_force_tiny(
             )
             for value in used
         }
-        if any(load > max_load or load < min_load for load in loads.values()):
+        last = max(used)
+        # The final used semester may be below min_load: only the remaining
+        # credits have to fit, so plan.lp does not force a full last term.
+        if any(
+            load > max_load or (value < last and load < min_load)
+            for value, load in loads.items()
+        ):
             continue
         prerequisites_ok = True
         for course_id, course in courses.items():
@@ -240,6 +253,10 @@ def check_plan(
     problems: list[str] = []
     scheduled: dict[str, int] = {}
 
+    last_used = max(
+        (semester.semester for semester in plan.semesters if semester.courses),
+        default=0,
+    )
     for semester in plan.semesters:
         if not semester.courses:
             problems.append(f"semester {semester.semester} is empty")
@@ -253,7 +270,7 @@ def check_plan(
             problems.append(
                 f"semester {semester.semester}: {credits} credits > {max_load}"
             )
-        if credits < min_load:
+        if semester.semester < last_used and credits < min_load:
             problems.append(
                 f"semester {semester.semester}: {credits} credits < {min_load}"
             )

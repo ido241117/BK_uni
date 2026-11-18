@@ -73,7 +73,6 @@ class GradeRule:
     passing: bool
     in_gpa: bool
     earns_credit: bool
-    provisional: bool = False
 
 
 @dataclass(frozen=True)
@@ -90,13 +89,8 @@ class GradingPolicy:
     rounding_decimals: int
     rounding_applied_to: str
     gpa_attempt_selection: str
-    credit_counting: str
-    eligibility_max_grade: str | None
-    eligibility_max_points: Decimal | None
-    max_attempts: int
-    grade_cap_applies_to: str
-    grade_cap_max_grade: str | None
-    grade_cap_max_points: Decimal | None
+    retake_grade_cap: str | None
+    retake_grade_cap_points: Decimal | None
     keep_old_attempts: bool
     equivalence: str
     pipeline_order: tuple[str, ...]
@@ -157,7 +151,8 @@ class Attempt:
     attempt_id: str
     course: str
     term: str
-    grade: str
+    grade: str | None
+    result: str | None
     course_kind: str
     order: int
 
@@ -214,11 +209,10 @@ class AttemptEvaluation:
     attempt: Attempt
     course: Course
     attempt_number: int
-    valid: bool
     selected: bool
     is_retake: bool
     cap_applied: bool
-    effective_grade: str
+    effective_grade: str | None
     effective_points: Decimal | None
     counts_for_gpa: bool
     earns_credit: bool

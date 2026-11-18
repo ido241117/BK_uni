@@ -4,6 +4,8 @@ from __future__ import annotations
 
 
 import re
+import sys
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -57,6 +59,7 @@ class Solution:
     priority: list[int] = field(default_factory=list)
     optimal: bool = False
     status: str = "SATISFIABLE"
+    runtime: float = 0.0
 
     def labelled_objective(self) -> list[tuple[str, int]]:
         return label_objective(self.objective, self.priority)
@@ -75,6 +78,10 @@ def label_objective(
     ``retakes``, ``cost``, ``level_order``, ``balance``, ``taste`` so it is
     stable across configurations and seeds.
     """
+    if not objective:
+        # ``--opt-mode=ignore`` returns models without an objective vector.
+        # Do not turn that absence into six fake zero values.
+        return []
     if priority is None or len(priority) != len(objective):
         return [
             (
@@ -126,12 +133,26 @@ class Plan:
     priority: list[int] = field(default_factory=list)
     optimal: bool = False
     status: str = "SATISFIABLE"
+    runtime: float = 0.0
     gpa_by_scale: dict[str, int] = field(default_factory=dict)
     total_cost: int | None = None
     total_attempted: int | None = None
     passed: list[str] = field(default_factory=list)
     credited: list[str] = field(default_factory=list)
-    pending: list[str] = field(default_factory=list)
+    ready_to_graduate: bool = False
+    assumed_pass: list[str] = field(default_factory=list)
+    graduation_blocked: list[str] = field(default_factory=list)
+    ext_missed: list[dict[str, Any]] = field(default_factory=list)
+    ext_pending: list[dict[str, Any]] = field(default_factory=list)
+    major_earned: list[str] = field(default_factory=list)
+    major_counts: dict[str, int] = field(default_factory=dict)
+    major_titles: dict[str, str] = field(default_factory=dict)
+    declared_major: str | None = None
+    default_major: str | None = None
+    gpa_best_case: int | None = None
+    gpa_required_avg: int | None = None
+    gpa_already_satisfied: bool = False
+    gpa_requirement_impossible: bool = False
 
     @property
     def last_semester(self) -> int:
@@ -140,6 +161,15 @@ class Plan:
     @property
     def objective_by_level(self) -> list[tuple[str, int]]:
         return label_objective(self.objective)
+
+    @property
+    def optimization(self) -> str:
+        """Machine-readable optimization status for reports."""
+        if self.optimal:
+            return "proven_optimal"
+        if not self.objective:
+            return "unoptimized"
+        return "not_proven_optimal"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -175,11 +205,25 @@ class Plan:
             "must": self.must,
             "passed": self.passed,
             "credited": self.credited,
-            "pending": self.pending,
+            "ready_to_graduate": self.ready_to_graduate,
+            "assumed_pass": self.assumed_pass,
+            "graduation_blocked": self.graduation_blocked,
+            "external_missed": self.ext_missed,
+            "external_pending": self.ext_pending,
+            "major_earned": self.major_earned,
+            "major_counts": dict(self.major_counts),
+            "declared_major": self.declared_major,
+            "default_major": self.default_major,
+            "gpa_best_case": self.gpa_best_case,
+            "gpa_required_avg": self.gpa_required_avg,
+            "gpa_already_satisfied": self.gpa_already_satisfied,
+            "gpa_requirement_impossible": self.gpa_requirement_impossible,
             "objective": dict(self.objective_by_level),
             "objective_vector": list(self.objective),
             "priority": list(self.priority),
             "optimal": self.optimal,
+            "optimization": self.optimization,
+            "runtime_seconds": round(self.runtime, 3),
             "status": self.status,
         }
 
@@ -236,10 +280,28 @@ def model_to_plan(
     degree_complete = False
     gpa: int | None = None
     gpas: dict[str, int] = {}
+    gpa_best_case: int | None = None
+    gpa_required_avg: int | None = None
+    gpa_already_satisfied = False
+    gpa_requirement_impossible = False
     must: list[str] = []
     passed: list[str] = []
     credited: list[str] = []
-    pending: list[str] = []
+    ready_to_graduate = False
+    assumed_pass: list[str] = []
+    graduation_blocked: list[str] = []
+    ext_missed: list[dict[str, Any]] = []
+    ext_pending: list[dict[str, Any]] = []
+    major_earned: list[str] = []
+    major_counts: dict[str, int] = {}
+    declared_major: str | None = None
+    major_titles = {
+        str(major.get("id", "")).strip().upper(): str(
+            major.get("name", major.get("id", ""))
+        )
+        for major in curriculum.get("majors", [])
+        if major.get("id") is not None
+    }
 
     for symbol in solution.symbols:
         name = getattr(symbol, "name", "")
@@ -288,9 +350,41 @@ def model_to_plan(
         elif name == "credited" and arguments:
             code, _, _, _ = _course_display(str(arguments[0]), catalog)
             credited.append(code)
-        elif name == "pending" and arguments:
+        elif name == "ready_to_graduate":
+            ready_to_graduate = True
+        elif name == "assumed_pass" and arguments:
             code, _, _, _ = _course_display(str(arguments[0]), catalog)
-            pending.append(code)
+            assumed_pass.append(code)
+        elif name == "graduation_blocked" and arguments:
+            graduation_blocked.append(str(arguments[0]))
+        elif name == "ext_missed" and len(arguments) >= 2:
+            ext_missed.append(
+                {"requirement": str(arguments[0]), "year": int(str(arguments[1]))}
+            )
+        elif name == "ext_pending" and len(arguments) >= 3:
+            ext_pending.append(
+                {
+                    "requirement": str(arguments[0]),
+                    "year": int(str(arguments[1])),
+                    "missing": int(str(arguments[2])),
+                }
+            )
+        elif name == "major_earned" and arguments:
+            key = str(arguments[0]).strip().upper()
+            major_earned.append(key)
+        elif name == "major_count" and len(arguments) >= 2:
+            key = str(arguments[0]).strip().upper()
+            major_counts[key] = int(str(arguments[1]))
+        elif name == "student_major" and arguments:
+            declared_major = str(arguments[0]).strip().upper()
+        elif name == "gpa_best_case" and arguments:
+            gpa_best_case = int(str(arguments[0]))
+        elif name == "gpa_required_avg" and arguments:
+            gpa_required_avg = int(str(arguments[0]))
+        elif name == "gpa_already_satisfied":
+            gpa_already_satisfied = True
+        elif name == "gpa_requirement_impossible":
+            gpa_requirement_impossible = True
 
     if gpa is None and gpas:
         preferred = asp_name(policy.default_scale)
@@ -346,12 +440,35 @@ def model_to_plan(
         priority=list(solution.priority),
         optimal=solution.optimal,
         status=solution.status,
+        runtime=solution.runtime,
         gpa_by_scale=dict(gpas),
         total_cost=total_cost,
         total_attempted=total_attempted,
         passed=sorted(passed),
         credited=sorted(credited),
-        pending=sorted(pending),
+        ready_to_graduate=ready_to_graduate,
+        assumed_pass=sorted(assumed_pass),
+        graduation_blocked=sorted(graduation_blocked),
+        ext_missed=sorted(
+            ext_missed, key=lambda item: (item["requirement"], item["year"])
+        ),
+        ext_pending=sorted(
+            ext_pending,
+            key=lambda item: (item["requirement"], item["year"]),
+        ),
+        major_earned=sorted(major_earned),
+        major_counts=dict(sorted(major_counts.items())),
+        major_titles=major_titles,
+        declared_major=declared_major,
+        default_major=(
+            str(curriculum.get("default_major"))
+            if curriculum.get("default_major") is not None
+            else None
+        ),
+        gpa_best_case=gpa_best_case,
+        gpa_required_avg=gpa_required_avg,
+        gpa_already_satisfied=gpa_already_satisfied,
+        gpa_requirement_impossible=gpa_requirement_impossible,
     )
 
 
@@ -367,8 +484,15 @@ def plans_from_solutions(
         model_to_plan(solution, curriculum, policy)
         for solution in satisfiable
     ]
-    plans.sort(
-        key=lambda plan: (
+    def plan_sort_key(plan: Plan) -> tuple:
+        if plan.optimal:
+            rank = 0
+        elif plan.objective:
+            rank = 1
+        else:
+            rank = 2
+        return (
+            rank,
             tuple(plan.objective),
             plan.last_semester,
             len(plan.semesters),
@@ -377,7 +501,8 @@ def plans_from_solutions(
                 for semester in plan.semesters
             ),
         )
-    )
+
+    plans.sort(key=plan_sort_key)
     return plans
 
 
@@ -392,9 +517,26 @@ ASP_DIR = Path(__file__).resolve().parent
 class SolverOptions:
     """Typed clingo options.
 
-    ``plans`` is the number of distinct plans to keep (0 means all optimal
-    models).  Optimization always uses ``--opt-mode=optN`` so intermediate,
-    non-optimal models are never reported as candidate plans.
+    ``plans`` is the number of distinct plans to keep (default 3; 0 means all
+    models).  ``opt_mode`` selects clingo's search strategy:
+
+    * ``optN`` (default) - prove optimality, then return up to ``plans``
+      optimal models.
+    * ``opt`` - compatibility alias for ``optN``; it also returns up to
+      ``plans`` models instead of stopping at one.
+    * ``ignore`` - return up to ``plans`` models without optimizing.
+
+    If optimized mode finds fewer than ``plans`` distinct optimal models, it
+    fills the remaining slots with non-optimal models and marks them as such
+    (set ``fill=False`` to return only proven-optimal models).  ``time_limit``
+    stops the search after the given number of seconds.  It is a soft limit:
+    clingo checks it between propagation steps, and a single long step can
+    overshoot it.  The CLI additionally supervises a real solve in a child
+    process with a hard wall clock.  Any model found before the limit is
+    returned with ``optimal=False`` unless optimality was already proven.
+    ``extra_facts`` and ``extra_program`` append scenario facts or rules (for
+    example a temporary objective) after plan.lp.  ``progress`` prints improving
+    objectives to stderr while the search runs.
     """
 
     horizon: int | None = None
@@ -408,6 +550,12 @@ class SolverOptions:
     seed: int | None = None
     budget: int | None = None
     objective_scale: str | None = None
+    opt_mode: str = "optN"
+    time_limit: float | None = None
+    progress: bool = False
+    fill: bool = True
+    extra_facts: tuple[str, ...] = field(default_factory=tuple)
+    extra_program: tuple[str, ...] = field(default_factory=tuple)
     extra_args: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -417,6 +565,17 @@ def _read_source(path: Path) -> str:
 
 def _symbol_key(symbols: list[clingo.Symbol]) -> tuple[str, ...]:
     return tuple(sorted(str(symbol) for symbol in symbols))
+
+
+def _solution_sort_key(solution: Solution) -> tuple:
+    """Proven plans first, then candidates by objective, then unoptimized."""
+    if solution.optimal:
+        rank = 0
+    elif solution.objective:
+        rank = 1
+    else:
+        rank = 2
+    return rank, tuple(solution.full_objective())
 
 
 def _merge_solutions(solutions: list[Solution]) -> list[Solution]:
@@ -443,16 +602,30 @@ def solve(
 ) -> list[Solution]:
     """Run clingo on encoding + policy + extension + curriculum + student + plan."""
     options = options or SolverOptions()
+    if options.opt_mode not in {"optN", "opt", "ignore"}:
+        raise ValueError(
+            "opt_mode must be one of 'optN', 'opt' or 'ignore'"
+        )
+    if options.plans < 0:
+        raise ValueError("plans must be >= 0")
+    if options.time_limit is not None and options.time_limit <= 0:
+        raise ValueError("time_limit must be > 0")
 
-    arguments = ["--opt-mode=optN", "--warn=none"]
+    # ``opt`` is kept as a compatibility alias.  It used to stop after one
+    # optimal model, but the CLI contract now asks for up to ``plans`` plans.
+    # ``optN`` provides that while still proving optimality.
+    opt_mode = "optN" if options.opt_mode == "opt" else options.opt_mode
+    started = time.perf_counter()
+
+    common_arguments: list[str] = []
     if options.horizon is not None:
-        arguments.append(f"-c n={options.horizon}")
+        common_arguments.append(f"-c n={options.horizon}")
     if options.studied_terms is not None:
-        arguments.append(f"-c t={options.studied_terms}")
+        common_arguments.append(f"-c t={options.studied_terms}")
     if options.min_load is not None:
-        arguments.append(f"-c min_load={options.min_load}")
+        common_arguments.append(f"-c min_load={options.min_load}")
     if options.max_load is not None:
-        arguments.append(f"-c max_load={options.max_load}")
+        common_arguments.append(f"-c max_load={options.max_load}")
     summer_min = (
         options.summer_min_load
         if options.summer_min_load is not None
@@ -464,16 +637,15 @@ def solve(
         else options.max_load
     )
     if summer_min is not None:
-        arguments.append(f"-c min_load_summer={summer_min}")
+        common_arguments.append(f"-c min_load_summer={summer_min}")
     if summer_max is not None:
-        arguments.append(f"-c max_load_summer={summer_max}")
+        common_arguments.append(f"-c max_load_summer={summer_max}")
     if options.shift is not None:
-        arguments.append(f"-c shift={options.shift}")
+        common_arguments.append(f"-c shift={options.shift}")
     if options.seed is not None:
-        arguments.append(f"--seed={options.seed}")
-    arguments.extend(options.extra_args)
+        common_arguments.append(f"--seed={options.seed}")
+    common_arguments.extend(options.extra_args)
 
-    control = clingo.Control(arguments)
     # Pass source text instead of file paths: clingo's native loader can fail
     # on Windows paths containing non-ASCII characters.
     sources = [
@@ -484,19 +656,62 @@ def solve(
         Path(student_path),
         ASP_DIR / "plan.lp",
     ]
-    for path in sources:
-        control.add("base", [], _read_source(path))
 
-    if options.budget is not None:
-        control.add("base", [], f"budget({int(options.budget)}).")
-    if options.objective_scale is not None:
-        control.add("base", [], f"objective_scale({options.objective_scale}).")
+    def build_control(
+        mode: str,
+        models: int | None = None,
+    ) -> clingo.Control:
+        arguments = [f"--opt-mode={mode}", "--warn=none"]
+        if models is not None:
+            arguments.append(f"--models={models}")
+        arguments.extend(common_arguments)
+        control = clingo.Control(arguments)
+        for path in sources:
+            control.add("base", [], _read_source(path))
+        if options.budget is not None:
+            control.add("base", [], f"budget({int(options.budget)}).")
+        if options.objective_scale is not None:
+            control.add(
+                "base", [], f"objective_scale({options.objective_scale})."
+            )
+        for fact in options.extra_facts:
+            control.add("base", [], fact)
+        for program in options.extra_program:
+            control.add("base", [], program)
+        ground_started = time.perf_counter()
+        control.ground([("base", [])])
+        if options.progress:
+            print(
+                f"[clingo] grounded in {time.perf_counter() - ground_started:.2f}s",
+                file=sys.stderr,
+                flush=True,
+            )
+        return control
 
-    control.ground([("base", [])])
+    # The Python API otherwise stops after one model.  ``0`` means all models;
+    # optN controls its own stopping point through the model callback.
+    primary_models: int | None = None
+    if opt_mode == "ignore" or options.plans == 0:
+        primary_models = options.plans
+    control = build_control(opt_mode, primary_models)
     proven: list[Solution] = []
     fallback: list[Solution] = []
+    model_count = 0
+
+    if options.progress:
+        limit = (
+            "none" if options.time_limit is None else f"{options.time_limit:g}s"
+        )
+        print(
+            f"[clingo] start opt-mode={opt_mode} "
+            f"plans={options.plans} time-limit={limit}",
+            file=sys.stderr,
+            flush=True,
+        )
 
     def on_model(model: clingo.Model) -> bool | None:
+        nonlocal model_count
+        model_count += 1
         solution = Solution(
             symbols=list(model.symbols(shown=True)),
             objective=list(model.cost),
@@ -504,30 +719,161 @@ def solve(
             optimal=bool(model.optimality_proven),
         )
         fallback.append(solution)
+
+        if options.progress:
+            kind = "optimal" if solution.optimal else "candidate"
+            objective = (
+                " ".join(str(value) for value in solution.objective) or "n/a"
+            )
+            print(
+                f"[clingo] {kind} model {model_count} "
+                f"at {time.perf_counter() - started:.2f}s: {objective}",
+                file=sys.stderr,
+                flush=True,
+            )
+
         if not solution.optimal:
-            # optN may still report improving models while it searches.  They
-            # are not candidates: only a proven-optimal snapshot is kept.
+            # In optN clingo reports improving models while it searches; they
+            # are not candidates.  Ignore mode has no proof to wait for, so
+            # stop after the requested number of models.
+            if (
+                opt_mode == "ignore"
+                and options.plans > 0
+                and len(fallback) >= options.plans
+            ):
+                return False
             return None
         proven.append(solution)
         if options.plans > 0 and len(proven) >= options.plans:
             return False  # optimum is proven; enough alternative plans
         return None
 
-    result = control.solve(on_model=on_model)
-    if not result.satisfiable:
-        status = "UNKNOWN" if result.unknown else "UNSATISFIABLE"
-        return [Solution(status=status)]
+    handle = control.solve(on_model=on_model, async_=True)
+    timed_out = False
+    if options.time_limit is not None:
+        if not handle.wait(options.time_limit):
+            timed_out = True
+            if options.progress:
+                print(
+                    f"[clingo] time limit {options.time_limit:g}s reached at "
+                    f"{time.perf_counter() - started:.2f}s; stopping the search",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            handle.cancel()
+        elif options.progress:
+            print(
+                f"[clingo] search wait returned at "
+                f"{time.perf_counter() - started:.2f}s",
+                file=sys.stderr,
+                flush=True,
+            )
+
+    try:
+        result = handle.get()
+    except RuntimeError:
+        if not timed_out:
+            raise
+        result = None
+    if options.progress:
+        print(
+            f"[clingo] search finished at {time.perf_counter() - started:.2f}s",
+            file=sys.stderr,
+            flush=True,
+        )
+
+    satisfiable = bool(result is not None and result.satisfiable)
+    unknown = bool(result.unknown) if result is not None else True
+    elapsed = time.perf_counter() - started
+    if not satisfiable and not proven and not fallback:
+        status = "UNKNOWN" if (unknown or timed_out) else "UNSATISFIABLE"
+        return [Solution(status=status, runtime=elapsed)]
 
     if proven:
         solutions = _merge_solutions(proven)
+        for solution in solutions:
+            solution.optimal = True
+        # If the instance has fewer optimal models than requested, fill the
+        # remaining slots with distinct non-optimal answer sets seen during
+        # the same search.  They are explicitly marked as candidates.
+        if options.fill and options.plans > 0 and len(solutions) < options.plans:
+            seen = {_symbol_key(solution.symbols) for solution in solutions}
+            for extra in _merge_solutions(fallback):
+                key = _symbol_key(extra.symbols)
+                if key in seen:
+                    continue
+                extra.optimal = False
+                solutions.append(extra)
+                seen.add(key)
+                if len(solutions) >= options.plans:
+                    break
+
+        # A completed optN search can still expose fewer distinct answer sets
+        # than requested (for example, one optimal plan and one improving
+        # snapshot).  Enumerate additional unoptimized models to fill the plan
+        # list; they are labelled as unoptimized.
+        if (
+            options.fill
+            and options.plans > 0
+            and len(solutions) < options.plans
+            and not timed_out
+        ):
+            remaining = options.plans - len(solutions)
+            seen = {_symbol_key(solution.symbols) for solution in solutions}
+            extras: list[Solution] = []
+
+            def on_fill_model(model: clingo.Model) -> bool | None:
+                symbols = list(model.symbols(shown=True))
+                key = _symbol_key(symbols)
+                if key in seen:
+                    return None
+                extras.append(Solution(symbols=symbols, optimal=False))
+                seen.add(key)
+                if len(extras) >= remaining:
+                    return False
+                return None
+
+            fill_control = build_control("ignore", 0)
+            fill_handle = fill_control.solve(
+                on_model=on_fill_model, async_=True
+            )
+            fill_limit = 10.0
+            if options.time_limit is not None:
+                fill_limit = min(fill_limit, options.time_limit)
+            if not fill_handle.wait(fill_limit):
+                fill_handle.cancel()
+            try:
+                fill_handle.get()
+            except RuntimeError:
+                pass
+            if options.progress and extras:
+                print(
+                    f"[clingo] filled {len(extras)} unoptimized plan(s)",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            solutions.extend(extras)
     else:
-        # Search stopped (interrupt/limit) before optimality was proven.  Keep
-        # the best improving snapshot but mark it honestly as not proven.
+        # Search stopped (interrupt/limit, or ignore mode) before optimality
+        # was proven.  Keep the best snapshots but mark them honestly as not
+        # proven.
         solutions = _merge_solutions(fallback)
         for solution in solutions:
             solution.optimal = False
 
-    solutions.sort(key=lambda solution: tuple(solution.full_objective()))
+    elapsed = time.perf_counter() - started
+    solutions.sort(key=_solution_sort_key)
     if options.plans > 0:
         solutions = solutions[: options.plans]
+    if not solutions:
+        return [Solution(status="UNKNOWN", runtime=elapsed)]
+    for solution in solutions:
+        solution.runtime = elapsed
+    if options.progress and timed_out:
+        print(
+            f"[clingo] returning {len(solutions)} model(s) found before the "
+            "time limit",
+            file=sys.stderr,
+            flush=True,
+        )
     return solutions

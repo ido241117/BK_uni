@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal
 
-from data_tools.policy import audit_all
+from data_tools.model import Attempt, Expected
+from data_tools.policy import audit_all, audit_student
 
 
 def _audit(audits, student_id):
@@ -22,10 +24,15 @@ def test_every_expected_value_matches(bundle):
     assert failures == {}
 
 
-def test_baseline_retakes_cap_and_p_w_grades(bundle):
+def test_baseline_retakes(bundle):
     audit = _audit(audit_all(bundle), "S001")
-    assert set(audit.counted_attempt_ids) == {"S001-01", "S001-03", "S001-06", "S001-07"}
-    assert audit.effective_grades == {"S001-06": "B", "S001-07": "B"}
+    assert set(audit.counted_attempt_ids) == {
+        "S001-01",
+        "S001-03",
+        "S001-05",
+        "S001-06",
+    }
+    assert audit.effective_grades == {"S001-05": "B", "S001-06": "B"}
     assert audit.gpa_credits == 11
     assert audit.grade_points == Decimal("36.00")
     assert audit.cgpa == Decimal("3.27")
@@ -35,6 +42,48 @@ def test_baseline_retakes_cap_and_p_w_grades(bundle):
     assert audit.major_name == "Computer Science"
 
 
+def test_pass_fail_result_earns_credit_without_gpa(bundle):
+    base = bundle.students[0]
+    attempts = (
+        Attempt(
+            attempt_id="S001-01",
+            course="CO1005",
+            term="2024-1",
+            grade=None,
+            result="passed",
+            course_kind="regular",
+            order=0,
+        ),
+    )
+    expected = Expected(
+        as_of_term="2024-1",
+        counted_attempts=("S001-01",),
+        effective_grades={},
+        gpa_credits=0,
+        grade_points=Decimal("0.00"),
+        cgpa=Decimal("0.00"),
+        credits_earned=3,
+        external_totals={
+            requirement.id: 0
+            for requirement in bundle.graduation.external_requirements
+        },
+    )
+    student = replace(
+        base,
+        attempts=attempts,
+        external_progress=(),
+        expected=expected,
+    )
+
+    audit = audit_student(bundle, student)
+    assert audit.expected_check.ok
+    assert audit.counted_attempt_ids == ("S001-01",)
+    assert audit.credits_earned == 3
+    assert audit.gpa_credits == 0
+    assert audit.grade_points == Decimal("0.00")
+    assert audit.effective_grades == {}
+
+
 def test_rounding_boundary_uses_half_up(bundle):
     audit = _audit(audit_all(bundle), "S002")
     assert audit.grade_points == Decimal("25.00")
@@ -42,24 +91,39 @@ def test_rounding_boundary_uses_half_up(bundle):
     assert audit.cgpa == Decimal("3.13")
 
 
-def test_fourth_attempt_is_ignored_by_max_attempts(bundle):
+def test_fourth_attempt_counts_and_is_capped(bundle):
     audit = _audit(audit_all(bundle), "S003")
     by_id = {item.attempt.attempt_id: item for item in audit.evaluations}
-    assert by_id["S003-04"].valid is False
-    assert by_id["S003-04"].selected is False
-    assert audit.counted_attempt_ids == ("S003-03",)
-    assert audit.effective_grades == {"S003-03": "C"}
+    assert by_id["S003-04"].selected is True
+    assert by_id["S003-04"].cap_applied is True
+    assert audit.counted_attempt_ids == ("S003-04",)
+    assert audit.effective_grades == {"S003-04": "B"}
     assert audit.gpa_credits == 3
-    assert audit.grade_points == Decimal("6.00")
-    assert audit.cgpa == Decimal("2.00")
+    assert audit.grade_points == Decimal("9.00")
+    assert audit.cgpa == Decimal("3.00")
     assert audit.credits_earned == 3
 
 
-def test_retake_above_c_is_ineligible(bundle):
+def test_retake_grade_is_capped(bundle):
     audit = _audit(audit_all(bundle), "S004")
     by_id = {item.attempt.attempt_id: item for item in audit.evaluations}
-    assert by_id["S004-02"].valid is False
+    assert by_id["S004-02"].selected is True
+    assert by_id["S004-02"].cap_applied is True
+    assert set(audit.counted_attempt_ids) == {"S004-02", "S004-03"}
+    assert audit.effective_grades == {"S004-02": "B"}
+    assert audit.gpa_credits == 6
+    assert audit.grade_points == Decimal("18.00")
+    assert audit.cgpa == Decimal("3.00")
+
+
+def test_best_selection_uses_highest_effective_grade(bundle):
+    policy = replace(bundle.policy, gpa_attempt_selection="best")
+    best_bundle = replace(bundle, policy=policy)
+    audit = _audit(audit_all(best_bundle), "S004")
+    by_id = {item.attempt.attempt_id: item for item in audit.evaluations}
+    assert by_id["S004-01"].selected is True
     assert by_id["S004-02"].selected is False
+    assert audit.effective_grades == {}
     assert set(audit.counted_attempt_ids) == {"S004-01", "S004-03"}
     assert audit.gpa_credits == 6
     assert audit.grade_points == Decimal("19.50")

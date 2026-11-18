@@ -124,8 +124,7 @@ def _check_cohort(
 # Policy switches the ASP layer really implements
 # ---------------------------------------------------------------------------
 SUPPORTED_POLICY_SWITCHES: dict[str, set[str]] = {
-    "gpa_attempt_selection": {"latest"},
-    "credit_counting": {"once_per_course"},
+    "gpa_attempt_selection": {"latest", "best"},
     "equivalence": {"use_course_equivalents"},
 }
 
@@ -133,8 +132,9 @@ SUPPORTED_POLICY_SWITCHES: dict[str, set[str]] = {
 def validate_policy_support(policy: Policy) -> None:
     """Refuse policy switches that the ASP rules cannot honour.
 
-    The switches are echoed as comments in policy.lp but the rules hard-wire
-    one behaviour; silently accepting another value would do nothing.
+    The switches are echoed as facts in policy.lp, but the ASP rules only
+    implement the values listed here; silently accepting another value would
+    do nothing.
     """
     for attribute, supported in SUPPORTED_POLICY_SWITCHES.items():
         value = getattr(policy, attribute, None)
@@ -164,9 +164,17 @@ def _offered_slots(course: dict[str, Any]) -> tuple[int, ...]:
     return tuple(sorted(terms))
 
 
-def _course_level(course_id: str) -> int | None:
-    """Return the course level from the first digit in its code."""
-    match = re.search(r"\d", course_id)
+def _course_level(course: dict[str, Any]) -> int | None:
+    """Return the course level.
+
+    An explicit ``level`` field wins.  Otherwise the first digit in the course
+    id is used, which is the convention for the current BK codes.  A dataset
+    whose codes do not encode a level can omit both; the level-order objective
+    simply has nothing to sort by.
+    """
+    if course.get("level") is not None:
+        return int(course["level"])
+    match = re.search(r"\d", str(course.get("id", "")))
     return int(match.group(0)) if match else None
 
 
@@ -216,6 +224,26 @@ def _group_upper_bound(
 def _require_course(courses: dict[str, Any], course_id: str, where: str) -> None:
     if course_id not in courses:
         raise ValueError(f"{where}: unknown course {course_id!r}")
+
+
+def curriculum_file_stem(curriculum: dict[str, Any] | None) -> str:
+    """Return the generated-file stem for ``curriculum``.
+
+    The curriculum id is the stable machine identifier, so the default file
+    name follows it (``cs_2023`` -> ``cs-2023.lp``).  A dataset may override
+    this with an explicit ``file_stem`` (or ``slug``) when its id is not a
+    convenient file name.
+
+    Display names are intentionally not used: they can contain spaces,
+    punctuation or non-ASCII characters, which makes cross-platform file
+    names fragile.
+    """
+    data = curriculum or {}
+    raw = data.get("file_stem") or data.get("slug") or data.get("id") or "curriculum"
+    stem = str(raw).strip().lower().replace("_", "-")
+    stem = re.sub(r"[^0-9a-z._-]+", "-", stem)
+    stem = re.sub(r"-+", "-", stem).strip("-._")
+    return stem or "curriculum"
 
 
 def curriculum_aliases(curriculum: dict[str, Any] | None) -> dict[str, str]:
@@ -349,9 +377,16 @@ def build_curriculum(curriculum: dict[str, Any], policy: Policy | None = None) -
 
     group_rows.sort(key=lambda row: row["atom"])
 
+    curriculum_id = str(curriculum.get("id") or curriculum_file_stem(curriculum))
+    curriculum_name = str(curriculum.get("name") or curriculum_id).replace("\n", " ")
+
     lines: list[str] = []
     lines.append("% " + "=" * 69)
-    lines.append("% cs-2023.lp : curriculum data and mappings")
+    lines.append("% curriculum data and mappings")
+    lines.append(f"% Curriculum: {curriculum_name} ({curriculum_id})")
+    lines.append(
+        f"% Default file name: {curriculum_file_stem(curriculum)}.lp"
+    )
     lines.append("% Generated from curriculum.json by the planner CLI -- do not edit by hand.")
     lines.append("% Load together with policy.lp, encoding.lp, extension.lp and plan.lp.")
     lines.append("% " + "=" * 69)
@@ -404,7 +439,7 @@ def build_curriculum(curriculum: dict[str, Any], policy: Policy | None = None) -
     lines.append("% " + "-" * 66)
     by_level: dict[int, list[str]] = defaultdict(list)
     for cid in sorted(courses, key=str.lower):
-        level = _course_level(cid)
+        level = _course_level(courses[cid])
         if level is not None:
             by_level[level].append(course_atom[cid])
     for level in sorted(by_level):
@@ -590,7 +625,6 @@ def build_policy(
     lines.append("% " + "-" * 66)
     lines.append("% Planner constants")
     lines.append("% " + "-" * 66)
-    lines.append(f"#const maxtries = {policy.max_attempts}.")
     lines.append(f"#const min_load = {planning['min_load']}.")
     lines.append(f"#const max_load = {planning['max_load']}.")
     lines.append(f"#const min_load_summer = {planning['summer_min_load']}.")
@@ -619,17 +653,14 @@ def build_policy(
     lines.append("% " + "-" * 66)
     lines.append("% Grade scale")
     lines.append("% " + "-" * 66)
-    for rank, grade in enumerate(policy.grades):
+    for grade in policy.grades:
         atom = asp_grade_name(grade.symbol)
         lines.append(_fact("grade", atom))
         lines.append(_fact("grade_symbol", atom, _quote(grade.symbol)))
-        lines.append(_fact("grade_rank", atom, rank))
         if grade.passing:
             lines.append(_fact("grade_passing", atom))
         if grade.earns_credit:
             lines.append(_fact("grade_earns_credit", atom))
-        if grade.provisional:
-            lines.append(_fact("grade_provisional", atom))
         for scale in policy.scales:
             scale_atom = asp_name(scale.id)
             value = grade.value_for(scale, policy.default_scale)
@@ -644,6 +675,8 @@ def build_policy(
                 lines.append(_fact("grade_points", atom, scaled))
                 if grade.in_gpa:
                     lines.append(_fact("grade_in_gpa", atom))
+    for rank, grade in enumerate(policy.grades):
+        lines.append(_fact("grade_rank", asp_grade_name(grade.symbol), rank))
     lines.append("")
 
     lines.append("% " + "-" * 66)
@@ -656,19 +689,11 @@ def build_policy(
     lines.append("% " + "-" * 66)
     lines.append("% Retake policy")
     lines.append("% " + "-" * 66)
-    if policy.retake_eligibility_max_grade is not None:
-        lines.append(
-            _fact(
-                "retake_eligibility",
-                asp_grade_name(policy.retake_eligibility_max_grade),
-            )
-        )
-    if policy.retake_grade_cap is not None:
-        lines.append(
-            _fact("retake_grade_cap", asp_grade_name(policy.retake_grade_cap))
-        )
     lines.append(f"% gpa_attempt_selection = {policy.gpa_attempt_selection}")
-    lines.append(f"% credit_counting = {policy.credit_counting}")
+    lines.append(_fact("gpa_attempt_selection", asp_name(policy.gpa_attempt_selection)))
+    if policy.retake_grade_cap is not None:
+        lines.append(f"% grade cap on retakes = {policy.retake_grade_cap}")
+        lines.append(_fact("retake_grade_cap", asp_grade_name(policy.retake_grade_cap)))
     lines.append(f"% equivalence = {policy.equivalence}")
     lines.append("")
 
@@ -771,7 +796,10 @@ belong to the compiled policy facts.  It does validate that every grade,
 course and result is known, so a typo cannot silently turn into a failed or
 missing course.
 
-Student record fields understood here (all but the first three optional):
+Student records are accepted either as schema-v1 nested objects or as
+schema-v2 tables linked by student_id; ``normalize_student_history`` folds the
+tables into one record.  Fields understood here (all but the first three
+optional):
 
     student_id, enrollment_term ("YYYY-P"), attempts[]
     as_of_term | expected.as_of_term     term the history is complete up to
@@ -786,7 +814,7 @@ Student record fields understood here (all but the first three optional):
 
 @dataclass(frozen=True)
 class NumberedAttempt:
-    """One kept attempt after numbering retakes among all registrations."""
+    """One recorded attempt after numbering retakes among all registrations."""
 
     course: str
     course_atom: str
@@ -811,7 +839,6 @@ class StudentFacts:
     budget: int | None
     major: str | None = None
     enroll_part: int = 1
-    warnings: tuple[str, ...] = ()
 
 
 _TERM_RE = re.compile(r"^(\d{4})-([1-3])$")
@@ -839,11 +866,91 @@ def term_to_index(term: str, enrollment_term: str) -> int:
     return index
 
 
+_STUDENT_TABLES = ("attempts", "external_progress", "expected")
+
+
+def normalize_student_history(
+    raw: dict[str, Any], source: str = "student_history.json"
+) -> dict[str, Any]:
+    """Return the nested student view used by the translator.
+
+    Schema version 2 stores history as related tables::
+
+        students[]           one row per student
+        attempts[]           one row per attempt, with student_id
+        external_progress[]  one row per progress entry, with student_id
+        expected[]           one result row per student, with student_id
+
+    Older nested files remain accepted.  This function folds the table rows
+    back into each student record so the rest of the translator has one shape
+    to handle.
+    """
+    if not isinstance(raw, dict) or not isinstance(raw.get("students"), list):
+        raise ValueError(f"{source}: expected an object with a students list")
+
+    has_tables = any(key in raw for key in _STUDENT_TABLES)
+    if not has_tables:
+        return raw
+
+    students: dict[str, dict[str, Any]] = {}
+    for index, row in enumerate(raw["students"]):
+        context = f"{source}.students[{index}]"
+        if not isinstance(row, dict):
+            raise ValueError(f"{context}: expected an object")
+        student_id = row.get("student_id")
+        if not student_id:
+            raise ValueError(f"{context}: missing student_id")
+        student_id = str(student_id)
+        if student_id in students:
+            raise ValueError(f"{context}: duplicate student_id {student_id!r}")
+        if any(key in row for key in _STUDENT_TABLES):
+            raise ValueError(
+                f"{context}: cannot mix table rows with nested {_STUDENT_TABLES} fields"
+            )
+        student = dict(row)
+        student["attempts"] = []
+        student["external_progress"] = []
+        students[student_id] = student
+
+    def merge(key: str) -> None:
+        rows = raw.get(key)
+        if rows is None:
+            return
+        if not isinstance(rows, list):
+            raise ValueError(f"{source}.{key}: expected a list")
+        for index, row in enumerate(rows):
+            context = f"{source}.{key}[{index}]"
+            if not isinstance(row, dict):
+                raise ValueError(f"{context}: expected an object")
+            student_id = row.get("student_id")
+            if not student_id:
+                raise ValueError(f"{context}: missing student_id")
+            student_id = str(student_id)
+            if student_id not in students:
+                raise ValueError(
+                    f"{context}: student_id {student_id!r} has no students[] row"
+                )
+            item = {name: value for name, value in row.items() if name != "student_id"}
+            if key == "expected":
+                if "expected" in students[student_id]:
+                    raise ValueError(
+                        f"{context}: duplicate expected row for {student_id!r}"
+                    )
+                students[student_id]["expected"] = item
+            else:
+                students[student_id][key].append(item)
+
+    for key in _STUDENT_TABLES:
+        merge(key)
+
+    normalized = dict(raw)
+    normalized["students"] = list(students.values())
+    return normalized
+
+
 def load_student_history(path: Path) -> dict[str, Any]:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
-    if not isinstance(raw, dict) or not isinstance(raw.get("students"), list):
-        raise ValueError(f"{path}: expected an object with a students list")
-    return raw
+    return normalize_student_history(raw, str(path))
 
 
 def find_student(raw: dict[str, Any], student_id: str | None = None) -> dict[str, Any]:
@@ -872,14 +979,6 @@ def enrolled_program(curriculum: dict[str, Any] | None) -> str | None:
 def scaled_money(amount: Any, money_scale: int) -> int:
     """Convert an amount in the tuition money unit to fixed point (half up)."""
     return int((Decimal(str(amount)) * money_scale).to_integral_value(ROUND_HALF_UP))
-
-
-def _non_counting_symbols(policy: Policy | None) -> set[str]:
-    """Grade symbols that never become a GPA attempt (W plus provisional)."""
-    symbols = {"W"}
-    if policy is not None:
-        symbols |= {g.symbol.strip().upper() for g in policy.grades if g.provisional}
-    return symbols
 
 
 def _resolve_as_of(
@@ -918,15 +1017,16 @@ def _term_list(
     return result
 
 
-def _render_attempts(
-    numbered: list[NumberedAttempt],
-    non_counting: set[str],
-) -> list[str]:
-    """Render numbered attempts as ASP facts (shared by both entry points)."""
+def _render_attempts(numbered: list[NumberedAttempt]) -> list[str]:
+    """Render numbered attempts as ASP facts (shared by both entry points).
+
+    Every recorded attempt is kept: there is no eligibility or attempt-limit
+    filter, so each attempt emits its grade/result and participates in the
+    latest-attempt selection.
+    """
     lines: list[str] = []
     counts: dict[str, int] = defaultdict(int)
     last: dict[str, NumberedAttempt] = {}
-    last_graded: dict[str, NumberedAttempt] = {}
     gpa_last: dict[str, NumberedAttempt] = {}
 
     for attempt in numbered:
@@ -946,69 +1046,17 @@ def _render_attempts(
             lines.append(f"kind_known({attempt.attempt_atom}).")
         counts[attempt.course_atom] += 1
         last[attempt.course_atom] = attempt
-        symbol = str(attempt.grade).strip().upper() if attempt.grade else ""
-        if symbol != "W":
-            last_graded[attempt.course_atom] = attempt
-        if symbol and symbol not in non_counting:
+        if attempt.grade is not None:
             gpa_last[attempt.course_atom] = attempt
 
     if lines:
         lines.append("")
     for course_atom in sorted(counts):
         lines.append(f"attempt_count({course_atom}, {counts[course_atom]}).")
-        chosen = last_graded.get(course_atom, last[course_atom])
-        lines.append(f"last_attempt({course_atom}, {chosen.attempt_atom}).")
+        lines.append(f"last_attempt({course_atom}, {last[course_atom].attempt_atom}).")
     for course_atom in sorted(gpa_last):
         lines.append(f"gpa_last({course_atom}, {gpa_last[course_atom].attempt_atom}).")
     return lines
-
-
-def _exhausted_warnings(
-    numbered: list[NumberedAttempt],
-    curriculum: dict[str, Any] | None,
-    policy: Policy | None,
-) -> list[str]:
-    """Compulsory courses that can never be credited (no attempts left)."""
-    if curriculum is None or policy is None:
-        return []
-    compulsory = {
-        cid
-        for group in curriculum.get("groups", [])
-        if str(group.get("type", "")).lower() == "mandatory"
-        for cid in group.get("course_ids", [])
-    }
-    by_symbol = {g.symbol.strip().upper(): g for g in policy.grades}
-    per_course: dict[str, list[NumberedAttempt]] = defaultdict(list)
-    for attempt in numbered:
-        per_course[attempt.course].append(attempt)
-
-    warnings: list[str] = []
-    for course, attempts in sorted(per_course.items()):
-        if course not in compulsory or len(attempts) < int(policy.max_attempts):
-            continue
-
-        def earned(item: NumberedAttempt) -> bool:
-            if item.result is not None:
-                return item.result.strip().lower() == "passed"
-            grade = by_symbol.get(str(item.grade or "").strip().upper())
-            return bool(grade and grade.earns_credit)
-
-        if any(earned(item) for item in attempts):
-            continue
-        final = [a for a in attempts if str(a.grade or "").strip().upper() != "W"]
-        last = (final or attempts)[-1]
-        if last.result is not None:
-            failing = last.result.strip().lower() == "failed"
-        else:
-            grade = by_symbol.get(str(last.grade or "").strip().upper())
-            failing = grade is not None and not grade.provisional
-        if failing:
-            warnings.append(
-                f"{course} is compulsory with {len(attempts)} attempt(s) "
-                f"(limit {policy.max_attempts}) and no credit earned: the plan "
-                "is unsatisfiable until the registrar grants another attempt"
-            )
-    return warnings
 
 
 def student_to_facts(
@@ -1023,16 +1071,40 @@ def student_to_facts(
 ) -> StudentFacts:
     """Render one ``student_history.json`` record as ASP facts.
 
-    ``policy`` enables the cohort check, grade validation, the
-    withdrawal-counting switch and the provisional-grade list.
-    ``money_scale`` (``10**precision`` of the tuition policy) is required when
-    the student has a budget, which is given in the tuition money unit.
+    ``policy`` enables the cohort check and grade validation.  ``money_scale``
+    (``10**precision`` of the tuition policy) is required when the student has
+    a budget, which is given in the tuition money unit.
     ``strict`` raises on unknown courses; otherwise they are skipped.
     """
     enrollment_term = student.get("enrollment_term")
     if enrollment_term is None:
         raise ValueError("student record is missing enrollment_term")
     enroll_year, enroll_part = parse_term(enrollment_term)
+
+    if curriculum is not None:
+        declared_curriculum = student.get("curriculum_id")
+        expected_curriculum = curriculum.get("id")
+        if (
+            declared_curriculum is not None
+            and expected_curriculum is not None
+            and str(declared_curriculum) != str(expected_curriculum)
+        ):
+            raise ValueError(
+                f"student {student.get('student_id', '?')} declares curriculum "
+                f"{declared_curriculum!r} but the loaded curriculum is "
+                f"{expected_curriculum!r}"
+            )
+    if policy is not None:
+        declared_policy = student.get("grading_policy")
+        if (
+            declared_policy is not None
+            and str(declared_policy) != str(policy.policy_id)
+        ):
+            raise ValueError(
+                f"student {student.get('student_id', '?')} declares grading "
+                f"policy {declared_policy!r} but the loaded policy is "
+                f"{policy.policy_id!r}"
+            )
 
     if policy is not None:
         validate_policy_support(policy)
@@ -1071,6 +1143,11 @@ def student_to_facts(
             continue
         attempt["course"] = course
         grade = attempt.get("grade")
+        if grade is not None and attempt.get("result") is not None:
+            raise ValueError(
+                f"attempt #{order} ({course}): an attempt may have grade or "
+                "result, not both"
+            )
         if (
             grade is not None
             and known_grades is not None
@@ -1085,13 +1162,7 @@ def student_to_facts(
         attempt["order"] = order
         attempts_raw.append(attempt)
 
-    count_withdrawals = (
-        bool(getattr(policy, "count_withdrawals_as_attempts", True))
-        if policy is not None else True
-    )
-    numbered = prepare_attempts(
-        attempts_raw, withdrawn=() if count_withdrawals else ("W",)
-    )
+    numbered = prepare_attempts(attempts_raw)
 
     lines: list[str] = [
         f"% student {student.get('student_id', '?')}",
@@ -1099,7 +1170,7 @@ def student_to_facts(
         _fact("enroll_part_in", enroll_part),
         "",
     ]
-    lines.extend(_render_attempts(numbered, _non_counting_symbols(policy)))
+    lines.extend(_render_attempts(numbered))
 
     for progress in student.get("external_progress", []):
         term = progress.get("term")
@@ -1148,8 +1219,6 @@ def student_to_facts(
         scaled_budget = scaled_money(budget, money_scale)
         lines.append(_fact("budget", scaled_budget))
 
-    warnings = _exhausted_warnings(numbered, curriculum, policy)
-
     return StudentFacts(
         student_id=str(student.get("student_id", "")),
         facts="\n".join(lines) + "\n",
@@ -1160,34 +1229,21 @@ def student_to_facts(
         budget=scaled_budget,
         major=(asp_name(str(major)) if major is not None else None),
         enroll_part=enroll_part,
-        warnings=tuple(warnings),
     )
-
-
-def _is_withdrawn(attempt: dict[str, Any], withdrawn: set[str]) -> bool:
-    grade = attempt.get("grade")
-    return grade is not None and str(grade).strip().upper() in withdrawn
 
 
 def prepare_attempts(
     attempts: Iterable[dict[str, Any]],
-    withdrawn: Iterable[str] = (),
     aliases: dict[str, str] | None = None,
 ) -> list[NumberedAttempt]:
-    """Number retakes among kept attempts.
+    """Number retakes among the recorded attempts.
 
-    By default every registration is kept, including ``W``.  Pass
-    ``withdrawn=("W",)`` to drop withdrawals.  ``aliases`` maps equivalent
-    old course codes onto their canonical code *before* numbering, because
-    the attempt index decides what counts as a retake.
+    Every registration is kept.  ``aliases`` maps equivalent old course codes
+    onto their canonical code *before* numbering, because the attempt index
+    decides what counts as a retake.
     """
     aliases = aliases or {}
-    withdrawn_set = {str(value).strip().upper() for value in withdrawn}
-    kept = [
-        dict(attempt)
-        for attempt in attempts
-        if not _is_withdrawn(attempt, withdrawn_set)
-    ]
+    kept = [dict(attempt) for attempt in attempts]
 
     by_course: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for attempt in kept:
@@ -1240,13 +1296,11 @@ def prepare_attempts(
 
 def attempts_to_facts(
     attempts: Iterable[dict[str, Any]],
-    withdrawn: Iterable[str] = (),
     aliases: dict[str, str] | None = None,
-    policy: Policy | None = None,
 ) -> str:
     """Render attempt dictionaries as ASP facts."""
-    numbered = prepare_attempts(attempts, withdrawn=withdrawn, aliases=aliases)
-    lines = _render_attempts(numbered, _non_counting_symbols(policy))
+    numbered = prepare_attempts(attempts, aliases=aliases)
+    lines = _render_attempts(numbered)
     return "\n".join(lines) + ("\n" if lines else "")
 
 

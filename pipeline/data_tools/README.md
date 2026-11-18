@@ -95,9 +95,9 @@ output/
    - external requirement references,
    - expected-result references.
 2. `policy.py` applies the grading policy:
-   - latest valid attempt per course,
-   - retake eligibility and `max_attempts`,
-   - retake grade cap,
+   - cap each retake at `retake.grade_cap.max_grade` when configured,
+   - select the latest attempt or the highest effective grade
+     (`gpa_attempt_selection`),
    - GPA filtering by `course_kind`,
    - credit-weighted GPA with half-up rounding,
    - credits earned once per course,
@@ -106,25 +106,27 @@ output/
 3. `stats.py` aggregates the audit results into pandas tables.
 4. `exporters/` writes CSV, Markdown, HTML and chart files.
 
-The validation command checks every student's computed result against the
-`expected` block in `student_history.json`. A mismatch returns a non-zero exit
-code and prints the differing fields.
+The loader accepts both the row-oriented `schema_version: 2` file and legacy
+nested `schema_version: 1` records. The validation command checks every
+student's computed result against the matching row in the `expected[]` table
+of `student_history.json`. A mismatch returns a non-zero exit code and prints
+the differing fields.
 
 ## Policy assumptions
 
 These match the current dataset and README:
 
 - Attempts after `expected.as_of_term` are ignored.
-- The latest valid attempt per course is the one used for GPA.
-- A retake is allowed only when the previous valid grade is at or below
-  `retake.eligibility.only_if_grade_at_most`.
-- No more than `retake.max_attempts` valid attempts are considered.
-- Retake grades above `retake.grade_cap.max_grade` are capped using the grade
-  scale.
-- `effective_grades` contains selected retake attempts, including retakes whose
-  grade was already below the cap.
-- Credits are earned once per course and are not lost if a later retake is
-  selected.
+- Every recorded attempt is kept. `gpa_attempt_selection` chooses `latest`
+  (default) or `best` (highest effective grade, later attempt on ties).
+- There is no retake eligibility threshold or attempt limit. A configured
+  `retake.grade_cap` caps each retake attempt before selection; first attempts
+  are never capped.
+- `effective_grades` contains the effective (capped) grades of selected retake
+  attempts. Pass/fail attempts have no effective letter grade.
+- A `result: passed` attempt earns credit without entering the GPA; `failed`
+  earns no credit. Credit is earned once per course and is not lost if a later
+  retake is selected.
 - `end_of_year` external deadlines are mapped to term `(cohort + year - 1)-2`;
   `graduation` deadlines are reported as pending unless the milestone is already
   met.
@@ -142,4 +144,5 @@ python -m pytest data_tools/tests -q
 ```
 
 The tests cover loading, cross-reference rejection, all seven expected student
-results, retake/cap/rounding/major edge cases, and exporter smoke tests.
+results, retake/cap/selection/rounding/major edge cases, and exporter smoke
+tests.
