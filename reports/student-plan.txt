@@ -1,0 +1,239 @@
+PLAN 1 / 3
+==================================================================
+objective: last_semester=8, retakes=0, cost=79890, level_order=87, balance=21, taste=0 (not proven optimal)
+Solve time      : 102.55 s
+
+History: semester 1 (16 cr), semester 2 (17 cr) (33 attempted)
+
+Semester 3  (summer, 7 credits, scheduled total 40, fee 8.610 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2003    Data Structures and Algorithms                          4
+  SP1031    Marxist-Leninist Philosophy                             3
+
+Semester 4  (regular, 21 credits, scheduled total 61, fee 16.165 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2007    Computer Architecture                                   4
+  CO2011    Mathematical Modeling                                   3
+  CO2013    Database Systems                                        4
+  CO3001    Software Engineering                                    3
+  CO3139    Digital Transformation                                  3
+  ENG_GC    English Requirements for Graduation                     0
+  SA4001    Student Activities                                      0
+  SP1007    Introduction to Vietnamese Law                          2
+  SP1033    Marxist-Leninist Political Economy                      2
+
+Semester 5  (regular, 21 credits, scheduled total 82, fee 16.165 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2017    Operating Systems                                       3
+  CO2039    Advanced Programming                                    3
+  CO3017    Software Architecture                                   3
+  CO3033    Information System Security                             3
+  CO3083    Advanced Cryptography and Coding Theory                 3
+  LA1007    English 3                                               2
+  MT2013    Probability and Statistics                              4
+
+Semester 6  (summer, 8 credits, scheduled total 90, fee 9.840 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO3005    Principles of Programming Languages                     4
+  LA1009    English 4                                               2
+  SP1035    Scientific Socialism                                    2
+
+Semester 7  (regular, 19 credits, scheduled total 109, fee 14.555 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CH1003    General Chemistry                                       3
+  CO2001    Professional Skills for Engineers                       3
+  CO3093    Computer Networks                                       3
+  CO3107    Multidisciplinary Project - AI                          1
+  CO3335    Internship                                              2
+  CO4029    Specialized Project                                     2
+  IM3001    Business Administration for Engineers                   3
+  SP1039    History of Vietnamese Communist Party                   2
+
+Semester 8  (regular, 19 credits, scheduled total 128, fee 14.555 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO3021    Database Management Systems                             3
+  CO3041    Intelligent Systems                                     3
+  CO3049    Web Programming                                         3
+  CO3101    Programming Integration Project - AI                    1
+  CO3153    Computer Network Security Assessment                    3
+  CO4337    Capstone Project                                        4
+  SP1037    Ho Chi Minh Ideology                                    2
+
+------------------------------------------------------------------
+Planned credits : 95 (attempted)
+Total credits   : 128 / 128 (earned)
+Status          : COMPLETE
+GPA             : 3.16
+Graduation      : DEGREE COMPLETE (external requirements outstanding)
+Major           : Computer Science (default; no major declared)
+GPA best case   : 3.89
+GPA needed      : 2.41 on remaining credits
+Assumed passes  : CO1007, CO1027, LA1005, MT1005, MT1007, PH1007
+External        : social_work_days needs 3 more by year 1; social_work_days needs 6 more by year 2; social_work_days is below the graduation minimum
+Future tuition  : 79.890 million VND
+
+PLAN 2 / 3
+==================================================================
+objective: last_semester=8, retakes=0, cost=79890, level_order=90, balance=21, taste=0 (not proven optimal)
+Solve time      : 102.55 s
+
+History: semester 1 (16 cr), semester 2 (17 cr) (33 attempted)
+
+Semester 3  (summer, 7 credits, scheduled total 40, fee 8.610 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO3005    Principles of Programming Languages                     4
+  SP1031    Marxist-Leninist Philosophy                             3
+
+Semester 4  (regular, 21 credits, scheduled total 61, fee 16.165 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2007    Computer Architecture                                   4
+  CO2011    Mathematical Modeling                                   3
+  CO2013    Database Systems                                        4
+  CO3001    Software Engineering                                    3
+  CO3047    Advanced Computer Networks                              3
+  ENG_GC    English Requirements for Graduation                     0
+  SA4001    Student Activities                                      0
+  SP1007    Introduction to Vietnamese Law                          2
+  SP1033    Marxist-Leninist Political Economy                      2
+
+Semester 5  (regular, 21 credits, scheduled total 82, fee 16.165 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2017    Operating Systems                                       3
+  CO2039    Advanced Programming                                    3
+  CO3017    Software Architecture                                   3
+  CO3033    Information System Security                             3
+  CO3083    Advanced Cryptography and Coding Theory                 3
+  LA1007    English 3                                               2
+  MT2013    Probability and Statistics                              4
+
+Semester 6  (summer, 8 credits, scheduled total 90, fee 9.840 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2003    Data Structures and Algorithms                          4
+  LA1009    English 4                                               2
+  SP1035    Scientific Socialism                                    2
+
+Semester 7  (regular, 19 credits, scheduled total 109, fee 14.555 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CH1003    General Chemistry                                       3
+  CO2001    Professional Skills for Engineers                       3
+  CO3093    Computer Networks                                       3
+  CO3107    Multidisciplinary Project - AI                          1
+  CO3335    Internship                                              2
+  CO4029    Specialized Project                                     2
+  IM3001    Business Administration for Engineers                   3
+  SP1039    History of Vietnamese Communist Party                   2
+
+Semester 8  (regular, 19 credits, scheduled total 128, fee 14.555 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO3021    Database Management Systems                             3
+  CO3041    Intelligent Systems                                     3
+  CO3049    Web Programming                                         3
+  CO3101    Programming Integration Project - AI                    1
+  CO3153    Computer Network Security Assessment                    3
+  CO4337    Capstone Project                                        4
+  SP1037    Ho Chi Minh Ideology                                    2
+
+------------------------------------------------------------------
+Planned credits : 95 (attempted)
+Total credits   : 128 / 128 (earned)
+Status          : COMPLETE
+GPA             : 3.16
+Graduation      : DEGREE COMPLETE (external requirements outstanding)
+Major           : Computer Science (default; no major declared)
+GPA best case   : 3.89
+GPA needed      : 2.41 on remaining credits
+Assumed passes  : CO1007, CO1027, LA1005, MT1005, MT1007, PH1007
+External        : social_work_days needs 3 more by year 1; social_work_days needs 6 more by year 2; social_work_days is below the graduation minimum
+Future tuition  : 79.890 million VND
+
+PLAN 3 / 3
+==================================================================
+objective: last_semester=8, retakes=0, cost=79890, level_order=99, balance=21, taste=0 (not proven optimal)
+Solve time      : 102.55 s
+
+History: semester 1 (16 cr), semester 2 (17 cr) (33 attempted)
+
+Semester 3  (summer, 6 credits, scheduled total 39, fee 7.380 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CH1003    General Chemistry                                       3
+  SP1031    Marxist-Leninist Philosophy                             3
+
+Semester 4  (regular, 21 credits, scheduled total 60, fee 16.165 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2003    Data Structures and Algorithms                          4
+  CO2007    Computer Architecture                                   4
+  CO2039    Advanced Programming                                    3
+  CO3085    Natural Language Processing                             3
+  CO3117    Machine Learning                                        3
+  LA1007    English 3                                               2
+  SP1033    Marxist-Leninist Political Economy                      2
+
+Semester 5  (regular, 21 credits, scheduled total 81, fee 16.165 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2011    Mathematical Modeling                                   3
+  CO2017    Operating Systems                                       3
+  CO3001    Software Engineering                                    3
+  CO3037    Internet of Things Application Development              3
+  CO3059    Computer Graphics                                       3
+  CO3101    Programming Integration Project - AI                    1
+  IM1013    Economics                                               3
+  SP1035    Scientific Socialism                                    2
+
+Semester 6  (summer, 9 credits, scheduled total 90, fee 11.070 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO3115    Systems Analysis and Design                             3
+  CO3131    Next-gen Software Engineering                           3
+  CO4039    Biometric Security                                      3
+  ENG_GC    English Requirements for Graduation                     0
+
+Semester 7  (regular, 19 credits, scheduled total 109, fee 14.555 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2013    Database Systems                                        4
+  CO3089    Selected Topics in High Performance Computing           3
+  CO3093    Computer Networks                                       3
+  CO3109    Multidisciplinary Project - Software Engineering        1
+  CO3335    Internship                                              2
+  CO4029    Specialized Project                                     2
+  LA1009    English 4                                               2
+  SP1039    History of Vietnamese Communist Party                   2
+
+Semester 8  (regular, 19 credits, scheduled total 128, fee 14.555 million VND)
+  Code      Course name                                       Credits
+  --------  ------------------------------------------------  -------
+  CO2001    Professional Skills for Engineers                       3
+  CO3005    Principles of Programming Languages                     4
+  CO4337    Capstone Project                                        4
+  MT2013    Probability and Statistics                              4
+  SA4001    Student Activities                                      0
+  SP1007    Introduction to Vietnamese Law                          2
+  SP1037    Ho Chi Minh Ideology                                    2
+
+------------------------------------------------------------------
+Planned credits : 95 (attempted)
+Total credits   : 128 / 128 (earned)
+Status          : COMPLETE
+GPA             : 3.16
+Graduation      : DEGREE COMPLETE (external requirements outstanding)
+Major           : Computer Science (default; no major declared)
+GPA best case   : 3.89
+GPA needed      : 2.41 on remaining credits
+Assumed passes  : CO1007, CO1027, LA1005, MT1005, MT1007, PH1007
+External        : social_work_days needs 3 more by year 1; social_work_days needs 6 more by year 2; social_work_days is below the graduation minimum
+Future tuition  : 79.890 million VND

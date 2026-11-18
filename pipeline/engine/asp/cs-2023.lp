@@ -1,5 +1,7 @@
 % =====================================================================
-% cs-2023.lp : curriculum data and mappings
+% curriculum data and mappings
+% Curriculum: Computer Science 2023 (cs_2023)
+% Default file name: cs-2023.lp
 % Generated from curriculum.json by the planner CLI -- do not edit by hand.
 % Load together with policy.lp, encoding.lp, extension.lp and plan.lp.
 % =====================================================================

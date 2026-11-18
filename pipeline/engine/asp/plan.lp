@@ -100,16 +100,15 @@ total_met :- map(l, total_degree, L), total_credit(S), S >= L.
 degree_complete :- total_met, not any_group_unmet.
 
 % ---------------------------------------------------------------------
-% Minimum cumulative GPA (reachability gate)
+% Minimum cumulative GPA (planning target)
 %
-% Future grades are unknown, so the gate does not compare the *current* GPA
-% with the minimum (that would reject every student who is below it today
-% and still has terms to improve).  It asks whether the minimum is still
-% reachable: every course that is planned or still in progress is assumed
-% to earn the best GPA-bearing grade (the retake cap for retakes), and old
-% grades of courses that will be retaken are replaced.  The gate is a
-% necessary condition, not a promise; gpa_required_avg/1 reports what
-% average the remaining credits must reach.
+% Future grades are unknown, so the model does not compare the *current* GPA
+% with the minimum.  It reports the backward-calculated target: the average
+% the remaining GPA credits must reach for the rounded cumulative GPA to meet
+% the minimum.  That target is a planning guide, not a hard per-term
+% constraint, so students may have weaker semesters.  The only readiness test
+% is whether the minimum is still reachable; gpa_requirement_impossible/0
+% reports the edge cases where even the cap-aware best case falls short.
 % ---------------------------------------------------------------------
 planned_course(E)  :- in(X, s(I)), I > t, base(X, E).
 planned_retake(E)  :- in(rt(E, _), s(I)), I > t.
@@ -138,24 +137,43 @@ kept_num(N) :- default_scale(S),
 kept_den(D) :- default_scale(S),
     D = #sum{ C, E : gpa_sel(E, X), gpa_attempt(E, X, S), map(c, E, C),
                      not optimistic(E) }.
+% Only future courses with a GPA-bearing best case enter the optimistic GPA;
+% pass/fail or otherwise non-GPA credits must not dilute the denominator.
 fut_num(F) :- F = #sum{ C*P, E : optimistic(E), map(c, E, C), future_best(E, P) }.
-fut_den(F) :- F = #sum{ C, E : optimistic(E), map(c, E, C) }.
+fut_den(F) :- F = #sum{ C, E : optimistic(E), map(c, E, C), future_best(E, _) }.
 
 best_num(N) :- kept_num(K), fut_num(F), N = K + F.
 best_den(D) :- kept_den(K), fut_den(F), D = K + F.
 
-:- min_gpa(S, Min), default_scale(S), best_den(D), D > 0, best_num(N),
-   (2*N + D) / (2*D) < Min.
-
 gpa_best_case(G) :- best_den(D), D > 0, best_num(N), G = (2*N + D) / (2*D).
 
-% Average (same fixed-point scale as the GPA) that all remaining credits
+% Average (same fixed-point scale as the GPA) that the remaining GPA credits
 % must reach so that the rounded cumulative GPA meets the minimum.
-gpa_required_avg(R) :-
+gpa_target_raw(R) :-
     min_gpa(S, Min), default_scale(S), kept_num(K), kept_den(KD),
     fut_den(F), F > 0,
     Need = (2*Min*(KD + F) - (KD + F) + 1) / 2,
     R = (Need - K + F - 1) / F.
+
+% Clamp a non-positive target to zero: no extra GPA is needed.
+gpa_required_avg(R) :- gpa_target_raw(R), R >= 0.
+gpa_required_avg(0)  :- gpa_target_raw(R), R < 0.
+
+gpa_already_satisfied :- gpa_target_raw(R), R <= 0.
+gpa_already_satisfied :-
+    min_gpa(S, Min), default_scale(S), fut_den(0), best_den(D), D > 0,
+    best_num(N), (2*N + D) / (2*D) >= Min.
+
+gpa_required_avg(0) :-
+    min_gpa(S, Min), default_scale(S), fut_den(0), best_den(D), D > 0,
+    best_num(N), (2*N + D) / (2*D) >= Min.
+
+% The best-case gate is now a report, not a hard constraint.  It catches
+% both the scale-max edge case and policies whose retake cap lowers the
+% maximum future GPA below the backward target.
+gpa_requirement_impossible :-
+    min_gpa(S, Min), default_scale(S), best_den(D), D > 0,
+    best_num(N), (2*N + D) / (2*D) < Min.
 
 % ---------------------------------------------------------------------
 % Milestone courses (e.g. internship, project, capstone) require a minimum
@@ -185,7 +203,8 @@ ext_pending(R, Y, Min - S) :- external_requirement(R, _, _, blocking),
 graduation_blocked(R) :- external_requirement(R, _, _, blocking),
     external_milestone(R, graduation, Min), ext_have(R, t, S), S < Min.
 
-ready_to_graduate :- degree_complete, not graduation_blocked(_), not ext_missed(_, _).
+ready_to_graduate :- degree_complete, not graduation_blocked(_), not ext_missed(_, _),
+    not gpa_requirement_impossible.
 
 % ---------------------------------------------------------------------
 % Tuition and budget
@@ -263,7 +282,7 @@ maxload(M) :- M = #max{ L : load(I, L) }.
 #show total_planned/1.
 #show total_attempted/1.
 #show total_credit/1.
-#show degree_complete.
+#show degree_complete/0.
 #show ready_to_graduate/0.
 #show pass/1.
 #show passed_course/1.
@@ -278,6 +297,8 @@ maxload(M) :- M = #max{ L : load(I, L) }.
 #show gpa/1.
 #show gpa_best_case/1.
 #show gpa_required_avg/1.
+#show gpa_already_satisfied/0.
+#show gpa_requirement_impossible/0.
 #show major_earned/1.
 #show major_count/2.
 #show ext_missed/2.

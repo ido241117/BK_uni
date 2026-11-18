@@ -33,7 +33,7 @@ result(pe1003, passed).
 result(pe1005, passed).
 
 % ---------- boundary metadata ----------------------------------------
-% This hand-written example has one attempt per course.  A real loader keeps
+% This hand-written examp?le has one attempt per course.  A real loader keeps
 % W attempts in the attempt count, renumbers retakes, then emits these two
 % facts.  W is a withdrawn status, not a failed grade.
 attempt_count(la1003, 1).
