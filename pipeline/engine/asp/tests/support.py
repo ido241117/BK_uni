@@ -224,13 +224,15 @@ def brute_force_tiny(
             max(used),
             0,
             0,  # tuition cost: the tiny fixture has no tuition policy
+            0,  # typical term: the tiny fixture has no typical_regular_term
             sum(
                 semester[course]
                 for course in ids
                 if level(course) <= 2
             ),
             max(loads.values()),
-            0,
+            0,  # taste
+            0,  # popularity: no popularity data
         )
         if best is None or objective < best:
             best = objective
@@ -333,13 +335,15 @@ def check_plan(
             if course_id in set(plan.must)
         ),
         0,  # tuition cost: the tiny fixture has no tuition policy
+        0,  # typical term: no typical_regular_term in the fixture
         sum(
             semester
             for course_id, semester in scheduled.items()
             if int(next(char for char in course_id if char.isdigit())) <= 2
         ),
         max((semester.credits for semester in plan.semesters), default=0),
-        0,
+        0,  # taste
+        0,  # popularity: no popularity data
     ]
     if plan.objective[: len(expected_objective)] != expected_objective:
         problems.append(

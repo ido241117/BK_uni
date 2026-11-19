@@ -281,7 +281,9 @@
       "credits": 1,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 5,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO3103",
@@ -289,7 +291,9 @@
       "credits": 1,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 5,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO3105",
@@ -297,7 +301,9 @@
       "credits": 1,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 5,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO3119",
@@ -305,7 +311,9 @@
       "credits": 1,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 5,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO3127",
@@ -313,7 +321,9 @@
       "credits": 1,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 5,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO3107",
@@ -321,7 +331,9 @@
       "credits": 1,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 6,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO3109",
@@ -329,7 +341,9 @@
       "credits": 1,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 6,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO3111",
@@ -337,7 +351,9 @@
       "credits": 1,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 6,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO3023",
@@ -737,7 +753,10 @@
       "credits": 2,
       "prerequisites": [],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 6,
+      "fills_next_term": true,
+      "note": "Needs faculty information: registered in this term, carried out in the following summer; the faculty sets the requirements each term."
     },
     {
       "id": "CO4029",
@@ -745,7 +764,9 @@
       "credits": 2,
       "prerequisites": [],
       "corequisites": [["CO3335"]],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 7,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "CO4337",
@@ -753,7 +774,9 @@
       "credits": 4,
       "prerequisites": [["CO3335"], ["CO4029"], ["ENG_GC"]],
       "corequisites": [],
-      "offered_terms": [1, 2, 3]
+      "offered_terms": [1, 2, 3],
+      "typical_regular_term": 8,
+      "note": "Faculty regulations for this term may add requirements; confirm with the faculty."
     },
     {
       "id": "SA4001",

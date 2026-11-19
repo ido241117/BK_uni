@@ -211,8 +211,6 @@ def test_student_history_emits_planning_facts() -> None:
             {"requirement": "social_work_days", "term": "2024-2", "amount": 2}
         ],
         "request": ["C1002"],
-        "avoid": ["C1003"],
-        "prefer": ["C2001"],
         "offer": [{"course": "C3001", "term": "2024-3"}],
         "closed": [{"course": "C1002", "term": "2025-1"}],
         "budget": "3.5",
@@ -239,8 +237,6 @@ def test_student_history_emits_planning_facts() -> None:
     assert "external_progress(social_work_days, 2, 2)." in facts
     assert "student_major(ai)." in facts
     assert "request(c1002)." in facts
-    assert "avoid(c1003)." in facts
-    assert "pref(c2001)." in facts
     assert "offer(c3001, 3)." in facts
     assert "closed(c1002, 4)." in facts
     assert "budget(3500)." in facts

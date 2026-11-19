@@ -135,9 +135,11 @@ def test_render_labels_the_full_objective(tmp_path: Path) -> None:
         "last_semester": 3,
         "retakes": 0,
         "cost": 0,
+        "typical_term": 0,
         "level_order": 7,
         "balance": 8,
         "taste": 0,
+        "popularity": 0,
     }
     assert payload[0]["optimal"] is True
     assert payload[0]["optimization"] == "proven_optimal"

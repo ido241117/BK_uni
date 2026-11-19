@@ -298,6 +298,21 @@ def curriculum_majors(curriculum: dict[str, Any] | None) -> dict[str, dict[str, 
     return result
 
 
+# interest(K, W) weights are integers in -MAX_INTEREST_WEIGHT..MAX_INTEREST_WEIGHT.
+MAX_INTEREST_WEIGHT = 10
+
+
+def curriculum_tags(curriculum: dict[str, Any] | None) -> set[str]:
+    """Keywords a student may weight: course tags, major ids and course ids."""
+    if not curriculum:
+        return set()
+    tags = {asp_name(str(course["id"])) for course in curriculum.get("courses", [])}
+    for course in curriculum.get("courses", []):
+        tags.update(asp_name(str(tag)) for tag in course.get("tags", []))
+    tags.update(curriculum_majors(curriculum))
+    return tags
+
+
 def planning_constants(
     curriculum: dict[str, Any] | None,
     policy: Policy | None = None,
@@ -336,11 +351,87 @@ def planning_horizon(studied_terms: int, curriculum: dict[str, Any] | None) -> i
     return studied_terms + horizon
 
 
-def build_curriculum(curriculum: dict[str, Any], policy: Policy | None = None) -> str:
+def _requisite_rows(course: dict[str, Any], key: str) -> tuple[tuple[str, ...], ...]:
+    """Non-empty AND-rows of OR-alternatives, canonically sorted."""
+    return tuple(
+        sorted(tuple(sorted(row)) for row in course.get(key, []) or [] if row)
+    )
+
+
+def elective_classes(
+    curriculum: dict[str, Any], popularity: dict[str, int] | None = None
+) -> list[list[str]]:
+    """Groups of interchangeable elective courses (two or more members).
+
+    Two electives are interchangeable when every curriculum fact the planner
+    reads about them is identical: credits, groups, majors, tags,
+    prerequisites/co-requisites, the courses that require them, offering,
+    level, milestone, typical term, fills-next flag, note and popularity.
+    Courses that belong to a mandatory group are never grouped.  Each class is
+    sorted by course id; classes are sorted by their first member.
+    """
+    popularity = popularity or {}
+    courses = {course["id"]: course for course in curriculum.get("courses", [])}
+    groups_of: dict[str, set[str]] = defaultdict(set)
+    elective: set[str] = set()
+    mandatory: set[str] = set()
+    for group in curriculum.get("groups", []):
+        is_mandatory = group.get("type", "").lower() == "mandatory"
+        for cid in group.get("course_ids", []):
+            groups_of[cid].add(str(group["id"]))
+            (mandatory if is_mandatory else elective).add(cid)
+    majors_of: dict[str, set[str]] = defaultdict(set)
+    for major in curriculum.get("majors", []):
+        for cid in (major.get("rule") or {}).get("course_ids", []):
+            majors_of[cid].add(str(major["id"]))
+    required_by: dict[str, set[tuple[str, str, tuple[str, ...]]]] = defaultdict(set)
+    for cid, course in courses.items():
+        for key in ("prerequisites", "corequisites"):
+            for row in _requisite_rows(course, key):
+                for item in row:
+                    required_by[item].add((cid, key, row))
+    milestones = {
+        entry["course"]: (entry.get("min_credits"), entry.get("min_credit_percent"))
+        for entry in curriculum.get("milestones", [])
+    }
+
+    by_signature: dict[tuple, list[str]] = defaultdict(list)
+    for cid in sorted(elective - mandatory):
+        course = courses[cid]
+        signature = (
+            int(course.get("credits", 0)),
+            tuple(sorted(groups_of[cid])),
+            tuple(sorted(majors_of[cid])),
+            tuple(sorted({asp_name(str(tag)) for tag in course.get("tags", [])})),
+            _requisite_rows(course, "prerequisites"),
+            _requisite_rows(course, "corequisites"),
+            tuple(sorted(required_by[cid])),
+            _offered_slots(course),
+            _course_level(course),
+            milestones.get(cid),
+            course.get("typical_regular_term"),
+            bool(course.get("fills_next_term", False)),
+            course.get("note"),
+            popularity.get(cid),
+        )
+        by_signature[signature].append(cid)
+    return sorted(
+        (members for members in by_signature.values() if len(members) > 1),
+        key=lambda members: members[0],
+    )
+
+
+def build_curriculum(
+    curriculum: dict[str, Any],
+    policy: Policy | None = None,
+    popularity: dict[str, int] | None = None,
+) -> str:
     """Return the ASP program for ``curriculum`` as a string.
 
     ``policy`` is accepted for backwards compatibility and is not used: the
-    milestones now come from the curriculum itself.
+    milestones now come from the curriculum itself.  ``popularity`` maps
+    course ids to historical enrollment counts (see
+    ``data/elective_popularity.json``); missing courses get no fact.
     """
     courses = {course["id"]: course for course in curriculum.get("courses", [])}
     credits = {cid: int(course.get("credits", 0)) for cid, course in courses.items()}
@@ -581,6 +672,56 @@ def build_curriculum(curriculum: dict[str, Any], policy: Policy | None = None) -
         lines.append(_fact("milestone", asp_name(course_id), minimum))
     lines.append("")
 
+    # ------------------------------------------------------------------
+    # Planning attributes: tags, typical term, fills-next, notes
+    # ------------------------------------------------------------------
+    lines.append("% " + "-" * 66)
+    lines.append("% Planning attributes. tag(E, K): keyword K (major lists are added")
+    lines.append("% as tags in extension.lp). typical_term(E, K): usually taken in the")
+    lines.append("% K-th regular term. fills_next(E): E also occupies the following")
+    lines.append("% term. map(note, E, Text): shown whenever E is planned.")
+    lines.append("% " + "-" * 66)
+    for cid in sorted(courses, key=str.lower):
+        course = courses[cid]
+        for tag in sorted({asp_name(str(tag)) for tag in course.get("tags", [])}):
+            lines.append(_fact("tag", course_atom[cid], tag))
+        if course.get("typical_regular_term") is not None:
+            lines.append(
+                _fact("typical_term", course_atom[cid], int(course["typical_regular_term"]))
+            )
+        if course.get("fills_next_term"):
+            lines.append(_fact("fills_next", course_atom[cid]))
+        if course.get("note"):
+            lines.append(
+                f"map(note, {course_atom[cid]}, {_quote(str(course['note']))})."
+            )
+    lines.append("")
+
+    # ------------------------------------------------------------------
+    # Popularity (historical enrollment counts)
+    # ------------------------------------------------------------------
+    lines.append("% " + "-" * 66)
+    lines.append("% Popularity: popularity(E, Count) from elective_popularity.json.")
+    lines.append("% No facts means the popularity tie-breaker is inactive.")
+    lines.append("% " + "-" * 66)
+    for cid in sorted(popularity or {}, key=str.lower):
+        _require_course(courses, cid, "popularity")
+        lines.append(_fact("popularity", course_atom[cid], int(popularity[cid])))
+    lines.append("")
+
+    # ------------------------------------------------------------------
+    # Interchangeable electives (symmetry breaking and slot options)
+    # ------------------------------------------------------------------
+    lines.append("% " + "-" * 66)
+    lines.append("% Interchangeable electives: elective_class(E, Class, Rank). Members")
+    lines.append("% of one class have identical curriculum facts; extension.lp uses")
+    lines.append("% the rank to keep one plan per permutation.")
+    lines.append("% " + "-" * 66)
+    for class_no, members in enumerate(elective_classes(curriculum, popularity), 1):
+        for rank, cid in enumerate(members, 1):
+            lines.append(_fact("elective_class", course_atom[cid], class_no, rank))
+    lines.append("")
+
     lines.append("% Curriculum-derived file ends here; see policy.lp and plan.lp.")
     lines.append("")
 
@@ -804,9 +945,10 @@ def write_programs(
     curriculum_output: Path,
     policy_output: Path,
     extra_policy: str = "",
+    popularity: dict[str, int] | None = None,
 ) -> None:
     curriculum_output.write_text(
-        build_curriculum(curriculum, policy), encoding="utf-8"
+        build_curriculum(curriculum, policy, popularity), encoding="utf-8"
     )
     policy_text = build_policy(policy, planning_constants(curriculum, policy))
     if extra_policy:
@@ -837,8 +979,11 @@ optional):
     budget                               in the tuition policy's money_unit
     external_progress[]                  {requirement, term, amount}
     request[]                            courses to retake on purpose
-    avoid[] / prefer[]                   elective taste
+    interests                            {keyword: weight}, weight -10..10
     offer[] / closed[]                   {course, term} offering overrides
+    pin[]                                {course, term} must be planned then
+    ban[]                                "COURSE" (never plan it) or
+                                         {course, term} (not in that term)
 """
 
 
@@ -1037,7 +1182,7 @@ def _term_list(
     student: dict[str, Any], key: str, enrollment_term: str, known: set[str],
     canon: dict[str, str],
 ) -> list[tuple[str, int]]:
-    """``offer`` / ``closed`` entries as ``(course_atom, term_index)``."""
+    """``{course, term}`` entries (offer, closed, pin, ban) as ``(course_atom, term_index)``."""
     result: list[tuple[str, int]] = []
     for entry in student.get(key, []) or []:
         course = canon.get(str(entry["course"]), str(entry["course"]))
@@ -1227,15 +1372,64 @@ def student_to_facts(
 
     # ---- planning inputs the student may state -----------------------------
     known = known_courses if known_courses is not None else set()
-    for key, predicate in (("request", "request"), ("avoid", "avoid"), ("prefer", "pref")):
-        for course in student.get(key, []) or []:
-            course = aliases.get(str(course), str(course))
-            if known_courses is not None and course not in known:
-                raise ValueError(f"{key}: unknown course {course!r}")
-            lines.append(_fact(predicate, asp_name(course)))
+    for key in ("prefer", "avoid"):
+        if student.get(key):
+            raise ValueError(
+                f"{key}: no longer supported; use interests "
+                '{"COURSE": 10} for prefer or {"COURSE": -10} for avoid'
+            )
+    for course in student.get("request", []) or []:
+        course = aliases.get(str(course), str(course))
+        if known_courses is not None and course not in known:
+            raise ValueError(f"request: unknown course {course!r}")
+        lines.append(_fact("request", asp_name(course)))
     for key in ("offer", "closed"):
         for atom, index in _term_list(student, key, enrollment_term, known, aliases):
             lines.append(_fact(key, atom, index))
+    studied_terms = term_to_index(as_of, enrollment_term)
+    for atom, index in _term_list(student, "pin", enrollment_term, known, aliases):
+        if index <= studied_terms:
+            raise ValueError(
+                f"pin: {atom} in term index {index} is not after as_of_term "
+                f"{as_of} (index {studied_terms}); only future terms can be pinned"
+            )
+        lines.append(_fact("pin", atom, index))
+    for entry in student.get("ban", []) or []:
+        if isinstance(entry, dict):
+            for atom, index in _term_list(
+                {"ban": [entry]}, "ban", enrollment_term, known, aliases
+            ):
+                if index <= studied_terms:
+                    raise ValueError(
+                        f"ban: {atom} in term index {index} is not after "
+                        f"as_of_term {as_of} (index {studied_terms}); only "
+                        "future terms can be banned"
+                    )
+                lines.append(_fact("ban", atom, index))
+            continue
+        course = aliases.get(str(entry), str(entry))
+        if known_courses is not None and course not in known:
+            raise ValueError(f"ban: unknown course {course!r}")
+        lines.append(_fact("ban", asp_name(course)))
+    interests = student.get("interests") or {}
+    if not isinstance(interests, dict):
+        raise ValueError("interests: expected an object {keyword: weight}")
+    known_tags = curriculum_tags(curriculum) if curriculum is not None else None
+    for keyword, weight in interests.items():
+        tag = asp_name(str(aliases.get(str(keyword), str(keyword))))
+        if known_tags is not None and tag not in known_tags:
+            raise ValueError(
+                f"interests: unknown keyword {keyword!r}; use a course tag, a "
+                "major id or a course id"
+            )
+        if isinstance(weight, bool) or not isinstance(weight, int):
+            raise ValueError(f"interests: weight of {keyword!r} must be an integer")
+        if weight == 0 or not -MAX_INTEREST_WEIGHT <= weight <= MAX_INTEREST_WEIGHT:
+            raise ValueError(
+                f"interests: weight of {keyword!r} must be a non-zero integer in "
+                f"-{MAX_INTEREST_WEIGHT}..{MAX_INTEREST_WEIGHT}"
+            )
+        lines.append(_fact("interest", tag, weight))
 
     # ---- budget (tuition money unit -> fixed point) -------------------------
     budget = student.get("budget")

@@ -38,9 +38,9 @@ JSON data ──> data.py ──> translation.py ──> *.lp facts
 | File | Role | May contain |
 | --- | --- | --- |
 | `encoding.lp` | Stable, generic ASP core. Defines the set/map representation and generic `empty`, `subseteq`, `equal`, `card`, `sum`, `int` and `before` constraints. **Do not change.** | Rules only; no curriculum or school data. |
-| `extension.lp` | Shared semantic base for any curriculum. Calendar and term parts, attempt history, retake/status rules, load bounds and regular-term contiguity, group and credit accounting, majors, prerequisites/corequisites, offering, milestones, degree completion, external requirements/readiness, GPA and tuition. | Rules and constraints that use the data predicates below. No concrete course codes. |
+| `extension.lp` | Shared semantic base for any curriculum. Calendar and term parts, attempt history, retake/status rules, load bounds and regular-term contiguity, group and credit accounting, majors, prerequisites/corequisites, offering, milestones, degree completion, external requirements/readiness, GPA, tuition, pins/bans, fills-next terms, typical terms, interests/tags/popularity, elective slots and symmetry breaking. | Rules and constraints that use the data predicates below. No concrete course codes. |
 | `core/translate.lp` | Student-input boundary. The only file that reads the raw student record; it converts transcript facts into the attempt/set vocabulary used by `extension.lp` and `core/optimize.lp`. | Rules only; no curriculum or school data. |
-| `core/optimize.lp` | The school's optimization order (six weighted `#minimize` levels) and the stable `#show` display surface. | Objective weights and display rules. No concrete course codes or credit values. |
+| `core/optimize.lp` | The school's optimization order (eight weighted `#minimize` levels) and the stable `#show` display surface. | Objective weights and display rules. No concrete course codes or credit values. |
 | `<curriculum-id>.lp` | Generated curriculum data. The file name follows `curriculum.json`'s `id` (`cs_2023` → `cs-2023.lp`); the current dataset is `cs-2023.lp`. | Facts only. No rules and no constraints. |
 | `policy.lp` | Generated university policy data: academic calendar and term types, load bounds, grading scales, grade rules, retake policy, graduation requirements, external requirements and the tuition schedule selected for one program. | Facts only. No rules and no constraints. |
 | `student.lp` | Hand-written or generated student facts. | Facts only. |
@@ -80,7 +80,8 @@ it. Important fields:
   `default_major`, `planning`, `milestones`, `equivalents`, `majors`, and an
   optional `file_stem`/`slug`
 - `courses[]`: `id`, `name`, `credits`, optional `level`, `prerequisites`,
-  `corequisites`, `offered_terms`
+  `corequisites`, `offered_terms`, and the optional planning attributes
+  `tags`, `typical_regular_term`, `fills_next_term` and `note`
 - `groups[]`: `id`, `type` (`mandatory` or `elective`), `course_ids`,
   `min_credits`, `max_credits`, `min_courses`, `max_courses`
 - `majors[]`: `id`, `name`, and a `rule` with `type: "required_courses"`,
@@ -109,6 +110,14 @@ optimization weights.
 uses that value by default when neither `--semesters` nor `--future-terms` is
 given. `--semesters` sets the absolute last term index, while
 `--future-terms` overrides only the number of terms after `--t`.
+
+#### `elective_popularity.json` (optional)
+
+Historical enrollment counts per elective (`--popularity`, default
+`pipeline/data/elective_popularity.json`; skipped when missing). Compiled into
+`popularity/2` facts in the curriculum file. The checked-in file is a
+**placeholder**: every count is `null`, so it emits no facts and the
+popularity objective is inactive.
 
 #### `grading_policy.json`
 
@@ -231,7 +240,9 @@ by a later failed retake.
 | `request(E).` | Student asks to retake `E` even when it is not compulsory. |
 | `offer(E, I).` / `closed(E, I).` | Registrar/student offering override. |
 | `budget(B).` | Hard upper bound on future tuition, in fixed-point money units. |
-| `avoid(E).` / `pref(E).` | Taste penalties/preferences used by the last objective level. |
+| `interest(K, W).` | Keyword weight, `W` in −10..10. An elective's score is the sum of the weights of its tags (course `tags`, its major lists, its own id). Maximized at `@1`. |
+| `pin(E, I).` | Hard: course `E` is scheduled in future term `I` (and is available there). |
+| `ban(E).` / `ban(E, I).` | Hard: course `E` is not scheduled at all / not in future term `I`. |
 | `external_progress(Requirement, Term, Amount).` | Cumulative progress on an external requirement, dated by term. Emitted by the JSON helper. |
 
 #### JSON helper
@@ -242,7 +253,8 @@ schema v2 keeps `students[]`, `attempts[]`, `external_progress[]` and
 rows back into one record (legacy nested v1 files are still accepted). A record
 provides `student_id`, `enrollment_term`, `attempts[]`, `as_of_term` (or
 `expected.as_of_term`), `program`, `major`, `budget`, `external_progress[]`,
-`request[]`, `avoid[]`, `prefer[]`, `offer[]` and `closed[]`. It resolves
+`request[]`, `interests`, `pin[]`, `ban[]`, `offer[]`
+and `closed[]`. See `pipeline/docs/USER_INPUT.md` for every field. It resolves
 course equivalents, validates grades and courses, numbers retakes, and emits
 `enroll_part_in/1`, `gpa_last/2` and `student_major/1`. A budget is converted
 to fixed-point money with the tuition policy's `precision`.
@@ -320,6 +332,12 @@ header records the curriculum id, display name and default file name.
 | `offered_slot(Course, Part).` | Course runs in term part `1` (fall), `2` (spring) or `3` (summer) of every academic year. A course with no declaration is always offered. |
 | `major(Major).` / `major_min(Major, K).` / `major_course(Major, Course).` | Major-determination rule: earn at least `K` courses from the list. |
 | `milestone(Course, MinimumCredits).` | Credits that must be accumulated strictly before the milestone course. |
+| `tag(Course, Keyword).` | Keyword from the course `tags` field (major lists and course ids are added as tags in `extension.lp`). |
+| `typical_term(Course, K).` | Course is usually taken in the K-th regular term (`typical_regular_term`). |
+| `fills_next(Course).` | Course also occupies the following term (`fills_next_term`). |
+| `map(note, Course, "Text").` | Note shown whenever the course is planned. |
+| `popularity(Course, Count).` | Historical enrollment count from `elective_popularity.json`. |
+| `elective_class(Course, Class, Rank).` | Interchangeable electives (identical curriculum facts), used for symmetry breaking and slot options. |
 
 The generated curriculum file deliberately contains **no** `in(E, m)`, `group/1`, credit
 accounting, prerequisite constraints or milestone constraints. Those are
@@ -540,12 +558,28 @@ Clingo objectives are lexicographic by level, highest first:
 
 | Level | Name | Meaning |
 | ---: | --- | --- |
-| `@6` | `last_semester` | Earliest last used term / earliest graduation. |
-| `@5` | `retakes` | Earliest retake of failed compulsory courses; voluntary retakes penalized. |
-| `@4` | `cost` | Minimum future tuition. |
+| `@7` | `last_semester` | Earliest last used term / earliest graduation. |
+| `@6` | `retakes` | Earliest retake of failed compulsory courses; voluntary retakes penalized. |
+| `@5` | `cost` | Minimum future tuition. |
+| `@4` | `typical_term` | Special courses near their typical regular term (half-step distance). |
 | `@3` | `level_order` | Lower-level courses earlier. |
 | `@2` | `balance` | Minimum heaviest future semester. |
-| `@1` | `taste` | Avoid disliked electives; prefer liked ones. |
+| `@1` | `taste` | Maximum interest score of planned electives (`interest`). |
+| `@0` | `popularity` | Most-taken electives (inactive while popularity counts are null). |
+
+Every hard and soft rule, with its data and scope, is listed in
+`pipeline/docs/CONSTRAINTS.md`.
+
+### Pins, bans, reserved terms, slots and notes
+
+- `pin(E, I)` forces a placement; `ban(E)` / `ban(E, I)` forbids one in every
+  term / in term `I` (§16).
+- `fills_next(E)`: the term after `E`'s term is kept empty and reported as
+  `reserved(Term, E)` (§17).
+- An elective the student did not name is reported as `elective_slot(E,
+  Group)`, with interchangeable alternatives `slot_option(E, A)` and matched
+  tags `interest_match(E, K)` (§20).
+- `course_note(E, Text)` repeats a curriculum note for a planned course.
 
 ---
 
@@ -581,6 +615,11 @@ The stable display surface is declared at the bottom of `core/optimize.lp`:
 | `ext_pending(Requirement, Year, Missing).` | A future external deadline is not yet met. |
 | `graduation_blocked(Requirement).` | A blocking graduation milestone is unmet. |
 | `semester_type(Term, Type).` | `regular` or `summer`. |
+| `elective_slot(Course, Group).` | Planned elective shown as a slot of `Group` (not named by the student). |
+| `slot_option(Course, Alternative).` | Unplanned course fully interchangeable with a slot's course. |
+| `interest_match(Course, Keyword).` | Weighted keyword that matched a slot's course. |
+| `course_note(Course, Text).` | Note of a planned course. |
+| `reserved(Term, Course).` | Term kept empty by a fills-next course. |
 
 ### 5.2 Python `Plan` output
 
@@ -616,7 +655,8 @@ Plan
   graduation_blocked[]  unmet blocking external milestones
   ext_missed[]       missed external deadlines
   ext_pending[]      future external deadlines with missing amounts
-  objective          six labelled objective values
+  reserved_terms[]   terms kept empty by fills-next courses
+  objective          eight labelled objective values
   objective_vector   raw clingo objective vector
   priority           clingo priority levels
   optimal            true when optimality is proven
@@ -625,8 +665,11 @@ Plan
   status             SATISFIABLE / UNSATISFIABLE / UNKNOWN
 ```
 
-`PlannedCourse` is `code`, `name`, `credits`, and `retake` (the retake number,
-or `None`). `total_cost` is computed by the Python layer from `semester_fee/2`;
+`PlannedCourse` is `code`, `name`, `credits`, `retake` (the retake number,
+or `None`), `note` (or `None`) and `slot` (or `None`). A slot
+(`ElectiveSlot`) has `group`, `major` (declared major, if the course is in its
+list), `interests`, `representative` (the course used) and `options`; text
+and Markdown show the slot label instead of the course name. `total_cost` is computed by the Python layer from `semester_fee/2`;
 it is intentionally not materialized in ASP because a `total_cost/1` set over
 a 12-term horizon grounds every possible intermediate sum and is unnecessarily
 expensive.
@@ -658,6 +701,7 @@ Inputs and scenario controls:
                             the last taken/2 term; --student-json uses
                             expected.as_of_term)
 --curriculum/--grading-policy/--graduation/--tuition-policy PATH
+--popularity PATH           elective_popularity.json (skipped if missing)
 --program NAME              tuition program (default: student, then curriculum)
 --semesters N               absolute last term index
 --future-terms N            terms after --t (default: curriculum planning.horizon)
@@ -741,8 +785,9 @@ These are the invariants the files are expected to maintain.
 5. Any predicate read by `extension.lp`, `core/translate.lp` or
    `core/optimize.lp` must be emitted by the data files:
    - group membership, bounds, `map(c,...)`, `elective_group/1`, `prereq*`,
-     `coreq*`, `offered_slot/2`, `major*`, `milestone/2` from the generated
-     curriculum file
+     `coreq*`, `offered_slot/2`, `major*`, `milestone/2`, `tag/2`,
+     `typical_term/2`, `fills_next/1`, `map(note,...)`, `popularity/2`,
+     `elective_class/3` from the generated curriculum file
    - scales, grades, `min_gpa/2`, load constants, `term_parts/1`,
      `term_part_type/2`, `extra_semester_type/1`, `load_bound/3`, `fee_rule/6`
      and money facts from `policy.lp`
@@ -832,15 +877,16 @@ python -m pipeline.engine.asp.cli --solve pipeline/engine/asp/student_showcase.l
 Its key output is:
 
 ```text
-objective: last_semester=10, retakes=20, cost=13750, level_order=10, balance=17, taste=0 (proven optimal)
-Solve time      : 0.34 s
+objective: last_semester=10, retakes=20, cost=13750, typical_term=2, level_order=10, balance=17, taste=-10, popularity=0 (proven optimal)
+Solve time      : 0.24 s
 
 Semester 10  (regular, 17 credits, scheduled total 135, fee 13.750 million VND)
   CO3035    Real-Time Systems (retake 1)                            3
   CO3057    Digital Image Processing and Computer Vision            3
-  CO3061    Introduction to Artificial Intelligence                 3
   CO4337    Capstone Project                                        4
+            note: Faculty regulations for this term may add requirements; confirm with the faculty.
   MT2013    Probability and Statistics (retake 1)                   4
+  slot      one C elective (3 credits), AI major course             3
 
 Planned credits : 17 (attempted)
 Total credits   : 128 / 128 (earned)
@@ -859,7 +905,7 @@ Add `--summer` to let the showcase use the extra term. The optimal proof then
 moves one 3-credit retake into a summer term and is slightly more expensive:
 
 ```text
-objective: last_semester=10, retakes=19, cost=17440, level_order=10, balance=14, taste=0 (proven optimal)
+objective: last_semester=10, retakes=19, cost=17440, typical_term=2, level_order=10, balance=14, taste=-10, popularity=0 (proven optimal)
 Semester 9  (summer, 3 credits, scheduled total 121, fee 3.690 million VND)
 Semester 10 (regular, 14 credits, scheduled total 135, fee 13.750 million VND)
 Future tuition  : 17.440 million VND

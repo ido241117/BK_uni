@@ -50,6 +50,9 @@ in(E1,before(A)) :- set(before(A)), in(E1,s(I)), in(E2,A), in(E2,s(J)), I < J.
 % ---------- derived values ----------------------------------------------
 sum_val(A,F,V) :- sum_dom(A,F,L,U), V = L..U,
                   V #sum{ W,E : in(E,A), map(F,E,W) } V.
+% Redundant: a requested sum takes exactly one value of its domain.  This
+% tells the solver directly that the value atoms exclude each other.
+:- sum_dom(A,F,L,U), not 1 { sum_val(A,F,V) : V = L..U } 1.
 
 % ---------- constraints -------------------------------------------------
 :- empty(A), in(E,A).

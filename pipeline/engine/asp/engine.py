@@ -21,23 +21,27 @@ except ImportError:  # script/test import
     from translation import asp_name
 
 # clingo orders the optimization vector by descending priority.  These labels
-# mirror the #minimize statements in core/optimize.lp (@6 .. @1).
+# mirror the #minimize statements in core/optimize.lp (@7 .. @0).
 OBJECTIVE_LEVELS: tuple[str, ...] = (
     "last_semester",
     "retakes",
     "cost",
+    "typical_term",
     "level_order",
     "balance",
     "taste",
+    "popularity",
 )
 
 PRIORITY_LABELS: dict[int, str] = {
-    6: "last_semester",
-    5: "retakes",
-    4: "cost",
+    7: "last_semester",
+    6: "retakes",
+    5: "cost",
+    4: "typical_term",
     3: "level_order",
     2: "balance",
     1: "taste",
+    0: "popularity",
 }
 
 _RETAKE_RE = re.compile(r"^rt\(([^,]+),(\d+)\)$")
@@ -74,13 +78,12 @@ def label_objective(
 ) -> list[tuple[str, int]]:
     """Pair objective entries with names, filling omitted levels with zero.
 
-    The result always follows the canonical order ``last_semester``,
-    ``retakes``, ``cost``, ``level_order``, ``balance``, ``taste`` so it is
-    stable across configurations and seeds.
+    The result always follows the canonical order of ``OBJECTIVE_LEVELS``
+    so it is stable across configurations and seeds.
     """
     if not objective:
         # ``--opt-mode=ignore`` returns models without an objective vector.
-        # Do not turn that absence into six fake zero values.
+        # Do not turn that absence into fake zero values.
         return []
     if priority is None or len(priority) != len(objective):
         return [
@@ -101,11 +104,35 @@ def label_objective(
 
 
 @dataclass
+class ElectiveSlot:
+    """A planned elective the student has not named: reported by its group.
+
+    ``representative`` is the course the solver used; ``options`` are other
+    unplanned courses that are fully interchangeable with it.
+    """
+
+    group: str
+    representative: str
+    major: str | None = None
+    interests: list[str] = field(default_factory=list)
+    options: list[str] = field(default_factory=list)
+
+    def label(self, credits: int) -> str:
+        unit = "credit" if credits == 1 else "credits"
+        text = f"one {self.group} elective ({credits} {unit})"
+        if self.major:
+            text += f", {self.major} major course"
+        return text
+
+
+@dataclass
 class PlannedCourse:
     code: str
     name: str
     credits: int
     retake: int | None = None
+    slot: ElectiveSlot | None = None
+    note: str | None = None
 
 
 @dataclass
@@ -153,6 +180,7 @@ class Plan:
     gpa_required_avg: int | None = None
     gpa_already_satisfied: bool = False
     gpa_requirement_impossible: bool = False
+    reserved: list[dict[str, Any]] = field(default_factory=list)
 
     @property
     def last_semester(self) -> int:
@@ -188,6 +216,19 @@ class Plan:
                             "name": course.name,
                             "credits": course.credits,
                             "retake": course.retake,
+                            "slot": (
+                                None
+                                if course.slot is None
+                                else {
+                                    "label": course.slot.label(course.credits),
+                                    "group": course.slot.group,
+                                    "major": course.slot.major,
+                                    "interests": list(course.slot.interests),
+                                    "representative": course.slot.representative,
+                                    "options": list(course.slot.options),
+                                }
+                            ),
+                            "note": course.note,
                         }
                         for course in semester.courses
                     ],
@@ -218,6 +259,7 @@ class Plan:
             "gpa_required_avg": self.gpa_required_avg,
             "gpa_already_satisfied": self.gpa_already_satisfied,
             "gpa_requirement_impossible": self.gpa_requirement_impossible,
+            "reserved_terms": self.reserved,
             "objective": dict(self.objective_by_level),
             "objective_vector": list(self.objective),
             "priority": list(self.priority),
@@ -302,23 +344,50 @@ def model_to_plan(
         for major in curriculum.get("majors", [])
         if major.get("id") is not None
     }
+    # Interest tags that are major ids are shown with the curriculum spelling.
+    major_titles_short = {
+        asp_name(str(major["id"])): str(major["id"])
+        for major in curriculum.get("majors", [])
+        if major.get("id") is not None
+    }
+
+    slot_groups: dict[str, str] = {}
+    slot_options: dict[str, list[str]] = defaultdict(list)
+    slot_interests: dict[str, list[str]] = defaultdict(list)
+    notes: dict[str, str] = {}
+    reserved: list[dict[str, Any]] = []
+    planned_atoms: list[tuple[str, PlannedCourse]] = []
 
     for symbol in solution.symbols:
         name = getattr(symbol, "name", "")
         arguments = getattr(symbol, "arguments", ())
-        if name == "plan" and len(arguments) >= 2:
+        if name == "elective_slot" and len(arguments) >= 2:
+            slot_groups[str(arguments[0])] = str(arguments[1])
+        elif name == "slot_option" and len(arguments) >= 2:
+            code, _, _, _ = _course_display(str(arguments[1]), catalog)
+            slot_options[str(arguments[0])].append(code)
+        elif name == "interest_match" and len(arguments) >= 2:
+            slot_interests[str(arguments[0])].append(str(arguments[1]))
+        elif name == "course_note" and len(arguments) >= 2:
+            notes[str(arguments[0])] = str(arguments[1].string)
+        elif name == "reserved" and len(arguments) >= 2:
+            code, title, _, _ = _course_display(str(arguments[1]), catalog)
+            reserved.append(
+                {"semester": int(str(arguments[0])), "code": code, "name": title}
+            )
+        elif name == "plan" and len(arguments) >= 2:
             code, title, credits, retake = _course_display(
                 str(arguments[0]), catalog
             )
             semester = int(str(arguments[1]))
-            plan_by_semester[semester].append(
-                PlannedCourse(
-                    code=code,
-                    name=title,
-                    credits=credits,
-                    retake=retake,
-                )
+            planned = PlannedCourse(
+                code=code,
+                name=title,
+                credits=credits,
+                retake=retake,
             )
+            plan_by_semester[semester].append(planned)
+            planned_atoms.append((str(arguments[0]), planned))
         elif name == "semester_credits" and len(arguments) >= 2:
             semester_credits[int(str(arguments[0]))] = int(str(arguments[1]))
         elif name == "semester_earned" and len(arguments) >= 2:
@@ -390,8 +459,39 @@ def model_to_plan(
         preferred = asp_name(policy.default_scale)
         gpa = gpas.get(preferred, gpas[sorted(gpas)[0]])
 
+    # Group display names: curriculum group ids keyed by ASP atom.
+    group_titles = {
+        asp_name(str(group["id"])): str(group["id"])
+        for group in curriculum.get("groups", [])
+    }
+    declared_courses: set[str] = set()
+    if declared_major is not None:
+        for major in curriculum.get("majors", []):
+            if str(major.get("id", "")).strip().upper() == declared_major:
+                declared_courses = {
+                    asp_name(cid)
+                    for cid in (major.get("rule") or {}).get("course_ids", [])
+                }
+    for atom, course in planned_atoms:
+        base, _ = _split_course_atom(atom)
+        course.note = notes.get(base)
+        if course.retake is None and atom in slot_groups:
+            course.slot = ElectiveSlot(
+                group=group_titles.get(slot_groups[atom], slot_groups[atom].upper()),
+                representative=course.code,
+                major=(
+                    major_titles_short.get(asp_name(declared_major), declared_major)
+                    if declared_major is not None and atom in declared_courses
+                    else None
+                ),
+                interests=sorted(
+                    major_titles_short.get(tag, tag)
+                    for tag in slot_interests.get(atom, [])
+                ),
+                options=sorted(slot_options.get(atom, [])),
+            )
     for courses in plan_by_semester.values():
-        courses.sort(key=lambda course: course.code)
+        courses.sort(key=lambda course: (course.slot is not None, course.code))
 
     future_semesters = set(plan_by_semester)
     history = [
@@ -469,6 +569,7 @@ def model_to_plan(
         gpa_required_avg=gpa_required_avg,
         gpa_already_satisfied=gpa_already_satisfied,
         gpa_requirement_impossible=gpa_requirement_impossible,
+        reserved=sorted(reserved, key=lambda item: item["semester"]),
     )
 
 

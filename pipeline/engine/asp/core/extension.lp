@@ -27,9 +27,13 @@
 #defined milestone/2.        #defined elective_group/1.
 #defined student_major/1.    #defined request/1.      #defined budget/1.
 #defined retake_grade_cap/1. #defined gpa_attempt_selection/1.
-#defined extra_semester_type/1.
+#defined extra_semester_type/1.  #defined soft_order/1.  #defined course_level/2.
 #defined external_requirement/4.  #defined external_milestone/3.
 #defined external_milestone/4.
+#defined pin/2.              #defined ban/1.          #defined ban/2.
+#defined interest/2.         #defined tag/2.
+#defined typical_term/2.     #defined fills_next/1.   #defined popularity/2.
+#defined elective_class/3.
 
 % =====================================================================
 % 1. Calendar
@@ -87,6 +91,7 @@ subseteq(retake_due, s).
 % History part is in translate.lp; a planned attempt is assumed passed.
 in(E, ok(I))        :- in(X, s(I)), base(X, E), I > t.
 in(E, ok)           :- in(E, ok(I)).
+in(E, ok_hist)      :- in(E, ok(I)), I <= t.
 in(E, ok_before(J)) :- in(E, ok(I)), I < J, J = 1..n.
 
 credited(E)  :- in(E, ok).
@@ -199,6 +204,20 @@ plan_cap(H) :- H = #sum{ Mx, I : I = t+1..n, not closed_term(I),
 sum_dom(planned, c, 0, H) :- plan_cap(H).
 total_planned(T)   :- sum_val(planned, c, T).
 total_attempted(T) :- total_planned(T).
+
+% Implied credit bound (search speed only; changes no answer).  The credits
+% still to attempt are known from the history alone: the degree minimum,
+% minus the most that history can contribute, plus required retakes of
+% courses already credited.  Stated over the per-term load values, it lets
+% the solver do the arithmetic ("36 credits in 2 terms of at most 21")
+% instead of rediscovering it course by course.
+hist_credit(H) :- H = #sum{ C, E : in(E, ok_hist), in(E, m), map(c, E, C) }.
+redo_credit(R) :- R = #sum{ C, E : must(E), earned(E), map(c, E, C) }.
+plan_lb(L - H + R) :- map(l, total_degree, L), hist_credit(H), redo_credit(R).
+
+in(I, future_term) :- I = t+1..n.
+map(load, I, V)    :- sum_val(s(I), c, V), I > t.
+sum(future_term, load, geq, B) :- plan_lb(B), B > 0.
 
 % =====================================================================
 % 10. Degree completion
@@ -326,3 +345,152 @@ semester_fee(I, F) :- fee(I, F).
 in(I, billed)  :- fee(I, _).
 map(fee, I, F) :- fee(I, F).
 sum(billed, fee, leq, B) :- budget(B).
+
+% =====================================================================
+% 14. Earliest possible term (static; ignores loads and milestones)
+% =====================================================================
+% can_at(E,J): course E could be placed in open future term J if every
+% prerequisite (and one option of each OR-group) could be credited in an
+% earlier term and every co-requisite in the same or an earlier term.
+% ready_by(E,J): E could have been taken in some term <= J.
+open_term(J)   :- J = t+1..n, not closed_term(J).
+could_before(A, J) :- in(A, ok_hist), open_term(J).
+could_before(A, J) :- can_at(A, I), open_term(J), I < J.
+could_by(A, J)     :- could_before(A, J).
+could_by(A, J)     :- can_at(A, J).
+
+need(E, pre(A))   :- prereq(E, A).
+need(E, grp(G))   :- prereq_group(E, G).
+need(E, co(A))    :- coreq(E, A).
+need(E, cogrp(G)) :- coreq_group(E, G).
+need_count(E, N)  :- in(E, m), N = #count{ R : need(E, R) }.
+
+met(E, pre(A), J)   :- prereq(E, A), could_before(A, J).
+met(E, grp(G), J)   :- prereq_option(E, G, A), could_before(A, J).
+met(E, co(A), J)    :- coreq(E, A), could_by(A, J).
+met(E, cogrp(G), J) :- coreq_option(E, G, A), could_by(A, J).
+
+can_at(E, J) :- in(E, m), open_term(J), avail(E, J), need_count(E, N),
+                N <= #count{ R : met(E, R, J) }.
+ready_by(E, J) :- can_at(E, I), open_term(J), I <= J.
+
+% =====================================================================
+% 15. Soft ordering (reported here, ranked in optimize.lp)
+% =====================================================================
+% soft_order(F) (policy.lp): a planned course should not be taken while a
+% course with a smaller value of attribute map(F,E,V) -- one that could
+% already have been taken by then -- is postponed to a later term.  This is
+% a "soft prerequisite" between value classes; a lower course that a
+% prerequisite chain forces late does not count.  F is any numeric
+% attribute; course levels are exposed as map(level,E,L).
+%
+%   order_key(E,F,V)       course E has value V for ordering attribute F
+%   key_postponed(F,V,J)   a course with value V, takeable by term J, is
+%                          planned after J
+%   order_violation(X,F,V) attempt X is in term J while key_postponed(F,V,J)
+%                          for a smaller value V
+% Only future placements are compared; history is fixed.
+map(level, E, L) :- course_level(E, L).
+
+order_key(E, F, V)     :- soft_order(F), map(F, E, V), in(E, m).
+key_postponed(F, V, J) :- order_key(E, F, V), in(X, s(I)), base(X, E),
+                          I > t, J = t+1..I-1, ready_by(E, J).
+order_violation(X, F, V) :- in(X, s(J)), J > t, base(X, E), order_key(E, F, W),
+                            key_postponed(F, V, J), V < W.
+
+% =====================================================================
+% 16. Pins and bans (student-stated, hard)
+% =====================================================================
+% placed(E,I): a future attempt of course E (first attempt or retake) is
+% scheduled in term I.
+placed(E, I) :- in(X, s(I)), I > t, base(X, E).
+
+% pin(E,I): course E must be scheduled in future term I.  A pin also makes
+% E available in I (like offer/2); closed(E,I) still wins, so pinning a
+% closed term is unsatisfiable.
+offered(E, I) :- pin(E, I).
+:- pin(E, I), not placed(E, I).
+
+% ban(E): course E must not be scheduled in any future term.
+% ban(E,I): course E must not be scheduled in future term I.
+:- ban(E), placed(E, _).
+:- ban(E, I), placed(E, I).
+
+% =====================================================================
+% 17. Courses that fill the following term (fills_next/1)
+% =====================================================================
+% fills_next(E) (curriculum): E is registered in term I but physically
+% carried out in term I+1 (the internship runs in the following summer).
+% Its credits and fee stay in term I; term I+1 is kept empty.  A history
+% attempt in term t reserves term t+1 as well.
+occupies(E, I)     :- fills_next(E), in(X, s(I)), base(X, E).
+reserved(I + 1, E) :- occupies(E, I), I + 1 > t, I < n.
+empty(s(J))        :- reserved(J, _).
+
+% =====================================================================
+% 18. Typical term of special courses (reported here, ranked in optimize.lp)
+% =====================================================================
+% typical_term(E,K) (curriculum): E is normally taken in the K-th regular
+% (core) term counted from enrollment, history included.  Positions are in
+% half steps so an extra term (summer) sits between its neighbours:
+% core term number K -> 2K, an extra term after core term K -> 2K+1.
+core_ord(I, K)       :- core_term(I), K = #count{ J : core_term(J), J <= I }.
+term_pos(I, 2*K)     :- core_ord(I, K).
+term_pos(I, 2*K + 1) :- extra_term(I), K = #count{ J : core_term(J), J < I }.
+typical_gap(E, |P - 2*K|) :- typical_term(E, K), placed(E, I), term_pos(I, P).
+
+% =====================================================================
+% 19. Interests, tags and popularity (reported here, ranked in optimize.lp)
+% =====================================================================
+% tag(E,K) (curriculum) plus two automatic tags: every major list is a tag
+% (major id) and every elective is tagged with its own id.  interest(K,W)
+% (student) scores each elective with the sum of the weights of its tags.
+in(E, el)  :- elective_group(G), in(E, G).
+tag(E, M)  :- major_course(M, E).
+tag(E, E)  :- in(E, el).
+score(E, S) :- in(E, el), S = #sum{ W,K : tag(E, K), interest(K, W) }, S != 0.
+
+% popularity(E,P) (data/elective_popularity.json): historical enrollment.
+% When any value is known, an elective without a value counts as 0.
+pop_known       :- popularity(_, _).
+pop_max(M)      :- pop_known, M = #max{ P : popularity(_, P) }.
+pop_value(E, P) :- popularity(E, P), in(E, el).
+pop_value(E, 0) :- pop_known, in(E, el), not popularity(E, _).
+
+% =====================================================================
+% 20. Elective slots and symmetry breaking
+% =====================================================================
+% An elective is "named" when the student mentioned it by id (pin or a
+% course-id interest).  Any other planned elective is reported
+% as a slot of the group it counts toward.
+named(E) :- pin(E, _).
+named(E) :- interest(E, _), in(E, m).
+
+% elective_class(E,K,R) (curriculum): electives of class K are
+% interchangeable -- same credits, groups, majors, tags, requisites (both
+% directions), offering, level, typical term, fills_next, note and
+% popularity.  For a student who has not singled any of them out, swapping
+% two members changes no constraint and no objective, so only the plan that
+% uses the lowest-ranked members, in non-decreasing term order, is kept.
+% This removes permutations and keeps at least one optimal plan.
+student_specific(E) :- named(E).
+student_specific(E) :- hist(_, E).
+student_specific(E) :- ban(E).
+student_specific(E) :- ban(E, _).
+student_specific(E) :- request(E).
+student_specific(E) :- offer(E, _).
+student_specific(E) :- closed(E, _).
+sym_free(E)     :- elective_class(E, _, _), not student_specific(E).
+placed_by(E, J) :- sym_free(E), placed(E, I), J = I..n.
+:- elective_class(A, K, RA), elective_class(B, K, RB), RA < RB,
+   sym_free(A), sym_free(B), placed(B, J), not placed_by(A, J).
+
+elective_slot(E, G)  :- in(E, s(I)), I > t, in(E, el), not named(E),
+                        counted(E, G).
+slot_option(E, A)    :- elective_slot(E, _), elective_class(E, K, _),
+                        elective_class(A, K, _), A != E, sym_free(A),
+                        not in(A, ok).
+interest_match(E, K) :- elective_slot(E, _), tag(E, K), interest(K, _), K != E.
+
+% Course notes (curriculum map(note,E,Text)) for planned courses.
+course_note(E, Text) :- map(note, E, Text), placed(E, _).

@@ -16,6 +16,7 @@ files, so results can be compared directly.
 | `graduation_requirements.json` | What a student must achieve to graduate | One file per curriculum |
 | `grading_policy.json` | Grade scale, GPA formula, retake rules | Shared by cohorts/curricula |
 | `tuition_policy.json` | Fees by program, semester type and credit load | Shared by cohorts/programs |
+| `elective_popularity.json` | Historical enrollment count per elective (**placeholder**: all `null`) | One file per curriculum |
 | `student_history.json` | Student attempts, external progress, expected results | Test cases |
 
 How they link:
@@ -76,6 +77,15 @@ Top-level fields:
 | `prerequisites` | Courses that must be credited before enrolling |
 | `corequisites` | Courses that must be credited before or with this one |
 | `offered_terms` | Academic-year term parts in which the course runs |
+| `tags` | Optional keywords students can weight with `interests` (major ids are added automatically) |
+| `typical_regular_term` | Optional: the regular term (1st, 2nd, …, counted from enrollment) in which the course is usually taken; a soft target |
+| `fills_next_term` | Optional `true`: the course is registered in one term and also occupies the next term, which is kept empty (internship) |
+| `note` | Optional text shown whenever the course is planned |
+
+Current planning attributes: integration projects (B3.2) typical term 5,
+multidisciplinary projects (B3.3) 6, internship CO3335 6 with
+`fills_next_term`, specialized project CO4029 7, capstone CO4337 8; all of
+them carry a faculty-regulation note.
 
 `offered_terms` uses the three-part calendar:
 
@@ -388,6 +398,26 @@ unit (half-up). The ASP engine compiles the current regular schedule to
 
 ---
 
+## `elective_popularity.json`
+
+Placeholder for the most realistic elective tie-breaker: how many students
+took each elective.
+
+| Field | Description |
+|---|---|
+| `schema_version` | Schema version |
+| `curriculum_id` | Must match `curriculum.json` `id` |
+| `status` | `placeholder` until real data is filled in |
+| `unit` | `students` |
+| `source`, `period` | Where and for which cohorts/terms the counts come from (`null` for now) |
+| `courses[]` | `{course, count}` for every elective; `count` is a non-negative integer or `null` |
+
+`null` counts are skipped, so the current file has no effect. Counts must come
+from one comparable population (for example the same cohorts) so courses are
+compared fairly.
+
+---
+
 ## `student_history.json`
 
 Test cases: a student's records plus the expected outcome, so each engine can
@@ -427,8 +457,12 @@ The ASP translator additionally understands these optional planner fields:
 | `major` | Declared curriculum major id |
 | `budget` | Maximum future tuition, in `money_unit` |
 | `request[]` | Courses the student explicitly wants to retake |
-| `avoid[]` / `prefer[]` | Elective taste used by the objective |
+| `interests` | `{keyword: weight}`, weight −10..10, non-zero; keywords are course tags, major ids or course ids |
+| `pin[]` | `{course, term}`: the course must be planned in that future term |
+| `ban[]` | `"COURSE"`: never planned; `{course, term}`: not planned in that future term |
 | `offer[]` / `closed[]` | `{course, term}` offering overrides |
+
+The full student-facing description is `pipeline/docs/USER_INPUT.md`.
 
 ### `attempts[]`
 

@@ -236,4 +236,89 @@ milestone(co4029, 90).
 % CO4337: 85% of 128 -> 109
 milestone(co4337, 109).
 
+% ------------------------------------------------------------------
+% Planning attributes. tag(E, K): keyword K (major lists are added
+% as tags in extension.lp). typical_term(E, K): usually taken in the
+% K-th regular term. fills_next(E): E also occupies the following
+% term. map(note, E, Text): shown whenever E is planned.
+% ------------------------------------------------------------------
+typical_term(co3101, 5).
+map(note, co3101, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co3103, 5).
+map(note, co3103, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co3105, 5).
+map(note, co3105, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co3107, 6).
+map(note, co3107, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co3109, 6).
+map(note, co3109, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co3111, 6).
+map(note, co3111, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co3119, 5).
+map(note, co3119, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co3127, 5).
+map(note, co3127, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co3335, 6).
+fills_next(co3335).
+map(note, co3335, "Needs faculty information: registered in this term, carried out in the following summer; the faculty sets the requirements each term.").
+typical_term(co4029, 7).
+map(note, co4029, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+typical_term(co4337, 8).
+map(note, co4337, "Faculty regulations for this term may add requirements; confirm with the faculty.").
+
+% ------------------------------------------------------------------
+% Popularity: popularity(E, Count) from elective_popularity.json.
+% No facts means the popularity tie-breaker is inactive.
+% ------------------------------------------------------------------
+
+% ------------------------------------------------------------------
+% Interchangeable electives: elective_class(E, Class, Rank). Members
+% of one class have identical curriculum facts; extension.lp uses
+% the rank to keep one plan per permutation.
+% ------------------------------------------------------------------
+elective_class(co3011, 1, 1).
+elective_class(co3013, 1, 2).
+elective_class(co3017, 1, 3).
+elective_class(co3065, 1, 4).
+elective_class(co3131, 1, 5).
+elective_class(co3021, 2, 1).
+elective_class(co3033, 2, 2).
+elective_class(co3023, 3, 1).
+elective_class(co3027, 3, 2).
+elective_class(co3129, 3, 3).
+elective_class(co3139, 3, 4).
+elective_class(co3035, 4, 1).
+elective_class(co3037, 4, 2).
+elective_class(co3085, 4, 3).
+elective_class(co3043, 5, 1).
+elective_class(co3045, 5, 2).
+elective_class(co3117, 5, 3).
+elective_class(co3047, 6, 1).
+elective_class(co3069, 6, 2).
+elective_class(co3083, 6, 3).
+elective_class(co3151, 6, 4).
+elective_class(co3153, 6, 5).
+elective_class(co3049, 7, 1).
+elective_class(co3051, 7, 2).
+elective_class(co3057, 8, 1).
+elective_class(co3059, 8, 2).
+elective_class(co3067, 9, 1).
+elective_class(co3071, 9, 2).
+elective_class(co3101, 10, 1).
+elective_class(co3103, 10, 2).
+elective_class(co3105, 10, 3).
+elective_class(co3119, 10, 4).
+elective_class(co3127, 10, 5).
+elective_class(co3107, 11, 1).
+elective_class(co3109, 11, 2).
+elective_class(co3111, 11, 3).
+elective_class(co4031, 12, 1).
+elective_class(co4035, 12, 2).
+elective_class(co4033, 13, 1).
+elective_class(co4039, 13, 2).
+elective_class(im1013, 14, 1).
+elective_class(im1023, 14, 2).
+elective_class(im1025, 14, 3).
+elective_class(im1027, 14, 4).
+
 % Curriculum-derived file ends here; see policy.lp and plan.lp.

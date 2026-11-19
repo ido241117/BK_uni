@@ -146,6 +146,16 @@ def _diagnostic_rows(
         rows.append(("Assumed passes", ", ".join(plan.assumed_pass)))
     if plan.must:
         rows.append(("Retakes needed", ", ".join(plan.must)))
+    if plan.reserved:
+        rows.append(
+            (
+                "Reserved terms",
+                ", ".join(
+                    f"semester {item['semester']} kept empty for {item['code']}"
+                    for item in plan.reserved
+                ),
+            )
+        )
     external = _external_labels(plan)
     if external:
         rows.append(("External", "; ".join(external)))
@@ -156,6 +166,16 @@ def _diagnostic_rows(
     if cost is not None:
         rows.append(("Future tuition", cost))
     return rows
+
+
+def _course_cells(course: Any) -> tuple[str, str]:
+    """Code and title cells; an unnamed elective is shown as its slot."""
+    if course.slot is not None:
+        return "slot", course.slot.label(course.credits)
+    title = course.name
+    if course.retake is not None:
+        title += f" (retake {course.retake})"
+    return course.code, title
 
 
 def objective_label(plan: Plan) -> str:
@@ -219,14 +239,18 @@ def _format_plan_text(
             f"  {'-' * 8}  {'-' * 48}  {'-' * 7}"
         )
         for course in semester.courses:
-            title = course.name
-            if course.retake is not None:
-                title += f" (retake {course.retake})"
+            code, title = _course_cells(course)
             lines.append(
-                f"  {course.code:<8}  "
+                f"  {code:<8}  "
                 f"{_truncate(title, 48):<48}  "
                 f"{course.credits:>7}"
             )
+            if course.slot is not None and course.slot.interests:
+                lines.append(
+                    f"  {'':<8}  interest: {', '.join(course.slot.interests)}"
+                )
+            if course.note:
+                lines.append(f"  {'':<8}  note: {course.note}")
         lines.append("")
 
     lines.append("-" * 66)
@@ -288,12 +312,14 @@ def _format_plan_markdown(
         lines.append("| Code | Course | Credits |")
         lines.append("| --- | --- | ---: |")
         for course in semester.courses:
-            title = course.name
-            if course.retake is not None:
-                title += f" (retake {course.retake})"
+            code, title = _course_cells(course)
+            if course.slot is not None and course.slot.interests:
+                title += f" *(interest: {', '.join(course.slot.interests)})*"
+            if course.note:
+                title += f" *(note: {course.note})*"
             title = title.replace("|", "\\|")
             lines.append(
-                f"| {course.code} | {title} | {course.credits} |"
+                f"| {code} | {title} | {course.credits} |"
             )
         lines.append("")
 
@@ -424,7 +450,7 @@ def render_solutions(
 # ---------------------------------------------------------------------------
 
 try:  # package import
-    from .data import load_bundle, load_tuition
+    from .data import load_bundle, load_popularity, load_tuition
     from .engine import SolverOptions, solve
     from .translation import (
         build_tuition,
@@ -437,7 +463,7 @@ try:  # package import
         write_programs,
     )
 except ImportError:  # script/test import
-    from data import load_bundle, load_tuition
+    from data import load_bundle, load_popularity, load_tuition
     from engine import SolverOptions, solve
     from translation import (
         build_tuition,
@@ -456,6 +482,7 @@ DEFAULT_CURRICULUM = DATA_DIR / "curriculum.json"
 DEFAULT_GRADING_POLICY = DATA_DIR / "grading_policy.json"
 DEFAULT_GRADUATION = DATA_DIR / "graduation_requirements.json"
 DEFAULT_TUITION_POLICY = DATA_DIR / "tuition_policy.json"
+DEFAULT_POPULARITY = DATA_DIR / "elective_popularity.json"
 DEFAULT_POLICY_OUTPUT = ASP_DIR / "policy.lp"
 
 
@@ -489,6 +516,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_TUITION_POLICY,
         help="path to tuition_policy.json",
+    )
+    parser.add_argument(
+        "--popularity",
+        type=Path,
+        default=DEFAULT_POPULARITY,
+        help=(
+            "path to elective_popularity.json (historical enrollment counts; "
+            "skipped when the file does not exist)"
+        ),
     )
     parser.add_argument(
         "--program",
@@ -962,6 +998,11 @@ def main(argv: list[str] | None = None) -> int:
         args.graduation,
     )
     tuition = load_tuition(args.tuition_policy)
+    popularity = (
+        load_popularity(args.popularity, bundle.curriculum)
+        if args.popularity is not None and args.popularity.is_file()
+        else None
+    )
     tuition_raw = load_json(args.tuition_policy)
     gpa_scale = next(
         (scale for scale in bundle.policy.scales if scale.default), None
@@ -1076,6 +1117,7 @@ def main(argv: list[str] | None = None) -> int:
             output,
             policy_output,
             extra_policy=build_tuition(tuition_raw, program),
+            popularity=popularity,
         )
         # Status messages go to stderr so that stdout stays machine-readable in
         # JSON and raw mode.  Temporary files used only for solving are quiet.

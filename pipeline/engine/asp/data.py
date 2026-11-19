@@ -318,6 +318,20 @@ def validate_curriculum(curriculum: dict[str, Any]) -> None:
             f"{item_context}.offered_terms",
         ):
             _int(term, f"{item_context}.offered_terms[]")
+        for tag in _list(item.get("tags", []), f"{item_context}.tags"):
+            _str(tag, f"{item_context}.tags[]")
+        if item.get("note") is not None:
+            _str(item["note"], f"{item_context}.note")
+        if item.get("typical_regular_term") is not None:
+            typical = _int(
+                item["typical_regular_term"], f"{item_context}.typical_regular_term"
+            )
+            if typical < 1:
+                raise DataError(
+                    f"{item_context}.typical_regular_term: must be >= 1"
+                )
+        if item.get("fills_next_term") is not None:
+            _bool(item["fills_next_term"], f"{item_context}.fills_next_term")
 
     groups = _list(_need(curriculum, "groups", context), f"{context}.groups")
     group_ids: set[str] = set()
@@ -943,6 +957,48 @@ def load_bundle(
         grading_path=Path(grading_path),
         graduation_path=Path(graduation_path),
     )
+
+
+def parse_popularity(
+    raw: dict[str, Any], curriculum: dict[str, Any], source: str = "elective_popularity.json"
+) -> dict[str, int]:
+    """Return ``{course_id: count}`` from an ``elective_popularity.json`` object.
+
+    A ``null`` count is a placeholder and is skipped, so a file of nulls has no
+    effect on the planner.  Every listed course must exist in the curriculum.
+    """
+    _int(_need(raw, "schema_version", source), f"{source}.schema_version")
+    declared = raw.get("curriculum_id")
+    if declared is not None and declared != curriculum.get("id"):
+        raise DataError(
+            f"{source}: curriculum_id {declared!r} does not match curriculum.json "
+            f"id {curriculum.get('id')!r}"
+        )
+    known = {course["id"] for course in curriculum.get("courses", [])}
+    counts: dict[str, int] = {}
+    seen: set[str] = set()
+    for index, raw_row in enumerate(
+        _list(_need(raw, "courses", source), f"{source}.courses")
+    ):
+        context = f"{source}.courses[{index}]"
+        row = _dict(raw_row, context)
+        course = _str(_need(row, "course", context), f"{context}.course")
+        if course not in known:
+            raise DataError(f"{context}: unknown course {course!r}")
+        if course in seen:
+            raise DataError(f"{context}: duplicate course {course!r}")
+        seen.add(course)
+        count = row.get("count")
+        if count is None:
+            continue
+        if _int(count, f"{context}.count") < 0:
+            raise DataError(f"{context}.count: must be non-negative")
+        counts[course] = count
+    return counts
+
+
+def load_popularity(path: Path, curriculum: dict[str, Any]) -> dict[str, int]:
+    return parse_popularity(load_json(path), curriculum, Path(path).name)
 
 
 """Data models and parsing for ``tuition_policy.json``.
