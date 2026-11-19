@@ -264,7 +264,12 @@ external_progress(social_work_days, 5, 3).
 external_progress(social_work_days, 7, 3).
 external_progress(social_work_days, 8, 3).
 student_major(ai).
+
 request(co3035).
-interest(co3137, -10).
-interest(co3057, 10).
-budget(15000).
+
+avoid(co3137).
+pref(co3057).
+
+
+% Budget
+budget(20000).
