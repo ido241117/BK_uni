@@ -30,11 +30,13 @@ from planner.facts import FixtureError
 from planner.normalize import normalize
 from planner.relations import enrich
 from planner.relations import load as load_snapshot
-from planner.solve import diff, solve
+from planner.result import diff
+from planner.solve_asp import solve_asp
 from planner.solve_cpsat import solve_cpsat
 from planner.validate import validate_plan
 
-SOLVERS = {"cpsat": solve_cpsat, "clingo": solve}
+# "clingo" = engine ASP (pipeline/engine/asp/core) qua adapter solve_asp.py (ASP-ADAPTER.md).
+SOLVERS = {"cpsat": solve_cpsat, "clingo": solve_asp}
 DEFAULT_SNAPSHOT = Path(__file__).with_name("data") / "relations-snapshot.json"
 
 
@@ -146,6 +148,8 @@ def run(payload: dict[str, Any], solver: str, time_limit: float,
         "violations": violations,
         "diff_vs_previous": diff_vs_previous,
         "infeasible_reason": _explain_unsat(fixture, scenario, time_limit) if result["status"] == "UNSAT" else None,
+        # Chi engine ASP co: GPA, chuyen nganh, dieu kien tot nghiep, lich su mo lop, hoc phi, tag.
+        "engine_report": result.get("engine_report"),
     }
 
 

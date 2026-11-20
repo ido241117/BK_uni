@@ -40,6 +40,9 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
 
     # 1. Mon dieu kien.
     conditions = set(fx.get("conditions", []))
+    # Trang thai mon dieu kien truoc khi bo: engine ASP dung lam external_requirement.
+    fx["_condition_statuses"] = {sc["course_code"]: sc["status"] for sc in fx["student"]["student_courses"]
+                                 if sc["course_code"] in conditions}
     if conditions:
         fx["curriculum_courses"] = [cc for cc in fx["curriculum_courses"] if cc["course_code"] not in conditions]
         for g in groups:
@@ -52,6 +55,12 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
     # 2. Chuyen nganh.
     target = fx["student"].get("target_specialization")
     children = [g for g in groups if g.get("parent")]
+    # Khoi con theo chuyen nganh truoc khi gop: engine ASP dung lam major/major_course.
+    fx["_specializations"] = [
+        {"code": g.get("specialization"), "name": g["name"], "members": list(g["members"]),
+         "required_count": g.get("required_count"), "required_credits": g.get("required_credits")}
+        for g in children if g.get("specialization")
+    ]
     if target is not None:
         chosen = [g for g in children if g.get("specialization") == target]
         if not chosen:

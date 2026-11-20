@@ -37,6 +37,10 @@ export class SolvePlanDto {
   @IsOptional() @IsArray()
   not_offered?: { course_code: string; semester_code: string }[];
 
+  @ApiPropertyOptional({ description: 'Kỳ sinh viên chủ động nghỉ, vd ["262"] (chỉ engine ASP dùng; không báo là kỳ trống)' })
+  @IsOptional() @IsArray() @Matches(SEMESTER, { each: true })
+  skip_semesters?: string[];
+
   @ApiPropertyOptional({ description: 'Kỳ hè sinh viên muốn học, vd ["263"]' })
   @IsOptional() @IsArray()
   summer_opt_in?: string[];

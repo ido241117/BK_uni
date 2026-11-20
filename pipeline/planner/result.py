@@ -1,64 +1,15 @@
-"""Chay Clingo va doi nghiem ve JSON theo ky."""
+"""Ket qua chung cua moi bo giai (CP-SAT, ASP engine): dung JSON theo ky, so sanh lo trinh.
+
+Truoc day nam trong ``solve.py`` cua bo giai Clingo cu; tach ra khi thay bo giai do bang
+engine ASP (``pipeline/engine/asp/core``, xem ``ASP-ADAPTER.md``).
+"""
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
-import clingo
-
-from planner.facts import assumptions, export_facts, plan_semesters
-from planner.normalize import normalize
+from planner.facts import assumptions, plan_semesters
 from planner.report import preferences_report, warnings
-
-ENCODING = Path(__file__).with_name("encoding.lp")
-
-
-def solve(
-    fixture: dict[str, Any],
-    scenario: dict[str, Any],
-    previous_plan: dict[str, str] | None = None,
-    time_limit: float = 30.0,
-    extra_args: tuple[str, ...] = (),
-) -> dict[str, Any]:
-    """``extra_args``: tham so them cho Clingo, vd ("--opt-strategy=usc",)."""
-    fixture = normalize(fixture)
-    facts = export_facts(fixture, scenario, previous_plan)
-    def logger(code: clingo.MessageCode, message: str) -> None:
-        # Predicate tuy chon (locked, prev, ...) co the khong co fact nao: binh thuong.
-        if code != clingo.MessageCode.AtomUndefined:
-            print(message)
-
-    ctl = clingo.Control(["--opt-mode=opt", *extra_args], logger=logger)
-    # Khong dung ctl.load(): Clingo tren Windows khong mo duoc duong dan co dau.
-    ctl.add("base", [], ENCODING.read_text(encoding="utf-8"))
-    ctl.add("base", [], facts)
-    ctl.ground([("base", [])])
-
-    best: list[tuple[str, int]] | None = None
-    proven = False
-
-    def on_model(model: clingo.Model) -> None:
-        # Duoc goi moi lan tim ra nghiem tot hon; nghiem cuoi cung la tot nhat.
-        nonlocal best, proven
-        best = [
-            (atom.arguments[0].string, atom.arguments[1].number)
-            for atom in model.symbols(shown=True)
-        ]
-        proven = model.optimality_proven
-
-    with ctl.solve(on_model=on_model, async_=True) as handle:
-        if not handle.wait(time_limit):
-            handle.cancel()
-        result = handle.get()
-    # Het gio truoc khi chung minh xong thi khong duoc goi la toi uu.
-    proven = proven or (best is not None and result.exhausted)
-
-    if best is None:
-        status = "UNSAT" if result.unsatisfiable else "TIMEOUT"
-    else:
-        status = "OPTIMAL" if proven else "SAT_NOT_PROVEN_OPTIMAL"
-    return make_result(fixture, scenario, "clingo", status, best, previous_plan)
 
 
 def make_result(

@@ -1,33 +1,37 @@
-# Planner: lập lộ trình học bằng Clingo
+# Planner: lập lộ trình học (CP-SAT và engine ASP)
 
-Bản mẫu chạy được từ đầu đến cuối: đọc JSON, sinh facts, giải bằng Clingo, trả lộ trình theo kỳ, rồi kiểm tra lại bằng một validator độc lập.
+Bản mẫu chạy được từ đầu đến cuối: đọc JSON, giải bằng một trong hai bộ giải, trả lộ trình theo kỳ, rồi kiểm tra lại bằng một validator độc lập.
+
+> **Từ 20/11/2026:** lựa chọn `clingo` là **engine ASP** (`pipeline/engine/asp/core`, từ nhánh `research-pipeline`) qua adapter `solve_asp.py`. Encoding Clingo cũ (`encoding.lp`, `solve.py`) đã bỏ. Đầu vào, đầu ra và khác biệt của engine ASP: [ASP-ADAPTER.md](ASP-ADAPTER.md). Các mục 2.6 và 3 dưới đây đã rút gọn tương ứng; mục 4.4 và 6 giữ số liệu của CP-SAT và encoding cũ.
 
 **Trạng thái:** bản mẫu trên dữ liệu bịa (14 môn). Chưa nhúng vào web, chưa đọc Supabase, luật chưa được đối chiếu với quy chế trường. Không dùng để tư vấn cho sinh viên thật.
 
 ## 1. Tổng quan pipeline
 
 ```
-fixtures/toy.json ──► facts.py ──► facts (văn bản ASP) ─┐
-   (dữ liệu + kịch bản)  (kiểm tra + dịch)              ├─► solve.py (Clingo) ──► JSON lộ trình
-                                     encoding.lp ───────┘                             │
-                                       (luật)                                         ▼
-fixtures/toy.json ───────────────────────────────────────────────────────────► validate.py
-   (đọc lại JSON gốc, không dùng facts hay Clingo)                              (danh sách vi phạm)
+                                   ┌─► solve_cpsat.py (CP-SAT) ──────────────┐
+fixtures/toy.json ──► normalize ──►┤                                         ├─► result.py ──► JSON lộ trình
+   (dữ liệu + kịch bản)  + facts.py└─► solve_asp.py ─► engine ASP (Clingo) ──┘                    │
+                       (kiểm tra)        (JSON → facts)  pipeline/engine/asp                        ▼
+fixtures/toy.json ───────────────────────────────────────────────────────────────────────────► validate.py
+   (đọc lại JSON gốc, không dùng code của bộ giải)                                         (danh sách vi phạm)
 ```
 
 | File | Vai trò |
 |---|---|
 | `fixtures/toy.json` | Chương trình đào tạo, hồ sơ sinh viên và các kịch bản what-if |
-| `facts.py` | Kiểm tra đầu vào, dịch JSON thành facts. Không suy luận gì |
-| `encoding.lp` | Toàn bộ luật: lựa chọn, ràng buộc cứng, mục tiêu |
-| `solve.py` | Gọi Clingo, đổi nghiệm về JSON, tính khác biệt giữa hai lộ trình |
+| `facts.py` | Kiểm tra đầu vào; các luật dùng chung cho CP-SAT, validator, báo cáo (tín chỉ từng kỳ, kỳ hè, cấp độ, ngưỡng tốt nghiệp) |
+| `solve_asp.py` | Adapter engine ASP: dịch JSON thành facts, gọi Clingo, đọc kết quả ([ASP-ADAPTER.md](ASP-ADAPTER.md)) |
+| `../engine/asp/` | Engine ASP: luật (`core/*.lp`) và quy định của trường (`policy.lp`) |
+| `result.py` | Dựng kết quả chung cho mọi bộ giải, tính khác biệt giữa hai lộ trình |
 | `validate.py` | Kiểm tra lộ trình bằng Python thuần, cố ý không dùng chung code với solver |
-| `run_scenarios.py` | Chạy mọi kịch bản bằng Clingo và in kết quả |
-| `solve_cpsat.py` | Bộ giải thứ hai bằng OR-Tools CP-SAT (mục 6) |
+| `run_scenarios.py` | Chạy mọi kịch bản (mặc định engine ASP, `--solver cpsat`) và in kết quả |
+| `solve_cpsat.py` | Bộ giải bằng OR-Tools CP-SAT (mục 6) |
 | `compare.py` | So sánh hai bộ giải và đo thời gian |
-| `tests/test_planner.py` | Test với đáp án xếp tay |
+| `tests/test_planner.py` | Test với đáp án xếp tay (chạy bằng CP-SAT) |
+| `tests/test_solve_asp.py` | Test của engine ASP và adapter |
 
-Nguyên tắc tách lớp: **dữ liệu** nằm trong JSON, **luật** nằm trong `encoding.lp`. Đổi sinh viên hay đổi kịch bản thì chỉ đổi facts, không sửa luật.
+Nguyên tắc tách lớp: **dữ liệu** nằm trong JSON, **luật** nằm trong engine (`pipeline/engine/asp`) hoặc `solve_cpsat.py`. Đổi sinh viên hay đổi kịch bản thì chỉ đổi dữ liệu, không sửa luật.
 
 ## 2. Đầu vào
 
@@ -93,23 +97,7 @@ Mỗi kịch bản là một bộ giả định đặt lên cùng một hồ sơ
 
 ### 2.6 Facts sinh ra
 
-Xem bằng `python -m planner.run_scenarios --facts base`. Kỳ được đánh số 1, 2, 3 theo thứ tự thời gian để so sánh trước sau.
-
-```prolog
-min_credits(3).  max_credits(12).
-course("CS301", 3).
-required("CS301").
-group_credits("Tu chon", 6).
-member("Tu chon", "EL301").
-relation("CS301", "CS201", "prerequisite").
-status("MA102", "failed").
-status("CS201", "in-progress").
-assume_result("CS201", "pass").
-plan_semester(1, "262").  plan_semester(2, "271").  plan_semester(3, "272").
-not_offered("EL303", 2).
-locked("EL303", 1).        % chỉ khi kịch bản có khóa môn
-prev("CS301", 1).          % lộ trình cơ sở, chỉ có ở kịch bản what-if
-```
+Chỉ engine ASP dùng facts. Xem bằng `python -m planner.run_scenarios --facts base`; bảng đối chiếu từng trường JSON với fact: [ASP-ADAPTER.md](ASP-ADAPTER.md), mục 4.
 
 ## 3. Solver và thuật toán
 
@@ -122,60 +110,13 @@ Clingo là bộ giải Answer Set Programming. Ta không viết thuật toán x�
 
 Để tối ưu, mỗi lần tìm được một lộ trình, Clingo thêm yêu cầu "lộ trình sau phải tốt hơn" rồi tìm tiếp. Khi không còn lộ trình nào tốt hơn thì lộ trình cuối cùng được **chứng minh** là tối ưu.
 
-### 3.2 Cấu trúc encoding: sinh, định nghĩa, loại
+### 3.2 Luật và mục tiêu của engine ASP
 
-**Sinh (không gian lựa chọn).** Mỗi môn chưa đạt được xếp vào nhiều nhất một kỳ, hoặc không xếp:
+Luật nằm trong `pipeline/engine/asp/core/*.lp`, quy định của trường trong `pipeline/engine/asp/policy.lp`; thứ tự mục tiêu `@8..@0` ở `core/optimize.lp`. Mô tả và các thay đổi so với nhánh `research-pipeline`: `pipeline/engine/asp/README.md`; khác biệt với CP-SAT: [ASP-ADAPTER.md](ASP-ADAPTER.md), mục 7.
 
-```prolog
-{ take(C, I) : sem(I) } 1 :- course(C, _), not passed(C).
-```
+### 3.3 Cách chạy what-if
 
-**Định nghĩa (khái niệm phụ suy ra từ lựa chọn).**
-
-```prolog
-passed(C)    :- status(C, "completed").
-passed(C)    :- status(C, "in-progress"), assume_result(C, "pass").
-attempted(C) :- status(C, _).
-done(C)      :- passed(C).
-done(C)      :- take(C, _).                  % môn xếp trong tương lai được giả định đậu
-take_before(C, I) :- take(C, J), sem(I), J < I.
-load(I, L)   :- sem(I), L = #sum { Cr, C : take(C, I), course(C, Cr) }.
-```
-
-**Loại (ràng buộc cứng).** Dòng bắt đầu bằng `:-` đọc là "không được phép xảy ra".
-
-| Ràng buộc | Luật |
-|---|---|
-| Đủ môn bắt buộc | `:- required(C), not done(C).` |
-| Đủ tín chỉ khối tự chọn | `:- group_credits(G, N), #sum { Cr, C : member(G, C), done(C), course(C, Cr) } < N.` |
-| Đủ số môn khối tự chọn | `:- group_count(G, N), #count { C : member(G, C), done(C) } < N.` |
-| Tiên quyết | `:- take(C, I), relation(C, R, "prerequisite"), not passed(R), not take_before(R, I).` |
-| Học trước | `:- take(C, I), relation(C, R, "prior"), not attempted(R), not take_before(R, I).` |
-| Song hành | `:- take(C, I), relation(C, R, "corequisite"), not attempted(R), not take_before(R, I), not take(R, I).` |
-| Môn không mở | `:- take(C, I), not_offered(C, I).` |
-| Môn bị khóa | `:- locked(C, I), not take(C, I).` |
-| Tối đa tín chỉ | `:- load(I, L), max_credits(M), L > M.` |
-| Tối thiểu tín chỉ | `:- used_after(I), load(I, L), min_credits(M), L < M.` |
-
-Mức tối thiểu áp dụng cho mọi kỳ **trừ kỳ cuối cùng có môn**, vì kỳ cuối thường chỉ còn vài môn. Hệ quả: không được bỏ trống một kỳ ở giữa.
-
-### 3.3 Mục tiêu (ràng buộc mềm)
-
-Vi phạm vẫn hợp lệ, chỉ kém hơn. Số sau `@` là mức ưu tiên; mức cao được tối ưu xong hẳn rồi mới xét mức thấp.
-
-```prolog
-#minimize { I @ 3 : last(I) }.                           % 1. học xong sớm nhất
-#minimize { Cr @ 2, C : take(C, _), course(C, Cr) }.      % 2. không học thừa tín chỉ
-#minimize { 1 @ 1, C, I : prev(C, I), not take(C, I) }.   % 3. ít khác lộ trình cũ nhất
-```
-
-Mục tiêu 3 chỉ có tác dụng ở kịch bản what-if: lộ trình cơ sở được đưa vào dưới dạng `prev`, nên lộ trình mới chỉ đổi những gì buộc phải đổi. Nhờ vậy phần khác biệt in ra phản ánh tác động thật của giả định, không phải do solver chọn ngẫu nhiên giữa các phương án ngang nhau.
-
-Thứ tự ưu tiên này là lựa chọn của bản mẫu, chưa có căn cứ từ khảo sát sinh viên.
-
-### 3.4 Cách chạy what-if
-
-`run_scenarios.py` giải kịch bản đầu tiên làm cơ sở, rồi với mỗi kịch bản sau: sinh facts mới (giả định khác) kèm `prev` từ lộ trình cơ sở, giải lại, và so sánh. Không có thuật toán riêng cho từng loại what-if.
+`run_scenarios.py` giải kịch bản đầu tiên làm cơ sở, rồi giải lại từng kịch bản sau và so sánh. CP-SAT có mục tiêu S3 (ít đổi so với lộ trình cơ sở); engine ASP chưa có, nên lộ trình what-if của engine có thể đổi cả những môn không liên quan.
 
 ## 4. Đầu ra
 
@@ -216,7 +157,7 @@ Ghi ra file bằng `--json output/planner.json`. Một phần tử cho mỗi k�
 
 ### 4.3 Validator
 
-`validate.py` nhận JSON gốc, kịch bản và lộ trình, rồi tự kiểm tra lại mọi ràng buộc cứng bằng Python. Nó không import `facts.py`, `solve.py` hay Clingo, nên lỗi trong exporter hoặc encoding sẽ lộ ra dưới dạng vi phạm. `violations` rỗng nghĩa là lộ trình hợp lệ.
+`validate.py` nhận JSON gốc, kịch bản và lộ trình, rồi tự kiểm tra lại mọi ràng buộc cứng bằng Python. Nó không import `facts.py`, `solve_asp.py`, `solve_cpsat.py` hay Clingo, nên lỗi trong adapter hoặc encoding sẽ lộ ra dưới dạng vi phạm. `violations` rỗng nghĩa là lộ trình hợp lệ.
 
 Giới hạn: validator chỉ kiểm tra tính hợp lệ, không kiểm tra tối ưu. Nó và solver cùng dựa trên một cách hiểu quy chế, nên nếu cách hiểu đó sai thì cả hai sai giống nhau.
 
@@ -243,16 +184,18 @@ python -m venv .venv
 
 ```bash
 .venv/Scripts/python -m planner.run_scenarios                          # chạy mọi kịch bản
-.venv/Scripts/python -m planner.run_scenarios --facts base             # xem facts của một kịch bản
+.venv/Scripts/python -m planner.run_scenarios --facts base             # xem facts engine ASP của một kịch bản
 .venv/Scripts/python -m planner.run_scenarios --json output/planner.json
-.venv/Scripts/python -m pytest planner -q                              # 23 test
+.venv/Scripts/python -m pytest planner -q
 ```
 
-Lưu ý: Clingo trên Windows không mở được file có dấu tiếng Việt trong đường dẫn, nên `solve.py` đọc `encoding.lp` bằng Python rồi mới đưa nội dung vào Clingo.
+Lưu ý: Clingo trên Windows không mở được file có dấu tiếng Việt trong đường dẫn, nên `solve_asp.py` đọc các file `.lp` bằng Python rồi mới đưa nội dung vào Clingo.
 
 ## 6. Bộ giải thứ hai: OR-Tools CP-SAT
 
-`solve_cpsat.py` giải cùng bài toán bằng OR-Tools CP-SAT. Nó nhận cùng JSON và kịch bản, trả cùng dạng JSON, nhưng viết độc lập: đọc thẳng JSON, không đi qua facts hay `encoding.lp`.
+`solve_cpsat.py` giải cùng bài toán bằng OR-Tools CP-SAT. Nó nhận cùng JSON và kịch bản, trả cùng dạng JSON, nhưng viết độc lập: đọc thẳng JSON, không đi qua facts hay engine ASP.
+
+> Bảng và nhận xét so sánh dưới đây đo với **encoding Clingo cũ** (đã bỏ 20/11/2026), giữ lại làm tư liệu. Engine ASP mới: KHMT 2023 (96 môn) `OPTIMAL` trong khoảng 1–2,5 giây ([ASP-ADAPTER.md](ASP-ADAPTER.md), mục 8).
 
 **Mô hình.** Biến `x[c, i] = 1` nếu môn `c` xếp vào kỳ thứ `i`. Mọi ràng buộc ở mục 3.2 được viết lại thành bất đẳng thức tuyến tính, ví dụ tiên quyết: `x[c, i] <= tổng x[r, j] với j < i`. Ba mức ưu tiên của mục tiêu được gộp thành một tổng có trọng số đủ lớn để mức cao luôn thắng mức thấp.
 
@@ -268,7 +211,7 @@ Lưu ý: Clingo trên Windows không mở được file có dấu tiếng Việt
 
 Cách đọc kết quả này:
 - Lộ trình Clingo tìm được ở cỡ lớn **có cùng giá trị mục tiêu** với nghiệm CP-SAT đã chứng minh tối ưu; cái Clingo thiếu là phần chứng minh.
-- Nguyên nhân đã được xác định bằng `python -m planner.compare --diagnose`: Clingo kẹt ở việc chứng minh "không thể xong sớm hơn một kỳ", vốn là một phép đếm tín chỉ. Tắt nới lỏng tuyến tính thì CP-SAT cũng kẹt tương tự. Chi tiết: `docs/luu-tru/2026-11-15-planner-3-so-sanh.md`.
+- Nguyên nhân đã được xác định bằng lệnh chẩn đoán của `compare.py` khi đó (đã bỏ cùng encoding cũ): Clingo kẹt ở việc chứng minh "không thể xong sớm hơn một kỳ", vốn là một phép đếm tín chỉ. Tắt nới lỏng tuyến tính thì CP-SAT cũng kẹt tương tự. Chi tiết: `docs/luu-tru/2026-11-15-planner-3-so-sanh.md`.
 - So sánh chỉ đúng cho **encoding này với cấu hình mặc định**. Encoding ASP có thể còn tối ưu được; dữ liệu là sinh ngẫu nhiên, chưa phải chương trình thật.
 
 **Mỗi bộ giải hợp với việc gì**
@@ -282,7 +225,7 @@ Cách đọc kết quả này:
 | Liệt kê mọi lộ trình hợp lệ | Có sẵn | Có nhưng kém tiện |
 
 **Lợi ích của việc có hai bộ giải**
-- **Đối chiếu chéo:** hai cách viết độc lập cho cùng giá trị mục tiêu là bằng chứng mạnh hơn nhiều so với một bộ giải tự kiểm tra. Test `test_cpsat_agrees_with_clingo_*` chạy việc này tự động.
+- **Đối chiếu chéo:** hai cách viết độc lập cho cùng giá trị mục tiêu là bằng chứng mạnh hơn nhiều so với một bộ giải tự kiểm tra. Với encoding cũ, test tự động kiểm tra hai bộ giải cùng giá trị mục tiêu; engine ASP dùng quy định và mục tiêu khác nên nay chỉ kiểm tra so sánh chạy được (`test_compare_runs_both_solvers_*`).
 - **Dùng được ở cỡ thật:** CP-SAT trả lời what-if trong vài trăm mili giây kèm chứng minh tối ưu.
 - **Có số liệu so sánh thật** giữa hai hướng mà tài liệu của nhóm đang phân vân (CP-SAT ở bản 28/10, Clingo ở bản 05/11).
 

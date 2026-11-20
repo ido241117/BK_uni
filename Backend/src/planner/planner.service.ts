@@ -19,7 +19,7 @@ import { StudentProgressImport } from '../student/entities/student-progress-impo
 import { SolvePlanDto } from './dto/solve-plan.dto';
 import { analyzeMybk, CatalogCourse, MybkParsed } from './mybk-check';
 import { importedCodes, ImportedFile, planImportStatuses } from './mybk-import';
-import { buildPlannerInput, PlannerSource } from './planner-input';
+import { buildPlannerInput, PlannerSource, progressFromImport } from './planner-input';
 import { PlannerRunner } from './planner.runner';
 
 /**
@@ -65,6 +65,7 @@ export class PlannerService {
       ]);
     const courseIds = items.map((it) => it.course_id);
     const openedSemesters = courseIds.length ? await this.opened.find({ where: { course_id: In(courseIds) } }) : [];
+    const progressRow = await this.progress.findOne({ where: { user_id: userId } });
     const course = (c: { id: string; code: string; name: string; credits: number }) =>
       ({ id: c.id, code: c.code, name: c.name, credits: c.credits });
     return {
@@ -89,6 +90,7 @@ export class PlannerService {
       openedSemesters: openedSemesters.map((o) => ({ course_id: o.course_id, semester_code: o.semester_code })),
       profile: { admission_year: profile.admission_year, target_specialization_id: profile.target_specialization_id },
       studentCourses: studentCourses.filter((sc) => sc.course).map((sc) => ({ course: course(sc.course), status: sc.status })),
+      progress: progressFromImport(progressRow?.data),
     };
   }
 

@@ -27,6 +27,8 @@ export interface SolvePlanPayload {
     student_flags?: { english_grad_reading?: boolean; mos?: boolean };
     use_inferred_relations?: boolean;
     previous_plan?: Record<string, string>;
+    /** Chỉ bộ giải Clingo (engine ASP): kỳ sinh viên chủ động nghỉ. */
+    skip_semesters?: string[];
 }
 
 export interface PlanCourse {
@@ -65,6 +67,28 @@ export interface PlanResult {
     violations: string[];
     diff_vs_previous?: string[];
     infeasible_reason?: string | null;
+    /** Chỉ bộ giải Clingo (engine ASP), xem pipeline/planner/ASP-ADAPTER.md mục 6. */
+    engine_report?: EngineReport | null;
+}
+
+export interface EngineReport {
+    objective: { level: string; priority: number; value: number }[];
+    gaps: string[];
+    gpa: Record<string, number>;
+    gpa_required_avg?: number;
+    gpa_best_case?: number;
+    gpa_already_satisfied?: boolean;
+    gpa_requirement_impossible?: boolean;
+    majors: { code: string; count: number; earned: boolean }[];
+    graduation_blocked: string[];
+    external_missed: { requirement: string; year: number }[];
+    external_pending: { requirement: string; year: number; missing: number }[];
+    offering_misses: { course: string; semester: string; missed_percent: number }[];
+    fees: Record<string, number>;
+    course_tags?: Record<string, string[]>;
+    degree_complete: boolean;
+    ready_to_graduate: boolean;
+    ground_and_solve_ms?: number;
 }
 
 /* ------------------------- File tiến độ myBK (giai đoạn 8) ------------------------- */

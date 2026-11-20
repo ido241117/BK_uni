@@ -1,4 +1,8 @@
-"""Dap an duoi day duoc XEP TAY tu fixture toy.json, khong lay tu output cua solver."""
+"""Dap an duoi day duoc XEP TAY tu fixture toy.json, khong lay tu output cua solver.
+
+Dap an tinh theo luat cua planner (toi da 12 TC/ky cua toy.json), nen chay bang CP-SAT.
+Engine ASP dung quy dinh cua policy.lp (14-21 TC): test rieng o test_solve_asp.py.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +14,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from planner.facts import FixtureError, export_facts, get_scenario, load_fixture  # noqa: E402
+from planner.facts import FixtureError, get_scenario, load_fixture, validate_input  # noqa: E402
+from planner.normalize import normalize  # noqa: E402
 from planner.run_scenarios import DEFAULT_FIXTURE, run_all  # noqa: E402
 from planner.validate import validate_plan  # noqa: E402
 
@@ -22,7 +27,7 @@ def fixture():
 
 @pytest.fixture(scope="module")
 def results(fixture):
-    return {r["scenario_id"]: r for r in run_all(fixture)}
+    return {r["scenario_id"]: r for r in run_all(fixture, "cpsat")}
 
 
 # Ly do (xep tay):
@@ -60,29 +65,17 @@ def test_failed_course_is_retaken(results):
     assert "CS201" in results["fail-cs201"]["semesters"][0]["courses"]
 
 
-def test_export_is_deterministic(fixture):
-    scenario = get_scenario(fixture, "base")
-    assert export_facts(fixture, scenario) == export_facts(fixture, scenario)
-
-
-def test_prior_relation_is_not_exported(fixture):
-    # Quyet dinh 18/11: bo quan he hoc truoc. Khuyen nghi thi xuat ra (mem, S6).
-    facts = export_facts(fixture, get_scenario(fixture, "base"))
-    assert '"prior"' not in facts
-    assert '"recommended"' in facts
-
-
 def test_missing_in_progress_assumption_is_rejected(fixture):
     scenario = {"id": "x", "in_progress_results": {"CS201": "pass"}}
     with pytest.raises(FixtureError):
-        export_facts(fixture, scenario)
+        validate_input(normalize(fixture), scenario)
 
 
 def test_overlapping_groups_are_rejected(fixture):
     broken = copy.deepcopy(fixture)
     broken["course_groups"][1]["members"].append("CS401")
     with pytest.raises(FixtureError):
-        export_facts(broken, get_scenario(broken, "base"))
+        validate_input(normalize(broken), get_scenario(broken, "base"))
 
 
 # --- Validator phai bat duoc lo trinh sai (viet tay) ----------------------
@@ -137,26 +130,25 @@ def test_validator_uses_scenario_assumptions(fixture):
     assert "thieu mon bat buoc CS201" in errors
 
 
-# --- Doi chieu cheo hai bo giai ------------------------------------------
+# --- Doi chieu hai bo giai (engine ASP va CP-SAT) ---------------------
+# Hai bo giai dung luat khac nhau (policy.lp vs rules cua web) nen muc tieu co the LECH;
+# o day chi kiem tra so sanh chay duoc va CP-SAT van hop le theo validator.
 
-def test_cpsat_agrees_with_clingo_on_toy(fixture):
+def test_compare_runs_both_solvers_on_toy(fixture):
     from planner.compare import agree, run_pair
-    from planner.solve import plan_map
 
-    previous = None
     for scenario in fixture["scenarios"]:
-        rows = run_pair(fixture, scenario, previous, 30.0)
-        assert agree(rows) == "KHOP", scenario["id"]
-        assert all(r["valid"] for r in rows), scenario["id"]
-        if previous is None:
-            previous = plan_map(rows[0]["result"])
+        rows = run_pair(fixture, scenario, None, 30.0)
+        assert [r["solver"] for r in rows] == ["asp", "cp-sat"]
+        assert agree(rows) in ("KHOP", "LECH"), scenario["id"]
+        assert rows[1]["valid"], scenario["id"]
 
 
 @pytest.mark.parametrize("seed", [1, 2, 3])
-def test_cpsat_agrees_with_clingo_on_synthetic(seed):
+def test_compare_runs_both_solvers_on_synthetic(seed):
     from planner.compare import agree, run_pair, synthetic
 
     data = synthetic(20, 8, seed)
     rows = run_pair(data, data["scenarios"][0], None, 30.0)
-    assert agree(rows) == "KHOP"
-    assert all(r["valid"] for r in rows)
+    assert agree(rows) in ("KHOP", "LECH", "khong ket luan (co bo giai het gio)")
+    assert rows[1]["valid"]

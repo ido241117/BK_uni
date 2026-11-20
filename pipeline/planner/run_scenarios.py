@@ -3,7 +3,7 @@
     cd pipeline
     .venv/Scripts/python -m planner.run_scenarios
     .venv/Scripts/python -m planner.run_scenarios --json output/planner.json
-    .venv/Scripts/python -m planner.run_scenarios --facts base     # xem facts
+    .venv/Scripts/python -m planner.run_scenarios --facts base     # xem facts cua engine ASP
 """
 
 from __future__ import annotations
@@ -12,8 +12,10 @@ import argparse
 import json
 from pathlib import Path
 
-from planner.facts import export_facts, get_scenario, load_fixture
-from planner.solve import diff, plan_map, solve
+from planner.facts import get_scenario, load_fixture, validate_input
+from planner.normalize import normalize
+from planner.result import diff, plan_map
+from planner.solve_asp import build_program, solve_asp
 from planner.validate import validate_plan
 
 DEFAULT_FIXTURE = Path(__file__).with_name("fixtures") / "toy.json"
@@ -24,7 +26,7 @@ def run_all(fixture: dict, solver: str = "clingo") -> list[dict]:
     if solver == "cpsat":
         from planner.solve_cpsat import solve_cpsat as solve_fn
     else:
-        solve_fn = solve
+        solve_fn = solve_asp  # "clingo" = engine ASP
     results: list[dict] = []
     base: dict | None = None
     for scenario in fixture["scenarios"]:
@@ -61,12 +63,15 @@ def main() -> None:
     parser.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
     parser.add_argument("--solver", choices=["clingo", "cpsat"], default="clingo")
     parser.add_argument("--json", type=Path, help="ghi toan bo ket qua ra file JSON")
-    parser.add_argument("--facts", metavar="SCENARIO_ID", help="chi in facts cua mot kich ban")
+    parser.add_argument("--facts", metavar="SCENARIO_ID", help="chi in facts engine ASP cua mot kich ban")
     args = parser.parse_args()
 
     fixture = load_fixture(args.fixture)
     if args.facts:
-        print(export_facts(fixture, get_scenario(fixture, args.facts)), end="")
+        scenario = get_scenario(fixture, args.facts)
+        normalized = normalize(fixture)
+        validate_input(normalized, scenario)
+        print(build_program(normalized, scenario)[0], end="")
         return
 
     results = run_all(fixture, args.solver)

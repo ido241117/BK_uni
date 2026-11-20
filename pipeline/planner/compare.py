@@ -1,13 +1,13 @@
-"""So sanh Clingo va CP-SAT: cung dau vao, doi chieu trang thai, muc tieu, thoi gian.
+"""So sanh engine ASP (Clingo) va CP-SAT: cung dau vao, doi chieu trang thai, muc tieu, thoi gian.
 
     cd pipeline
     .venv/Scripts/python -m planner.compare                 # 5 kich ban cua toy.json
     .venv/Scripts/python -m planner.compare --benchmark     # du lieu sinh ngau nhien
-    .venv/Scripts/python -m planner.compare --diagnose      # vi sao Clingo cham?
 
 Hai bo giai co the tra hai lo trinh KHAC nhau ma van dung, mien la cung gia tri
 muc tieu. Vi vay so sanh bo ba (ky cuoi, tong tin chi, so thay doi), khong so
-tung mon.
+tung mon. Engine ASP dung quy dinh cua policy.lp va thu tu muc tieu rieng
+(ASP-ADAPTER.md), nen "LECH" la ket qua binh thuong: day chinh la diem can so sanh.
 """
 
 from __future__ import annotations
@@ -18,10 +18,10 @@ import time
 from typing import Any
 
 from planner.facts import load_fixture
-from planner.report import metrics
 from planner.report import objective as report_objective
 from planner.run_scenarios import DEFAULT_FIXTURE
-from planner.solve import plan_map, solve
+from planner.result import plan_map
+from planner.solve_asp import solve_asp
 from planner.solve_cpsat import solve_cpsat
 from planner.validate import validate_plan
 
@@ -35,7 +35,7 @@ def objective(fixture: dict, scenario: dict, result: dict, previous: dict[str, s
 
 def run_pair(fixture: dict, scenario: dict, previous: dict[str, str] | None, time_limit: float):
     rows = []
-    for name, fn in (("clingo", solve), ("cp-sat", solve_cpsat)):
+    for name, fn in (("asp", solve_asp), ("cp-sat", solve_cpsat)):
         start = time.perf_counter()
         result = fn(fixture, scenario, previous, time_limit)
         elapsed = time.perf_counter() - start
@@ -99,7 +99,8 @@ def synthetic(n_courses: int, n_semesters: int, seed: int) -> dict[str, Any]:
     rng.shuffle(elective)
     elective_need = sum(credit[c] for c in elective) // 2
     total = sum(credit[c] for c in required) + elective_need
-    semesters = [f"S{k}" for k in range(n_semesters + 1)]
+    # Ma ky that (YYS, chi ky chinh) vi engine ASP tinh lich tu ma ky.
+    semesters = [f"{24 + k // 2}{1 + k % 2}" for k in range(n_semesters + 1)]
     blocked = [
         {"course_code": c, "semester_code": rng.choice(semesters[1:]), "status": "not-offered"}
         for c in rng.sample(codes, n_courses // 5)
@@ -121,7 +122,7 @@ def synthetic(n_courses: int, n_semesters: int, seed: int) -> dict[str, Any]:
              "required_credits": elective_need, "members": elective},
         ],
         "offerings": {"unknown_policy": "assume-open", "records": blocked},
-        "student": {"current_semester": "S0", "student_courses": []},
+        "student": {"current_semester": semesters[0], "student_courses": []},
         "scenarios": [{"id": "fresh", "in_progress_results": {}}],
     }
 
@@ -135,82 +136,12 @@ def benchmark(time_limit: float) -> None:
             print_rows(f"{n_courses} mon, seed {seed}", rows)
 
 
-# --- Chan doan: phan nao cua bai toan lam Clingo cham? -----------------------
-
-def _clingo_variant(fixture: dict, keep: set[str], extra: str, time_limit: float) -> str:
-    """Giai bang Clingo, chi giu cac #minimize cua mong muon trong ``keep`` (vd {"s1"})."""
-    import re
-
-    import clingo
-
-    from planner.facts import export_facts
-    from planner.solve import ENCODING
-
-    lines = []
-    for line in ENCODING.read_text(encoding="utf-8").splitlines():
-        found = re.match(r"#minimize.*priority\((s\d)", line)
-        if found and found.group(1) not in keep:
-            continue
-        lines.append(line)
-    ctl = clingo.Control(["--opt-mode=opt"], logger=lambda code, message: None)
-    ctl.add("base", [], "\n".join(lines) + "\n" + extra)
-    ctl.add("base", [], export_facts(fixture, fixture["scenarios"][0]))
-    ctl.ground([("base", [])])
-    start = time.perf_counter()
-    with ctl.solve(async_=True) as handle:
-        finished = handle.wait(time_limit)
-        if not finished:
-            handle.cancel()
-        result = handle.get()
-    elapsed = (time.perf_counter() - start) * 1000
-    conflicts = int(ctl.statistics["solving"]["solvers"]["conflicts"])
-    if not finished:
-        verdict = "HET GIO"
-    else:
-        verdict = "xong, co nghiem" if result.satisfiable else "xong, vo nghiem"
-    return f"{verdict:<16} {elapsed:8.0f} ms  {conflicts:>7} mau thuan"
-
-
-def diagnose(time_limit: float) -> None:
-    fixture = synthetic(40, 8, 1)
-    scenario = fixture["scenarios"][0]
-    reference = solve_cpsat(fixture, scenario, None, time_limit)
-    m = metrics(fixture, scenario, plan_map(reference), None)
-    best_last, total = m["S1"], m["S2"]
-    cap = fixture["curriculum"]["max_semester_credits"]
-    print(f"Bai 40 mon, 8 ky. Toi uu (CP-SAT): xong o ky {best_last}, {total} TC. Toi da {cap} TC/ky.")
-    print(f"Phep dem: {best_last - 1} ky x {cap} TC = {(best_last - 1) * cap} TC < {total} TC can hoc.\n")
-
-    print("Clingo, tung phan cua bai toan:")
-    tasks = [
-        ("tim mot lo trinh hop le bat ky", set(), ""),
-        ("toi thieu tin chi (chi muc S2)", {"s2"}, ""),
-        (f"toi thieu tin chi, biet truoc xong o ky {best_last}", {"s2"},
-         f":- take(_, I), I > {best_last}."),
-        ("toi thieu ky cuoi (chi muc S1)", {"s1"}, ""),
-        (f"chung minh KHONG the xong trong {best_last - 1} ky", set(),
-         f":- take(_, I), I > {best_last - 1}."),
-    ]
-    for label, keep, extra in tasks:
-        print(f"   {label:<48} {_clingo_variant(fixture, keep, extra, time_limit)}")
-
-    print("\nCP-SAT, bat va tat noi long tuyen tinh (LP):")
-    for label, level in (("LP bat (mac dinh)", None), ("LP tat", 0)):
-        start = time.perf_counter()
-        result = solve_cpsat(fixture, scenario, None, time_limit, level)
-        elapsed = (time.perf_counter() - start) * 1000
-        print(f"   {label:<48} {result['status']:<22} {elapsed:8.0f} ms")
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--benchmark", action="store_true")
-    parser.add_argument("--diagnose", action="store_true")
     parser.add_argument("--time-limit", type=float, default=30.0)
     args = parser.parse_args()
-    if args.diagnose:
-        diagnose(args.time_limit)
-    elif args.benchmark:
+    if args.benchmark:
         benchmark(args.time_limit)
     else:
         compare_fixture(load_fixture(DEFAULT_FIXTURE), args.time_limit)

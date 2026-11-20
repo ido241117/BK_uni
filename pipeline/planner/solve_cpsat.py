@@ -1,7 +1,7 @@
 """Bo giai thu hai: OR-Tools CP-SAT.
 
-Cung dau vao (JSON + kich ban) va cung dang dau ra voi ``solve.py``, nhung
-viet doc lap: doc thang JSON, khong di qua facts hay encoding.lp. Nho vay hai
+Cung dau vao (JSON + kich ban) va cung dang dau ra voi engine ASP (``solve_asp.py``),
+nhung viet doc lap: doc thang JSON, khong di qua facts hay engine ASP. Nho vay hai
 bo giai co the doi chieu cheo nhau. Chi dung chung phan kiem tra dau vao va
 cach doc kich ban (muc tin chi tung ky, thu tu uu tien) trong ``facts.py``.
 
@@ -34,7 +34,7 @@ from planner.facts import (
     validate_input,
 )
 from planner.normalize import normalize
-from planner.solve import make_result
+from planner.result import make_result
 
 
 def solve_cpsat(

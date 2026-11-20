@@ -8,7 +8,9 @@
  * - Khối con theo chuyên ngành giữ `parent`, `specialization`; khối `any` giữ nguyên.
  * - Nhóm "E. ..." là điều kiện tốt nghiệp (không xếp lịch); nhóm "D. ..." là học phần tốt nghiệp.
  * - Môn có chữ "đồ án" trong tên không xếp vào kỳ hè (người duyệt, 19/11/2026).
- * Không đưa tên, MSSV hay điểm của sinh viên vào đầu vào.
+ * Không đưa tên, MSSV của sinh viên vào đầu vào. Điểm từng môn và điều kiện tốt nghiệp từ file tiến độ
+ * myBK (`student.scores`, `student.graduation_conditions`) có đưa vào để engine ASP tính GPA và điều kiện
+ * tốt nghiệp (20/11/2026); CP-SAT bỏ qua hai trường này. Vì vậy PLANNER_DUMP_DIR cũng ghi điểm ra file.
  */
 import { currentSemester } from '../advisor/semester';
 import type { SolvePlanDto } from './dto/solve-plan.dto';
@@ -27,7 +29,41 @@ export type PlannerSource = {
   openedSemesters: { course_id: string; semester_code: string }[];
   profile: { admission_year: number | null; target_specialization_id: string | null };
   studentCourses: { course: PlannerCourse; status: string }[];
+  /** Từ file tiến độ myBK đã nhập (bảng `student_progress_imports`); không có file thì bỏ trống. */
+  progress?: PlannerProgress | null;
 };
+
+export type PlannerProgress = {
+  scores: { code: string; score: string | null; letter: string | null }[];
+  graduation_conditions: { code: string; passed: boolean }[];
+};
+
+/**
+ * Lấy điểm từng môn (hệ 10 `score`, điểm chữ `letter`) và điều kiện tốt nghiệp từ JSON của
+ * `python -m planner.mybk` đã lưu. Chỉ lấy mã môn, điểm và cờ đạt; không lấy tên, MSSV.
+ * File Excel không có điểm nên `scores` rỗng.
+ */
+export function progressFromImport(data: Record<string, unknown> | null | undefined): PlannerProgress | null {
+  if (!data) return null;
+  const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+  const blocks = Array.isArray(data.blocks) ? (data.blocks as { courses?: unknown }[]) : [];
+  const scores = blocks
+    .flatMap((b) => (Array.isArray(b.courses) ? (b.courses as Record<string, unknown>[]) : []))
+    .map((c) => ({ code: String(c.code ?? ''), score: str(c.score), letter: str(c.letter) }))
+    .filter((c) => c.code && (c.score !== null || c.letter !== null));
+  const conditions = Array.isArray(data.graduation_conditions)
+    ? (data.graduation_conditions as Record<string, unknown>[])
+      .map((c) => ({ code: String(c.code ?? ''), passed: c.passed === true })).filter((c) => c.code)
+    : [];
+  return { scores, graduation_conditions: conditions };
+}
+
+/**
+ * Mã điều kiện tốt nghiệp (không phải lớp học, không xếp vào kỳ) luôn coi là điều kiện, kể cả khi
+ * chương trình không có nhóm "E. ..." (chương trình nhập lại từ myBK ngày 20/11/2026 không có nhóm này).
+ * Engine ASP đổi thành external_requirement; CP-SAT bỏ khỏi lịch như mọi môn điều kiện.
+ */
+export const GRADUATION_CONDITION_CODES = ['ENG_GC', 'ENG_GC_600', 'SA4001'];
 
 export const PLANNER_RULES = {
   credits_min: 11,
@@ -72,7 +108,8 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
 
   const categoryCodes = (prefix: string) => (src.categories.find((c) => c.name.trim().startsWith(prefix))
     ?.member_course_ids ?? []).map((id) => codeOf.get(id)).filter((c): c is string => !!c);
-  const conditions = [...new Set(categoryCodes('E.'))].sort();
+  const conditions = [...new Set([...categoryCodes('E.'),
+    ...GRADUATION_CONDITION_CODES.filter((c) => inCurriculum.has(c))])].sort();
   const graduation: Record<string, string> = {};
   for (const code of categoryCodes('D.')) {
     const kind = graduationKind(nameOf.get(code) ?? '');
@@ -108,6 +145,12 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
   const internship = graduation.internship;
   const summerExcluded = [...inCurriculum]
     .filter((c) => lower(nameOf.get(c) ?? '').includes('đồ án') && c !== internship).sort();
+  const openedByCode: Record<string, string[]> = {};
+  for (const o of src.openedSemesters) {
+    const code = codeOf.get(o.course_id);
+    if (code) (openedByCode[code] ??= []).push(o.semester_code);
+  }
+  for (const code of Object.keys(openedByCode)) openedByCode[code] = [...new Set(openedByCode[code])].sort();
   const summerHistory = [...new Set(src.openedSemesters
     .filter((o) => o.semester_code.endsWith('3') && codeOf.has(o.course_id))
     .map((o) => codeOf.get(o.course_id) as string))].sort();
@@ -130,7 +173,7 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
 
   const scenario: Record<string, unknown> = { id: 'request', label: 'Yeu cau tu trang Goi y', in_progress_results: results };
   for (const key of ['max_credits', 'semester_limits', 'graduate_by', 'locked', 'not_offered', 'summer_opt_in',
-    'preferences', 'use_inferred_relations'] as const) {
+    'preferences', 'use_inferred_relations', 'skip_semesters'] as const) {
     if (dto[key] !== undefined && dto[key] !== null) scenario[key] = dto[key];
   }
 
@@ -148,6 +191,8 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
     conditions,
     graduation_courses: graduation,
     summer_history: summerHistory,
+    // Lịch sử mở lớp đầy đủ theo môn: engine ASP dùng làm mục tiêu mềm "đúng kỳ thường mở lớp".
+    opened_semesters: openedByCode,
     summer_excluded: summerExcluded,
     offerings: { unknown_policy: 'assume-open', records: [] },
     student: {
@@ -157,6 +202,8 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
         ? specCode.get(src.profile.target_specialization_id) ?? null : null,
       flags: dto.student_flags ?? {},
       student_courses: studentCourses,
+      scores: src.progress?.scores ?? [],
+      graduation_conditions: src.progress?.graduation_conditions ?? [],
     },
     scenario,
     previous_plan: dto.previous_plan ?? undefined,

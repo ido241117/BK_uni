@@ -103,6 +103,8 @@ const RecommendationsPage = () => {
     const myCoursesQuery = useApiQuery(['my-courses'], listMyCourses);
 
     const [solver, setSolver] = useState<PlanSolver>('cpsat');
+    /** Chỉ bộ giải Clingo (engine ASP): kỳ chủ động nghỉ, không báo là kỳ trống. */
+    const [skipped, setSkipped] = useState<string[]>([]);
     const [maxCredits, setMaxCredits] = useState<number | null>(null);
     const [graduateBy, setGraduateBy] = useState<string | undefined>();
     const [results, setResults] = useState<Record<string, 'pass' | 'fail'>>({});
@@ -192,6 +194,7 @@ const RecommendationsPage = () => {
             student_flags: Object.fromEntries(Object.entries(flags).filter(([, v]) => v !== undefined)),
             // What-if: gửi mốc để bộ giải giữ lộ trình gần mốc nhất (S3) và báo môn dời kỳ.
             ...(baseline ? { previous_plan: planOf(baseline.result) } : {}),
+            ...(solver === 'clingo' && skipped.length ? { skip_semesters: skipped } : {}),
         };
     };
 
@@ -319,6 +322,13 @@ const RecommendationsPage = () => {
                                     <Segmented value={solver} onChange={v => setSolver(v as PlanSolver)}
                                         options={[{ value: 'cpsat', label: 'CP-SAT (nhanh)' }, { value: 'clingo', label: 'Clingo' }]} />
                                 </Space>
+                                {solver === 'clingo' && (
+                                    <Space orientation="vertical" style={{ width: '100%' }}>
+                                        <Text>Kỳ muốn nghỉ (chỉ Clingo)</Text>
+                                        <Select mode="multiple" style={{ width: '100%' }} placeholder="Không nghỉ kỳ nào"
+                                            value={skipped} options={mainSemesterOptions} onChange={setSkipped} />
+                                    </Space>
+                                )}
                                 <ISolidBtn block loading={solve.isPending} onClick={() => solve.mutate(buildPayload())}>
                                     Giải lộ trình
                                 </ISolidBtn>

@@ -19,7 +19,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from planner.facts import FixtureError, get_scenario, is_summer, load_fixture  # noqa: E402
 from planner.normalize import normalize  # noqa: E402
 from planner.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
-from planner.solve import plan_map, solve  # noqa: E402
+from planner.result import plan_map  # noqa: E402
+from planner.solve_asp import solve_asp  # noqa: E402
 from planner.solve_cpsat import solve_cpsat  # noqa: E402
 from planner.validate import validate_plan  # noqa: E402
 
@@ -90,12 +91,12 @@ def test_validator_rejects_regular_course_in_summer(khmt):
 # -> truoc 271 toi da 28 < 31, nen CS401 som nhat 272. Dap an: xong 272, 20 TC.
 
 @pytest.mark.parametrize("name", ["cpsat", "clingo"])
-def test_k6_thesis_threshold(name):
+def test_k6_thesis_threshold(name, toy_policy):
     toy = copy.deepcopy(load_fixture(DEFAULT_FIXTURE))
     toy["graduation_courses"] = {"thesis": "CS401"}
     toy["rules"] = {"graduation_thresholds": {"thesis": 0.85}}
     scenario = get_scenario(toy, "base")
-    r = (solve_cpsat if name == "cpsat" else solve)(toy, scenario)
+    r = (solve_cpsat if name == "cpsat" else solve_asp)(toy, scenario)
     assert validate_plan(toy, scenario, r["semesters"]) == []
     assert r["graduation_semester"] == "272"
     assert sum(s["credits"] for s in r["semesters"]) == 20

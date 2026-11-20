@@ -168,6 +168,58 @@ describe('Planner API (POST /api/plans/solve)', () => {
     expect(text).not.toContain('2399999');
   });
 
+  it('adds offering history, myBK scores and graduation conditions for the ASP engine', async () => {
+    const repo = <T extends ObjectLiteral>(entity: new () => T) => app.get<Repository<T>>(getRepositoryToken(entity));
+    const ma201 = await repo(Course).findOneByOrFail({ code: 'MA201' });
+    await repo(CourseOpenedSemester).save([{ course_id: ma201.id, semester_code: '252' },
+      { course_id: ma201.id, semester_code: '242' }]);
+    await repo(StudentProgressImport).save({
+      user_id: studentId, format: 'pdf', official_program_code: null, source_updated_at: null,
+      data: {
+        student: { full_name: 'Ten That', student_number: '2399999', gpa_10: '7.10' },
+        blocks: [{ name: 'A', courses: [
+          { code: 'MA101', name: 'Giai tich', score: '8.5', letter: 'A', passed: true },
+          { code: 'MA102', name: 'Dai so', score: '3.0', letter: 'F', passed: false },
+          { code: 'CS301', name: 'Chua hoc', score: null, letter: null, passed: false },
+        ] }],
+        graduation_conditions: [{ code: 'ENG_GC_600', name: 'Tieng Anh', passed: true }],
+      },
+    });
+    const spy = jest.spyOn(runner, 'run').mockResolvedValue({ status: 'OPTIMAL' });
+    await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ solver: 'clingo', skip_semesters: ['262'] }).expect(200);
+    type AspInput = { opened_semesters: Record<string, string[]>; scenario: { skip_semesters?: string[] };
+      student: { scores: unknown[]; graduation_conditions: unknown[] } };
+    const [input] = spy.mock.calls[0] as unknown as [AspInput, string];
+    spy.mockRestore();
+    expect(input.opened_semesters.MA201).toEqual(['242', '252']);
+    expect(input.student.scores).toEqual([
+      { code: 'MA101', score: '8.5', letter: 'A' }, { code: 'MA102', score: '3.0', letter: 'F' }]);
+    expect(input.student.graduation_conditions).toEqual([{ code: 'ENG_GC_600', passed: true }]);
+    expect(input.scenario.skip_semesters).toEqual(['262']);
+    const text = JSON.stringify(input);
+    expect(text).not.toContain('Ten That');
+    expect(text).not.toContain('2399999');
+    expect(text).not.toContain('Giai tich');
+  });
+
+  it('treats ENG_GC_600 and SA4001 as graduation conditions without an "E." category', () => {
+    const c = (code: string, credits: number) => ({ id: code, code, name: code, credits });
+    const input = buildPlannerInput({
+      curriculum: { code: 'X', name: 'X', cohort: 2023, duration_years: 4, min_semester_credits: 14, max_semester_credits: 21 },
+      items: [c('CO1005', 3), c('ENG_GC_600', 0), c('SA4001', 0)].map((course) => ({ course, recommended_year: 1, recommended_term: 1 })),
+      groups: [], relations: [], categories: [], specializations: [], openedSemesters: [],
+      profile: { admission_year: 2023, target_specialization_id: null }, studentCourses: [],
+    }, {}, new Date('2026-11-20T00:00:00Z'));
+    expect(input.conditions).toEqual(['ENG_GC_600', 'SA4001']);
+    expect((input.course_groups[0] as { members: string[] }).members).toEqual(['CO1005']);
+  });
+
+  it('rejects a malformed skip_semesters entry', async () => {
+    await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ skip_semesters: ['26'] }).expect(400);
+  });
+
   it('rejects unknown request fields', async () => {
     await request(server()).post('/api/plans/solve').set('Origin', origin).send({ hack: 1 }).expect(400);
   });

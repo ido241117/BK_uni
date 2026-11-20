@@ -1,6 +1,6 @@
-"""JSON (fixture + kich ban) -> ASP facts.
+"""Doc va kiem tra dau vao (fixture + kich ban), cac luat dung chung cho moi bo giai.
 
-Chi dich du lieu, khong suy luan: moi quy tac nam trong ``encoding.lp``.
+Facts cho engine ASP do ``solve_asp.py`` sinh (xem ``ASP-ADAPTER.md``).
 Moi thu khong ho tro duoc bao loi ro rang thay vi am tham bo qua.
 """
 
@@ -310,108 +310,6 @@ def validate_input(fixture: dict[str, Any], scenario: dict[str, Any]) -> None:
             raise FixtureError(f"graduation_courses.{kind}: {code} khong thuoc chuong trinh")
     for code in summer_courses(fixture):
         need(code, "rules.summer_courses")
-
-
-def _q(value: str) -> str:
-    """Chuoi ASP co nhay kep, da escape."""
-    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
-
-
-def export_facts(
-    fixture: dict[str, Any],
-    scenario: dict[str, Any],
-    previous_plan: dict[str, str] | None = None,
-) -> str:
-    """Tra ve chuoi facts. ``previous_plan``: {ma mon: ma ky} cua lo trinh cu."""
-    from planner.normalize import normalize  # tranh import vong
-
-    fixture = normalize(fixture)
-    validate_input(fixture, scenario)
-    plan = plan_semesters(fixture)
-    index = {code: i for i, code in enumerate(plan, start=1)}
-    in_curriculum = {cc["course_code"] for cc in fixture["curriculum_courses"]}
-    out: list[str] = []
-
-    cur = fixture["curriculum"]
-    base_min, _ = base_credit_limits(fixture)
-    out.append(f"base_min_credits({base_min}).")  # S11: muc mem cua ky chinh
-    for sem, (lo, hi) in credit_limits(fixture, scenario).items():
-        out.append(f"sem_min({index[sem]}, {lo}).  sem_max({index[sem]}, {hi}).")
-    if scenario.get("graduate_by"):
-        out.append(f"deadline({index[scenario['graduate_by']]}).")
-
-    for course in sorted(fixture["courses"], key=lambda c: c["code"]):
-        if course["code"] in in_curriculum:
-            out.append(f"course({_q(course['code'])}, {course['credits']}).")
-            level = course_level(course["code"]) if level_enabled(fixture) else None
-            if level is not None:
-                out.append(f"need_year({_q(course['code'])}, {required_year(level)}).")
-    if level_enabled(fixture):
-        for sem, i in index.items():
-            out.append(f"sem_year({i}, {semester_year(sem, cur['cohort'])}).")
-    for sem, i in index.items():
-        if is_summer(sem):
-            out.append(f"summer({i}).")
-            for c in sorted(in_curriculum):
-                if summer_allowed(fixture, scenario, c, sem):
-                    out.append(f"summer_ok({_q(c)}, {i}).")
-    out.extend(f"internship({_q(c)})." for c in sorted(summer_courses(fixture)))
-    out.extend(f"summer_specialized({_q(c)})." for c in sorted(in_curriculum) if summer_specialized(fixture, c))
-    band = preferred_load(fixture, scenario)
-    if band:
-        out.append(f"pref_lo({band[0]}).  pref_hi({band[1]}).")
-    s_lo, s_hi = summer_preferred_load(fixture)
-    out.append(f"spref_lo({s_lo}).  spref_hi({s_hi}).")
-    for code, need_credits in sorted(graduation_needs(fixture).items()):
-        out.append(f"grad_need({_q(code)}, {need_credits}).")
-    out.append(f"outside_credits({fixture.get('_free_outside_credits', 0)}).")
-
-    prefs = preferences(scenario)
-    out.extend(f"wanted({_q(c)})." for c in sorted(prefs["wanted_courses"]))
-    order = preference_order(fixture, scenario)
-    for rank, name in enumerate(reversed(order), start=1):
-        out.append(f"priority({name.lower()}, {rank}).")
-
-    for group in fixture["course_groups"]:
-        gid = _q(group["name"])
-        if group["kind"] == "required":
-            out.extend(f"required({_q(c)})." for c in sorted(group["members"]))
-            continue
-        if group["required_credits"] is not None:
-            out.append(f"group_credits({gid}, {group['required_credits']}).")
-        if group["required_count"] is not None:
-            out.append(f"group_count({gid}, {group['required_count']}).")
-        out.extend(f"member({gid}, {_q(c)})." for c in sorted(group["members"]))
-
-    for rel in fixture["course_relations"]:
-        if rel["type"] in HARD_RELATIONS + SOFT_RELATIONS:  # "prior" bi bo
-            out.append(
-                f"relation({_q(rel['course_code'])}, {_q(rel['related_course_code'])}, "
-                f"{_q(rel['type'])})."
-            )
-
-    for sc in fixture["student"]["student_courses"]:
-        if sc["status"] != "not-started":
-            out.append(f"status({_q(sc['course_code'])}, {_q(sc['status'])}).")
-    for code, result in sorted(scenario["in_progress_results"].items()):
-        out.append(f"assume_result({_q(code)}, {_q(result)}).")
-
-    for code, i in index.items():
-        out.append(f"plan_semester({i}, {_q(code)}).")
-
-    blocked = [r for r in fixture["offerings"]["records"] if r["status"] == "not-offered"]
-    blocked += scenario.get("not_offered", [])
-    for rec in blocked:
-        if rec["semester_code"] in index:
-            out.append(f"not_offered({_q(rec['course_code'])}, {index[rec['semester_code']]}).")
-    for item in scenario.get("locked", []):
-        out.append(f"locked({_q(item['course_code'])}, {index[item['semester_code']]}).")
-
-    for code, sem in sorted((previous_plan or {}).items()):
-        if sem in index:
-            out.append(f"prev({_q(code)}, {index[sem]}).")
-
-    return "\n".join(out) + "\n"
 
 
 def assumptions(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[str]:

@@ -4,6 +4,7 @@ import { IOutLinedBtn, ISolidBtn } from '@/components';
 import type { PlanCourse, PlanCourseReason, PlanResult } from '@/types';
 import { semesterLabel } from '@/pages/courses/analysis/semester';
 import { comparePlans, isSameAsBaseline, type PlanDiff } from './whatIf';
+import EngineReportCard from './EngineReportCard';
 
 const { Text } = Typography;
 
@@ -202,6 +203,8 @@ const PlanResultView = ({
                     description={<ul>{result.warnings!.map(w => <li key={w}>{w}</li>)}</ul>}
                 />
             )}
+
+            {result.engine_report && <EngineReportCard report={result.engine_report} courseName={courseName} />}
 
             {result.semesters.map(semester => (
                 <Card

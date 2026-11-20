@@ -1,0 +1,4 @@
+{
+  "_note": "Tag cua mon hoc: ten tag -> danh sach ma mon. Engine ASP doc thanh tag(Mon, Tag) (pipeline/planner/solve_asp.py) va tra ve engine_report.course_tags cho cac mon trong lo trinh. Chuyen nganh KHONG khai o day: lay tu khoi con theo chuyen nganh trong database. Vi du: {\"AI\": [\"CO3061\", \"CO3117\"], \"software\": [\"CO3001\"]}",
+  "tags": {}
+}

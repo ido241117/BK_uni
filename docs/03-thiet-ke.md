@@ -89,10 +89,11 @@ Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, và
 | File | Vai trò | Hàm chính |
 |---|---|---|
 | `cli.py` | Cửa vào cho backend: JSON stdin → JSON stdout | `run` (toàn bộ luồng giải), `_explain_unsat` (lý do không có lộ trình), `_reason` (lý do xếp từng môn), `input_error`, `main` |
-| `facts.py` | Đọc và kiểm tra đầu vào; dịch sang facts cho Clingo; các luật dùng chung (tín chỉ từng kỳ, kỳ hè, cấp độ, năm học, ngưỡng tốt nghiệp, thứ tự mong muốn) | `validate_input`, `export_facts`, `credit_limits`, `summer_allowed`, `graduation_needs`, `course_level`, `semester_year`, `preference_order`, `assumptions` |
+| `facts.py` | Đọc và kiểm tra đầu vào; các luật dùng chung (tín chỉ từng kỳ, kỳ hè, cấp độ, năm học, ngưỡng tốt nghiệp, thứ tự mong muốn) | `validate_input`, `credit_limits`, `summer_allowed`, `graduation_needs`, `course_level`, `semester_year`, `preference_order`, `assumptions` |
 | `normalize.py` | Chuẩn hóa dữ liệu dùng chung cho cả hai bộ giải và validator (bỏ môn điều kiện, khối chuyên ngành, ô tự chọn tự do `FREE_k`, tổng TC chương trình); không chứa luật | `normalize` |
 | `solve_cpsat.py` | Bộ giải OR-Tools CP-SAT: biến 0/1 môn×kỳ, ràng buộc tuyến tính, mục tiêu trọng số theo thứ tự mong muốn | `solve_cpsat` |
-| `encoding.lp` + `solve.py` | Bộ giải Clingo: luật viết gần câu chữ quy định, mức ưu tiên `@n` | `solve`, `make_result` (dựng kết quả chung), `plan_map`, `diff` (so với mốc) |
+| `solve_asp.py` + `pipeline/engine/asp/` | Bộ giải "Clingo": adapter JSON → facts và engine ASP (`core/*.lp`, `policy.lp`), mức ưu tiên `@8..@0` (`ASP-ADAPTER.md`) | `build_program`, `solve_asp` |
+| `result.py` | Dựng kết quả chung cho mọi bộ giải, so với mốc | `make_result`, `plan_map`, `diff` |
 | `validate.py` | Kiểm tra lộ trình độc lập với bộ giải | `validate_plan` |
 | `report.py` | Số đo từng mong muốn, báo cáo đáp ứng, cảnh báo | `metrics`, `objective`, `preferences_report`, `warnings` |
 | `relations.py` | Bản chụp quan hệ môn 96 chương trình, đo độ nhất quán, suy ra quan hệ (không dùng khi giải) | `take_snapshot`, `consistency`, `enrich`, `coverage` |
@@ -256,30 +257,15 @@ Hai bộ giải **viết độc lập** và chỉ dùng chung bước kiểm tra
 | `INFEASIBLE` | `UNSAT` | Không |
 | Khác (`UNKNOWN`, `MODEL_INVALID`) | `TIMEOUT` | Không |
 
-### C.2 Clingo (ASP), tùy chọn
+### C.2 Clingo: engine ASP (từ 20/11/2026)
 
-**Nhận:** cùng JSON đầu vào, nhưng `facts.py` dịch nó thành **facts** dạng văn bản, ví dụ:
+Lựa chọn `clingo` chạy **engine ASP** (`pipeline/engine/asp/core`, từ nhánh `research-pipeline`) qua adapter `pipeline/planner/solve_asp.py`. Encoding Clingo cũ (`planner/encoding.lp`, `planner/solve.py`, mô tả ở bản trước của mục này) đã bỏ.
 
-```prolog
-course("CS301", 3).        relation("CS301", "CS201", "prerequisite").
-status("CS201", "in-progress").   assume_result("CS201", "pass").
-plan_semester(1, "262").   not_offered("EL303", 2).   locked("EL303", 1).
-```
+**Nhận:** cùng JSON đầu vào; adapter dịch thành facts của engine (`in/2`, `map/3`, `prereq/2`, `taken/2`, `raw_score/2`, `pin/2`, `sem_max/2`...). Quy định của trường nằm trong `pipeline/engine/asp/policy.lp` (tải 14–21 TC, thang điểm, học phí), không lấy từ `PLANNER_RULES`.
 
-Luật nằm riêng trong `encoding.lp`, viết gần câu chữ quy định, ví dụ tiên quyết:
+**Xử lý:** nạp `core/encoding.lp`, `core/extension.lp`, `policy.lp`, facts, `core/translate.lp`, `core/optimize.lp` (đọc bằng Python vì Clingo trên Windows không mở được đường dẫn có dấu); grounding; solving với `--opt-mode=opt`, mức ưu tiên `@8..@0`; giới hạn mềm 30 giây.
 
-```prolog
-:- take(C, I), relation(C, R, "prerequisite"), not passed(R), not take_before(R, I).
-```
-
-**Xử lý:**
-
-1. Nạp `encoding.lp` và facts. File được đọc bằng Python trước, vì Clingo trên Windows không mở được đường dẫn có dấu.
-2. **Grounding:** thay mọi biến bằng giá trị cụ thể từ facts.
-3. **Solving** với `--opt-mode=opt`: mỗi lần tìm được lộ trình tốt hơn thì gọi `on_model` và giữ lại lộ trình đó. Các mức ưu tiên là `@3`, `@2`, `@1` (thứ tự từ điển, không cần trọng số).
-4. Giới hạn 30 giây. Hết giờ thì hủy và giữ lộ trình tốt nhất đã có.
-
-**Trả:** các atom `take(môn, chỉ số kỳ)` của lộ trình cuối cùng, cờ "đã chứng minh tối ưu", và kết quả `unsatisfiable` / `exhausted`. Đổi trạng thái:
+**Trả:** atom `plan(môn, chỉ số kỳ)` (học lại là `rt(môn, k)`), đổi trạng thái như bảng dưới; thêm `engine_report` (GPA, chuyên ngành, điều kiện tốt nghiệp, lịch sử mở lớp, học phí, kỳ trống).
 
 | Clingo trả | `status` của ta |
 |---|---|
@@ -288,11 +274,14 @@ Luật nằm riêng trong `encoding.lp`, viết gần câu chữ quy định, v�
 | Không lộ trình, `unsatisfiable` | `UNSAT` |
 | Không lộ trình, hết giờ | `TIMEOUT` |
 
+Chi tiết, bảng đối chiếu JSON → facts và khác biệt với CP-SAT: `pipeline/planner/ASP-ADAPTER.md`.
+
 ### C.3 Khác nhau trong thực tế
 
 | | CP-SAT | Clingo |
 |---|---|---|
-| Thời gian trên dữ liệu sinh ngẫu nhiên 40–80 môn | 80–250 ms, chứng minh được tối ưu | Có lộ trình nhưng không chứng minh xong trong 20 giây → thường trả `SAT_NOT_PROVEN_OPTIMAL` |
+| Thời gian trên dữ liệu sinh ngẫu nhiên 40–80 môn (encoding cũ, 15/11) | 80–250 ms, chứng minh được tối ưu | Có lộ trình nhưng không chứng minh xong trong 20 giây → thường trả `SAT_NOT_PROVEN_OPTIMAL` |
+| KHMT 2023, 96 môn (engine ASP, 20/11) | dưới 1 giây, `OPTIMAL` | khoảng 1–2,5 giây kể cả grounding, `OPTIMAL` |
 | Cách viết mức ưu tiên | Trọng số trong một tổng | Mức `@n` |
 | Dễ đọc luật | Khó hơn | Gần câu chữ quy định |
 | Cùng đầu vào, có cùng lộ trình không | **Không nhất thiết.** Có thể có nhiều lộ trình tốt ngang nhau. Chỉ so sánh bộ giá trị mục tiêu (kỳ cuối, tổng tín chỉ, số môn dời) | — |
