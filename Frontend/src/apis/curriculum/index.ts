@@ -24,6 +24,16 @@ import type {
 export const listCurricula = (params: CurriculumQueryParams = {}) =>
     queryMethod.getPage<Curriculum>('/curricula', { params });
 
+/** Mọi chương trình (backend giới hạn 100 bản ghi mỗi trang nên gọi lần lượt từng trang). */
+export const listAllCurricula = async (params: Omit<CurriculumQueryParams, 'page' | 'take'> = {}) => {
+    const items: Curriculum[] = [];
+    for (let page = 1; ; page++) {
+        const result = await listCurricula({ ...params, page, take: 100 });
+        items.push(...result.items);
+        if (!result.pagination.hasNextPage) return items;
+    }
+};
+
 export const getCurriculum = (curriculumId: string) =>
     queryMethod.get<Curriculum>(`/curricula/${curriculumId}`);
 

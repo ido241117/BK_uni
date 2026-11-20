@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min, ValidateNested } from 'class-validator';
+import { CurriculumProfileDto } from './curriculum-profile.dto';
 
 export class CreateCurriculumDto {
   @ApiProperty({ example: 'CS-2023', maxLength: 50 })
@@ -84,4 +85,22 @@ export class CreateCurriculumDto {
   @IsString()
   @MaxLength(100)
   source_version?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 'Computer Science', maxLength: 255 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  name_en?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: CurriculumProfileDto, description: 'Giới thiệu chương trình (vi/en)' })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CurriculumProfileDto)
+  profile?: CurriculumProfileDto | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 'DH_CQ_MT_NG_KHM_2024', maxLength: 100, description: 'Mã CTĐT nguồn của profile' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  profile_source_code?: string | null;
 }

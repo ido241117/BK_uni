@@ -57,4 +57,41 @@ export class Curriculum extends BaseEntityCustom {
   /** Phiên bản CTĐT ở nguồn, vd `DH_CQ_MT_NG_KHM_2023.v01`. */
   @Column({ type: 'varchar', length: 100, nullable: true })
   source_version!: string | null;
+
+  /** Tên tiếng Anh của chương trình. */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  name_en!: string | null;
+
+  /**
+   * Giới thiệu chương trình (myBK `v2/curriculums`), văn bản thuần. Không trả trong danh sách để trang nhẹ;
+   * chỉ có ở `GET /curricula/{id}`.
+   */
+  @Column({ type: 'jsonb', nullable: true, select: false })
+  profile?: CurriculumProfile | null;
+
+  /** Mã CTĐT myBK cung cấp `profile`; khác `source_code` khi mượn từ khóa gần nhất cùng ngành. */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  profile_source_code!: string | null;
+
+  /** Thời điểm myBK đồng bộ bản ghi gốc lần cuối (`lastSyncedAt`). */
+  @Column({ type: 'timestamptz', nullable: true })
+  source_synced_at!: Date | null;
+}
+
+export const CURRICULUM_PROFILE_FIELDS = [
+  'overview',
+  'career_opportunities',
+  'admission_target',
+  'training_process',
+  'assessment_method',
+] as const;
+
+export type CurriculumProfileField = (typeof CURRICULUM_PROFILE_FIELDS)[number];
+
+/** Một ngôn ngữ của phần giới thiệu; trường không có nội dung thì vắng hoặc `null`. */
+export type CurriculumProfileText = Partial<Record<CurriculumProfileField, string | null>>;
+
+export interface CurriculumProfile {
+  vi?: CurriculumProfileText;
+  en?: CurriculumProfileText;
 }

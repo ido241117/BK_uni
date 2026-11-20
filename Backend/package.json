@@ -13,6 +13,7 @@
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "admin:create": "ts-node src/database/create-admin.ts",
     "curriculum:create": "node scripts/create-curriculum.mjs",
+    "curriculum:sync-profiles": "ts-node src/database/sync-curriculum-profiles.ts",
     "outlines:import": "ts-node src/database/import-outlines.ts",
     "search:reindex": "ts-node src/database/reindex-outlines.ts"
   },

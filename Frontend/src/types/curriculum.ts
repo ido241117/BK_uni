@@ -61,6 +61,40 @@ export interface Curriculum extends BaseRecord {
     source_code: string | null;
     source_id: number | null;
     source_version: string | null;
+    /** Tên tiếng Anh của chương trình. */
+    name_en: string | null;
+    /** Mã CTĐT myBK cung cấp `profile`; khác `source_code` khi mượn từ khóa gần nhất cùng ngành. */
+    profile_source_code: string | null;
+    /** Thời điểm myBK đồng bộ bản ghi gốc lần cuối. */
+    source_synced_at: string | null;
+    /** Giới thiệu chương trình; chỉ có ở `GET /curricula/{id}`, không có trong danh sách. */
+    profile?: CurriculumProfile | null;
+}
+
+export const CURRICULUM_PROFILE_FIELDS = [
+    'overview',
+    'career_opportunities',
+    'admission_target',
+    'training_process',
+    'assessment_method',
+] as const;
+
+export type CurriculumProfileField = (typeof CURRICULUM_PROFILE_FIELDS)[number];
+
+export const CURRICULUM_PROFILE_FIELD_LABEL: Record<CurriculumProfileField, { vi: string; en: string }> = {
+    overview: { vi: 'Giới thiệu chương trình', en: 'Program overview' },
+    career_opportunities: { vi: 'Cơ hội việc làm', en: 'Career opportunities' },
+    admission_target: { vi: 'Đối tượng tuyển sinh', en: 'Admission' },
+    training_process: { vi: 'Quá trình đào tạo', en: 'Training process' },
+    assessment_method: { vi: 'Cách thức đánh giá', en: 'Assessment' },
+};
+
+/** Văn bản thuần, đoạn cách bằng dòng trống, mục danh sách bắt đầu bằng "- ". */
+export type CurriculumProfileText = Partial<Record<CurriculumProfileField, string | null>>;
+
+export interface CurriculumProfile {
+    vi?: CurriculumProfileText;
+    en?: CurriculumProfileText;
 }
 
 export interface CurriculumPayload {

@@ -8,7 +8,8 @@ import { Order } from '../common/dto/page-options.dto';
 import { CreateCurriculumDto } from './dto/create-curriculum.dto';
 import { CurriculumQueryDto } from './dto/curriculum-query.dto';
 import { UpdateCurriculumDto } from './dto/update-curriculum.dto';
-import { Curriculum } from './entities/curriculum.entity';
+import { CurriculumProfileDto } from './dto/curriculum-profile.dto';
+import { Curriculum, CURRICULUM_PROFILE_FIELDS, CurriculumProfile, CurriculumProfileText } from './entities/curriculum.entity';
 
 @Injectable()
 export class CurriculumService {
@@ -20,7 +21,7 @@ export class CurriculumService {
     const search = query.search?.trim();
     if (search) {
       builder.where(
-        'LOWER(curriculum.code) LIKE LOWER(:search) OR LOWER(curriculum.name) LIKE LOWER(:search) OR LOWER(curriculum.faculty) LIKE LOWER(:search)',
+        'LOWER(curriculum.code) LIKE LOWER(:search) OR LOWER(curriculum.name) LIKE LOWER(:search) OR LOWER(curriculum.faculty) LIKE LOWER(:search) OR LOWER(curriculum.name_en) LIKE LOWER(:search)',
         { search: `%${search}%` },
       );
     }
@@ -39,9 +40,21 @@ export class CurriculumService {
     return curriculum;
   }
 
+  /** Như `findOne`, kèm phần giới thiệu `profile` (cột không nằm trong select mặc định). */
+  async findDetail(id: string): Promise<Curriculum> {
+    const curriculum = await this.curricula
+      .createQueryBuilder('curriculum')
+      .addSelect('curriculum.profile')
+      .where('curriculum.id = :id', { id })
+      .getOne();
+    if (!curriculum) throw new NotFoundException('Không tìm thấy chương trình đào tạo.');
+    curriculum.profile ??= null;
+    return curriculum;
+  }
+
   async create(dto: CreateCurriculumDto): Promise<Curriculum> {
     try {
-      return await this.curricula.save(this.curricula.create({
+      const created = await this.curricula.save(this.curricula.create({
         code: dto.code.trim(),
         name: dto.name.trim(),
         major: dto.major.trim(),
@@ -57,7 +70,11 @@ export class CurriculumService {
         source_code: dto.source_code?.trim() || null,
         source_id: dto.source_id ?? null,
         source_version: dto.source_version?.trim() || null,
+        name_en: dto.name_en?.trim() || null,
+        profile: normalizeProfile(dto.profile),
+        profile_source_code: dto.profile_source_code?.trim() || null,
       }));
+      return await this.findDetail(created.id);
     } catch (error) {
       if (isPostgresError(error, UNIQUE_VIOLATION)) throw new ConflictException('Mã chương trình đã tồn tại.');
       throw error;
@@ -81,8 +98,12 @@ export class CurriculumService {
     if (dto.source_code !== undefined) curriculum.source_code = dto.source_code?.trim() || null;
     if (dto.source_id !== undefined) curriculum.source_id = dto.source_id;
     if (dto.source_version !== undefined) curriculum.source_version = dto.source_version?.trim() || null;
+    if (dto.name_en !== undefined) curriculum.name_en = dto.name_en?.trim() || null;
+    if (dto.profile !== undefined) curriculum.profile = normalizeProfile(dto.profile);
+    if (dto.profile_source_code !== undefined) curriculum.profile_source_code = dto.profile_source_code?.trim() || null;
     try {
-      return await this.curricula.save(curriculum);
+      await this.curricula.save(curriculum);
+      return await this.findDetail(id);
     } catch (error) {
       if (isPostgresError(error, UNIQUE_VIOLATION)) throw new ConflictException('Mã chương trình đã tồn tại.');
       throw error;
@@ -95,4 +116,19 @@ export class CurriculumService {
     if (!result.affected) throw new NotFoundException('Không tìm thấy chương trình đào tạo.');
     return null;
   }
+}
+
+/** Bỏ khoảng trắng thừa và trường rỗng; không còn nội dung nào thì lưu `null`. */
+function normalizeProfile(profile: CurriculumProfileDto | null | undefined): CurriculumProfile | null {
+  if (!profile) return null;
+  const result: CurriculumProfile = {};
+  for (const lang of ['vi', 'en'] as const) {
+    const text: CurriculumProfileText = {};
+    for (const field of CURRICULUM_PROFILE_FIELDS) {
+      const value = profile[lang]?.[field]?.trim();
+      if (value) text[field] = value;
+    }
+    if (Object.keys(text).length) result[lang] = text;
+  }
+  return Object.keys(result).length ? result : null;
 }

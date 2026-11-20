@@ -17,6 +17,7 @@ import { StorageTuning1795300000000 } from './migrations/1795300000000-storage-t
 import { SearchIndexes1795400000000 } from './migrations/1795400000000-search-indexes';
 import { AuditLog1795500000000 } from './migrations/1795500000000-audit-log';
 import { CurriculumSourceAndGroupSemester1795600000000 } from './migrations/1795600000000-curriculum-source-and-group-semester';
+import { CurriculumProfile1795700000000 } from './migrations/1795700000000-curriculum-profile';
 import { getDatabaseOptions } from './database-options';
 
 export default new DataSource({
@@ -39,5 +40,6 @@ export default new DataSource({
     SearchIndexes1795400000000,
     AuditLog1795500000000,
     CurriculumSourceAndGroupSemester1795600000000,
+    CurriculumProfile1795700000000,
   ],
 });
