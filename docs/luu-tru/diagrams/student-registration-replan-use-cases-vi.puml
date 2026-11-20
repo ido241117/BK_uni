@@ -1,0 +1,45 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor #F8FBFD
+  BorderColor #2F6F91
+  ArrowColor #455A64
+  FontColor #172B36
+}
+
+actor "Sinh viên" as Student
+actor "Hệ thống trường\n(External System)" as University
+
+rectangle "Smart Advisory & Optimization Platform" {
+  usecase "UC-04\nPhân tích lựa chọn\nđăng ký môn" as UC04
+  usecase "UC-05\nXem phương án\nlập lại lộ trình" as UC05
+  usecase "UC-06\nXem giải thích và\nlịch sử lộ trình" as UC06
+  usecase "Nạp ngữ cảnh đăng ký\nmới nhất" as LoadContext
+  usecase "Kiểm tra ràng buộc\nhọc vụ" as CheckRules
+  usecase "Lập lại phần lộ trình\ntương lai" as Replan
+  usecase "Cảnh báo xung đột\nhoặc lựa chọn không hợp lệ" as Warn
+}
+
+Student -- UC04
+Student -- UC05
+Student -- UC06
+University -- LoadContext
+
+UC04 ..> LoadContext : <<include>>
+UC04 ..> CheckRules : <<include>>
+UC04 ..> Replan : <<include>>
+UC05 ..> LoadContext : <<include>>
+UC05 ..> Replan : <<include>>
+Warn ..> UC04 : <<extend>>
+UC06 ..> UC04 : <<extend>>
+UC06 ..> UC05 : <<extend>>
+
+note bottom of UC04
+  Sinh viên vẫn nộp và điều chỉnh phiếu đăng ký
+  chính thức trên hệ thống trường.
+end note
+@enduml

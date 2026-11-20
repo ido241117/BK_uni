@@ -1,0 +1,83 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam dpi 150
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam roundcorner 0
+skinparam nodesep 32
+skinparam ranksep 80
+skinparam ArrowColor #526071
+skinparam ArrowThickness 1.3
+skinparam packageStyle folder
+skinparam packageBorderColor #9AA9B8
+skinparam packageFontColor #334155
+skinparam packageFontStyle bold
+skinparam rectangleBorderColor #334155
+skinparam rectangleFontColor #172B46
+skinparam rectangleFontStyle bold
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #46617D
+  FontColor #172B46
+}
+skinparam actor {
+  BorderColor #334155
+  FontColor #172B46
+}
+
+title SƠ ĐỒ USE CASE TỔNG QUAN\n<size:14>Các chức năng chính của module</size>
+
+actor "Student" as Student
+actor "System Admin" as Admin
+actor "University Core System" as University
+
+rectangle "Degree Path Planning and Replanning Module" {
+  package "Lập và theo dõi lộ trình" #F4F8FC {
+    usecase "UC01\nXem tiến độ học tập" as UC01
+    usecase "UC02\nSinh các lộ trình học tập" as UC02
+    usecase "UC03\nSo sánh các lộ trình" as UC03
+    usecase "UC04\nChọn lộ trình đang theo dõi" as UC04
+    usecase "UC11\nXem lịch sử lộ trình" as UC11
+    UC01 -[hidden]down- UC02
+    UC02 -[hidden]down- UC03
+    UC03 -[hidden]down- UC04
+    UC04 -[hidden]down- UC11
+  }
+  package "Hỗ trợ đăng ký và lập lại lộ trình" #F3F9F6 {
+    usecase "UC06\nXem gợi ý môn\ncho kỳ đăng ký" as UC06
+    usecase "UC08\nPhân tích phương án\nđăng ký giả định" as UC08
+    usecase "UC09\nLập lại lộ trình tương lai" as UC09
+    UC06 -[hidden]down- UC08
+    UC08 -[hidden]down- UC09
+  }
+  package "Vận hành đồng bộ dữ liệu" #FCF8F1 {
+    usecase "UC14\nKhởi tạo đồng bộ dữ liệu" as UC14
+    usecase "UC15\nXem trạng thái\nvà lỗi đồng bộ" as UC15
+    UC14 -[hidden]down- UC15
+  }
+}
+
+Student -- UC01
+Student -- UC02
+Student -- UC03
+Student -- UC04
+Student -- UC11
+Student -- UC06
+Student -- UC08
+Student -- UC09
+Admin -- UC14
+Admin -- UC15
+UC02 -- University
+UC09 -- University
+UC14 -- University
+
+legend bottom
+  Khung ngoài: phạm vi module. Các package bên trong: nhóm chức năng.
+  Đường liền: actor tham gia use case; không thể hiện thứ tự xử lý hay hướng dữ liệu.
+  Dữ liệu trường được truy cập chỉ đọc. Đăng ký môn chính thức thực hiện tại cổng trường.
+  Mã UC giữ theo danh mục đã đề xuất; hình tổng quan không liệt kê toàn bộ use case chi tiết.
+endlegend
+@enduml

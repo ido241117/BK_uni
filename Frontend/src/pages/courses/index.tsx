@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Alert, Card, Input, Segmented, Select, Space, Statistic, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { LuChartColumn, LuPencil, LuSearch } from 'react-icons/lu';
+import { LuChartColumn, LuSearch } from 'react-icons/lu';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { IconBtn, IOutLinedBtn, ISolidBtn, ITable, PageHeader, TablePageSkeleton } from '@/components';
+import { IOutLinedBtn, ISolidBtn, ITable, PageHeader, TablePageSkeleton } from '@/components';
 import { listCourses } from '@/apis/course';
 import { getCurriculum, listCourseGroups, listCurriculumCategories, listCurriculumCourses } from '@/apis/curriculum';
 import { getMyProfile, listMyCourses, listMyPlanCourses } from '@/apis/student';
@@ -18,8 +18,7 @@ import {
 } from '@/types';
 import { courseSearchRank } from '@/utils/course-search';
 import { summarizeCurriculumProgress } from '@/utils/curriculum-credits';
-import CourseEditModal from './components/CourseEditModal';
-import CourseStatusFileActions from './components/CourseStatusFileActions';
+import { MybkProgressCard, MybkUploadButton } from './components/MybkProgress';
 import SemesterSummary from './components/SemesterSummary';
 import { countCoursesWithoutPeDuplicates } from './physical-education';
 import type { CourseRow } from './types';
@@ -60,7 +59,6 @@ const CoursesPage = () => {
     const keyword = debouncedSearch.trim();
     const [statusFilter, setStatusFilter] = useState<StatusFilter>();
     const [scopeChoice, setScopeChoice] = useState<Scope>();
-    const [editing, setEditing] = useState<CourseRow | null>(null);
 
     /** Đổi bộ lọc thì quay về trang 1, tránh đứng ở trang không còn tồn tại. */
     const resetPage = () => {
@@ -180,16 +178,6 @@ const CoursesPage = () => {
         if (keyword) ranked.sort((a, b) => a.rank! - b.rank!);
         return ranked.map(({ row }) => row);
     }, [serverPaged, scope, curriculumRows, statusesQuery.data, toRow, keyword, activeStatusFilter]);
-
-    /** Môn điền sẵn vào file mẫu khai trạng thái: chương trình + đã khai/lên kế hoạch. */
-    const templateCourses = useMemo<CourseSummary[]>(() => {
-        if (hasCurriculum) {
-            return curriculumRows.map(row => ({
-                id: row.courseId, code: row.code, name: row.name, credits: row.credits, description: row.description,
-            }));
-        }
-        return (statusesQuery.data ?? []).map(item => item.course);
-    }, [hasCurriculum, curriculumRows, statusesQuery.data]);
 
     const serverRows = useMemo(
         () => (serverPaged ? (catalogQuery.data?.items ?? []).map(course => toRow(course.id, course)) : []),
@@ -317,15 +305,6 @@ const CoursesPage = () => {
                     ? <Tag color="purple">HK {row.plannedSemester}</Tag>
                     : <Text type="secondary">—</Text>),
             },
-            {
-                title: '',
-                key: 'actions',
-                width: 56,
-                align: 'center',
-                render: (_value, row) => (
-                    <IconBtn size="small" icon={<LuPencil />} label={`Sửa môn ${row.code}`} onClick={() => setEditing(row)} />
-                ),
-            },
         );
     }
 
@@ -334,7 +313,7 @@ const CoursesPage = () => {
             <PageHeader
                 title="Môn học & kế hoạch"
                 subtitle={isStudent
-                    ? 'Danh sách môn của chương trình, trạng thái học tập và học kỳ dự kiến của bạn. Bấm “Sửa” ở một môn, hoặc khai hàng loạt bằng file Excel/CSV.'
+                    ? 'Trạng thái học tập lấy đúng từ file PDF "Tiến độ hoàn thành CTĐT" của myBK. Tải file mới để cập nhật.'
                     : 'Tra cứu danh mục môn học theo mã hoặc tên.'}
                 extra={isStudent
                     ? (
@@ -344,7 +323,7 @@ const CoursesPage = () => {
                                     <IOutLinedBtn icon={<LuChartColumn />}>Phân tích</IOutLinedBtn>
                                 </Link>
                             )}
-                            <CourseStatusFileActions statusByCourseId={statusByCourseId} templateCourses={templateCourses} />
+                            <MybkUploadButton />
                         </Space>
                     )
                     : undefined}
@@ -360,6 +339,8 @@ const CoursesPage = () => {
                         action={<Link to="/profile"><ISolidBtn size="small">Điền hồ sơ</ISolidBtn></Link>}
                     />
                 )}
+
+                {isStudent && <MybkProgressCard />}
 
                 {isStudent && (
                     <div className="stat-row">
@@ -441,8 +422,6 @@ const CoursesPage = () => {
                     />
                 </Card>
             </div>
-
-            <CourseEditModal row={editing} curriculumId={curriculumId} onClose={() => setEditing(null)} />
         </section>
     );
 };

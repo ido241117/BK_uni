@@ -1,0 +1,42 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor #F8FBFD
+  BorderColor #2F6F91
+  ArrowColor #455A64
+  FontColor #172B36
+}
+
+actor "Quản trị viên\nhệ thống" as Admin
+actor "Hệ thống trường\n(External System)" as University
+
+rectangle "Smart Advisory & Optimization Platform" {
+  usecase "UC-07\nĐồng bộ dữ liệu trường" as UC07
+  usecase "UC-08\nTheo dõi và xử lý\nlỗi đồng bộ" as UC08
+  usecase "Lấy dữ liệu chỉ đọc\ntừ hệ thống trường" as Fetch
+  usecase "Kiểm tra schema, độ đầy đủ\nvà tính nhất quán" as Validate
+  usecase "Lưu snapshot có version\nvà thời điểm đồng bộ" as Store
+  usecase "Ghi nhận lỗi đồng bộ" as RecordError
+  usecase "Thử đồng bộ lại" as Retry
+}
+
+Admin -- UC07
+Admin -- UC08
+University -- Fetch
+
+UC07 ..> Fetch : <<include>>
+UC07 ..> Validate : <<include>>
+UC07 ..> Store : <<include>>
+RecordError ..> UC07 : <<extend>>
+Retry ..> UC08 : <<extend>>
+Retry ..> UC07 : <<include>>
+
+note bottom of Fetch
+  Prototype sử dụng Mock University API
+  theo cùng data contract giả định.
+end note
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam actorStyle stickman
+skinparam usecase {
+  BackgroundColor #F8FBFD
+  BorderColor #2F6F91
+  ArrowColor #455A64
+  FontColor #172B36
+}
+
+actor "Sinh viên" as Student
+actor "Quản trị viên\nhệ thống" as Admin
+actor "Hệ thống trường\n(External System)" as University
+
+rectangle "Smart Advisory & Optimization Platform" {
+  usecase "UC-01\nXem tiến độ học tập" as UC01
+  usecase "UC-02\nSinh và xem các\nlộ trình học tập" as UC02
+  usecase "UC-03\nSo sánh và chọn\nlộ trình đang theo" as UC03
+  usecase "UC-04\nPhân tích lựa chọn\nđăng ký môn" as UC04
+  usecase "UC-05\nXem phương án\nlập lại lộ trình" as UC05
+  usecase "UC-06\nXem giải thích và\nlịch sử lộ trình" as UC06
+  usecase "UC-07\nĐồng bộ dữ liệu trường" as UC07
+  usecase "UC-08\nTheo dõi và xử lý\nlỗi đồng bộ" as UC08
+}
+
+Student -- UC01
+Student -- UC02
+Student -- UC03
+Student -- UC04
+Student -- UC05
+Student -- UC06
+
+Admin -- UC07
+Admin -- UC08
+University -- UC07
+
+note bottom of UC04
+  Phiếu đăng ký chính thức vẫn được nộp
+  và xác nhận trên hệ thống trường.
+end note
+@enduml

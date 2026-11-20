@@ -1,0 +1,113 @@
+"""Chuan hoa fixture TRUOC khi giai. Chi doi hinh dang du lieu, khong chua luat.
+
+Ca hai bo giai, validator va bao cao deu goi ``normalize`` (idempotent), nen ca
+ba cung nhin mot du lieu. Cac buoc:
+
+1. Mon "dieu kien" (``conditions``, vd ENG_GC, SA4001) bi bo khoi chuong trinh:
+   khong phai lop hoc, khong xep vao ky.
+2. Khoi con theo chuyen nganh (co ``parent``): neu sinh vien chon chuyen nganh
+   (``student.target_specialization``), danh sach mon cua khoi goc thu lai con
+   danh sach cua khoi con do (H15). Khong chon thi bo cac khoi con.
+3. Khoi tu chon tu do (``pool_scope = "any"``, H13) doi thanh cac o trong
+   ``FREE_k`` bat buoc, moi o ``pool_course_credits`` TC, khong co tien quyet.
+   Tru truoc phan hoc vuot cac nhom tu chon (mon trong chuong trinh), roi moi
+   tru mon da dat ngoai chuong trinh (thu tu cua file tien do myBK).
+4. Ghi ``_total_credits`` = tong TC chuong trinh (bat buoc + nguong cac khoi
+   goc), dung cho nguong mon tot nghiep (QD 285 Dieu 15.5).
+"""
+
+from __future__ import annotations
+
+import copy
+import math
+from typing import Any
+
+from planner.facts import FixtureError
+
+DEFAULT_FREE_SLOT_CREDITS = 3
+
+
+def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
+    if fixture.get("_normalized"):
+        return fixture
+    fx = copy.deepcopy(fixture)
+    credits = {c["code"]: c["credits"] for c in fx["courses"]}
+    groups = fx["course_groups"]
+    for g in groups:
+        g.setdefault("pool_scope", "listed")
+        if g["pool_scope"] not in ("listed", "any"):
+            raise FixtureError(f"pool_scope khong ho tro: {g['pool_scope']}")
+
+    # 1. Mon dieu kien.
+    conditions = set(fx.get("conditions", []))
+    if conditions:
+        fx["curriculum_courses"] = [cc for cc in fx["curriculum_courses"] if cc["course_code"] not in conditions]
+        for g in groups:
+            g["members"] = [c for c in g["members"] if c not in conditions]
+        fx["course_relations"] = [r for r in fx["course_relations"]
+                                  if r["course_code"] not in conditions and r["related_course_code"] not in conditions]
+        fx["student"]["student_courses"] = [sc for sc in fx["student"]["student_courses"]
+                                            if sc["course_code"] not in conditions]
+
+    # 2. Chuyen nganh.
+    target = fx["student"].get("target_specialization")
+    children = [g for g in groups if g.get("parent")]
+    if target is not None:
+        chosen = [g for g in children if g.get("specialization") == target]
+        if not chosen:
+            raise FixtureError(f"khong co khoi con cho chuyen nganh '{target}'")
+        by_name = {g["name"]: g for g in groups}
+        for child in chosen:
+            parent = by_name.get(child["parent"])
+            if parent is None:
+                raise FixtureError(f"khoi con '{child['name']}' tro toi khoi goc khong ton tai")
+            keep = set(child["members"])
+            parent["members"] = [c for c in parent["members"] if c in keep]
+            parent["name"] = f"{parent['name']} [{target}]"
+    groups = [g for g in groups if not g.get("parent")]
+
+    # 4 (tinh truoc khi doi khoi tu do). Tong TC chuong trinh.
+    total = 0
+    for g in groups:
+        if g["kind"] == "required":
+            total += sum(credits[c] for c in g["members"])
+        else:
+            total += g["required_credits"] or 0
+
+    # 3. Tu chon tu do -> o trong. Thu tu tinh tin chi theo file tien do myBK:
+    #    bat buoc > tu chon > tu chon tu do; khi xet tu chon tu do thi mon TRONG
+    #    chuong trinh (phan hoc vuot nhom tu chon) truoc, mon NGOAI chuong trinh sau.
+    in_curriculum = {cc["course_code"] for cc in fx["curriculum_courses"]}
+    completed = {sc["course_code"] for sc in fx["student"]["student_courses"] if sc["status"] == "completed"}
+    excess = 0
+    for g in groups:
+        if g["kind"] == "elective" and g["pool_scope"] == "listed" and g["required_credits"]:
+            got = sum(credits[c] for c in g["members"] if c in completed)
+            excess += max(0, got - g["required_credits"])
+    outside = sum(credits.get(c, 0) for c in completed if c not in in_curriculum)
+    out_groups = []
+    for k, g in enumerate(groups, start=1):
+        if g["pool_scope"] != "any":
+            out_groups.append(g)
+            continue
+        need = g["required_credits"] or 0
+        per = g.get("pool_course_credits") or DEFAULT_FREE_SLOT_CREDITS
+        used_excess = min(excess, need)
+        excess -= used_excess
+        used_outside = min(outside, need - used_excess)
+        outside -= used_outside
+        left = max(0, need - used_excess - used_outside)
+        slots = [f"FREE_{k}_{j}" for j in range(1, math.ceil(left / per) + 1)]
+        for code in slots:
+            fx["courses"].append({"code": code, "name": f"O tu chon tu do ({g['name']})", "credits": per})
+            fx["curriculum_courses"].append({"course_code": code, "recommended_year": None,
+                                             "recommended_term": None})
+        out_groups.append({"name": f"{g['name']} (o trong)", "kind": "required", "required_count": None,
+                           "required_credits": None, "pool_scope": "listed", "members": slots,
+                           "_free_slots": True})
+        fx.setdefault("_free_outside_credits", 0)
+        fx["_free_outside_credits"] += used_outside
+    fx["course_groups"] = out_groups
+    fx["_total_credits"] = total
+    fx["_normalized"] = True
+    return fx

@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor #F5F9FC
+  BorderColor #2679A8
+  ArrowColor #455A64
+  FontColor #172B36
+}
+skinparam actor {
+  BorderColor #263238
+  FontColor #172B36
+}
+
+actor Student as student
+
+rectangle "Degree Path Planning and Replanning Module" {
+  package "Degree Planning" {
+    usecase "UC-01\nGenerate Full Degree Paths" as UC01
+    usecase "UC-02\nCompare and Select\nActive Path" as UC02
+  }
+
+  package "Registration Support" {
+    usecase "UC-03\nAnalyze Round 1\nRegistration Draft" as UC03
+    usecase "UC-04\nAdjust Plan in\nRegistration Round 2" as UC04
+    usecase "UC-05\nConfirm and Replan after\nRegistration Round 3" as UC05
+  }
+
+  package "Change and Traceability" {
+    usecase "UC-06\nReplan after Academic or\nRegistration Change" as UC06
+    usecase "UC-07\nView Recommendation\nExplanations" as UC07
+    usecase "UC-08\nReview and Compare\nPlan Versions" as UC08
+  }
+}
+
+student -- UC01
+student -- UC02
+student -- UC03
+student -- UC04
+student -- UC05
+student -- UC06
+student -- UC07
+student -- UC08
+
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor #F5F9FC
+  BorderColor #2679A8
+  ArrowColor #455A64
+  FontColor #172B36
+}
+
+actor Student as student
+actor "Existing University Portal /\nCourse Registration System" as portal
+actor "University Data Provider" as provider
+
+rectangle "Degree Path Planning and Replanning Module" {
+  usecase "UC-03\nAnalyze Round 1\nRegistration Draft" as UC03
+  usecase "UC-04\nAdjust Plan in\nRegistration Round 2" as UC04
+  usecase "UC-05\nConfirm and Replan after\nRegistration Round 3" as UC05
+  usecase "UC-06\nReplan Future Semesters" as UC06
+  usecase "SUC-01\nLoad Latest\nPlanning Context" as SUC01
+}
+
+student -- UC03
+student -- UC04
+student -- UC05
+student -- UC06
+
+portal -- SUC01
+provider -- SUC01
+
+UC03 ..> UC06 : <<include>>
+UC04 ..> UC06 : <<include>>
+UC05 ..> UC06 : <<include>>
+UC06 ..> SUC01 : <<include>>
+
+note bottom of portal
+  Official registration remains outside
+  the Planning Module boundary.
+end note
+@enduml

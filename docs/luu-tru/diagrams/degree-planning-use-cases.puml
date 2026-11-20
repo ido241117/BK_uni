@@ -1,0 +1,38 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor #F5F9FC
+  BorderColor #2679A8
+  ArrowColor #455A64
+  FontColor #172B36
+}
+
+actor Student as student
+actor "University Data Provider" as provider
+
+rectangle "Degree Path Planning and Replanning Module" {
+  usecase "UC-01\nGenerate Full Degree Paths" as UC01
+  usecase "UC-02\nCompare and Select\nActive Path" as UC02
+  usecase "UC-07\nView Recommendation\nExplanations" as UC07
+  usecase "UC-08\nReview and Compare\nPlan Versions" as UC08
+  usecase "SUC-01\nLoad Latest\nPlanning Context" as SUC01
+}
+
+student -- UC01
+student -- UC02
+student -- UC07
+student -- UC08
+provider -- SUC01
+UC01 ..> SUC01 : <<include>>
+
+UC07 ..> UC01 : <<extend>>
+UC07 ..> UC02 : <<extend>>
+
+note bottom of UC01
+  Planning guide is not a required input.
+end note
+@enduml

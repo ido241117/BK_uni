@@ -1,0 +1,44 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor #F8FBFD
+  BorderColor #2F6F91
+  ArrowColor #455A64
+  FontColor #172B36
+}
+
+actor "Sinh viên" as Student
+actor "Hệ thống trường\n(External System)" as University
+
+rectangle "Smart Advisory & Optimization Platform" {
+  usecase "UC-01\nXem tiến độ học tập" as UC01
+  usecase "UC-02\nSinh và xem các\nlộ trình học tập" as UC02
+  usecase "UC-03\nSo sánh và chọn\nlộ trình đang theo" as UC03
+  usecase "UC-06\nXem giải thích và\nlịch sử lộ trình" as UC06
+  usecase "Nạp ngữ cảnh học tập\nmới nhất" as LoadContext
+  usecase "Sinh các lộ trình\nkhả thi" as GeneratePaths
+  usecase "Chọn 3–5 lộ trình\nđại diện" as SelectPaths
+}
+
+Student -- UC01
+Student -- UC02
+Student -- UC03
+Student -- UC06
+University -- LoadContext
+
+UC01 ..> LoadContext : <<include>>
+UC02 ..> LoadContext : <<include>>
+UC02 ..> GeneratePaths : <<include>>
+UC02 ..> SelectPaths : <<include>>
+UC03 ..> UC02 : <<extend>>
+UC06 ..> UC02 : <<extend>>
+UC06 ..> UC03 : <<extend>>
+
+note bottom of GeneratePaths
+  Planning guide không phải input bắt buộc.
+end note
+@enduml

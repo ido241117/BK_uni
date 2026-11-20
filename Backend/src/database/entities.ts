@@ -19,11 +19,12 @@ import { CurriculumSpecialization } from '../curriculum/entities/curriculum-spec
 import { StudentProfile } from '../student/entities/student-profile.entity';
 import { StudentCourse } from '../student/entities/student-course.entity';
 import { StudentPlanCourse } from '../student/entities/student-plan-course.entity';
+import { StudentProgressImport } from '../student/entities/student-progress-import.entity';
 import { StudentRegulationStatusEntity } from '../student/entities/student-regulation-status.entity';
 
 export const entities = [
   User, AuthSession, Course, CourseOpenedSemester, Curriculum, CurriculumCourse,
   CourseGroup, CourseGroupMember, CourseCategory, CourseCategoryMember, CourseRelation, CurriculumRegulation,
   CurriculumSpecialization, StudentProfile, StudentCourse, StudentPlanCourse, StudentRegulationStatusEntity,
-  AdvisorSession, AdvisorStep, CourseOutline, CourseOutlinePrerequisite, CourseOutlineImport,
+  AdvisorSession, AdvisorStep, CourseOutline, CourseOutlinePrerequisite, CourseOutlineImport, StudentProgressImport,
 ];

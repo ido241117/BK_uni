@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1640" viewBox="0 0 1400 1640">
+<title>Use case tổng quan — Degree Path Planning and Replanning Module</title>
+<desc>Ba actor bên ngoài module: Student, System Admin, University Core System. Mười use case chính được chia thành ba package. Đường liên kết không có mũi tên.</desc>
+<rect width="100%" height="100%" fill="white"/>
+<text x="700" y="43" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#24364B">SƠ ĐỒ USE CASE TỔNG QUAN</text>
+<text x="700" y="81" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="20" font-weight="normal" fill="#5F7082">Các chức năng chính · Bản 01 để xem xét</text>
+<rect x="300" y="125" width="800" height="1370" fill="white" stroke="#24364B" stroke-width="2"/>
+<text x="700" y="155" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="25" font-weight="bold" fill="#24364B">Degree Path Planning and Replanning Module</text>
+<rect x="350" y="205" width="280" height="34" fill="#F2F7FC" stroke="#A0AFBD" stroke-width="1.5"/>
+<rect x="350" y="239" width="700" height="496" fill="#F2F7FC" stroke="#A0AFBD" stroke-width="1.5"/>
+<text x="367" y="222" text-anchor="start" dominant-baseline="central" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#24364B">Lập và theo dõi lộ trình</text>
+<rect x="350" y="775" width="375" height="34" fill="#F1F8F4" stroke="#A0AFBD" stroke-width="1.5"/>
+<rect x="350" y="809" width="700" height="296" fill="#F1F8F4" stroke="#A0AFBD" stroke-width="1.5"/>
+<text x="367" y="792" text-anchor="start" dominant-baseline="central" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#24364B">Hỗ trợ đăng ký và lập lại lộ trình</text>
+<rect x="350" y="1145" width="310" height="34" fill="#FCF7ED" stroke="#A0AFBD" stroke-width="1.5"/>
+<rect x="350" y="1179" width="700" height="266" fill="#FCF7ED" stroke="#A0AFBD" stroke-width="1.5"/>
+<text x="367" y="1162" text-anchor="start" dominant-baseline="central" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#24364B">Vận hành đồng bộ dữ liệu</text>
+<polyline points="152,604 455,285" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,604 455,385" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,604 455,485" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,604 455,585" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,604 455,685" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,604 320,835 455,855" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,604 455,955" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,604 455,1055" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,1284 455,1245" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="152,1284 455,1370" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="945,385 1243,804" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="945,1055 1243,804" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<polyline points="945,1245 1243,804" fill="none" stroke="#66788A" stroke-width="1.6"/>
+<ellipse cx="700" cy="285" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="272" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC01</text>
+<text x="700" y="298" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Xem tiến độ học tập</text>
+<ellipse cx="700" cy="385" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="372" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC02</text>
+<text x="700" y="398" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Sinh các lộ trình học tập</text>
+<ellipse cx="700" cy="485" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="472" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC03</text>
+<text x="700" y="498" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">So sánh các lộ trình</text>
+<ellipse cx="700" cy="585" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="572" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC04</text>
+<text x="700" y="598" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Chọn lộ trình đang theo dõi</text>
+<ellipse cx="700" cy="685" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="672" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC11</text>
+<text x="700" y="698" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Xem lịch sử lộ trình</text>
+<ellipse cx="700" cy="855" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="842" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC06</text>
+<text x="700" y="868" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Xem gợi ý môn cho kỳ đăng ký</text>
+<ellipse cx="700" cy="955" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="942" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC08</text>
+<text x="700" y="968" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Phân tích phương án đăng ký giả định</text>
+<ellipse cx="700" cy="1055" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="1042" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC09</text>
+<text x="700" y="1068" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Lập lại lộ trình tương lai</text>
+<ellipse cx="700" cy="1245" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="1232" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC14</text>
+<text x="700" y="1258" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Khởi tạo đồng bộ dữ liệu</text>
+<ellipse cx="700" cy="1370" rx="245" ry="39" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<text x="700" y="1357" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#46617D">UC15</text>
+<text x="700" y="1383" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="21" font-weight="normal" fill="#24364B">Xem trạng thái và lỗi đồng bộ</text>
+<ellipse cx="125" cy="570" rx="15" ry="15" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<polyline points="125,585 125,635" fill="none" stroke="#24364B" stroke-width="2"/>
+<polyline points="98,604 152,604" fill="none" stroke="#24364B" stroke-width="2"/>
+<polyline points="100,664 125,635 150,664" fill="none" stroke="#24364B" stroke-width="2"/>
+<text x="125" y="688" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#24364B">Student</text>
+<ellipse cx="125" cy="1250" rx="15" ry="15" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<polyline points="125,1265 125,1315" fill="none" stroke="#24364B" stroke-width="2"/>
+<polyline points="98,1284 152,1284" fill="none" stroke="#24364B" stroke-width="2"/>
+<polyline points="100,1344 125,1315 150,1344" fill="none" stroke="#24364B" stroke-width="2"/>
+<text x="125" y="1368" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#24364B">System Admin</text>
+<ellipse cx="1270" cy="770" rx="15" ry="15" fill="white" stroke="#24364B" stroke-width="1.6"/>
+<polyline points="1270,785 1270,835" fill="none" stroke="#24364B" stroke-width="2"/>
+<polyline points="1243,804 1297,804" fill="none" stroke="#24364B" stroke-width="2"/>
+<polyline points="1245,864 1270,835 1295,864" fill="none" stroke="#24364B" stroke-width="2"/>
+<text x="1270" y="888" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#24364B">University</text>
+<text x="1270" y="915" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#24364B">Core System</text>
+<text x="300" y="1530" text-anchor="start" dominant-baseline="central" font-family="Arial, sans-serif" font-size="17" font-weight="normal" fill="#526477">Khung ngoài: module. Package bên trong: nhóm chức năng. Đường liền: sự tham gia của actor.</text>
+<text x="300" y="1562" text-anchor="start" dominant-baseline="central" font-family="Arial, sans-serif" font-size="17" font-weight="normal" fill="#526477">Dữ liệu trường chỉ đọc; đăng ký môn chính thức thực hiện tại cổng trường.</text>
+<text x="300" y="1594" text-anchor="start" dominant-baseline="central" font-family="Arial, sans-serif" font-size="17" font-weight="normal" fill="#526477">Mã UC giữ theo danh mục đề xuất; các use case còn lại sẽ được trình bày ở sơ đồ chi tiết.</text>
+</svg>
