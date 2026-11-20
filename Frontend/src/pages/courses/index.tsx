@@ -297,14 +297,6 @@ const CoursesPage = () => {
                     ? <Tag color={STUDENT_COURSE_STATUS_COLOR[row.status]}>{STUDENT_COURSE_STATUS_LABEL[row.status]}</Tag>
                     : <Text type="secondary">Chưa khai</Text>),
             },
-            {
-                title: 'Học kỳ dự kiến',
-                key: 'planned',
-                width: 120,
-                render: (_value, row) => (row.plannedSemester
-                    ? <Tag color="purple">HK {row.plannedSemester}</Tag>
-                    : <Text type="secondary">—</Text>),
-            },
         );
     }
 
