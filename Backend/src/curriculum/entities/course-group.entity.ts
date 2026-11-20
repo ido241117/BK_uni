@@ -47,6 +47,14 @@ export class CourseGroup extends BaseEntityCustom {
   @Column({ type: 'integer', nullable: true })
   pool_course_credits!: number | null;
 
+  /** Năm gợi ý bắt đầu học khối (theo kế hoạch giảng dạy); `null` khi không xếp kỳ. Đi cùng `recommended_term`. */
+  @Column({ type: 'integer', nullable: true })
+  recommended_year!: number | null;
+
+  /** Học kỳ gợi ý (1, 2, 3 = hè) bắt đầu học khối; `null` khi không xếp kỳ. */
+  @Column({ type: 'integer', nullable: true })
+  recommended_term!: number | null;
+
   /** Chuyên ngành mà khối này phục vụ; `null` với khối gốc (xét tốt nghiệp). */
   @Column({ type: 'uuid', nullable: true })
   specialization_id!: string | null;

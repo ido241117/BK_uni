@@ -36,6 +36,8 @@
  *
  * Tuy chon:
  *   --data=<file>     file JSON dinh nghia chuong trinh (mac dinh scripts/sample-curriculum.json)
+ *   --dir=<thu muc>   import moi file *.json trong thu muc (bo file bat dau bang "_"), dang nhap 1 lan
+ *                     (login bi gioi han 10 lan/phut); loi o 1 file khong dung ca lo, tong ket o cuoi
  *   --base-url=<url>  mac dinh http://localhost:3210/api
  *   --origin=<url>    phai thuoc CORS_ORIGINS, mac dinh http://localhost:5173
  *   --email=<email>   tai khoan ADMIN, mac dinh admin@bkuni.local
@@ -45,8 +47,8 @@
  *   --prune           xoa nhom mon, chuyen nganh, nhom hoc phan, quy dinh co trong DB nhung khong co trong file
  */
 
-import { readFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -79,6 +81,7 @@ const config = {
   dataFile: options.has('data')
     ? resolve(process.cwd(), String(options.get('data')))
     : resolve(SCRIPT_DIR, 'sample-curriculum.json'),
+  dataDir: options.has('dir') ? resolve(process.cwd(), String(options.get('dir'))) : null,
   dryRun: options.has('dry-run'),
   removeAfter: options.has('remove-after'),
   prune: options.has('prune'),
@@ -102,8 +105,11 @@ function fail(message) {
   process.exit(1);
 }
 
+/** Loi trong luc import 1 chuong trinh: nem ra de che do --dir ghi nhan va chay tiep file sau. */
+class ImportError extends Error {}
+
 function assert(condition, message) {
-  if (!condition) fail(message);
+  if (!condition) throw new ImportError(message);
 }
 
 class ApiError extends Error {
@@ -247,6 +253,15 @@ function validatePlan(plan) {
   if (curriculum.description != null && typeof curriculum.description !== 'string') {
     errors.push('curriculum.description phai la chuoi hoac null');
   }
+  if (curriculum.total_credits != null && (!isInteger(curriculum.total_credits) || curriculum.total_credits < 1)) {
+    errors.push('curriculum.total_credits phai la so nguyen >= 1 hoac null');
+  }
+  if (curriculum.specialization_required != null && typeof curriculum.specialization_required !== 'boolean') {
+    errors.push('curriculum.specialization_required phai la true/false');
+  }
+  if (curriculum.source_id != null && !isInteger(curriculum.source_id)) {
+    errors.push('curriculum.source_id phai la so nguyen hoac null');
+  }
 
   const courses = Array.isArray(plan.courses) ? plan.courses : [];
   const courseByCode = new Map();
@@ -329,6 +344,12 @@ function validatePlan(plan) {
     }
     if (group.pool_course_credits != null && (!isInteger(group.pool_course_credits) || group.pool_course_credits < 1)) {
       errors.push(`${label}.pool_course_credits phai la so nguyen >= 1`);
+    }
+    if ((group.recommended_year == null) !== (group.recommended_term == null)) {
+      errors.push(`${label}: recommended_year va recommended_term phai cung co hoac cung bo trong`);
+    } else if (group.recommended_year != null && (!isInteger(group.recommended_year) || group.recommended_year < 1 ||
+      ![1, 2, 3].includes(group.recommended_term))) {
+      errors.push(`${label}: recommended_year >= 1, recommended_term la 1, 2 hoac 3`);
     }
 
     const nameKey = typeof group.name === 'string' ? normalize(group.name) : '';
@@ -496,21 +517,38 @@ async function login(api) {
   log(`  dang nhap: ${account.email} (${account.role})`);
 }
 
+/** Id mon theo ma (khong phan biet hoa thuong), `null` khi chua co. */
+async function findCourseId(api, code) {
+  try {
+    return (await api.get(`/courses/by-code/${encodeURIComponent(code)}`)).id;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
 async function ensureCourses(api, plan) {
   const ids = new Map();
   const created = [];
   for (const course of plan.courses) {
-    let courseId;
-    try {
-      const saved = await api.post('/courses', { code: course.code, name: course.name, credits: course.credits });
-      courseId = saved.id;
-      created.push({ id: courseId, code: course.code });
-      log(`  + mon moi ${course.code} (${course.credits} TC)`);
-    } catch (error) {
-      if (!(error instanceof ApiError) || error.status !== 409) throw error;
-      const existing = await api.get(`/courses/by-code/${encodeURIComponent(course.code)}`);
-      courseId = existing.id;
+    // Tra truoc roi moi tao: "tao truoc, 409 thi tra" lam moi mon da co sinh 1 INSERT hong
+    // (Postgres ghi log ERROR 23505 UQ_courses_code_lower), mon dung chung nhieu chuong trinh nen log rat nhieu.
+    let courseId = await findCourseId(api, course.code);
+    if (courseId) {
       log(`  = mon da co ${course.code}`);
+    } else {
+      try {
+        const saved = await api.post('/courses', { code: course.code, name: course.name, credits: course.credits });
+        courseId = saved.id;
+        created.push({ id: courseId, code: course.code });
+        log(`  + mon moi ${course.code} (${course.credits} TC)`);
+      } catch (error) {
+        // Tien trinh khac vua tao cung ma (chay song song): lay lai id.
+        if (!(error instanceof ApiError) || error.status !== 409) throw error;
+        courseId = await findCourseId(api, course.code);
+        assert(courseId, `Mon ${course.code} bao trung ma nhung khong tra cuu duoc`);
+        log(`  = mon da co ${course.code} (vua duoc tao boi tien trinh khac)`);
+      }
     }
     ids.set(normalize(course.code), courseId);
 
@@ -532,8 +570,10 @@ async function ensureCurriculum(api, curriculum) {
     const page = await api.get(`/curricula?search=${encodeURIComponent(curriculum.code)}&take=100`);
     const found = (page ?? []).find((item) => normalize(item.code) === normalize(curriculum.code));
     assert(found, `Ma chuong trinh "${curriculum.code}" da ton tai nhung khong tim thay khi tra cuu`);
-    log(`  = chuong trinh da co ${found.code} (${found.id})`);
-    return { curriculum: found, created: false };
+    // Cap nhat thong tin chung (ten, tong tin chi, nguon...) theo file, de chay lai la dong bo.
+    const updated = await api.patch(`/curricula/${found.id}`, curriculum);
+    log(`  = chuong trinh da co ${updated.code} (${updated.id}), da cap nhat thong tin chung`);
+    return { curriculum: updated, created: false };
   }
 }
 
@@ -565,6 +605,8 @@ async function ensureGroups(api, curriculumId, plan, courseIds) {
       required_credits: group.required_credits ?? null,
       pool_scope: scope,
       pool_course_credits: group.pool_course_credits ?? null,
+      recommended_year: group.recommended_year ?? null,
+      recommended_term: group.recommended_term ?? null,
     };
     const target = group.required_credits != null
       ? `${group.required_credits} TC`
@@ -825,7 +867,7 @@ async function verify(api, curriculumId, plan, courseIds) {
 
   const regulations = await api.get(`/curricula/${curriculumId}/regulations`);
 
-  if (errors.length) fail(`Nghiem thu that bai:\n  - ${errors.join('\n  - ')}`);
+  if (errors.length) throw new ImportError(`Nghiem thu that bai:\n  - ${errors.join('\n  - ')}`);
 
   log(`  chuong trinh : ${curriculum.code} - ${curriculum.name} (${curriculum.cohort}, ${curriculum.duration_years} nam)`);
   log(`  mon hoc      : ${assigned.length}`);
@@ -844,12 +886,20 @@ async function main() {
   log(`BK Uni - tao chuong trinh dao tao qua API`);
   log(`  API    : ${config.baseUrl}`);
   log(`  Origin : ${config.origin}`);
-  log(`  Du lieu: ${config.dataFile}`);
+  const files = config.dataDir
+    ? (await readdir(config.dataDir)).filter((name) => name.endsWith('.json') && !name.startsWith('_')).sort()
+      .map((name) => resolve(config.dataDir, name))
+    : [config.dataFile];
+  log(`  Du lieu: ${config.dataDir ? `${config.dataDir} (${files.length} file)` : config.dataFile}`);
 
-  const plan = JSON.parse(await readFile(config.dataFile, 'utf8'));
-  const summary = validatePlan(plan);
-  log(`\nDu lieu hop le: ${plan.courses.length} mon, ${plan.curriculum_courses.length} mon trong chuong trinh, ` +
-    `${summary.groupCount} nhom mon, ${summary.specializationCount} chuyen nganh (${summary.specializationGroupCount} khoi), ${summary.categoryCount} nhom hoc phan, ${(plan.relations ?? []).length} quan he, ${summary.regulationCount} quy dinh.`);
+  const plans = [];
+  for (const file of files) {
+    const plan = JSON.parse(await readFile(file, 'utf8'));
+    const summary = validatePlan(plan);
+    log(`\nDu lieu hop le ${basename(file)}: ${plan.courses.length} mon, ${plan.curriculum_courses.length} mon trong chuong trinh, ` +
+      `${summary.groupCount} nhom mon, ${summary.specializationCount} chuyen nganh (${summary.specializationGroupCount} khoi), ${summary.categoryCount} nhom hoc phan, ${(plan.relations ?? []).length} quan he, ${summary.regulationCount} quy dinh.`);
+    plans.push({ file, plan });
+  }
 
   if (config.dryRun) {
     log('\n--dry-run: khong ghi du lieu. Bo co nay de tao that.');
@@ -861,6 +911,30 @@ async function main() {
   heading('Dang nhap ADMIN');
   await login(api);
 
+  if (!config.dataDir) {
+    await importPlan(api, plans[0].plan);
+    return;
+  }
+  const failures = [];
+  for (const [index, { file, plan }] of plans.entries()) {
+    log(`\n================ ${index + 1}/${plans.length} ${plan.curriculum.code} (${basename(file)})`);
+    const before = api.requests;
+    const started = Date.now();
+    try {
+      await importPlan(api, plan);
+      log(`== OK ${plan.curriculum.code}: ${api.requests - before} request, ${((Date.now() - started) / 1000).toFixed(1)} s`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      failures.push({ code: plan.curriculum.code, message });
+      log(`== LOI ${plan.curriculum.code}: ${message}`);
+    }
+  }
+  log(`\nTong ket: ${plans.length - failures.length}/${plans.length} chuong trinh thanh cong, ${api.requests} request.`);
+  for (const item of failures) log(`  - ${item.code}: ${item.message}`);
+  if (failures.length) process.exitCode = 1;
+}
+
+async function importPlan(api, plan) {
   heading('Mon hoc (danh muc dung chung)');
   const { ids: courseIds, created: createdCourses } = await ensureCourses(api, plan);
 
@@ -916,5 +990,6 @@ main().catch((error) => {
         : '';
     fail(`${error.message}${hint}`);
   }
+  if (error instanceof ImportError) fail(error.message);
   fail(error instanceof Error ? error.stack ?? error.message : String(error));
 });

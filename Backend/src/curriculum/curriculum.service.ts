@@ -51,6 +51,12 @@ export class CurriculumService {
         min_semester_credits: dto.min_semester_credits,
         max_semester_credits: dto.max_semester_credits,
         description: dto.description ?? null,
+        total_credits: dto.total_credits ?? null,
+        specialization_required: dto.specialization_required ?? false,
+        source_system: dto.source_system?.trim() || null,
+        source_code: dto.source_code?.trim() || null,
+        source_id: dto.source_id ?? null,
+        source_version: dto.source_version?.trim() || null,
       }));
     } catch (error) {
       if (isPostgresError(error, UNIQUE_VIOLATION)) throw new ConflictException('Mã chương trình đã tồn tại.');
@@ -69,6 +75,12 @@ export class CurriculumService {
     if (dto.min_semester_credits !== undefined) curriculum.min_semester_credits = dto.min_semester_credits;
     if (dto.max_semester_credits !== undefined) curriculum.max_semester_credits = dto.max_semester_credits;
     if (dto.description !== undefined) curriculum.description = dto.description;
+    if (dto.total_credits !== undefined) curriculum.total_credits = dto.total_credits;
+    if (dto.specialization_required !== undefined) curriculum.specialization_required = dto.specialization_required;
+    if (dto.source_system !== undefined) curriculum.source_system = dto.source_system?.trim() || null;
+    if (dto.source_code !== undefined) curriculum.source_code = dto.source_code?.trim() || null;
+    if (dto.source_id !== undefined) curriculum.source_id = dto.source_id;
+    if (dto.source_version !== undefined) curriculum.source_version = dto.source_version?.trim() || null;
     try {
       return await this.curricula.save(curriculum);
     } catch (error) {

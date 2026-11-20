@@ -52,6 +52,15 @@ export interface Curriculum extends BaseRecord {
     min_semester_credits: number;
     max_semester_credits: number;
     description: string | null;
+    /** Tổng tín chỉ tốt nghiệp khai báo ở nguồn (myBK); `null` khi không rõ. */
+    total_credits: number | null;
+    /** Phải đạt đúng một chuyên ngành mới đủ điều kiện tốt nghiệp. */
+    specialization_required: boolean;
+    /** Nguồn dữ liệu, vd `mybk`; `null` với chương trình nhập tay. */
+    source_system: string | null;
+    source_code: string | null;
+    source_id: number | null;
+    source_version: string | null;
 }
 
 export interface CurriculumPayload {
@@ -64,6 +73,8 @@ export interface CurriculumPayload {
     min_semester_credits: number;
     max_semester_credits: number;
     description?: string | null;
+    total_credits?: number | null;
+    specialization_required?: boolean;
 }
 
 export interface CurriculumCourse extends BaseRecord {
@@ -100,6 +111,9 @@ export interface CourseGroup extends BaseRecord {
     pool_scope: CourseGroupScope;
     /** Khối `any`: chỉ nhận môn đúng số tín chỉ này; `null` là không lọc. */
     pool_course_credits: number | null;
+    /** Kỳ gợi ý bắt đầu học khối (theo kế hoạch giảng dạy); `null` khi không xếp kỳ. */
+    recommended_year: number | null;
+    recommended_term: number | null;
     /** `null` với khối gốc (xét tốt nghiệp); có giá trị với khối chuyên ngành (không cộng tín chỉ). */
     specialization_id: string | null;
     /** Khối gốc mà khối chuyên ngành thu hẹp. */
@@ -114,6 +128,8 @@ export interface CourseGroupPayload {
     required_credits?: number | null;
     pool_scope?: CourseGroupScope;
     pool_course_credits?: number | null;
+    recommended_year?: number | null;
+    recommended_term?: number | null;
     course_ids?: string[];
 }
 
