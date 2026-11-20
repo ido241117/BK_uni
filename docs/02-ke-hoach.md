@@ -234,6 +234,11 @@ Ký hiệu cột "Ở đâu": **P** = chỉ `pipeline/` và `docs/`; **W** = có
 | T29 | Trang Môn học: nút "Tải PDF tiến độ myBK", hiện đúng nội dung file, ghi database; bỏ tự khai (Tải file mẫu, Nhập từ file, Sửa) | W | 9 | T28 |
 | T30 | Trang Gợi ý: bỏ nút myBK cũ; ghi rõ "chưa có môn đang học" tới khi có popup/tab đang học (người duyệt tự làm) | W | 9 | T29 |
 | T31 | Kiểm trên local bằng PDF thật: thẻ trang Môn học khớp số môn đạt và TC tích lũy của PDF; cập nhật 01, 03, `check_baseline.py` | W | 9 | T29 |
+| T32 | Backend `POST /api/plans/mybk/review`: đọc file, so với trạng thái môn đang có trong database, trả danh sách khác biệt (mã, tên, web đang ghi, file ghi) và cờ "đã từng tải file"; không ghi gì | W | 10 | T28 |
+| T33 | Backend `POST /api/plans/mybk/import` nhận thêm `choices` (mã môn → trạng thái sinh viên chọn); môn không có trong `choices` thì theo file. Test hàm thuần | W | 10 | T32 |
+| T34 | Frontend luồng tải file: **lần đầu** (chưa có tiến độ) ghi luôn; **lần thứ n** mở hộp xác nhận "Thông tin từ file có thể khác với web hiện tại; bạn vẫn có thể tùy chỉnh. Bấm Xác nhận thì ghi đè", bảng khác biệt có ô chọn từng môn. Đổi tên nút tải | W | 10 | T33 |
+| T35 | Frontend sửa tay trên bảng môn: cột Trạng thái thành ô chọn, nút "Cập nhật" ghi database rồi tải lại từ database; nhãn "Khác file myBK"; bỏ cột Học kỳ dự kiến (đã làm 20/11, chưa commit) | W | 10 | — |
+| T36 | Kiểm bằng tài khoản thử: tải lần 1 → sửa tay vài môn → tải lần 2 thấy đúng các môn khác biệt → tùy chỉnh → Xác nhận → database đúng lựa chọn | W | 10 | T34, T35 |
 
 ### Chờ trường trả lời (không chặn việc nào ở trên)
 
@@ -316,6 +321,14 @@ Người duyệt chốt 20/11: bỏ tự khai trạng thái môn; trang Môn h�
 - [~] T29 (20/11) Trang Môn học: nút "Tải PDF tiến độ myBK" (không bước xác nhận), thẻ "Tiến độ hoàn thành CTĐT" hiện từng khối (đạt/cần), môn (Stt, mã, tên, TC, ✓), điều kiện tốt nghiệp; bỏ file mẫu, Nhập từ file, nút Sửa. Điểm, ghi chú, thông tin sinh viên chưa hiện. Build + lint qua; **chưa bấm thử trên trình duyệt** (API đã chạy thật).
 - [x] T30 (20/11) Trang Gợi ý bỏ nút myBK cũ, ghi chú "chưa có môn đang học". `MybkImport.tsx` còn trong thư mục (chưa commit, xóa là mất hẳn) nhưng không dùng.
 - [ ] T31 Thẻ trang Môn học khớp PDF thật (chạy tại máy, không commit file).
+
+### Giai đoạn 10: Sprint "Sinh viên chốt trạng thái" (T32–T36), mở 20/11
+Người duyệt chốt 20/11: database là thứ web hiển thị; mọi màn hình đọc từ database, mọi lần bấm xác nhận/cập nhật đều ghi database. File myBK có thể đọc sai hoặc chưa cập nhật (ví dụ môn đang học), nên sinh viên sửa tay được. Tải file lần đầu ghi luôn; tải lại lần thứ n thì cho xem khác biệt, tùy chỉnh, rồi Xác nhận ghi đè.
+- [ ] T32 API review trả đúng danh sách khác biệt; không ghi gì.
+- [ ] T33 Import nhận `choices`; test.
+- [ ] T34 Lần đầu ghi luôn, lần n có hộp xác nhận.
+- [ ] T35 Sửa tay + Cập nhật ghi database.
+- [ ] T36 Kịch bản lần 1 → sửa tay → lần 2 chạy đúng trên tài khoản thử.
 
 ---
 
@@ -410,6 +423,7 @@ Người duyệt xác nhận **trước khi** code giai đoạn 2. K1–K4 tính
 | 18/11 | Chuẩn ngoại ngữ, MOS, GDQP, GDTC: sinh viên khai qua `student_flags`; không khai thì giả định đạt | Đề xuất |
 | 20/11 | **Bỏ tự khai** trạng thái môn; PDF myBK là nguồn duy nhất, ghi đè database đúng như file, môn không có trong file thì không đụng tới. Thay quyết định 19/11 "không tự lưu, sinh viên xác nhận từng môn" | Đã duyệt (người duyệt) |
 | 20/11 | Không dùng Postgres local (rỗng, thiếu 3 migration). Thử thẳng trên Supabase; lệnh ghi chỉ đụng dòng của tài khoản đang đăng nhập; sao lưu dòng đó trước khi ghi | Đã duyệt (người duyệt) |
+| 20/11 | Database là nguồn hiển thị duy nhất; sinh viên sửa tay trạng thái môn, bấm Cập nhật thì ghi database. Tải file lần đầu ghi luôn, lần thứ n hỏi xác nhận kèm khác biệt và cho tùy chỉnh trước khi ghi đè (giai đoạn 10). Bỏ cột Học kỳ dự kiến ở trang Môn học | Đã duyệt (người duyệt) |
 | 20/11 | Lưu cột "Ghi chú" từng môn (backend có, frontend chưa dùng). Không lưu đoạn "Độ ưu tiên thứ tự khi xét hoàn thành…" ở đầu file (giống nhau cho mọi sinh viên) | Đã duyệt (người duyệt) |
 | 20/11 | Lưu nội dung file tiến độ (khối, môn, đạt/chưa, **điểm**, điều kiện tốt nghiệp) vào bảng mới `student_progress_imports` (JSON, mỗi tài khoản một dòng) để hiển thị lại đúng trang myBK. Cần **1 migration trên Supabase chung**; thay quy tắc "không lưu điểm" ở mục 8. Sửa cùng ngày: **lưu hết** cả họ tên, MSSV, mã lớp, khoa, điểm TBTL hệ 10 và hệ 4 (`student` trong JSON); frontend chưa gọi ra | Đã duyệt (người duyệt) |
 
@@ -431,3 +445,4 @@ Chỉ cần ghi "Đồng ý" hoặc "Không" vào cột thứ hai.
 | 7 | | | Chặn: chưa có `build-vertical.cjs` |
 | 8 | | | Đã làm 19/11 (PDF + Excel), chờ duyệt; chưa làm T24 |
 | 9 | | | Sprint mở 20/11; T27, T28, T30 xong; T29 chờ bấm thử trên trình duyệt; T31 chờ chọn chương trình cho tài khoản thử |
+| 10 | | | Sprint mở 20/11, chưa làm; chờ người duyệt chốt tên nút và việc bỏ thẻ kế hoạch cũ |
