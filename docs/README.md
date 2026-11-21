@@ -33,7 +33,7 @@ Script `pipeline/check_baseline.py` kiểm tự động phần lớn sự thật
 
 Ngày 20/11 (ngoài nhánh này): đồng đội `kqyuu22` thay bộ giải Clingo bằng engine ASP (`pipeline/engine/asp`, không sửa `core/*.lp`); Thiên thay toàn bộ CTĐT trên database bằng dữ liệu myBK (132 chương trình, trường cho phép). Xem [01 mục 6e](01-boi-canh.md#6e-database-mới-và-luồng-pdf--database-2111).
 
-### Phiên 21/11 đã làm (chưa commit)
+### Phiên 21/11 đã làm (commit `4a663b5`, đã đẩy lên `origin/feature/goi-y-hoc-phan`)
 
 Trang Môn học (sinh viên) chỉ còn thẻ tiến độ myBK; luồng chi tiết ở [03 mục 4b](03-thiet-ke.md#4b-luồng-tải-pdf-tiến-độ--database-f9-giai-đoạn-910-cập-nhật-2111):
 - Nút **"Nhập tiến độ từ myBK"**, 2 cách: tải PDF (phải "Lưu dưới dạng PDF"; file "Microsoft Print to PDF" không có chữ) hoặc **dán nội dung trang** (Ctrl+A, Ctrl+C; "đạt" suy từ điểm 4–10/12/21).
@@ -64,7 +64,7 @@ Lần chạy cuối (21/11): pytest planner 122 qua + 7 xfail + 1 xpass; jest pl
 
 ## Git (kiểm tra ngày 21/11)
 
-- Nhánh `feature/goi-y-hoc-phan`, đã kéo tới `bd98658` (2 commit engine ASP của `kqyuu22`). Việc T32 ngày 21/11 **chưa commit**; người dùng chỉ muốn commit khi yêu cầu.
+- Nhánh `feature/goi-y-hoc-phan`, đã kéo tới `bd98658` (2 commit engine ASP của `kqyuu22`). Việc ngày 21/11 đã commit `4a663b5` và đẩy lên remote (người dùng yêu cầu). Chỉ commit khi được yêu cầu.
 - **Chưa gộp `origin/main`** (khoảng 60 file của Thiên: dữ liệu CTĐT, trang Môn học viết lại). Thử gộp ngày 21/11 có 2 xung đột (`Backend/src/database/data-source.ts`, `Frontend/src/pages/courses/index.tsx`), đã hủy. Người duyệt chọn: xong luồng PDF rồi gộp một lần. Khi gộp, bỏ phần khai `source_*`, `total_credits` trong `curriculum.entity.ts` của nhánh này (entity bên `main` đã có).
 - Hai migration cùng mốc `1795600000000` (nhánh này và `main`), cả hai đã chạy trên Supabase.
 
