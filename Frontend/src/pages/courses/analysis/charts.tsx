@@ -174,36 +174,3 @@ export const ColumnChart = ({ columns, references = [], height = 180, unit = 'TC
         </div>
     );
 };
-
-interface RingProps {
-    percent: number;
-    label: ReactNode;
-    sublabel?: ReactNode;
-}
-
-/** Con số chính (hero) kèm vòng tiến độ: chỉ một giá trị nên không cần chú thích màu. */
-export const ProgressRing = ({ percent, label, sublabel }: RingProps) => {
-    const radius = 42;
-    const circumference = 2 * Math.PI * radius;
-    const clamped = Math.max(0, Math.min(100, percent));
-    return (
-        <div className="viz-ring">
-            <svg viewBox="0 0 100 100" width="112" height="112" role="img" aria-label={`${clamped.toFixed(0)}%`}>
-                <circle cx="50" cy="50" r={radius} className="viz-ring-track" />
-                <circle
-                    cx="50"
-                    cy="50"
-                    r={radius}
-                    className="viz-ring-value"
-                    strokeDasharray={`${(clamped / 100) * circumference} ${circumference}`}
-                    transform="rotate(-90 50 50)"
-                />
-                <text x="50" y="54" textAnchor="middle" className="viz-ring-text">{clamped.toFixed(0)}%</text>
-            </svg>
-            <div>
-                <div className="viz-ring-label">{label}</div>
-                {sublabel && <div className="hint">{sublabel}</div>}
-            </div>
-        </div>
-    );
-};

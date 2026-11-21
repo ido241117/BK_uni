@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Card, Input, Popconfirm, Select, Skeleton, Space, Statistic, Tabs, Typography } from 'antd';
+import { Alert, Card, Input, Popconfirm, Select, Skeleton, Space, Tabs, Tag, Typography } from 'antd';
 import { LuChartColumn, LuSave, LuSearch, LuUndo2 } from 'react-icons/lu';
 import { Link, useNavigate } from 'react-router';
 import { IOutLinedBtn, ISolidBtn, ITextBtn, PageHeader } from '@/components';
@@ -23,6 +23,7 @@ import { computeCurriculumBlocks, summarizeCurriculumCredits } from '@/utils/cur
 import { toastMessage } from '@/utils/toast';
 import type { StatusChange } from '@/utils/student-course-file';
 import CourseStatusFileActions from '../components/CourseStatusFileActions';
+import { MetricGroup, MetricTile, ProgressHero } from '../components/ProgressSummary';
 import { currentSemester, nextMainSemester, recommendedSemester } from '../analysis/semester';
 import CourseCard from './CourseCard';
 import CourseDrawer, { type CourseContext } from './CourseDrawer';
@@ -303,19 +304,54 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
             ) : (
                 <div className="stack">
                     <Card size="small">
-                        <div className="board-section-head">
-                            <span>
-                                <span className="board-section-title" style={{ fontSize: 17 }}>{curriculum.name}</span>
-                                <span className="board-section-sub">{` — ${curriculum.code} · Khóa ${curriculum.cohort} · ${curriculum.major}`}</span>
-                            </span>
+                        <div className="board-curriculum-head">
+                            <div style={{ minWidth: 0 }}>
+                                <h2 className="board-curriculum-title">{curriculum.name}</h2>
+                                <div className="board-curriculum-meta">
+                                    <Tag style={{ marginInlineEnd: 0 }}>{curriculum.code}</Tag>
+                                    <Tag style={{ marginInlineEnd: 0 }}>Khóa {curriculum.cohort}</Tag>
+                                    <Tag style={{ marginInlineEnd: 0 }}>{curriculum.major}</Tag>
+                                </div>
+                            </div>
                             <Link to="/profile"><ITextBtn size="small">Giới thiệu chương trình</ITextBtn></Link>
                         </div>
-                        <div className="stat-row" style={{ marginBottom: 12 }}>
-                            <Statistic title="Tín chỉ tích lũy / tốt nghiệp" value={stats.completedCredits} suffix={`/ ${stats.totalCredits} TC`} />
-                            <Statistic title="Môn hoàn thành / phải học" value={stats.completedCourses} suffix={`/ ${stats.requiredCourses} môn`} />
-                            <Statistic title="Đang học" value={stats.inProgressCredits} suffix="TC" />
-                            <Statistic title="Đã lên kế hoạch" value={stats.plannedCredits} suffix="TC" />
-                            {stats.failedCount > 0 && <Statistic title="Chưa đạt" value={stats.failedCount} suffix="môn" />}
+                        <div className="progress-overview" style={{ marginBottom: 16 }}>
+                            <ProgressHero
+                                percent={pct(stats.completedCredits)}
+                                value={stats.completedCredits}
+                                total={stats.totalCredits}
+                                unit="TC"
+                                label="Tín chỉ tích lũy / chuẩn tốt nghiệp"
+                                caption={`${stats.completedCourses} / ${stats.requiredCourses} môn được tính vào chuẩn tốt nghiệp`}
+                            />
+                            <div className="progress-overview-groups">
+                                <MetricGroup title="Tín chỉ">
+                                    <MetricTile label="Đang học" value={stats.inProgressCredits} unit="TC" tone="progress" />
+                                    <MetricTile label="Đã lên kế hoạch" value={stats.plannedCredits} unit="TC" tone="plan-status" />
+                                    <MetricTile
+                                        label="Còn thiếu"
+                                        value={Math.max(0, stats.totalCredits - stats.completedCredits - stats.inProgressCredits - stats.plannedCredits)}
+                                        unit="TC"
+                                        tone="remaining"
+                                        note="chưa học, chưa xếp kỳ"
+                                    />
+                                </MetricGroup>
+                                <MetricGroup title="Môn học">
+                                    <MetricTile
+                                        label="Đã hoàn thành"
+                                        value={stats.completedCourses}
+                                        unit={`/ ${stats.requiredCourses} môn`}
+                                        tone="done"
+                                    />
+                                    <MetricTile
+                                        label="Chưa đạt"
+                                        value={stats.failedCount}
+                                        unit="môn"
+                                        tone={stats.failedCount ? 'danger' : 'neutral'}
+                                        note={stats.failedCount ? 'cần học lại' : undefined}
+                                    />
+                                </MetricGroup>
+                            </div>
                         </div>
                         <div
                             className="viz-hbar"
@@ -330,6 +366,7 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
                             <span className="viz-legend-item"><span className="viz-swatch viz-fill-done" />Đã tích lũy</span>
                             <span className="viz-legend-item"><span className="viz-swatch viz-fill-progress" />Đang học</span>
                             <span className="viz-legend-item"><span className="viz-swatch viz-fill-plan-status" />Đã lên kế hoạch</span>
+                            <span className="viz-legend-item"><span className="viz-swatch viz-fill-track" />Còn thiếu</span>
                         </div>
                     </Card>
 

@@ -1,12 +1,13 @@
 import { type ReactNode } from 'react';
-import { Alert, Card, Empty, Space, Statistic, Tabs, Tag, Tooltip, Typography } from 'antd';
+import { Alert, Card, Empty, Space, Tabs, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { LuArrowLeft, LuCircleAlert, LuCircleCheck, LuInfo, LuTriangleAlert } from 'react-icons/lu';
 import { Link } from 'react-router';
 import { IOutLinedBtn, ISolidBtn, ITable, PageHeader, TablePageSkeleton } from '@/components';
 import { COURSE_RELATION_TYPE_LABEL, STUDENT_COURSE_STATUS_COLOR, STUDENT_COURSE_STATUS_LABEL, type OutlineSummary } from '@/types';
 import { type Analysis, type CourseCheck, type Warning } from './analyze';
-import { BlockBars, ColumnChart, Legend, ProgressRing, StackedBar } from './charts';
+import { BlockBars, ColumnChart, Legend, StackedBar } from './charts';
+import { MetricGroup, MetricTile, ProgressHero } from '../components/ProgressSummary';
 import { semesterLabel } from './semester';
 import { useStudentAnalysis } from './useStudentAnalysis';
 
@@ -184,31 +185,48 @@ const AnalysisPage = () => {
                 )}
                 {/* ----------------------------- Tổng quan ----------------------------- */}
                 <Card>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center' }}>
-                        <ProgressRing
+                    <div className="progress-overview">
+                        <ProgressHero
                             percent={percent}
-                            label={`${overview.completedCredits} / ${overview.totalCredits} TC`}
-                            sublabel={`${overview.completedCourses} / ${overview.requiredCourses} môn được tính vào chuẩn tốt nghiệp`}
+                            value={overview.completedCredits}
+                            total={overview.totalCredits}
+                            unit="TC"
+                            label="Tín chỉ tích lũy / chuẩn tốt nghiệp"
+                            caption={`${overview.completedCourses} / ${overview.requiredCourses} môn được tính vào chuẩn tốt nghiệp`}
                         />
-                        <div className="stat-row" style={{ flex: 1, minWidth: 280 }}>
-                            <Statistic title="Đang học" value={overview.inProgressCredits} suffix="TC" />
-                            <Statistic title="Đã lên kế hoạch" value={overview.plannedCredits} suffix="TC" />
-                            <Statistic title="Còn thiếu (chưa xếp)" value={overview.remainingCredits} suffix="TC" />
-                            <Statistic
-                                title="Nhịp đã học"
-                                value={overview.averagePerSemester !== null ? overview.averagePerSemester.toFixed(1) : '—'}
-                                suffix={overview.averagePerSemester !== null ? `TC/kỳ · ${overview.elapsedSemesters} kỳ` : undefined}
-                            />
-                            <Statistic
-                                title="Cần để tốt nghiệp đúng hạn"
-                                value={overview.neededPerSemester !== null ? overview.neededPerSemester.toFixed(1) : '—'}
-                                suffix={overview.neededPerSemester !== null ? `TC/kỳ · ${overview.semestersLeft} kỳ` : undefined}
-                            />
-                            <Statistic
-                                title="Dự kiến tốt nghiệp"
-                                value={analysis.projectedGraduation ? `HK ${analysis.projectedGraduation}` : 'Chưa xác định'}
-                                suffix={<Text type={lateGraduation ? 'danger' : 'secondary'} style={{ fontSize: 13 }}>chuẩn HK {analysis.standardGraduation}</Text>}
-                            />
+                        <div className="progress-overview-groups">
+                            <MetricGroup title="Tín chỉ">
+                                <MetricTile label="Đang học" value={overview.inProgressCredits} unit="TC" tone="progress" />
+                                <MetricTile label="Đã lên kế hoạch" value={overview.plannedCredits} unit="TC" tone="planned" />
+                                <MetricTile
+                                    label="Còn thiếu"
+                                    value={overview.remainingCredits}
+                                    unit="TC"
+                                    tone="remaining"
+                                    note="chưa học, chưa xếp kỳ"
+                                />
+                            </MetricGroup>
+                            <MetricGroup title="Tiến độ">
+                                <MetricTile
+                                    label="Nhịp đã học"
+                                    value={overview.averagePerSemester !== null ? overview.averagePerSemester.toFixed(1) : '—'}
+                                    unit={overview.averagePerSemester !== null ? 'TC/kỳ' : undefined}
+                                    note={overview.averagePerSemester !== null ? `trung bình ${overview.elapsedSemesters} kỳ đã qua` : 'chưa có kỳ nào'}
+                                />
+                                <MetricTile
+                                    label="Cần để tốt nghiệp đúng hạn"
+                                    value={overview.neededPerSemester !== null ? overview.neededPerSemester.toFixed(1) : '—'}
+                                    unit={overview.neededPerSemester !== null ? 'TC/kỳ' : undefined}
+                                    note={overview.neededPerSemester !== null ? `trong ${overview.semestersLeft} kỳ còn lại` : undefined}
+                                />
+                                <MetricTile
+                                    label="Dự kiến tốt nghiệp"
+                                    value={analysis.projectedGraduation ? `HK ${analysis.projectedGraduation}` : 'Chưa rõ'}
+                                    note={`chuẩn HK ${analysis.standardGraduation}${lateGraduation ? ' · trễ hạn' : ''}`}
+                                    noteTone={lateGraduation ? 'danger' : undefined}
+                                    tone={lateGraduation ? 'danger' : 'neutral'}
+                                />
+                            </MetricGroup>
                         </div>
                     </div>
                     <div style={{ marginTop: 20 }}>

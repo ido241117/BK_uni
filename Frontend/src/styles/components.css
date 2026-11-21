@@ -213,11 +213,9 @@
     .viz-xlabels > span.is-highlight { color: var(--text-primary); font-weight: 600; }
     .viz-axis-spacer { flex: none !important; width: 28px; }
 
-    .viz-ring { display: flex; align-items: center; gap: 16px; }
     .viz-ring-track { fill: none; stroke: var(--viz-track); stroke-width: 10; }
     .viz-ring-value { fill: none; stroke: var(--viz-done); stroke-width: 10; stroke-linecap: round; }
     .viz-ring-text { fill: var(--text-primary); font-size: 20px; font-weight: 700; }
-    .viz-ring-label { font-size: 18px; font-weight: 600; color: var(--text-primary); }
 
     .analysis-grid {
         display: grid;
@@ -782,4 +780,95 @@
     .program-chip-legend .program-chip { cursor: default; }
     .program-chip-legend .program-chip + .program-chip,
     .program-chip-legend .program-chip:nth-of-type(2) { margin-left: 10px; }
+}
+
+/* Khối số liệu tiến độ (pages/courses/components/ProgressSummary). */
+@layer components {
+    .progress-overview {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+    @media (min-width: 900px) {
+        .progress-overview { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); align-items: start; }
+    }
+    .progress-overview-groups { display: grid; gap: 16px; min-width: 0; }
+
+    .progress-hero {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        border-radius: var(--radius-md);
+        background: var(--bg-subtle);
+    }
+    .progress-hero-ring { width: 96px; height: 96px; flex: none; }
+    .progress-hero-body { min-width: 0; display: grid; gap: 4px; }
+    .progress-hero-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+    .progress-hero-number {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.1;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+    }
+    .progress-hero-total { font-size: 15px; color: var(--text-secondary); white-space: nowrap; }
+
+    .metric-group { min-width: 0; }
+    .metric-group-title {
+        margin: 0 0 8px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+        gap: 10px;
+    }
+
+    .metric-tile {
+        --tone: var(--border-strong);
+        display: grid;
+        align-content: start;
+        gap: 2px;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--border-soft);
+        border-left: 3px solid var(--tone);
+        border-radius: var(--radius-sm);
+        background: var(--bg-surface);
+    }
+    .metric-tile[data-tone='done'] { --tone: var(--viz-done); }
+    .metric-tile[data-tone='progress'] { --tone: var(--viz-progress); }
+    .metric-tile[data-tone='planned'] { --tone: var(--viz-planned); }
+    .metric-tile[data-tone='plan-status'] { --tone: var(--status-planned); }
+    .metric-tile[data-tone='remaining'] { --tone: var(--viz-track); }
+    .metric-tile[data-tone='danger'] { --tone: var(--status-failed); }
+
+    .metric-label { font-size: 12px; line-height: 1.35; color: var(--text-secondary); }
+    .metric-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; }
+    .metric-number {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+    }
+    .metric-unit { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+    .metric-note { font-size: 12px; line-height: 1.35; color: var(--text-muted); }
+    .metric-note[data-tone='danger'] { color: var(--status-failed); font-weight: 600; }
+
+    .board-curriculum-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px 16px;
+        margin-bottom: 16px;
+    }
+    .board-curriculum-title { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.35; color: var(--text-primary); }
+    .board-curriculum-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 }
