@@ -26,9 +26,14 @@ export interface ImportStatusPlan {
  * Ghi đúng như file; môn không có trong file thì không đụng tới (người duyệt chốt 20/11).
  * Một mã xuất hiện hai lần (khối và điều kiện tốt nghiệp) thì "đạt" thắng.
  */
-export function planImportStatuses(file: ImportedFile, idByCode: Map<string, string>): ImportStatusPlan {
+export function planImportStatuses(
+  file: ImportedFile,
+  idByCode: Map<string, string>,
+  /** Môn trên web tương ứng mã chứng chỉ của file (vd CCGDTC → PE1003, PE1005), lấy từ `certificateCourses`. */
+  extra: ImportedCourse[] = [],
+): ImportStatusPlan {
   const passedByCode = new Map<string, boolean>();
-  const rows = [...file.blocks.flatMap((b) => b.courses), ...(file.graduation_conditions ?? [])];
+  const rows = [...file.blocks.flatMap((b) => b.courses), ...(file.graduation_conditions ?? []), ...extra];
   for (const row of rows) passedByCode.set(row.code, (passedByCode.get(row.code) ?? false) || row.passed);
 
   const items: ImportStatusPlan['items'] = [];

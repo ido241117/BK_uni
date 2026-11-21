@@ -162,6 +162,8 @@ export interface MybkProgressCourse {
     score?: string | null;
     letter?: string | null;
     note?: string | null;
+    /** Dòng không có trong file (môn thêm tay trên web, hoặc PE1003/PE1005 suy từ CCGDTC). */
+    outside_file?: boolean;
 }
 
 export interface MybkProgressBlock {
@@ -170,6 +172,17 @@ export interface MybkProgressBlock {
     required_credits: number;
     earned_credits: number;
     courses: MybkProgressCourse[];
+}
+
+/** Thông tin sinh viên in trên đầu PDF tiến độ (của chính người tải file). */
+export interface MybkStudentInfo {
+    faculty: string | null;
+    full_name: string | null;
+    student_number: string | null;
+    class_code: string | null;
+    applied_from_year: string | null;
+    gpa_10: string | null;
+    gpa_4: string | null;
 }
 
 /** JSON của `python -m planner.mybk` (PDF) như đã lưu trong database. */
@@ -182,16 +195,53 @@ export interface MybkProgressData {
     updated_at: string | null;
     blocks: MybkProgressBlock[];
     graduation_conditions: MybkProgressCourse[];
+    student?: MybkStudentInfo;
+    checks?: { id: string; ok: boolean; detail: string }[];
+}
+
+/** `POST /api/plans/mybk/review` (T32): xem trước file, không ghi gì. */
+export interface MybkReview {
+    file: MybkProgressData;
+    program: {
+        official_program_code: string | null;
+        matched: {
+            id: string; code: string; name: string; cohort: number;
+            source_code: string | null; source_version: string | null; total_credits: number | null; course_count: number;
+        } | null;
+        /** `code` là mã nội bộ của web, không hiện cho người dùng; hiện `source_code` (mã myBK). */
+        profile: { id: string; code: string; name: string; source_code?: string | null } | null;
+        same_as_profile: boolean;
+    };
+    /** Mã chứng chỉ myBK tương ứng môn trên web (CCGDTC → PE1003, PE1005); lúc lưu ghi trạng thái theo chứng chỉ. */
+    equivalents: { file_code: string; passed: boolean; courses: { code: string; name: string }[] }[];
+    conflicts: { id: string; level: 'error' | 'warning' | 'info'; title: string; codes?: string[] }[];
+    /** `file: null`: môn đang có trên web mà file không nhắc tới, lưu sẽ xóa (mặc định Chưa học). */
+    status_changes: { code: string; name: string; web: string | null; file: string | null }[];
+    has_previous_import: boolean;
+    can_confirm: boolean;
 }
 
 /** `GET /api/plans/mybk/progress`: `data` = null khi chưa tải file. */
 export interface MybkProgress {
     imported_at: string | null;
     data: MybkProgressData | null;
+    /** Học kỳ hiện tại (vd "261"): sinh viên khai ở Hiệu chỉnh (`student`) hoặc tính theo ngày (`auto`). */
+    current_semester: string;
+    current_semester_source: 'student' | 'auto';
+}
+
+/** `PUT /api/plans/mybk/adjustments` (nút Hiệu chỉnh). */
+export interface MybkAdjustPayload {
+    current_semester?: string;
+    items: { course_id: string; status: StudentCourseStatus }[];
+    /** Xóa trạng thái các môn này (môn ngoài file thêm nhầm). */
+    remove_course_ids?: string[];
 }
 
 /** `POST /api/plans/mybk/import`: tiến độ vừa lưu + số môn đã ghi trạng thái. */
 export interface MybkImportResult extends MybkProgress {
     written_courses: number;
     unknown_codes: string[];
+    /** Chương trình vừa đặt vào hồ sơ (khi gửi `apply_curriculum`). */
+    curriculum: { id: string; code: string; name: string; source_code: string | null } | null;
 }

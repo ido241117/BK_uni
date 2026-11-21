@@ -1,4 +1,6 @@
-# 01 · Bối cảnh đã kiểm chứng (cập nhật 19/11/2026)
+# 01 · Bối cảnh đã kiểm chứng (cập nhật 21/11/2026)
+
+> **21/11:** database đã thay toàn bộ dữ liệu chương trình ngày 20/11 (mục 6e). Số liệu database ở mục 2, 2b, 6b là **trước 20/11**, giữ để tra lịch sử.
 
 Tài liệu này giữ lại những gì đã biết chắc qua các phiên làm việc 15–18/11, để phiên sau (người hoặc AI) không phải đoán. Kế hoạch việc cần làm nằm ở [02-ke-hoach.md](02-ke-hoach.md).
 
@@ -168,6 +170,33 @@ Thêm từ việc đọc code backend ngày 18/11: `student_courses` **không c�
 | Tài khoản thử của người duyệt chưa chọn chương trình trong hồ sơ (20/11), nên bảng môn và thẻ thống kê trang Môn học chưa theo chương trình | Trang Hồ sơ |
 | Python không đọc file có tên tiếng Việt qua `curl -F` (Git Bash) và Postgres không mở thư mục có "Đồ án": chép sang đường dẫn không dấu | — |
 
+## 6e. Database mới và luồng PDF ↔ database (21/11)
+
+Đọc Supabase bằng `SELECT` trong transaction `READ ONLY` (script tạm, không commit), và đọc file thật tại máy (chỉ in mã, số đếm, không in tên/MSSV/điểm).
+
+| Sự thật | Cách kiểm tra lại |
+|---|---|
+| Ngày 20/11 Thiên thay toàn bộ CTĐT bằng dữ liệu myBK (`Backend/DU-LIEU-CTDT.md` trên `main`): **132 chương trình** (khóa 2023: 46, 2024: 40, 2025: 2, 2026: 44), **5 675 môn** | `select count(*) from bk_uni.curricula` / `courses`; `check_baseline.py` |
+| Mọi chương trình có `source_system = 'mybk'` và `source_code` (mã CTĐT myBK), 132 mã **không trùng**. `CS-2023-KHMT` ↔ `DH_CQ_MT_KHM_2023` (phiên bản `DH_CQ_MT_NG_KHM_2023.v01`, 128 TC, 96 môn); `CS-2024-KHMT` ↔ `DH_CQ_MT_NG_7480101_2024`; `CS-2026-KHMT` ↔ `DH_CQ_MT_NG_7480101_2026` | `select code, source_code, source_version from bk_uni.curricula where code like '%KHMT%'` |
+| Hai migration cùng mốc `1795600000000` **đều đã chạy** trên Supabase: `StudentProgressImports` (nhánh này) và `CurriculumSourceAndGroupSemester` (`main`); thêm `CurriculumProfile1795700000000` | `select * from bk_uni.migrations order by timestamp desc limit 5` |
+| CS-2023-KHMT có **37 quan hệ**: 11 TQ, 21 KN, 2 HT (CO2007 sau CO1023, CO3031 sau CO2003), **3 SH** (CO3049–CO2013; CO3335–CO4029 ghi **cả hai chiều**). So bản chụp 19/11 (PDF CTĐT công khai, 32 quan hệ): chung 31; mất HT PE1005 sau PE1003; thêm 2 SH, 1 HT, 3 KN | Truy vấn `course_relations` theo `curriculum_id`; bản chụp `planner/data/relations-snapshot.json` (nay đã cũ) |
+| `curriculum_courses` có thêm `recommended_year`, `recommended_term` (KHMT 2023: 37/96 môn có giá trị). Lịch sử mở lớp của KHMT 2023: 19 kỳ, 201–261 | `information_schema.columns`; `course_opened_semesters` |
+| Nhóm môn (`course_categories`) đổi tên: **"Tốt nghiệp"** (CO3335, CO4029, CO4337) và **"Điều kiện tốt nghiệp"** (ENG_GC_600, SA4001); **không chương trình nào** còn nhóm tên `D.`/`E.` → `buildPlannerInput` không nhận môn tốt nghiệp (T37) | Truy vấn `course_categories` (`name like 'D.%'` → 0 chương trình) |
+| Trên database, `ENG_GC` đã đổi thành `ENG_GC_600` (trùng mã myBK) | `courses.code` |
+| **PDF in bằng "Microsoft Print to PDF" không đọc được**: 6 trang, 0 chữ, 0 font, 0 hình (Windows vẽ chữ thành nét; producer `Microsoft: Print To PDF`). PDF đọc được là bản Chrome/Edge **"Lưu dưới dạng PDF"** (producer `Skia/PDF`, 14 font). Gặp ngày 21/11 với file của sinh viên B | `pymupdf.open(f).metadata`, `page.get_text()` |
+| **Chữ dán** từ trang Tiến độ (Ctrl+A, Ctrl+C trên Edge, 2 sinh viên KHMT 2023): bảng giữ dấu **Tab** giữa các ô; dấu ✓ (icon) **mất**; ô mã môn của khối tự chọn có dấu cách đầu; đầu trang có menu myBK và chú thích "Điểm số > Điểm MT (12) > Điểm DT (21)". Suy "đạt" từ điểm (4–10 khác F, 12, 21): cả hai qua tự kiểm tra cộng tín chỉ từng khối; với người duyệt, **PDF (`trinh.pdf`, myBK 14/11) và chữ dán cho cùng mã môn, cùng đạt/chưa, cùng điểm** | `planner.mybk.parse_text` trên file tại máy (không commit) |
+| Tài khoản **tài khoản thử B** giữ dữ liệu của sinh viên B (KHMT 2023, 116/128, myBK 18/09/2026). 21/11 lưu lại bằng chữ dán của chính sinh viên B qua API: 97 trạng thái, 45 Đã hoàn thành = 116 TC, PE1003/PE1005 Đã hoàn thành, CH4079 (ngoài chương trình) tính tự chọn tự do | `GET /api/plans/mybk/progress`, `GET /api/student-courses/me` khi đăng nhập tài khoản đó |
+| Hiệu chỉnh trên tài khoản thử B qua API (21/11): khai kỳ 261 + CO3013 Đang học → bộ giải CP-SAT `OPTIMAL`, lộ trình bắt đầu 262, không xếp lại CO3013 ("giả định đậu"), không xếp PE1003/PE1005; đã trả CO3013 về Chưa học, **kỳ 261 vẫn để ở trạng thái "đã khai"** (`data.web.current_semester`) | `GET /api/plans/mybk/progress` khi đăng nhập tài khoản đó |
+| PE1003, PE1005 (0 TC) có trong **cả 132** chương trình; quy định GDTC ghi "Trên myBK ghi theo CCGDTC" ở 46 chương trình, còn khóa 2024, 2026 ghi "Trên myBK ghi theo PE1009, PE1011, PE1013, PE1015…". IM3047 (Giao tiếp trong kinh doanh, 3 TC) thuộc 5 chương trình, không thuộc KHMT 2023 | Truy vấn `curriculum_courses`, `curriculum_regulations` (21/11) |
+| **GDTC**: PE1003, PE1005 không thuộc nhóm nào; MI1003 thuộc nhóm "Chứng chỉ Giáo dục Quốc phòng". Liên kết duy nhất tới `CCGDTC` là chữ trong `curriculum_regulations.detail` của quy định "Chứng chỉ Giáo dục Thể chất" ("Trên myBK ghi theo CCGDTC", 46 chương trình) | Truy vấn `course_category_members`, `curriculum_regulations` |
+| PDF của người duyệt (myBK 06/03/2026) so với CS-2023-KHMT: 84 mã chung; chỉ PDF có `CCGDTC`; chỉ web có CO3129, CO3131, CO3133, CO3135, CO3137, CO3139, CO3151, CO3153, PE1003, PE1005 (và ENG_GC_600, SA4001 nằm ở điều kiện tốt nghiệp của PDF) | `POST /api/plans/mybk/review` với PDF (xem 03 mục 4b) |
+| JSON từ API myBK của người duyệt (`danh-sach-mon-hoc-ctdt/v2`, myBK cập nhật 14/11, lưu ở thư mục gốc, **không commit**): 99 dòng = 98 mã + 1 dòng ô tự chọn tự do; 111/128 TC; **có** 8 môn CO31xx mà PDF không có, có thêm môn ngoài CTĐT IM3047, PE1021, PE1035; tín chỉ khớp database 100%. **Không có** mã CTĐT, họ tên, GPA (nằm ở API `thong-tin-mo-ta-ctdt/v2` riêng). ⇒ 8 môn lệch là do **PDF cũ**, không phải database sai | `ctdt-ben-tien-do-mon-tra-ve-cua-tao.json` (tại máy) |
+| Trường của JSON đó: `loainhomkhoikienthuc` (mã khối: `TOAN`, `COSONGANH`, `CHUYENNGANH`, `CC_GDTC`…), `khoikienthucid` + `tcyeucau` (Chuyên ngành tách 4 khối 10/15/1/1 TC, khớp nhóm A/B/C của database), `hieuluc`, `tamdat`, `xetchontctd`, `monhoctuongduongid`, `douutien` (= điểm số ở 39/39 môn có điểm), `diemso` 21 (MI1003, CCGDTC) và 12 (LA1003, LA1005) với điểm chữ `--` (nghĩa chưa kiểm chứng). 55 môn chưa đạt đều `diemso = null`: không phân biệt được rớt với chưa học | Như trên |
+| Mã trang "Tiến độ hoàn thành CTĐT" của myBK (`function.js`, Phòng Đào tạo, thư mục gốc, **không commit**): `tamdat = 1` ẩn điểm (`--`); `hieuluc = 0` hiện `--`, không ✓; ✓ chỉ khi `diemdat = 1`, `hieuluc = 1`, `xetchontctd ≠ 1`; ghi chú "Đã dùng để xét TCTD", "Tương đương <mã>"; nút "Cập nhật" gọi `cap-nhat-tien-do-hoan-thanh-ctdt/v2` để tính lại | `function.js` dòng 95–107, 195–227, 420–427, 457–465 |
+| Công cụ cộng đồng `danhnth/mybk-planner` (MIT, 08/2026, đọc code 21/11, không chạy): CLI dùng mật khẩu CAS của chính sinh viên; gợi ý **một kỳ**, tham lam, **không** tiên quyết. Ghi nhận: API CTĐT của myBK **không có trường tiên quyết**; `diemdat` của CTĐT nghĩa là "có điểm" (môn rớt vẫn = 1); có API bảng điểm theo kỳ (`danh-sach-diem-hoc-ky-mon-hoc/v2`) và môn tương đương; API tải Excel CTĐT bị tắt (500); học phí 2026–2027 CQ: 15,75 triệu/kỳ, định mức 18 TC, 940 nghìn/TC vượt | `github.com/danhnth/mybk-planner`, `mybk_planner/planner.py`, `transcript.py`, `fees.py` |
+| **Tài khoản thử của người duyệt là tài khoản thử A** (đang giữ tiến độ từ `Bảng điểm.pdf`, nạp 20/11: 31 Đã hoàn thành, 54 Chưa học). `khmt.demo@bkuni.local` **không được giữ dữ liệu thật**: ngày 20/11 nó bị ghi nhầm 1 dòng `student_progress_imports` chứa PDF của người duyệt; đã xóa ngày 21/11 theo yêu cầu người duyệt (trạng thái môn của demo, 40 đạt + 4 đang học, không phải dữ liệu từ PDF nên giữ nguyên). Sau khi xóa, bảng chỉ còn 1 dòng (tài khoản thử A) | `select u.email from bk_uni.student_progress_imports p join bk_uni.users u on u.id = p.user_id` |
+| Quan hệ môn của myBK nằm trong **đề cương** (`v1/subject-outlines/{id}/full`, mở cho khách); backend đọc trường `prerequisites` có loại khi nhập đề cương. 1 127/1 626 môn thuộc CTĐT có đề cương. Chưa kiểm 37 quan hệ của KHMT 2023 lấy từ đề cương hay từ CTĐT | `Backend/src/outline/outline-format.ts` dòng 14–34, 124–141; `DU-LIEU-CTDT.md` |
+
 ## 7. Trao đổi với trường
 
 | Ngày | Sự việc |
@@ -180,6 +209,6 @@ Thêm từ việc đọc code backend ngày 18/11: `student_courses` **không c�
 ## 8. Ràng buộc làm việc
 
 - Không sửa schema, không chạy migration, không sửa dữ liệu trên Supabase dùng chung **trừ khi người duyệt cho phép từng lần** (20/11: cho phép migration `StudentProgressImports` và đổi chủ bảng đó).
-- Không đăng nhập myBK hay thu mật khẩu sinh viên; không cào hệ thống của trường.
+- Không đăng nhập myBK hay thu mật khẩu sinh viên; không cào hệ thống của trường. Dữ liệu CTĐT nạp ngày 20/11 lấy từ myBK **có phép của trường** (Thiên xin thầy; người duyệt xác nhận 21/11).
 - Không đưa tên, MSSV, điểm thật vào code, test hay commit.
 - File `docs/luu-tru/2026-11-15-ban-giao-claude-web-va-pipeline.md` mục 11 chứa mật khẩu và khóa API: **không commit file này**.
