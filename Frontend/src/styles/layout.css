@@ -68,6 +68,54 @@
         min-height: 0;
     }
 
+    /* ---------- Sidebar thu gọn (chỉ icon) ---------- */
+    .app-shell[data-sider-collapsed='true'] {
+        grid-template-columns: var(--sidebar-collapsed-width) minmax(0, 1fr);
+    }
+
+    .app-shell[data-sider-collapsed='true'] .app-sidebar {
+        padding-inline: 8px;
+    }
+
+    .app-shell[data-sider-collapsed='true'] .app-brand {
+        justify-content: center;
+        padding-inline: 0;
+    }
+
+    .app-sidebar-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: var(--radius-md);
+        background: transparent;
+        color: var(--text-muted);
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .app-sidebar-toggle:hover {
+        background: var(--brand-soft);
+        color: var(--text-primary);
+    }
+
+    .app-sidebar-toggle:focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+    }
+
+    .app-sidebar-toggle > svg {
+        flex: 0 0 auto;
+        font-size: 18px;
+    }
+
+    .app-shell[data-sider-collapsed='true'] .app-sidebar-toggle {
+        justify-content: center;
+        padding-inline: 0;
+    }
+
     /* ---------- Bottom nav (mobile) ---------- */
     .app-bottom-nav {
         position: fixed;

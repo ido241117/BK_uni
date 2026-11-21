@@ -43,6 +43,7 @@
 
     /* Layout */
     --sidebar-width: 248px;
+    --sidebar-collapsed-width: 72px;
     --bottom-nav-height: 60px;
     --topbar-height: 64px;
     --content-max-width: 1440px;

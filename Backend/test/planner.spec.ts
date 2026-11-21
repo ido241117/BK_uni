@@ -23,7 +23,7 @@ import { Curriculum } from '../src/curriculum/entities/curriculum.entity';
 import { CourseGroupKind } from '../src/curriculum/enum/course-group-kind';
 import { CourseRelationType } from '../src/curriculum/enum/course-relation-type';
 import { analyzeMybk, MybkParsed } from '../src/planner/mybk-check';
-import { buildPlannerInput, semestersFor } from '../src/planner/planner-input';
+import { buildPlannerInput, progressFromImport, savedCurrentSemester, semestersFor } from '../src/planner/planner-input';
 import { PlannerController } from '../src/planner/planner.controller';
 import { PlannerRunner } from '../src/planner/planner.runner';
 import { PlannerService } from '../src/planner/planner.service';
@@ -213,6 +213,35 @@ describe('Planner API (POST /api/plans/solve)', () => {
     }, {}, new Date('2026-11-20T00:00:00Z'));
     expect(input.conditions).toEqual(['ENG_GC_600', 'SA4001']);
     expect((input.course_groups[0] as { members: string[] }).members).toEqual(['CO1005']);
+  });
+
+  it('uses the current semester declared in Hiệu chỉnh (data.web), else the date (21/11)', () => {
+    expect(savedCurrentSemester({ web: { current_semester: '253' } })).toBe('253');
+    expect(savedCurrentSemester({ web: { current_semester: '2025' } })).toBeNull();
+    expect(savedCurrentSemester({})).toBeNull();
+    expect(progressFromImport({ blocks: [], web: { current_semester: '253' } })?.current_semester).toBe('253');
+    const c = (code: string, credits: number) => ({ id: code, code, name: code, credits });
+    const src = {
+      curriculum: { code: 'X', name: 'X', cohort: 2023, duration_years: 4, min_semester_credits: 14, max_semester_credits: 21 },
+      items: [c('CO1005', 3)].map((course) => ({ course, recommended_year: 1, recommended_term: 1 })),
+      groups: [], relations: [], categories: [], specializations: [], openedSemesters: [],
+      profile: { admission_year: 2023, target_specialization_id: null }, studentCourses: [],
+    };
+    const date = new Date('2026-11-20T00:00:00Z');
+    expect(buildPlannerInput(src, {}, date).student.current_semester).toBe('261');
+    expect(buildPlannerInput({ ...src, progress: { scores: [], graduation_conditions: [], current_semester: '253' } }, {}, date)
+      .student.current_semester).toBe('253');
+  });
+
+  it('does not schedule physical education (PE1003, PE1005 become conditions, 21/11)', () => {
+    const c = (code: string, credits: number) => ({ id: code, code, name: code, credits });
+    const input = buildPlannerInput({
+      curriculum: { code: 'X', name: 'X', cohort: 2023, duration_years: 4, min_semester_credits: 14, max_semester_credits: 21 },
+      items: [c('CO1005', 3), c('PE1003', 0), c('PE1005', 0)].map((course) => ({ course, recommended_year: 1, recommended_term: 1 })),
+      groups: [], relations: [], categories: [], specializations: [], openedSemesters: [],
+      profile: { admission_year: 2023, target_specialization_id: null }, studentCourses: [],
+    }, {}, new Date('2026-11-20T00:00:00Z'));
+    expect(input.conditions).toEqual(['PE1003', 'PE1005']);
   });
 
   it('rejects a malformed skip_semesters entry', async () => {

@@ -234,11 +234,13 @@ Ký hiệu cột "Ở đâu": **P** = chỉ `pipeline/` và `docs/`; **W** = có
 | T29 | Trang Môn học: nút "Tải PDF tiến độ myBK", hiện đúng nội dung file, ghi database; bỏ tự khai (Tải file mẫu, Nhập từ file, Sửa) | W | 9 | T28 |
 | T30 | Trang Gợi ý: bỏ nút myBK cũ; ghi rõ "chưa có môn đang học" tới khi có popup/tab đang học (người duyệt tự làm) | W | 9 | T29 |
 | T31 | Kiểm trên local bằng PDF thật: thẻ trang Môn học khớp số môn đạt và TC tích lũy của PDF; cập nhật 01, 03, `check_baseline.py` | W | 9 | T29 |
-| T32 | Backend `POST /api/plans/mybk/review`: đọc file, so với trạng thái môn đang có trong database, trả danh sách khác biệt (mã, tên, web đang ghi, file ghi) và cờ "đã từng tải file"; không ghi gì | W | 10 | T28 |
+| T32 | Backend `POST /api/plans/mybk/review`: đọc file, **tìm chương trình theo `curricula.source_code`** (21/11), liệt kê mâu thuẫn file ↔ chương trình, tương ứng `CCGDTC` ↔ PE1003/PE1005, so với trạng thái môn đang có trong database, trả danh sách khác biệt (mã, tên, web đang ghi, file ghi) và cờ "đã từng tải file"; không ghi gì. `import` nhận thêm `apply_curriculum` (đặt chương trình trong hồ sơ). Frontend: hộp xác nhận + hiện đủ trường đọc được | W | 10 | T28 |
 | T33 | Backend `POST /api/plans/mybk/import` nhận thêm `choices` (mã môn → trạng thái sinh viên chọn); môn không có trong `choices` thì theo file. Test hàm thuần | W | 10 | T32 |
 | T34 | Frontend luồng tải file: **lần đầu** (chưa có tiến độ) ghi luôn; **lần thứ n** mở hộp xác nhận "Thông tin từ file có thể khác với web hiện tại; bạn vẫn có thể tùy chỉnh. Bấm Xác nhận thì ghi đè", bảng khác biệt có ô chọn từng môn. Đổi tên nút tải | W | 10 | T33 |
 | T35 | Frontend sửa tay trên bảng môn: cột Trạng thái thành ô chọn, nút "Cập nhật" ghi database rồi tải lại từ database; nhãn "Khác file myBK"; bỏ cột Học kỳ dự kiến (đã làm 20/11, chưa commit) | W | 10 | — |
 | T36 | Kiểm bằng tài khoản thử: tải lần 1 → sửa tay vài môn → tải lần 2 thấy đúng các môn khác biệt → tùy chỉnh → Xác nhận → database đúng lựa chọn | W | 10 | T34, T35 |
+| T37 | (21/11) Sửa `buildPlannerInput`: database 20/11 đổi tên nhóm "D. Học phần tốt nghiệp" → "Tốt nghiệp", "E. Điều kiện tốt nghiệp" → "Điều kiện tốt nghiệp", nên bộ giải không nhận môn tốt nghiệp (ngưỡng 65/70/85% H12 mất tác dụng) cho cả 132 chương trình. `check_baseline.py` báo KHAC | P | — | Chờ người duyệt |
+| T38 | (21/11) Mong muốn mềm S12: ưu tiên xếp môn vào kỳ mà môn hay mở, xét 2–3 năm gần nhất (4–6 kỳ chính), ưu tiên thấp. Engine ASP đã có (@5); CP-SAT chưa | P | — | Làm cùng what-if, sau luồng PDF |
 
 ### Chờ trường trả lời (không chặn việc nào ở trên)
 
@@ -324,10 +326,10 @@ Người duyệt chốt 20/11: bỏ tự khai trạng thái môn; trang Môn h�
 
 ### Giai đoạn 10: Sprint "Sinh viên chốt trạng thái" (T32–T36), mở 20/11
 Người duyệt chốt 20/11: database là thứ web hiển thị; mọi màn hình đọc từ database, mọi lần bấm xác nhận/cập nhật đều ghi database. File myBK có thể đọc sai hoặc chưa cập nhật (ví dụ môn đang học), nên sinh viên sửa tay được. Tải file lần đầu ghi luôn; tải lại lần thứ n thì cho xem khác biệt, tùy chỉnh, rồi Xác nhận ghi đè.
-- [ ] T32 API review trả đúng danh sách khác biệt; không ghi gì.
+- [x] T32 (21/11) `POST mybk/review` (`mybk-review.ts`, hàm thuần; `planner.service.ts`), `import` + `apply_curriculum`, entity khai `source_code`. jest 20 qua (6 test mới), build + lint frontend qua. Gọi `review` bằng PDF thật trên tài khoản demo (không ghi): tìm đúng CS-2023-KHMT, cảnh báo 8 môn CO3129–CO3153 (PDF cũ), `CCGDTC` → PE1003, PE1005. **Chưa bấm trên trình duyệt; chưa gọi `import` mới** (ghi database, chờ tài khoản tài khoản thử A). Chi tiết: [03 mục 4b](03-thiet-ke.md#4b-luồng-tải-pdf-tiến-độ--database-f9-giai-đoạn-910-cập-nhật-2111).
 - [ ] T33 Import nhận `choices`; test.
-- [ ] T34 Lần đầu ghi luôn, lần n có hộp xác nhận.
-- [ ] T35 Sửa tay + Cập nhật ghi database.
+- [~] T34 Hộp xác nhận đã có (21/11), hiện **mọi lần** kể cả lần đầu (người duyệt đồng ý 21/11); chưa có ô chọn trạng thái từng môn (cần T33); tên nút chưa đổi.
+- [x] T35 (21/11, thành nút **Hiệu chỉnh**) sửa trạng thái mọi môn, thêm môn, khai học kỳ hiện tại; `PUT mybk/adjustments` ghi database. jest 25 qua; chạy API trên tài khoản thử B (đã trả lại môn thử). Chưa bấm trên trình duyệt; chưa có chuyển nhóm.
 - [ ] T36 Kịch bản lần 1 → sửa tay → lần 2 chạy đúng trên tài khoản thử.
 
 ---
@@ -425,6 +427,31 @@ Người duyệt xác nhận **trước khi** code giai đoạn 2. K1–K4 tính
 | 20/11 | Không dùng Postgres local (rỗng, thiếu 3 migration). Thử thẳng trên Supabase; lệnh ghi chỉ đụng dòng của tài khoản đang đăng nhập; sao lưu dòng đó trước khi ghi | Đã duyệt (người duyệt) |
 | 20/11 | Database là nguồn hiển thị duy nhất; sinh viên sửa tay trạng thái môn, bấm Cập nhật thì ghi database. Tải file lần đầu ghi luôn, lần thứ n hỏi xác nhận kèm khác biệt và cho tùy chỉnh trước khi ghi đè (giai đoạn 10). Bỏ cột Học kỳ dự kiến ở trang Môn học | Đã duyệt (người duyệt) |
 | 20/11 | Lưu cột "Ghi chú" từng môn (backend có, frontend chưa dùng). Không lưu đoạn "Độ ưu tiên thứ tự khi xét hoàn thành…" ở đầu file (giống nhau cho mọi sinh viên) | Đã duyệt (người duyệt) |
+| 21/11 | Dữ liệu CTĐT trên database thay bằng dữ liệu myBK ngày 20/11 (Thiên); **trường đã cho phép** lấy (Thiên xin thầy), không phải cào | Ghi nhận (người duyệt) |
+| 21/11 | Luồng PDF: tìm chương trình theo `curricula.source_code` = mã CTĐT của file (thay bảng nối viết tay); cho sinh viên xác nhận khi chương trình và file mâu thuẫn, rồi mới ghi; hiện **toàn bộ** thông tin đọc được | Đã duyệt (người duyệt) |
+| 21/11 | Hộp xác nhận hiện mọi lần tải (kể cả lần đầu), vì lần đầu cũng phải xác nhận chương trình: chọn PDF → `review` (không ghi) → hộp xác nhận → `import` ghi → giao diện đọc lại từ database. Thay T34 "lần đầu ghi luôn". Không làm nút kiểm thử riêng sau khi ghi | Đã duyệt (người duyệt) |
+| 21/11 | Mâu thuẫn mức lỗi (không tìm được chương trình, file không qua tự kiểm tra) khóa nút Xác nhận | Đề xuất (đã làm) |
+| 21/11 | `CCGDTC` ↔ PE1003, PE1005: hiện hai mã, suy theo tên môn "Giáo dục thể chất"; không ghi trạng thái hai môn này | **Thay bằng** dòng dưới (cùng ngày) |
+| 21/11 | `CCGDTC` đạt thì tính PE1003, PE1005 Đã hoàn thành (ghi khi lưu); nối cố định, chỉ cho chương trình có quy định ghi `CCGDTC` (46 chương trình khóa 2023; khóa 2024, 2026 myBK dùng PE1009, PE1011… chưa xử lý). Hộp xác nhận chỉ một dòng, bỏ dòng giải thích | Đã duyệt (người duyệt) |
+| 21/11 | Nút **"Nhập tiến độ từ myBK"** (đổi tên, trả lời câu hỏi T34) cho **2 cách**: (1) tải PDF, có hướng dẫn chọn **"Lưu dưới dạng PDF"**, không chọn "Microsoft Print to PDF" (file không có chữ; bộ đọc báo đúng lỗi này); (2) **dán nội dung trang** (Ctrl+A, Ctrl+C, Ctrl+V): dấu ✓ mất nên "đạt" suy từ điểm (4–10 khác F; 12 = miễn; 21 = đạt), tự kiểm tra cộng tín chỉ khối vẫn chặn suy sai. Cả hai đi qua cùng hộp xác nhận | Đã duyệt (người duyệt); đã làm |
+| 21/11 | Nút **"Hiệu chỉnh"** dưới thẻ tiến độ: để sẵn, bị khóa, tooltip "Sắp có"; chức năng người duyệt thiết kế sau | **Thay bằng** các dòng dưới (cùng ngày) |
+| 21/11 | **Mỗi lần nhập (PDF hoặc dán), trạng thái môn trên web theo đúng file mới**: môn file không nhắc tới bị xóa (= mặc định Chưa học), kể cả môn đã hiệu chỉnh tay; hộp xác nhận liệt kê trước "Chưa học (file không có)". Thay quy tắc 20/11 "môn không có trong file thì không đụng tới" (gây sót IM3047 ở tài khoản thử B). Học kỳ đã khai vẫn giữ | Đã duyệt (người duyệt) |
+| 21/11 | Hiệu chỉnh: mỗi lần đổi trạng thái hoặc xóa có hộp xác nhận OK/Hủy; GDTC hiện một dòng "Giáo dục thể chất" (không mã), đổi thì đổi cả PE1003 + PE1005; khối cuối tên "Môn ngoài chương trình đào tạo", xóa được môn ở khối này | Đã duyệt (người duyệt); đã làm |
+| 21/11 | **Hiệu chỉnh** (thay T35): sinh viên sửa trạng thái **mọi môn** (4 trạng thái), **thêm môn bất kỳ** trong danh mục (mặc định Đang học), **khai học kỳ hiện tại**; môn "Đang học" là môn của kỳ đó, bộ giải xếp từ kỳ sau. Lưu ghi `student_courses` + `student_progress_imports.data.web.current_semester` (không migration; nhập lại file vẫn giữ). Nội dung file giữ nguyên; dòng khác file có nhãn "Khác file" | Đã duyệt (người duyệt); đã làm |
+| 21/11 | Frontend **không hiện điểm** (điểm số, điểm chữ; bỏ luôn dòng điểm TBTL). Dữ liệu điểm vẫn lưu trong JSON | Người duyệt chốt bỏ 2 cột điểm; bỏ dòng TBTL là đề xuất |
+| 21/11 | Chuyển nhóm (kéo môn sang khối khác): **chưa làm**, để sau. Người duyệt muốn sinh viên được hiệu chỉnh mọi thứ; nhưng nhóm ảnh hưởng cách bộ giải tính tín chỉ khối, cần thiết kế riêng | Chờ người duyệt |
+| 21/11 | **Bộ giải không xếp GDTC** (PE1003, PE1005) vào lộ trình: coi như điều kiện tốt nghiệp (`NOT_SCHEDULED_CODES` trong `planner-input.ts`). File không cho biết GDTC (khóa 2024, 2026 myBK ghi môn thể thao PE1009… thay vì `CCGDTC`) thì hộp xác nhận báo "Chưa hoàn thành GDTC", không báo PE1003/PE1005 là thiếu; môn 0 TC ngoài chương trình không tính tự chọn tự do. Khi có file thật khóa 2024+, nối theo khối GDTC của file | Đã duyệt (người duyệt) |
+| 21/11 | Môn có trong file mà không thuộc chương trình: báo "tính vào tự chọn tự do" (mức thông tin), không còn là cảnh báo. Bỏ khung "Trạng thái môn ở bảng dưới lấy đúng từ file…" | Đã duyệt (người duyệt) |
+| 21/11 | Đặt chương trình trong hồ sơ theo file chỉ khi sinh viên tích ô (mặc định tích); đổi chương trình thì bỏ chuyên ngành mục tiêu | **Thay bằng** dòng dưới (cùng ngày) |
+| 21/11 | **Mã CTĐT myBK là gốc**: bấm Xác nhận là tài khoản theo chương trình của file, **bỏ ô tích** và bỏ việc tự chọn chương trình. Người dùng chỉ thấy mã myBK (`DH_CQ_MT_KHM_2023`), không thấy mã nội bộ của web (`CS-2023-KHMT`). Cột `curriculum_id` vẫn giữ (nhiều trang, API đang dùng) nhưng chỉ đặt từ file | Đã duyệt (người duyệt) |
+| 21/11 | Trang Môn học: thông báo "Chưa có chương trình đào tạo" kèm nút tải PDF, thay nút "Điền hồ sơ" | Đã duyệt (người duyệt) |
+| 21/11 | Trang Hồ sơ: hiện thông tin từ PDF (chỉ đọc); **tạm bỏ** số điện thoại, ngày sinh, địa chỉ, mục tiêu tín chỉ. Làm **sau khi gộp `main`** (Thiên đã viết lại trang Hồ sơ) | Đã duyệt (người duyệt); chưa làm |
+| 21/11 | Chuyên ngành mục tiêu (H15): không đặt ở Hồ sơ; khai riêng ở trang bộ giải, làm sau (người duyệt nắm ngành KHMT, ngành khác phải xem lại) | Đã duyệt (người duyệt); chưa làm |
+| 21/11 | Trang Môn học (sinh viên) **bỏ** hàng thống kê (môn đã khai, môn hoàn thành, TC), bảng tóm tắt theo kỳ và bảng môn bên dưới thẻ tiến độ; chỉ còn thẻ tiến độ PDF. Chỗ thêm/bớt/sửa trạng thái sau khi đọc file: nút **"Hiệu chỉnh"**, người duyệt tự thiết kế (thay hướng T35 "cột Trạng thái thành ô chọn"). Quản trị vẫn có bảng tra cứu danh mục môn | Đã duyệt (người duyệt); đã làm |
+| 21/11 | Sidebar thu gọn được còn cột icon (72px), nhớ lựa chọn trong trình duyệt (`localStorage`, khóa `bkuni.sider.collapsed`) | Đã duyệt (người duyệt); đã làm |
+| 21/11 | Môn có mở hay không: sinh viên tự đánh trong what-if (đã có `not_offered`). Ưu tiên kỳ hay mở: mềm, ưu tiên thấp, xét 2–3 năm gần nhất (T38), làm sau | Đã duyệt (người duyệt) |
+| 21/11 | Môn đang học: chỗ riêng (người duyệt tự làm, như GĐ 9). Rớt hay chưa học, chuyên ngành (H15) từ file: chưa xét | Đã duyệt (người duyệt) |
+| 21/11 | Không gọi API myBK thay sinh viên (cần mật khẩu, trái mục 8 của 01); chỉ nhận file sinh viên tự tải lên | Đề xuất |
 | 20/11 | Lưu nội dung file tiến độ (khối, môn, đạt/chưa, **điểm**, điều kiện tốt nghiệp) vào bảng mới `student_progress_imports` (JSON, mỗi tài khoản một dòng) để hiển thị lại đúng trang myBK. Cần **1 migration trên Supabase chung**; thay quy tắc "không lưu điểm" ở mục 8. Sửa cùng ngày: **lưu hết** cả họ tên, MSSV, mã lớp, khoa, điểm TBTL hệ 10 và hệ 4 (`student` trong JSON); frontend chưa gọi ra | Đã duyệt (người duyệt) |
 
 ---
@@ -445,4 +472,4 @@ Chỉ cần ghi "Đồng ý" hoặc "Không" vào cột thứ hai.
 | 7 | | | Chặn: chưa có `build-vertical.cjs` |
 | 8 | | | Đã làm 19/11 (PDF + Excel), chờ duyệt; chưa làm T24 |
 | 9 | | | Sprint mở 20/11; T27, T28, T30 xong; T29 chờ bấm thử trên trình duyệt; T31 chờ chọn chương trình cho tài khoản thử |
-| 10 | | | Sprint mở 20/11, chưa làm; chờ người duyệt chốt tên nút và việc bỏ thẻ kế hoạch cũ |
+| 10 | | | Sprint mở 20/11. T32 xong 21/11 (code + test + API thật, chưa bấm web); T34 một phần; T33, T35, T36 chưa làm. "Hộp xác nhận mọi lần" đã duyệt 21/11. Chờ người duyệt chốt tên nút, việc bỏ thẻ kế hoạch cũ |

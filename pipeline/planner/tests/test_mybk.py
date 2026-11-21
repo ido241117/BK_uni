@@ -179,6 +179,54 @@ def test_pdf_roundtrip_with_real_pdf_bytes():
     assert sum(len(b["courses"]) for b in out["blocks"]) == 5
 
 
+PASTE = "\n".join([
+    "myBk/app", "Tiến độ hoàn thành chương trình đào tạo", "Khoa Bịa", "Ngành: Ngành Bịa - DH_CQ_XX_BIA_2023",
+    "Áp dụng từ năm: 2023", "Họ và tên: SINH VIEN BIA", "Mã sinh viên: 2399999", "Mã lớp: XX23",
+    "Số tín chỉ tích lũy: 9/20", "Cập nhật cuối: 14/11/2026 21:00",
+    "Stt\tMã môn học\tTên môn học\tĐiểm số\tĐiểm chữ\tTín chỉ\tĐạt\tGhi chú",
+    "Toán\t7/10\t\tKhối kiến thức Bắt buộc",
+    "1\tAA1001\tMôn A\t5.9\tC\t4\t\t",
+    "2\tAA1002\tMôn B\t3.2\tF\t3\t\t",       # rot: diem < 4
+    "3\tLA1003\tAnh văn 1\t12\t--\t3\t\t",   # 12 = mien (MT) -> dat
+    "Tự chọn\t2/6\t\tKhối kiến thức Tự chọn",
+    "1\t AA2001\tMôn C\t--\t--\t2\t\t",      # ma co dau cach dau (icon bi mat khi copy)
+    "2\t AA2002\tMôn D\t8\tB+\t2\t\tĐã dùng để xét TCTD",
+    "Chứng chỉ Giáo dục Thể chất\t\t\tKhối kiến thức Bắt buộc",
+    "1\tCCGDTC\tChứng chỉ GDTC\t21\t--\t0\t\t",  # 21 = dat (DT)
+    "Điều kiện tốt nghiệp\t\t\tKhối kiến thức Bắt buộc",
+    "1\tSA4001\tHoạt động sinh viên\t--\t--\t0\t\t",
+])
+
+
+def test_pasted_page_text_infers_passed_from_score():
+    """21/11: chu dan tu trang myBK (Ctrl+A, Ctrl+C): dau ✓ mat, 'dat' suy tu diem; tu kiem tra cong tin chi qua."""
+    out = parse_bytes(PASTE.encode("utf-8"))
+    assert out["format"] == "text" and out["official_program_code"] == "DH_CQ_XX_BIA_2023"
+    assert (out["total_earned"], out["total_required"], out["updated_at"], out["cohort_hint"]) == (9, 20, "2026-11-14", 2023)
+    passed = {c["code"]: c["passed"] for b in out["blocks"] for c in b["courses"]}
+    assert passed == {"AA1001": True, "AA1002": False, "LA1003": True, "AA2001": False, "AA2002": True, "CCGDTC": True}
+    assert [(c["code"], c["passed"]) for c in out["graduation_conditions"]] == [("SA4001", False)]
+    assert all(c["ok"] for c in out["checks"])
+    assert next(c for b in out["blocks"] for c in b["courses"] if c["code"] == "AA2002")["note"] == "Đã dùng để xét TCTD"
+
+
+def test_pasted_text_without_tabs_is_rejected():
+    with pytest.raises(MybkError, match="mất ký tự Tab"):
+        parse_bytes(PASTE.replace("\t", "  ").encode("utf-8"))
+
+
+def test_pdf_without_text_layer_says_how_to_fix():
+    """21/11: PDF in bang 'Microsoft Print to PDF' chi con net ve, khong co chu: bao cach in lai."""
+    import pymupdf
+
+    doc = pymupdf.open()
+    page = doc.new_page()
+    page.draw_line((40, 40), (200, 40))  # chi co net ve, giong chu bi ve lai thanh net
+    doc.set_metadata({"producer": "Microsoft: Print To PDF"})
+    with pytest.raises(MybkError, match="Microsoft Print to PDF.*Lưu dưới dạng PDF"):
+        parse_bytes(doc.tobytes())
+
+
 def test_cli_stdin_stdout():
     proc = subprocess.run([sys.executable, "-m", "planner.mybk"], input=xlsx(), capture_output=True,
                           cwd=PIPELINE, check=True)

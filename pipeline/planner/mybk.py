@@ -88,7 +88,12 @@ def detect_format(data: bytes) -> str:
         except zipfile.BadZipFile:
             return "unknown"
         return "xlsx" if any(n.startswith("xl/") for n in names) else "unknown"
-    return "unknown"
+    # 21/11: chu sinh vien dan tu trang "Tien do hoan thanh CTDT" (Ctrl+A, Ctrl+C) - xem parse_text.
+    try:
+        text = data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return "unknown"
+    return "text" if "Ngành:" in text and "Khối kiến thức" in text else "unknown"
 
 
 def read_rows(data: bytes) -> list[list[Any]]:
@@ -178,8 +183,8 @@ def self_checks(parsed: dict[str, Any]) -> list[dict[str, Any]]:
     checks: list[dict[str, Any]] = []
     passed_credits = lambda b: sum(c["credits"] for c in b["courses"] if c["passed"])  # noqa: E731
     if parsed["total_earned"] is not None:
-        if parsed["format"] == "pdf":
-            # PDF: tin chi dat cua tung khoi da tinh hoc du (chi tinh du so yeu cau) va mon ngoai CTDT.
+        if parsed["format"] in ("pdf", "text"):
+            # PDF / chu dan: tin chi dat cua tung khoi da tinh hoc du (chi tinh du so yeu cau) va mon ngoai CTDT.
             total = sum(b["earned_credits"] for b in parsed["blocks"])
             label = "Cộng tín chỉ đạt của các khối"
         else:
@@ -234,7 +239,17 @@ def read_pdf_lines(data: bytes) -> list[str]:
             ln = unicodedata.normalize("NFC", ln).replace("\xa0", " ").replace("\xad", "-")
             ln = re.sub(r"[\x00-\x08\x0b-\x1f]", "", ln)  # glyph thieu trong font -> ky tu dieu khien
             lines.append(re.sub(r"[ \t]+", " ", ln).strip())
-    return [ln for ln in lines if ln]
+    lines = [ln for ln in lines if ln]
+    if not lines:
+        # 21/11: file in bang may in "Microsoft Print to PDF" (hoac scan, chup anh) khong con lop chu:
+        # Windows ve lai chu thanh net. In lai bang "Luu duoi dang PDF" cua trinh duyet thi doc duoc.
+        producer = (doc.metadata or {}).get("producer") or ""
+        how = " (file được in bằng Microsoft Print to PDF)" if "Microsoft" in producer else ""
+        raise MybkError(
+            f"File PDF không có chữ để đọc{how}. Trên myBK bấm In, ở ô Máy in chọn "
+            "\"Lưu dưới dạng PDF\" (Save as PDF), không chọn \"Microsoft Print to PDF\", rồi tải lại file."
+        )
+    return lines
 
 
 def _after(lines: list[str], label: str) -> str | None:
@@ -371,14 +386,134 @@ def _semester_of_date(m: re.Match[str]) -> str:
     return f"{(year - 1) % 100:02d}3"
 
 
+# --- Chu dan tu trang "Tien do hoan thanh CTDT" (Ctrl+A, Ctrl+C, Ctrl+V; 21/11) ------------------
+#
+# Da xem chu dan tu Edge cua 2 sinh vien KHMT 2023: dau trang co cac dong "Ngành: ... - <MA>", "Số tín chỉ tích
+# lũy: 111/128", "Cập nhật cuối: dd/mm/yyyy hh:mm"...; bang moi dong mot hang, cac o cach nhau bang TAB:
+#   khoi: "<ten>\t<dat>/<can>\t\tKhối kiến thức Bắt buộc"  (khoi chung chi khong co dat/can)
+#   mon:  "<stt>\t[ ]<ma>\t<ten>\t<diem so|-->\t<diem chu|-->\t<tin chi>\t<dat: trong>\t<ghi chu>"
+# Dau ✓ la icon (<i class="fa-check">) nen KHONG copy ra chu: suy "dat" tu diem (TEXT_PASS_SPECIAL).
+
+# Chu thich dau trang myBK: "Điểm tổng kết (Đạt) ... Điểm số > Điểm MT (12) > Điểm DT (21)" - 12 la mien, 21 la dat.
+TEXT_PASS_SPECIAL = {12.0, 21.0}
+TEXT_BLOCK_RE = re.compile(r"^Khối kiến thức (Bắt buộc|Tự chọn)$")
+
+
+def _passed_from_grade(score: str | None, letter: str | None) -> bool:
+    """Suy dat/chua tu diem khi khong co dau ✓: 4-10 (diem chu khac F), 12 (MT), 21 (DT) la dat; "--" la chua."""
+    if score is None:
+        return False
+    try:
+        value = float(score.replace(",", "."))
+    except ValueError:
+        return False
+    if value in TEXT_PASS_SPECIAL:
+        return True
+    return 4.0 <= value <= 10.0 and (letter or "").upper() != "F"
+
+
+def parse_text(text: str) -> dict[str, Any]:
+    raw = [unicodedata.normalize("NFC", ln).replace("\xa0", " ") for ln in text.replace("\r\n", "\n").split("\n")]
+    lines = [re.sub(r"[ \t]+", " ", ln).strip() for ln in raw]
+    lines = [ln for ln in lines if ln]
+    head = lines[:120]  # chu dan con co menu cua myBK o dau
+
+    def after(label: str) -> str | None:
+        return next((ln[len(label):].strip() for ln in head if ln.startswith(label)), None)
+
+    program = after("Ngành:")
+    m_prog = re.search(r"-\s*([A-Z0-9_]+)\s*$", program or "")
+    totals = re.fullmatch(r"(\d+)\s*/\s*(\d+)", after("Số tín chỉ tích lũy:") or "")
+    if not m_prog or not totals:
+        raise MybkError("Không phải nội dung trang Tiến độ hoàn thành CTĐT của myBK. Trên myBK mở trang đó, "
+                        "bấm Ctrl+A rồi Ctrl+C, dán vào đây.")
+    if not any("\t" in ln for ln in raw):
+        raise MybkError("Nội dung dán không có bảng (mất ký tự Tab). Hãy copy trên trình duyệt máy tính "
+                        "(Chrome, Edge), hoặc dùng cách tải PDF.")
+    updated = re.match(r"(\d{2})/(\d{2})/(\d{4})", after("Cập nhật cuối:") or "")
+    title = next((i for i, ln in enumerate(head) if ln.startswith("Tiến độ hoàn thành chương trình đào tạo")), None)
+    faculty = next((ln for ln in head[(title or 0) + 1:] if ln.startswith("Khoa ")), None)
+
+    blocks: list[dict[str, Any]] = []
+    conditions: list[dict[str, Any]] = []
+    block: dict[str, Any] | None = None
+    for ln in raw:
+        cells = [c.strip() for c in ln.split("\t")]
+        filled = [c for c in cells if c]
+        if len(cells) >= 2 and filled and TEXT_BLOCK_RE.match(filled[-1]):
+            frac = re.fullmatch(r"(\d+)/(\d+)", cells[1]) if len(cells) > 1 else None
+            name = cells[0]
+            block = {"name": name, "kind": "BB" if filled[-1].endswith("Bắt buộc") else "TC",
+                     "required_credits": int(frac.group(2)) if frac else 0,
+                     "earned_credits": int(frac.group(1)) if frac else 0, "courses": []}
+            if "ngoài chương trình" in name.lower():
+                block["kind"] = OUTSIDE_KIND
+            if "điều kiện tốt nghiệp" in name.lower():
+                block["conditions"] = True
+            blocks.append(block)
+            continue
+        code_m = CODE_RE.match(cells[1]) if len(cells) >= 6 else None
+        if block is None or not cells[0].isdigit() or not code_m or not cells[5].isdigit():
+            continue
+        score, letter = _grade(cells[3]) or None, _grade(cells[4]) or None
+        shown = {"name": cells[2] or None, "score": score, "letter": letter,
+                 "note": (cells[7] if len(cells) > 7 else "") or None}
+        passed = _passed_from_grade(score, letter)
+        if block.get("conditions"):
+            conditions.append({"code": code_m.group(1), "passed": passed, **shown})
+        else:
+            block["courses"].append({"code": code_m.group(1), "credits": int(cells[5]), "passed": passed,
+                                     "free_elective": block["kind"] == OUTSIDE_KIND, **shown})
+
+    course_blocks = [b for b in blocks if not b.pop("conditions", False)]
+    seen: set[str] = set()
+    for b in course_blocks:
+        for c in b["courses"]:
+            if c["code"] in seen:
+                raise MybkError(f"Môn {c['code']} xuất hiện hai lần trong nội dung dán.")
+            seen.add(c["code"])
+    if not seen:
+        raise MybkError("Không đọc được môn nào trong nội dung dán. Hãy copy cả trang (Ctrl+A) rồi dán lại.")
+
+    out: dict[str, Any] = {
+        "status": "OK",
+        "format": "text",
+        "official_program_code": m_prog.group(1),
+        "specialization": (program or "")[: m_prog.start()].strip(" -") or None,
+        "total_required": int(totals.group(2)),
+        "total_earned": int(totals.group(1)),
+        "exported_semester": _semester_of_date(updated) if updated else None,
+        "updated_at": f"{updated.group(3)}-{updated.group(2)}-{updated.group(1)}" if updated else None,
+        "cohort_hint": _cohort(after("Mã sinh viên:")),
+        "blocks": course_blocks,
+        "graduation_conditions": conditions,
+        "lists_only_passed": False,
+        # Dau ✓ khong copy duoc: "dat" suy tu diem; tu kiem tra cong tin chi tung khoi se bat suy sai.
+        "passed_inferred": True,
+        "student": {
+            "faculty": faculty,
+            "full_name": after("Họ và tên:"),
+            "student_number": after("Mã sinh viên:"),
+            "class_code": after("Mã lớp:"),
+            "applied_from_year": after("Áp dụng từ năm:"),
+            "gpa_10": after("Điểm TBTL hệ 10:"),
+            "gpa_4": after("Điểm TBTL hệ 4:"),
+        },
+    }
+    out["checks"] = self_checks(out)
+    return out
+
+
 def parse_bytes(data: bytes) -> dict[str, Any]:
     if len(data) > MAX_BYTES:
         raise MybkError("File quá lớn (tối đa 5 MB).")
     fmt = detect_format(data)
     if fmt == "pdf":
         return parse_pdf_lines(read_pdf_lines(data))
+    if fmt == "text":
+        return parse_text(data.decode("utf-8-sig"))
     if fmt != "xlsx":
-        raise MybkError("Chỉ nhận file tiến độ myBK dạng PDF hoặc Excel (.xlsx).")
+        raise MybkError("Chỉ nhận file tiến độ myBK dạng PDF hoặc Excel (.xlsx), hoặc nội dung trang dán vào.")
     return parse_rows(read_rows(data))
 
 

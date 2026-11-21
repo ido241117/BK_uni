@@ -7,7 +7,9 @@ Ngày lập: 19/11/2026. Đi kèm [kế hoạch](02-ke-hoach.md) và [thiết k�
 | Lệnh | Kiểm gì | Kết quả 19/11 |
 |---|---|---|
 | `cd pipeline` → `.venv/Scripts/python -m pytest planner -q` | Bộ giải (ca K1–K8d, hai bộ giải đối chiếu, KHMT 2023 thật), cli, đọc file myBK (chỉ file bịa) | 101 qua |
-| `cd Backend` → `npx jest test/planner.spec.ts` | Ghép đầu vào từ database (pg-mem), API, không lộ dữ liệu cá nhân, đối chiếu file myBK, gọi Python thật | 11 qua |
+| `cd Backend` → `npx jest test/planner.spec.ts` | Ghép đầu vào từ database (pg-mem), API, không lộ dữ liệu cá nhân, đối chiếu file myBK, gọi Python thật | 11 qua (21/11: 14 qua) |
+| `cd Backend` → `npx jest test/mybk-review.spec.ts` | (21/11) Xem trước PDF: chương trình theo `source_code`, mâu thuẫn, `CCGDTC` ↔ PE1003/PE1005, khóa không có CCGDTC, trạng thái sẽ đổi (dữ liệu bịa) | 9 qua (21/11) |
+| `cd pipeline` → `.venv/Scripts/python -m pytest planner/tests/test_mybk.py -q` | (21/11) Đọc PDF, chữ dán (suy đạt từ điểm 12/21), chữ mất Tab, PDF không có chữ (dữ liệu bịa) | 15 qua (21/11); cả `planner`: 122 qua + 7 xfail + 1 xpass |
 | `cd Frontend` → `npx tsc -b` và `npx eslint src/pages/recommendations` | Kiểu và lint trang Gợi ý | Qua |
 | `cd pipeline` → `.venv/Scripts/python check_baseline.py` | Mọi sự thật trong [01-boi-canh.md](01-boi-canh.md); phần database cần backend đang chạy | DUNG 38, CHUA_LAM 2, KHAC 0 |
 
@@ -112,6 +114,47 @@ Nút "Tải file tiến độ myBK" ở đầu cột trái trang Gợi ý. Test 
 | D8 | Lộ trình cơ sở + 3 what-if trên hồ sơ thật (T24) | Người duyệt xác nhận kết quả hợp lý | Chưa | |
 | D9 | Mở "Dữ liệu chương trình của web lệch với myBK" | File người duyệt: chỉ `CCGDTC` (không có trong danh mục web); không lệch tín chỉ | API | |
 | D10 | Kiểm tra lưu trữ | Backend không ghi file; kết quả đọc file không có MSSV, mã lớp, tên, điểm | Test | |
+
+---
+
+## F. Tải PDF tiến độ ở trang Môn học (giai đoạn 9–10, T32: code 21/11)
+
+Nút "Tải PDF tiến độ myBK" ở đầu trang Môn học (`/courses`). Luồng: [03 mục 4b](03-thiet-ke.md#4b-luồng-tải-pdf-tiến-độ--database-f9-giai-đoạn-910-cập-nhật-2111).
+
+⚠️ Bấm **Xác nhận và lưu** sẽ ghi database chung cho tài khoản đang đăng nhập: nội dung file, trạng thái môn, và chương trình trong hồ sơ nếu tích ô. Thử bằng tài khoản thử của người duyệt **tài khoản thử A**. **Không tải file thật vào `khmt.demo`**, kể cả chỉ để xem (người duyệt cấm 21/11; dòng ghi nhầm hôm 20/11 đã xóa).
+
+| # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
+|---|---|---|---|---|
+| F1 | Chọn `Bảng điểm.pdf` | Hộp "Kiểm tra file tiến độ trước khi lưu" mở; **chưa ghi gì** (thẻ tiến độ, bảng môn không đổi) | API (`review` 21/11, không ghi) | |
+| F2 | Xem mục Chương trình | "Mã CTĐT (myBK)": `DH_CQ_MT_KHM_2023`; "Chương trình trên web": tên ngành (khóa 2023, 128 TC, 96 môn; phiên bản DH_CQ_MT_NG_KHM_2023.v01). **Không** thấy chữ `CS-2023-KHMT` ở đâu trong hộp | Chưa (đổi 21/11) | |
+| F3 | Tài khoản chưa có chương trình (tài khoản thử A, ảnh chụp 21/11) | Trang Môn học: "Chưa có chương trình đào tạo" kèm nút tải PDF (không còn "Điền hồ sơ"). Hộp: cảnh báo "Tài khoản chưa có chương trình đào tạo. Bấm Xác nhận sẽ đặt chương trình DH_CQ_MT_KHM_2023."; **không có ô tích** | Chưa | |
+| F4 | Xem mâu thuẫn | Vàng: 8 môn CO3129–CO3153 "thuộc chương trình trên web nhưng file không liệt kê". Xanh dương: `CCGDTC` không có trong danh mục | API | |
+| F5 | Xem tương ứng GDTC | Một dòng "Giáo dục thể chất: Đạt" (21/11, người duyệt bỏ phần còn lại); PE1003, PE1005 hiện trong bảng "Trạng thái môn sẽ đổi"; CCGDTC không bị báo là mã lạ. Sau khi lưu, PE1003, PE1005 của tài khoản là Đã hoàn thành | Test (đổi 21/11) | |
+| F5b | (khi có file khóa 2024/2026) File không có `CCGDTC` | Vàng "Chưa hoàn thành GDTC … Lộ trình không xếp GDTC"; không báo PE1003/PE1005 thiếu; môn thể thao 0 TC không vào tự chọn tự do | Test (`mybk-review.spec.ts`) | |
+| F5c | Trang Gợi ý, giải lộ trình | Không kỳ nào có PE1003, PE1005 | Test (`planner.spec.ts`) | |
+| F4b | File có môn ngoài chương trình (vd IM3047 ở PDF mới) | Khung xanh dương "Môn ngoài chương trình, tính vào tự chọn tự do" kèm mã, không còn khung vàng | Test (đổi 21/11) | |
+| F6 | Mở "Toàn bộ thông tin đọc được từ file" | Họ tên, MSSV, lớp, khoa, ngành, năm áp dụng, 89/128, GPA hệ 10 / hệ 4, ngày cập nhật 06/03/2026; 17 khối; mỗi môn có Điểm số, Điểm chữ, Tín chỉ, Đạt, Ghi chú | API (chỉ kiểm có trường) | |
+| F7 | Bấm **Hủy** | Không có gì thay đổi | Chưa | |
+| F8 | Chọn lại file, bấm **Xác nhận và lưu** | Toast "Đã lưu tiến độ … cập nhật trạng thái N môn. Tài khoản theo chương trình DH_CQ_MT_KHM_2023."; thẻ tiến độ hiện đủ trường như F6; thông báo "Chưa có chương trình đào tạo" biến mất | Chưa | |
+| F13 | Cuộn trang Môn học (sinh viên) xuống dưới thẻ tiến độ | Không còn hàng thẻ "Môn đã khai / Môn đã hoàn thành / Tín chỉ", không còn bảng môn 5675 dòng. Đăng nhập quản trị: trang Môn học vẫn có ô tìm và bảng danh mục | Chưa | |
+| F14 | Bấm "Nhập tiến độ từ myBK" | Hộp có 2 tab "Tải file PDF" (hướng dẫn, dòng đỏ "Không chọn Microsoft Print to PDF") và "Dán nội dung trang" (ô chữ, nút "Đọc nội dung" khóa khi ô trống) | Chưa | |
+| F15 | Tab dán: dán cả trang Tiến độ (Edge/Chrome máy tính), bấm Đọc nội dung | Hộp xác nhận như F2–F6; số môn đạt và TC khớp trang myBK | API 21/11 (tài khoản thử B: 116/128, 45 Đã hoàn thành) | |
+| F16 | Tải PDF in bằng "Microsoft Print to PDF" | Toast "File PDF không có chữ để đọc (file được in bằng Microsoft Print to PDF)…" | Test (`test_mybk.py`) + file thật của sinh viên B tại máy | |
+| F17 | Thẻ tiến độ | Thanh trên: "Học kỳ hiện tại: HK 261 (kỳ 1 2026-2027)" + "tự tính theo ngày", "Đang học: N môn, X TC", nút Hiệu chỉnh. Bảng không có cột điểm; có cột "Đạt (file)" và "Trên web" | Chưa | |
+| F18 | Hiệu chỉnh → đổi một môn "--" sang Đang học, chọn học kỳ, Lưu | Toast "Đã lưu hiệu chỉnh: 1 môn…"; dòng đó có "Đang học" + "Khác file"; số Đang học tăng | API 21/11 (tài khoản thử B, đã trả lại) | |
+| F19 | Hiệu chỉnh → ô "+ Môn đang học", gõ mã ngoài chương trình, Lưu | Môn hiện ở khối "Môn trên web ngoài file", trạng thái Đang học | Chưa | |
+| F18b | Xem nhãn ở dòng đã đổi | Nhãn vàng ghi "Khác file tiến độ" | Chưa | |
+| F19b | Ô "+ Môn đang học", gõ mã đã có trong bảng (vd CO3021) | Kết quả ghi "· đã có trong bảng"; chọn → toast "… chuyển sang Đang học", dòng đó trong bảng thành Đang học + "Khác file tiến độ"; không có dòng trùng (lỗi 21/11: trước đó hiện "Không có môn khớp") | Chưa | |
+| F20 | Sau F18, trang Gợi ý → Giải lộ trình | Lộ trình bắt đầu từ kỳ sau kỳ đã khai; môn Đang học không bị xếp lại; mục giả định "Môn đang học …: giả định đậu" | API 21/11 (kỳ 261 → bắt đầu 262) | |
+| F21 | Nhập lại file sau khi đã khai học kỳ | Học kỳ đã khai vẫn còn (không về "tự tính") | API 21/11 (tài khoản thử B) | |
+| F22 | Có môn ngoài file (vd thêm tay), nhập lại file | Hộp xác nhận ghi môn đó "Chưa học (file không có)"; lưu xong môn đó biến mất, mọi trạng thái khớp file | API 21/11 (sinh viên B: IM3047 bị xóa, CO3029 về Chưa học, 116 TC) | |
+| F23 | Hiệu chỉnh → đổi trạng thái một môn | Hộp "Đổi … sang …?" OK/Hủy; Hủy thì không đổi | Chưa | |
+| F24 | Hiệu chỉnh → nút Xóa ở khối "Môn ngoài chương trình đào tạo" → OK → Lưu | Môn biến mất; toast "… xóa 1 môn" | Chưa | |
+| F25 | Khối "Chứng chỉ Giáo dục Thể chất" | Dòng "Giáo dục thể chất", không có mã; không có PE1003/PE1005 riêng | Chưa | |
+| F12 | Bấm "Thu gọn" ở cuối sidebar, rồi tải lại trang (F5) | Sidebar còn cột icon, rê chuột vào icon hiện tên mục; sau F5 vẫn thu gọn; bấm lại thì mở rộng | Chưa | |
+| F9 | Tải lại cùng file lần hai | Không còn cảnh báo hồ sơ; mục "Trạng thái môn sẽ đổi khi xác nhận (0)" | Chưa | |
+| F10 | Tải file không phải PDF tiến độ | Toast lỗi "Chỉ nhận file PDF…" hoặc "Không phải file PDF tiến độ myBK…"; không mở hộp | Test (luồng cũ) | |
+| F11 | (giả lập) File có mã CTĐT không có trên web | Đỏ "Không có chương trình nào trên web mang mã myBK …"; nút Xác nhận bị khóa | Test (`mybk-review.spec.ts`) | |
 
 ---
 

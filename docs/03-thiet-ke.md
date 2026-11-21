@@ -1,6 +1,6 @@
 # 03 · Thiết kế: tính năng "Gợi ý học phần"
 
-Cập nhật 19/11/2026. Mô tả **cái đã có trong code**: tính năng, kiến trúc, từng file và hàm chính, hợp đồng API, quyết định thiết kế, bên trong hai bộ giải. Trạng thái việc và duyệt xem [02-ke-hoach.md](02-ke-hoach.md); sự thật đã kiểm chứng xem [01-boi-canh.md](01-boi-canh.md); cách kiểm tra xem [05-kiem-thu.md](05-kiem-thu.md).
+Cập nhật 21/11/2026 (mục 4b: luồng tải PDF tiến độ ↔ database). Mô tả **cái đã có trong code**: tính năng, kiến trúc, từng file và hàm chính, hợp đồng API, quyết định thiết kế, bên trong hai bộ giải. Trạng thái việc và duyệt xem [02-ke-hoach.md](02-ke-hoach.md); sự thật đã kiểm chứng xem [01-boi-canh.md](01-boi-canh.md); cách kiểm tra xem [05-kiem-thu.md](05-kiem-thu.md).
 
 ---
 
@@ -16,7 +16,7 @@ Cập nhật 19/11/2026. Mô tả **cái đã có trong code**: tính năng, ki�
 | F6 | **Kết quả**: kỳ học xong, TC còn lại, từng kỳ và lý do từng môn, mong muốn nào không đáp ứng được, cảnh báo, giả định, độ tin cậy dữ liệu tiên quyết; không có lộ trình thì nói **lựa chọn nào/luật nào** đang chặn; validator bắt lỗi thì cảnh báo đỏ | Cột phải |
 | F7 | **What-if**: lưu lộ trình làm mốc, đổi kịch bản rồi giải lại, xem kỳ tốt nghiệp trước/sau, môn dời kỳ, môn mới, môn bỏ; nút Về mốc / Lấy làm mốc mới / Xóa mốc | Thẻ "So với lộ trình mốc" |
 | F8 | **Nhập file tiến độ myBK** (PDF hoặc Excel): đọc file, nhận chương trình, cảnh báo chọn sai chương trình, so dữ liệu chương trình của web với myBK, sinh viên xác nhận rồi mới lưu trạng thái môn | Nút "Tải file tiến độ myBK" |
-| F9 | **Tiến độ theo PDF myBK** (giai đoạn 9, 20/11): tải PDF ở trang Môn học → lưu nội dung file theo tài khoản và ghi trạng thái môn đúng như file, không bước xác nhận; thẻ hiện lại khối/môn/✓/điều kiện tốt nghiệp. Điểm, ghi chú, thông tin sinh viên có lưu, chưa hiện. Thay F8 trên giao diện | Trang Môn học (`/courses`) |
+| F9 | **Tiến độ theo PDF myBK** (giai đoạn 9–10): tải PDF ở trang Môn học → backend đọc file, **tìm chương trình theo mã CTĐT myBK** (`curricula.source_code`), liệt kê mâu thuẫn, **chưa ghi gì** → hộp xác nhận → bấm "Xác nhận và lưu" mới ghi nội dung file, trạng thái môn và chương trình của tài khoản theo mã CTĐT của file (người dùng chỉ thấy mã myBK, không thấy mã nội bộ). Thẻ tiến độ hiện đủ mọi trường đọc được: thông tin sinh viên, khối, môn, điểm số, điểm chữ, ✓, ghi chú, điều kiện tốt nghiệp (mục 4b). Thay F8 trên giao diện | Trang Môn học (`/courses`) |
 
 ---
 
@@ -25,8 +25,10 @@ Cập nhật 19/11/2026. Mô tả **cái đã có trong code**: tính năng, ki�
 ```
 Trình duyệt (React, Frontend/src/pages/recommendations)
   │  POST /api/plans/solve          (JSON kịch bản + mốc what-if)
-  │  POST /api/plans/mybk/preview   (multipart: file PDF/Excel)
-  │  PUT  /api/student-courses/me   (API sẵn có: lưu trạng thái môn sau khi xác nhận)
+  │  POST /api/plans/mybk/review    (multipart PDF: xem trước, không ghi; trang Môn học, 21/11)
+  │  POST /api/plans/mybk/import    (multipart PDF [+ apply_curriculum]: ghi sau khi xác nhận)
+  │  GET  /api/plans/mybk/progress  (nội dung file đã lưu)
+  │  POST /api/plans/mybk/preview   (cũ, giao diện không còn gọi: PDF/Excel)
   ▼
 Backend NestJS (Backend/src/planner)
   │  đọc database (chỉ đọc): hồ sơ, chương trình, môn, khối, quan hệ, nhóm, lịch mở hè, trạng thái môn
@@ -40,7 +42,7 @@ pipeline/planner (Python)
   mybk: PDF (PyMuPDF) hoặc Excel (openpyxl) → JSON chuẩn hóa, tự kiểm tra tín chỉ
 ```
 
-Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, và từ 20/11 bảng `student_progress_imports` (thêm bằng 1 migration, người duyệt cho phép).
+Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, từ 20/11 bảng `student_progress_imports` (thêm bằng 1 migration, người duyệt cho phép), và từ 21/11 cột `curriculum_id` trong hồ sơ của chính tài khoản khi sinh viên đồng ý đặt chương trình theo file. Mọi lệnh ghi chỉ chạy ở `importMybk`, trong một transaction.
 
 ---
 
@@ -82,6 +84,123 @@ Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, và
 
 ---
 
+## 4b. Luồng tải PDF tiến độ ↔ database (F9, giai đoạn 9–10, cập nhật 21/11)
+
+Mục 4 ở trên là luồng cũ (F8, trang Gợi ý); giao diện không còn dùng. Luồng hiện tại ở trang Môn học.
+
+### 4b.1 Từng bước
+
+Nút **"Nhập tiến độ từ myBK"** mở hộp chọn cách nhập (2 tab): **Tải file PDF** (hướng dẫn: myBK → Cập nhật → In → Máy in đích **"Lưu dưới dạng PDF"**, không chọn "Microsoft Print to PDF") hoặc **Dán nội dung trang** (Ctrl+A, Ctrl+C trên trang Tiến độ, dán vào ô chữ; frontend gửi thành file `mybk-tien-do.txt` qua cùng API, backend nhận `format: 'pdf' | 'text'`).
+
+```
+Sinh viên chọn PDF hoặc dán chữ (MybkProgress.tsx, MybkUploadButton)
+  │ 1. POST /api/plans/mybk/review  (multipart file: .pdf hoặc .txt)   ── KHÔNG GHI GÌ
+  ▼
+PlannerService.reviewMybk
+  │ a. readMybkPdf → PlannerRunner.readMybk → python -m planner.mybk (bytes qua stdin) → JSON
+  │    (format khác "pdf" → 400 "Chỉ nhận file PDF ...")
+  │ b. Đọc database, song song:
+  │      curricula WHERE source_code = file.official_program_code      (chương trình của file)
+  │      student_profiles của tài khoản → curricula theo curriculum_id   (chương trình đang chọn)
+  │      student_progress_imports của tài khoản (chỉ id)                 (đã từng tải file chưa)
+  │      student_courses + courses của tài khoản                         (trạng thái môn trên web)
+  │      courses WHERE code IN (mọi mã trong file)                        (danh mục)
+  │    Có chương trình thì đọc thêm curriculum_courses + courses, curriculum_regulations của nó.
+  │ c. reviewMybk(...)  (mybk-review.ts, hàm thuần) → chương trình, mâu thuẫn, tương ứng, trạng thái sẽ đổi
+  │ d. Trả kèm nguyên JSON của file (`file`) để giao diện hiện lại
+  ▼
+Hộp xác nhận "Kiểm tra file tiến độ trước khi lưu"
+  │ Hủy → không có gì xảy ra.
+  │ 2. "Xác nhận và lưu" → POST /api/plans/mybk/import (file + apply_curriculum=true khi chương trình của file
+  │    khác chương trình tài khoản đang theo; không có ô chọn: mã CTĐT myBK là gốc, người duyệt 21/11)
+  ▼
+PlannerService.importMybk  (một transaction)
+  │ đọc lại file (không tin dữ liệu gửi từ trình duyệt), tìm lại chương trình theo source_code
+  │ ghi: student_progress_imports (upsert theo user_id, JSON đầy đủ)
+  │      student_courses (upsert): ✓ → completed, "--" → not-started; mã không có trong danh mục bỏ qua;
+  │        rồi XÓA mọi môn khác của tài khoản (21/11: web luôn theo đúng file mới; sửa lại bằng Hiệu chỉnh)
+  │      student_profiles.curriculum_id = chương trình của file (chỉ khi apply_curriculum, và
+  │        đặt target_specialization_id = null nếu đổi chương trình; chưa có hồ sơ thì tạo)
+  ▼
+Trang cập nhật thẻ tiến độ (GET mybk/progress), bảng môn, hồ sơ
+```
+
+File PDF chỉ nằm trong bộ nhớ (multer memory storage, ≤ 5 MB, ≤ 10 lần/phút/endpoint), không ghi ra đĩa. Nút Xác nhận gửi lại file vì backend không giữ kết quả bước 1.
+
+### 4b.1b Hiệu chỉnh (21/11)
+
+Thẻ tiến độ có thanh trên cùng: **Học kỳ hiện tại** (kỳ đã khai, hoặc "tự tính theo ngày"), **Đang học: N môn, X TC** (cảnh báo khi > 25 TC, < 11 TC ở kỳ chính, > 12 TC ở kỳ hè), nút **Hiệu chỉnh**. Bảng môn có cột "Đạt (file)" (✓/--) và "Trên web" (trạng thái trong `student_courses`, nhãn **"Khác file tiến độ"** khi khác ✓→Đã hoàn thành / --→Chưa học); **không hiện điểm**. Khối "Môn trên web ngoài file" gồm môn thêm tay và PE1003/PE1005 suy từ CCGDTC.
+
+GDTC: dòng CCGDTC của file hiện là "Giáo dục thể chất" (không mã), trạng thái lấy từ PE1003/PE1005 và đổi cả hai cùng lúc; PE1003/PE1005 không hiện riêng. Khối cuối "Môn ngoài chương trình đào tạo" = môn có trên web mà file không có (thêm tay).
+
+Chế độ sửa: cột "Trên web" thành ô chọn 4 trạng thái, **mỗi lần đổi hỏi xác nhận OK/Hủy**; môn ở khối cuối có nút **Xóa** (cũng hỏi xác nhận; lưu thì gửi `remove_course_ids`); chọn học kỳ hiện tại (các kỳ từ năm áp dụng tới 7 năm sau); công tắc "Chỉ môn chưa đạt"; ô **"+ Môn đang học"** (tìm trong danh mục, ≥ 2 ký tự): môn đã có trong bảng thì hiện "· đã có trong bảng" và chọn vào là chuyển dòng đó sang Đang học; môn chưa có thì thêm vào khối "Môn trên web ngoài file" với Đang học. Đánh dấu Đang học được cả bằng ô này lẫn đổi trực tiếp ở bảng; **Hủy** / **Lưu hiệu chỉnh** → `PUT /api/plans/mybk/adjustments`.
+
+Backend `adjustMybk`: kiểm môn có trong danh mục, rồi trong một transaction upsert `student_courses` và ghi `data.web.current_semester` của dòng tiến độ. `importMybk` giữ `data.web` khi nhập lại. `progressFromImport` → `PlannerProgress.current_semester` → `buildPlannerInput` dùng làm `student.current_semester` (chưa khai thì `currentSemester(ngày)`); bộ giải xếp từ kỳ sau, môn Đang học được giả định đậu (đổi ở what-if).
+
+### 4b.2 Nối file với database
+
+| Thông tin trong file | Nối với | Ghi chú |
+|---|---|---|
+| Mã CTĐT ở dòng "Ngành: … - `DH_CQ_MT_KHM_2023`" (`official_program_code`) | `curricula.source_code` | 132 chương trình đều có `source_code`, không trùng (kiểm 21/11). Thay bảng nối viết tay `mybk-program-map.json` (chỉ còn hàm `preview` cũ dùng) |
+| Mã môn (`CO2003`…) | `courses.code` | KHMT 2023: 84/85 mã khớp; `CCGDTC` không có trong danh mục (mục 4b.4) |
+| ✓ hay `--` | `student_courses.status` | ✓ → `completed`; `--` → `not-started` (xem 4b.5 về nghĩa của `--`) |
+| Điều kiện tốt nghiệp (`ENG_GC_600`, `SA4001`) | `courses.code` (môn 0 TC trong chương trình) | Không phải mâu thuẫn khi file để chúng ở khối điều kiện thay vì khối môn |
+| Tổng TC cần (`total_required`) | `curricula.total_credits` | KHMT 2023: 128 = 128 |
+| Họ tên, MSSV, lớp, khoa, GPA, ngày cập nhật, điểm từng môn | Không nối; chỉ lưu trong JSON `student_progress_imports.data` | Chỉ chính tài khoản đọc được (`GET mybk/progress`) |
+
+Cột `source_system`, `source_code`, `source_version`, `total_credits` do migration `CurriculumSourceAndGroupSemester1795600000000` bên nhánh `main` tạo (đã chạy trên Supabase). Nhánh này chỉ **khai** 4 cột trong `curriculum.entity.ts` để đọc, không có migration; gộp `main` thì bỏ phần khai này.
+
+### 4b.3 Danh sách mâu thuẫn (`reviewMybk`)
+
+| `id` | Mức | Khi nào | Ảnh hưởng nút Xác nhận |
+|---|---|---|---|
+| `check:<id>` | error | Bộ đọc file tự kiểm tra không qua (cộng TC đạt các khối ≠ "Số tín chỉ tích lũy"…) | Khóa |
+| `program_code_missing` | error | File không có mã CTĐT | Khóa |
+| `program_not_found` | error | Không chương trình nào có `source_code` = mã của file | Khóa |
+| `profile_missing` | warning | Tài khoản chưa có chương trình; Xác nhận sẽ đặt theo file | Không |
+| `profile_differs` | warning | Tài khoản đang theo chương trình khác chương trình của file; Xác nhận sẽ đổi sang chương trình của file | Không |
+
+**Người dùng chỉ thấy mã CTĐT myBK** (`source_code`, vd `DH_CQ_MT_KHM_2023`) và tên ngành; mã nội bộ (`curricula.code`, vd `CS-2023-KHMT`) chỉ dùng trong web, không hiện ở hộp xác nhận, câu cảnh báo hay toast.
+| `total_credits` | warning | Tổng TC của file ≠ `curricula.total_credits` | Không |
+| `free_elective` | info | Môn trong file nhưng không thuộc chương trình (trừ khối "Môn học ngoài CTĐT" của myBK và mã chứng chỉ đã nối): **tính vào tự chọn tự do** (quyết định 19/11, như `normalize.py`). Vd IM3047 (3 TC, thuộc 5 chương trình khác) | Không |
+| `missing_in_file` | warning | Môn của chương trình mà file không liệt kê (trừ môn tương ứng chứng chỉ). Với PDF của người duyệt (06/03) là 8 môn CO3129–CO3153, do PDF cũ (mục 4b.5) | Không |
+| `credit_mismatch` | warning | Tín chỉ một môn trong file ≠ trên chương trình | Không |
+| `unknown_codes` | info | Mã không có trong danh mục: chỉ lưu trong JSON, không ghi trạng thái | Không |
+
+Ngoài ra trả `status_changes` (môn sẽ đổi trạng thái: web đang ghi → theo file) và `has_previous_import`. Lần đầu tải chỉ hiện số môn sẽ ghi; từ lần hai hiện bảng từng môn.
+
+### 4b.4 Chứng chỉ GDTC (`CCGDTC` ↔ PE1003, PE1005)
+
+myBK khóa 2023 gộp Giáo dục thể chất 1, 2 thành một dòng `CCGDTC` (khối "Chứng chỉ Giáo dục Thể chất"). Database tách thành PE1003, PE1005 (0 TC, có trong cả 132 chương trình) và không có nhóm nào nối tới `CCGDTC`; chỉ quy định "Chứng chỉ Giáo dục Thể chất" ghi "Trên myBK ghi theo CCGDTC" (46 chương trình, khóa 2023). Khóa 2024, 2026 ghi "Trên myBK ghi theo PE1009, PE1011, PE1013, PE1015…" (chưa có file mẫu nên chưa xử lý).
+
+Cách nối (21/11, người duyệt): `CERTIFICATES = { CCGDTC: ['PE1003', 'PE1005'] }`, hàm thuần `certificateCourses(file, chương trình)` chỉ nối khi quy định của chương trình nhắc đúng mã chứng chỉ và chỉ lấy môn có trong chương trình. Hộp xác nhận hiện một dòng "Giáo dục thể chất: Đạt" (hoặc "Chưa đạt"); PE1003, PE1005 nằm trong bảng trạng thái sẽ đổi; `CCGDTC` không bị báo là mã lạ. **Lúc lưu**, `importMybk` gọi cùng hàm rồi ghi PE1003, PE1005 theo chứng chỉ (đạt → `completed`, chưa → `not-started`).
+
+**File không có `CCGDTC`** (khóa 2024, 2026, chưa thấy file thật): cảnh báo `gdtc_unknown` "Chưa hoàn thành GDTC … Lộ trình không xếp GDTC"; PE1003, PE1005 không bị báo "file không liệt kê"; môn 0 TC ngoài chương trình (vd PE1009 Bóng đá) không đưa vào tự chọn tự do.
+
+**Bộ giải không xếp GDTC** (người duyệt 21/11): `buildPlannerInput` đưa PE1003, PE1005 vào `conditions` (`NOT_SCHEDULED_CODES`), nên `normalize.py` bỏ khỏi lịch (CP-SAT), engine ASP coi là điều kiện tốt nghiệp (chưa đạt thì báo, không làm UNSAT).
+
+### 4b.5 Bộ đọc PDF (`planner/mybk.py`) và giới hạn
+
+**Không đo tọa độ.** PyMuPDF `page.get_text()` trả lớp chữ theo thứ tự đọc, mỗi ô bảng một dòng → chuẩn hóa (NFC, bỏ dấu cách không ngắt, gạch mềm, ký tự điều khiển) → đọc như một chuỗi ô:
+
+1. Đầu trang: tìm theo nhãn trong 40 dòng đầu (`"Ngành:"` lấy mã sau dấu `-` cuối; `"Số tín chỉ tích lũy:"`; `"Mã sinh viên:"`; `"Điểm TBTL hệ 10:"`…). Không có mã CTĐT, tổng TC, hoặc chữ "Khối kiến thức" → lỗi "Không phải file PDF tiến độ myBK".
+2. Bỏ tiêu đề cột lặp lại ở mỗi trang (`PDF_HEADER_CELLS`).
+3. Máy trạng thái trên chuỗi ô:
+   - **Đầu khối**: `"Khối kiến thức"` + `"Bắt buộc"`/`"Tự chọn"` → lùi lại lấy biểu tượng, `đạt/cần`, tên khối. Tên chứa "ngoài chương trình" → `NGOAICTDT`; "điều kiện tốt nghiệp" → điều kiện.
+   - **Dòng môn**: `<stt số> <mã khớp CODE_RE> <tên, nhiều ô> <điểm số khớp SCORE_RE> <điểm chữ> <tín chỉ> [✓ = U+F00C]`.
+   - Ô nằm giữa cuối dòng môn và đầu dòng/khối kế tiếp là **Ghi chú** của môn trước.
+4. Tự kiểm tra (`self_checks`): cộng "đạt" các khối = "Số tín chỉ tích lũy"; mã không trùng.
+
+**Khác màn hình, khác máy**: không ảnh hưởng vì đọc chữ, không đọc ảnh hay vị trí. Tên môn xuống dòng, bảng sang trang đã xử lý. **Có thể hỏng** khi: trình duyệt in PDF đổi thứ tự ô; font thiếu biểu tượng ✓ (phép cộng TC bắt được); PDF là ảnh scan (không có lớp chữ → báo lỗi). Mới thử trên **một** file thật. Dự phòng nếu gặp thứ tự ô đảo: đọc theo tọa độ (`get_text("words")`, gom theo cột), chưa làm.
+
+**PDF không có chữ** (in bằng "Microsoft Print to PDF", scan, ảnh chụp): `read_pdf_lines` ra 0 dòng → lỗi "File PDF không có chữ để đọc (file được in bằng Microsoft Print to PDF). Trên myBK bấm In, ở ô Máy in chọn "Lưu dưới dạng PDF"…" (kiểm `metadata.producer`).
+
+**Chữ dán (`parse_text`, 21/11)**: `detect_format` nhận chữ UTF-8 có "Ngành:" và "Khối kiến thức" là `text`. Mỗi dòng tách theo **Tab**: dòng khối = ô cuối là "Khối kiến thức Bắt buộc|Tự chọn", ô 2 là `đạt/cần` (khối chứng chỉ để trống); dòng môn = `<stt>\t[ ]<mã>\t<tên>\t<điểm số>\t<điểm chữ>\t<tín chỉ>\t<đạt>\t<ghi chú>`. Dấu ✓ là icon nên mất khi copy: `_passed_from_grade` coi **4–10 (điểm chữ khác F), 12 (MT, miễn), 21 (DT, đạt)** là đạt, `--` là chưa (chú thích "Điểm số > Điểm MT (12) > Điểm DT (21)" trên chính trang myBK). Kết quả cùng cấu trúc với PDF, thêm `passed_inferred: true`; `self_checks` cộng tín chỉ đạt các khối như PDF, nên suy sai thì nút Xác nhận bị khóa. Chữ không có Tab (copy trên điện thoại…) → lỗi, gợi ý dùng PDF.
+
+**`--` trên PDF có 4 nghĩa** (theo mã trang myBK `function.js` của Phòng Đào tạo, người duyệt lấy 21/11, không commit): chưa học, rớt, tạm đạt (`tamdat = 1`: ẩn điểm), hoặc không tính vào tiến độ (`hieuluc = 0`). ✓ chỉ hiện khi `diemdat = 1`, `hieuluc = 1` và môn không bị dùng để xét tự chọn tự do (`xetchontctd ≠ 1`; khi đó cột Ghi chú ghi "Đã dùng để xét TCTD"). Công cụ cộng đồng `mybk-planner` ghi `diemdat` của CTĐT nghĩa là "có điểm" (môn rớt vẫn = 1); chưa kiểm được trên file có môn rớt. Vì vậy web ghi `--` thành "Chưa học" và sinh viên phải sửa tay được (T35). PDF in khi chưa bấm "Cập nhật" trên myBK thì cũ (PDF của người duyệt ghi 06/03, dữ liệu myBK ghi 14/11).
+
+---
+
 ## 5. File và hàm
 
 ### 5.1 Python `pipeline/planner/`
@@ -114,8 +233,11 @@ Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, và
 | `planner.service.ts` (20/11) | `importMybk`, `getProgress` | Ghi trong một transaction: upsert `student_progress_imports` theo `user_id` + upsert `student_courses` |
 | `student/entities/student-progress-import.entity.ts`, migration `1795600000000-student-progress-imports.ts` (mới 20/11) | `StudentProgressImport` | Bảng mới: `user_id` (duy nhất, xóa theo tài khoản), `format`, `official_program_code`, `source_updated_at`, `data` jsonb |
 | `planner.service.ts` | `loadSource`, `solve`, `previewMybk`, `programMap` | Đọc database (chỉ đọc), gọi runner, đọc bảng nối mã |
-| `planner-input.ts` | `buildPlannerInput`, `semestersFor`, `graduationKind`, `PLANNER_RULES` | Hàm thuần: database → JSON đầu vào bộ giải |
-| **`mybk-check.ts`** (mới) | `analyzeMybk` | Hàm thuần: file đã đọc + database → nhận chương trình, cảnh báo, so dữ liệu, đề xuất trạng thái |
+| `planner-input.ts` | `buildPlannerInput`, `semestersFor`, `graduationKind`, `PLANNER_RULES`, `GRADUATION_CONDITION_CODES`, `NOT_SCHEDULED_CODES` (21/11: PE1003, PE1005) | Hàm thuần: database → JSON đầu vào bộ giải; mã điều kiện và GDTC vào `conditions` (không xếp lịch) |
+| **`mybk-check.ts`** (mới) | `analyzeMybk` | Hàm thuần: file đã đọc + database → nhận chương trình, cảnh báo, so dữ liệu, đề xuất trạng thái (chỉ `preview` cũ dùng) |
+| **`mybk-review.ts`** (mới 21/11) | `reviewMybk`, `CERTIFICATES` | Hàm thuần (T32): file + chương trình theo `source_code` + hồ sơ + danh mục + trạng thái web → `program`, `conflicts`, `equivalents`, `status_changes`, `can_confirm` (mục 4b.3, 4b.4). Test: `Backend/test/mybk-review.spec.ts` (6 test, dữ liệu bịa) |
+| `planner.service.ts` (21/11) | `reviewMybk`, `importMybk(userId, file, applyCurriculum)`, `readMybkPdf`, `findBySourceCode` | Đọc database cho `reviewMybk`; `importMybk` thêm bước đặt `curriculum_id` trong cùng transaction |
+| `curriculum/entities/curriculum.entity.ts` (21/11) | `source_system`, `source_code`, `source_version`, `total_credits` | Chỉ khai cột đã có trên Supabase (migration bên `main`) |
 | `planner.runner.ts` | `run`, `readMybk`, `runModule` | Gọi `python -m <module>` qua stdin/stdout; biến môi trường `PLANNER_DIR`, `PLANNER_PYTHON`, `PLANNER_TIMEOUT_MS`, `PLANNER_DUMP_DIR` |
 | `dto/solve-plan.dto.ts` | `SolvePlanDto` | Kiểm tra request giải (trường lạ → 400) |
 
@@ -127,8 +249,10 @@ Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, và
 | `pages/recommendations/PlanResultView.tsx` | `PlanResultView`, `WhatIfCard` | Hiện kết quả; thẻ so mốc; nhãn "dời từ …", "mới so với mốc" |
 | **`pages/recommendations/whatIf.ts`** (mới) | `planOf`, `comparePlans`, `isSameAsBaseline`, `loadBaseline`, `storeBaseline`, `baselineKey` | Logic what-if, lưu mốc trong localStorage (khóa theo tài khoản và chương trình) |
 | **`pages/recommendations/MybkImport.tsx`** (mới) | `MybkImport` | Nút tải file, màn hình xác nhận, lưu |
-| **`pages/courses/components/MybkProgress.tsx`** (mới 20/11) | `MybkUploadButton`, `MybkProgressCard` | Nút tải PDF (gọi import, không xác nhận); thẻ tiến độ đọc `GET mybk/progress`. Thay `MybkImport` (không còn dùng) |
-| `apis/planner/index.ts` | `solvePlan`, `previewMybk` | Gọi API (chờ tối đa 2 phút) |
+| **`pages/courses/components/MybkProgress.tsx`** (20/11, viết lại 21/11) | `MybkUploadButton`, `MybkReviewContent`, `MybkFileDetails`, `MybkProgressCard` | Nút tải PDF → `reviewMybk` → hộp xác nhận (chương trình, ô đặt chương trình, mâu thuẫn, tương ứng GDTC, trạng thái sẽ đổi, toàn bộ nội dung file) → `importMybk`. `MybkFileDetails` dùng chung cho hộp xác nhận và thẻ tiến độ: thông tin sinh viên, khối, cột Điểm số / Điểm chữ / Ghi chú. Thay `MybkImport` (không còn dùng) |
+| `pages/courses/index.tsx` (rút gọn 21/11) | `CoursesPage`, `CourseCatalog` | Sinh viên: đầu trang (nút Phân tích nếu đã có chương trình, nút tải PDF), thông báo "Chưa có chương trình đào tạo", `MybkProgressCard`; bỏ thống kê, tóm tắt theo kỳ, bảng môn. Quản trị: `CourseCatalog` tra cứu danh mục (phân trang, tìm ở server). `components/SemesterSummary.tsx` không còn nơi nào dùng (để nguyên, nhánh `main` đã xóa file này) |
+| `layouts/private/index.tsx`, `layouts/private/Sider/index.tsx`, `styles/layout.css`, `styles/tokens.css` (21/11) | `PrivateLayout`, `AppSider({collapsed, onToggle})` | Sidebar thu gọn còn cột icon 72px (`--sidebar-collapsed-width`), nút "Thu gọn" cuối sidebar, nhớ trong `localStorage` (`bkuni.sider.collapsed`, đọc/ghi lỗi thì coi như mở) |
+| `apis/planner/index.ts` | `solvePlan`, `reviewMybk`, `importMybk({file, applyCurriculum})`, `getMybkProgress`, `previewMybk` (cũ) | Gọi API (chờ tối đa 2 phút) |
 | `types/planner.ts` | `SolvePlanPayload`, `PlanResult`, `MybkPreview`… | Kiểu dữ liệu khớp hợp đồng |
 
 ### 5.4 Python `pipeline/tag_classifier/` (đang làm, từ 21/11)
@@ -158,9 +282,18 @@ Pipeline riêng tìm tag cho môn học từ đề cương trong database, để
 `solver`, `max_credits`, `semester_limits`, `graduate_by`, `in_progress_results`, `locked`, `not_offered`, `summer_opt_in`, `preferences {wanted_courses, balanced_load, recommendations_first}`, `student_flags {english_grad_reading, mos}`, `previous_plan {mã môn: mã kỳ}`.
 Trả: `status` (`OPTIMAL` | `SAT_NOT_PROVEN_OPTIMAL` | `UNSAT` | `TIMEOUT` | `INPUT_ERROR`), `semesters[{semester_code, credits, courses[{code, credits, reason, locked}]}]`, `graduation_semester`, `preferences_report`, `assumptions`, `warnings`, `violations`, `diff_vs_previous`, `infeasible_reason`, `unverified_prerequisites`. Lỗi: 401 chưa đăng nhập, 400 chưa chọn chương trình hoặc trường lạ, 502 không chạy được Python.
 
-**`POST /api/plans/mybk/import`** (20/11) — multipart `file` (chỉ PDF, ≤ 5 MB). Ghi `student_progress_imports` của tài khoản (ghi đè) và `student_courses` đúng như file. Trả `{imported_at, data, written_courses, unknown_codes}`. Lỗi: 400 file không phải PDF tiến độ, 401.
+**`POST /api/plans/mybk/review`** (21/11, T32) — multipart `file` (chỉ PDF, ≤ 5 MB). **Không ghi gì.** Trả:
+`file` (nguyên JSON của `planner.mybk`, gồm `student`),
+`program {official_program_code, matched {id, code, name, cohort, source_code, source_version, total_credits, course_count} | null, profile {id, code, name} | null, same_as_profile}`,
+`conflicts [{id, level: error|warning|info, title, codes?}]` (mục 4b.3),
+`equivalents [{file_code, passed, courses [{code, name}]}]` (mục 4b.4),
+`status_changes [{code, name, web, file}]`, `has_previous_import`, `can_confirm` (false khi có mâu thuẫn mức error). Lỗi: 400 không phải PDF tiến độ / không có file, 401, 413.
 
-**`GET /api/plans/mybk/progress`** (20/11) — trả `{imported_at, data}` của chính tài khoản; `data` = null khi chưa tải. `data` là JSON của `python -m planner.mybk`, có cả họ tên, MSSV, điểm.
+**`POST /api/plans/mybk/import`** (20/11; 21/11 thêm `apply_curriculum`) — multipart `file` (chỉ PDF, ≤ 5 MB) và trường form tùy chọn `apply_curriculum=true`. Ghi trong một transaction: `student_progress_imports` của tài khoản (ghi đè), `student_courses` đúng như file, và khi có `apply_curriculum` thì `student_profiles.curriculum_id` = chương trình có `source_code` của file (bỏ chuyên ngành mục tiêu nếu đổi chương trình). Trả `{imported_at, data, written_courses, unknown_codes, curriculum {id, code, name} | null}`. Lỗi: 400 file không phải PDF tiến độ, hoặc `apply_curriculum` mà không tìm được chương trình; 401.
+
+**`PUT /api/plans/mybk/adjustments`** (21/11, Hiệu chỉnh) — body `{current_semester?: "YYS", items: [{course_id, status}], remove_course_ids?: [uuid]}` (≤ 1000 dòng, chỉ cần môn đổi). Cần đã nhập tiến độ (không thì 400). Ghi `student_courses` và `data.web.current_semester` trong một transaction; trả như `GET mybk/progress` + `written_courses`. Lỗi: 400 kỳ sai định dạng, môn không có trong danh mục, chưa nhập tiến độ; 401.
+
+**`GET /api/plans/mybk/progress`** (20/11; 21/11 thêm `current_semester`, `current_semester_source: "student" | "auto"`) — trả `{imported_at, data}` của chính tài khoản; `data` = null khi chưa tải. `data` là JSON của `python -m planner.mybk`, có cả họ tên, MSSV, điểm.
 
 **`POST /api/plans/mybk/preview`** — multipart, trường `file` (PDF hoặc .xlsx, ≤ 5 MB). Trả:
 `file {format, official_program_code, total_required, total_earned, updated_at, exported_semester, cohort_hint, checks[], course_count, passed_count, blocks[], graduation_conditions[], lists_only_passed}`,
@@ -183,7 +316,12 @@ Trả: `status` (`OPTIMAL` | `SAT_NOT_PROVEN_OPTIMAL` | `UNSAT` | `TIMEOUT` | `I
 | So mốc tính ở trình duyệt, không dùng chuỗi `diff_vs_previous` | Có cấu trúc (dời/mới/bỏ, kỳ trước/sau), câu chữ có dấu |
 | File myBK đọc rồi bỏ, không lưu; kết quả không có tên, MSSV, mã lớp, điểm | Mục 8 kế hoạch; MSSV chỉ dùng lấy 2 chữ số khóa |
 | Không tự lưu: sinh viên xác nhận từng môn chưa đạt | Cả PDF lẫn Excel đều không phân biệt chưa học / đang học / rớt |
-| Bảng nối mã myBK để trong repo | Không thêm bảng vào database chung |
+| Bảng nối mã myBK để trong repo | Không thêm bảng vào database chung. **Từ 21/11 thay bằng `curricula.source_code`** cho luồng PDF |
+| (21/11) Xem trước rồi mới ghi; mọi lần tải đều qua hộp xác nhận | Phải cho sinh viên thấy chương trình tìm được và mâu thuẫn trước khi ghi đè database (người duyệt 21/11) |
+| (21/11) Bước ghi đọc lại file và tìm lại chương trình ở backend | Không tin kết quả xem trước gửi từ trình duyệt |
+| (21/11) Mâu thuẫn mức error khóa nút Xác nhận | Không tìm được chương trình hoặc file đọc lệch thì ghi vào sẽ sai |
+| (21/11) `CCGDTC` → PE1003, PE1005 cố định, chỉ khi quy định của chương trình nhắc `CCGDTC`; lúc lưu ghi trạng thái hai môn theo chứng chỉ | Hai môn có trong mọi chương trình; chỉ khóa 2023 dùng `CCGDTC` trên myBK (người duyệt 21/11) |
+| (20/11) Lưu cả họ tên, MSSV, điểm trong `student_progress_imports` | Người duyệt quyết 20/11 (thay dòng "đọc rồi bỏ" ở trên cho luồng PDF); chỉ chính tài khoản đọc được |
 
 ---
 

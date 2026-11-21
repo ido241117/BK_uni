@@ -36,7 +36,20 @@ export type PlannerSource = {
 export type PlannerProgress = {
   scores: { code: string; score: string | null; letter: string | null }[];
   graduation_conditions: { code: string; passed: boolean }[];
+  /** Học kỳ hiện tại sinh viên khai ở nút Hiệu chỉnh (21/11); null thì tính theo ngày. */
+  current_semester?: string | null;
 };
+
+const SEMESTER_RE = /^\d{2}[123]$/;
+
+/**
+ * Phần sinh viên khai trên web (nút Hiệu chỉnh), lưu cạnh nội dung file trong `student_progress_imports.data.web`
+ * để không cần migration; nội dung file myBK giữ nguyên. Hiện có `current_semester`.
+ */
+export function savedCurrentSemester(data: Record<string, unknown> | null | undefined): string | null {
+  const web = data?.web as { current_semester?: unknown } | undefined;
+  return typeof web?.current_semester === 'string' && SEMESTER_RE.test(web.current_semester) ? web.current_semester : null;
+}
 
 /**
  * Lấy điểm từng môn (hệ 10 `score`, điểm chữ `letter`) và điều kiện tốt nghiệp từ JSON của
@@ -55,7 +68,7 @@ export function progressFromImport(data: Record<string, unknown> | null | undefi
     ? (data.graduation_conditions as Record<string, unknown>[])
       .map((c) => ({ code: String(c.code ?? ''), passed: c.passed === true })).filter((c) => c.code)
     : [];
-  return { scores, graduation_conditions: conditions };
+  return { scores, graduation_conditions: conditions, current_semester: savedCurrentSemester(data) };
 }
 
 /**
@@ -64,6 +77,12 @@ export function progressFromImport(data: Record<string, unknown> | null | undefi
  * Engine ASP đổi thành external_requirement; CP-SAT bỏ khỏi lịch như mọi môn điều kiện.
  */
 export const GRADUATION_CONDITION_CODES = ['ENG_GC', 'ENG_GC_600', 'SA4001'];
+
+/**
+ * Giáo dục thể chất (0 TC, có trong cả 132 chương trình): bộ giải **không xếp vào lộ trình** (người duyệt 21/11),
+ * coi như điều kiện tốt nghiệp. Đạt hay chưa lấy từ trạng thái môn (PDF khóa 2023 ghi CCGDTC → PE1003, PE1005).
+ */
+export const NOT_SCHEDULED_CODES = ['PE1003', 'PE1005'];
 
 export const PLANNER_RULES = {
   credits_min: 11,
@@ -109,7 +128,7 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
   const categoryCodes = (prefix: string) => (src.categories.find((c) => c.name.trim().startsWith(prefix))
     ?.member_course_ids ?? []).map((id) => codeOf.get(id)).filter((c): c is string => !!c);
   const conditions = [...new Set([...categoryCodes('E.'),
-    ...GRADUATION_CONDITION_CODES.filter((c) => inCurriculum.has(c))])].sort();
+    ...[...GRADUATION_CONDITION_CODES, ...NOT_SCHEDULED_CODES].filter((c) => inCurriculum.has(c))])].sort();
   const graduation: Record<string, string> = {};
   for (const code of categoryCodes('D.')) {
     const kind = graduationKind(nameOf.get(code) ?? '');
@@ -155,7 +174,8 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
     .filter((o) => o.semester_code.endsWith('3') && codeOf.has(o.course_id))
     .map((o) => codeOf.get(o.course_id) as string))].sort();
 
-  const current = currentSemester(today);
+  // Kỳ sinh viên khai (môn "Đang học" là môn của kỳ này); chưa khai thì tính theo ngày.
+  const current = src.progress?.current_semester ?? currentSemester(today);
   const cohort = src.profile.admission_year ?? src.curriculum.cohort;
 
   // Môn ngoài chương trình sinh viên đã khai: cần có trong `courses` (tính vào tự chọn tự do).
