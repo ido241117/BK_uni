@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Card, Input, Popconfirm, Select, Skeleton, Space, Tabs, Tag, Typography } from 'antd';
 import { LuChartColumn, LuSave, LuSearch, LuUndo2 } from 'react-icons/lu';
 import { Link, useNavigate } from 'react-router';
@@ -32,6 +32,9 @@ import { CategoriesView, GroupsView, SemesterView, SpecializationsView, type Boa
 import { buildStructure, canPlan } from './structure';
 import { useCourseDraft } from './useCourseDraft';
 
+// React Flow khá nặng: chỉ tải khi mở tab sơ đồ.
+const PrerequisiteGraph = lazy(() => import('./graph/PrerequisiteGraph'));
+
 const { Text } = Typography;
 
 /** Bấm thẻ ở chế độ "Xoay vòng": Chưa khai → Đã hoàn thành → Đang học → Chưa đạt → Chưa học → Chưa khai. */
@@ -61,7 +64,7 @@ const LEGEND: { status: StudentCourseStatus | 'none' | 'planned'; label: string;
     { status: 'not-started', label: 'Chưa học', color: 'var(--status-not-started)' },
 ];
 
-type ViewKey = 'semester' | 'groups' | 'categories' | 'specializations' | 'catalog';
+type ViewKey = 'semester' | 'groups' | 'graph' | 'categories' | 'specializations' | 'catalog';
 
 interface CurriculumBoardProps {
     userId: string;
@@ -436,6 +439,21 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
                                 key: 'groups',
                                 label: `Theo khối kiến thức (${structure.rootGroups.length + 1})`,
                                 children: <GroupsView structure={structure} view={boardView} outsideCourses={outsideCourses} />,
+                            },
+                            {
+                                key: 'graph',
+                                label: 'Sơ đồ điều kiện',
+                                children: (
+                                    <Suspense fallback={<Card><Skeleton active paragraph={{ rows: 8 }} /></Card>}>
+                                        <PrerequisiteGraph
+                                            curriculumId={curriculumId}
+                                            courses={courses}
+                                            groups={groups}
+                                            statusMap={statusMap}
+                                            planMap={planMap}
+                                        />
+                                    </Suspense>
+                                ),
                             },
                             {
                                 key: 'categories',
