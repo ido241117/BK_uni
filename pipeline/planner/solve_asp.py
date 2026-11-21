@@ -301,6 +301,18 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
     for sem in scenario.get("skip_semesters") or []:
         out.append(f"skip({future_index(sem, 'scenario.skip_semesters')}).")
 
+    # Interests: tag names the student picked (Clingo tab). Weight 1 each; optimize.lp maximises the
+    # summed weights of the planned electives' tags, at the lowest priority (taste).
+    interests = scenario.get("interests") or []
+    if not isinstance(interests, list) or not all(isinstance(x, str) and x for x in interests):
+        raise FixtureError("scenario.interests: expected a list of tag names")
+    interests = sorted(set(interests))
+    tagged = {tag for course_tag_list in course_tags.values() for tag in course_tag_list}
+    for tag in interests:
+        out.append(f"interest({_q(tag)}, 1).")
+        if tag not in tagged:
+            warnings.append(f'Interest "{tag}" has no course in your program, so it does not change the plan.')
+
     # -- Doi chieu muc tin chi: policy.lp la quy dinh, du lieu chuong trinh chi de canh bao --
     pol = _policy_constants()
     cur = fixture["curriculum"]
@@ -321,7 +333,7 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
     context = {
         "calendar": cal, "t": t, "n": n, "plan": plan, "plan_index": plan_index,
         "allow_summer": bool(scenario.get("summer_opt_in")), "course_tags": course_tags,
-        "warnings": warnings,
+        "interests": interests, "warnings": warnings,
     }
     return "\n".join(out) + "\n", context
 
@@ -453,6 +465,9 @@ def _decode(symbols: list[clingo.Symbol], cost: list[tuple[int, int]], ctx: dict
                                                "missing": args[2].number})
     report["majors"] = [{"code": m, "count": c, "earned": m in majors_earned} for m, c in sorted(major_count.items())]
     report["course_tags"] = {c: tags for c, tags in ctx["course_tags"].items() if any(c == x for x, _ in takes)}
+    # Planned courses carrying each interest the student picked ([] when none of them was planned).
+    report["interests"] = {tag: sorted(c for c, tags in report["course_tags"].items() if tag in tags)
+                           for tag in ctx["interests"]}
     for key in ("gaps", "graduation_blocked"):
         report[key].sort()
     for sem in report["gaps"]:
@@ -489,4 +504,7 @@ def _assumptions(fixture: dict[str, Any], scenario: dict[str, Any], ctx: dict[st
         notes.append(f"Giả định {item['course_code']} không mở kỳ {item['semester_code']}")
     for sem in scenario.get("skip_semesters") or []:
         notes.append(f"Bạn nghỉ kỳ {sem}")
+    if ctx["interests"]:
+        notes.append(f"Interests: {', '.join(ctx['interests'])}. Lowest priority: they decide between electives only "
+                     "when every other goal is equal")
     return notes

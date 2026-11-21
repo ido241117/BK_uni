@@ -1,6 +1,6 @@
 import { queryMethod } from '@/config/query-method';
 import type {
-    MybkAdjustPayload, MybkImportResult, MybkPreview, MybkProgress, MybkReview, PlanResult, SolvePlanPayload,
+    InterestTag, MybkAdjustPayload, MybkImportResult, MybkPreview, MybkProgress, MybkReview, PlanResult, SolvePlanPayload,
 } from '@/types';
 
 /** Bộ giải có thể chạy tới vài chục giây (Clingo); chờ lâu hơn mặc định. */
@@ -8,6 +8,9 @@ const SOLVE_TIMEOUT_MS = 2 * 60_000;
 
 export const solvePlan = (payload: SolvePlanPayload) =>
     queryMethod.post<PlanResult>('/plans/solve', payload, { timeout: SOLVE_TIMEOUT_MS });
+
+/** Interest tags for the Clingo solver: tags with courses in the student's program. */
+export const getInterestTags = () => queryMethod.get<{ tags: InterestTag[] }>('/plans/interest-tags');
 
 /** Đọc file tiến độ myBK ở backend (không lưu file), trả đề xuất trạng thái môn để sinh viên xác nhận. */
 export const previewMybk = (file: File) => {

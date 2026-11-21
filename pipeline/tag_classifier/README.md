@@ -246,7 +246,8 @@ with the rows listed. A kept row with no courses is skipped with a warning, and 
 has not re-scored yet are warned about. The CSVs are read as written by `review` or as re-saved by
 Excel (tab-separated or Windows codepage, with a warning); save from Excel as "CSV UTF-8". `--dry-run` validates and prints without writing. `"tags"` is the format
 `solve_asp.py` reads today (all curricula merged; the adapter only uses the student's own curriculum
-courses); `"by_curriculum"` keeps the per-curriculum split for a later adapter change.
+courses); `"by_curriculum"` keeps the per-curriculum split for a later adapter change. Students see the
+exported tags as interests on the Clingo tab of the planner page (`GET /api/plans/interest-tags`).
 
 ## Colab (NLI scoring on a GPU)
 

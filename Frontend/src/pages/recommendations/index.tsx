@@ -6,7 +6,7 @@ import { LuPlus, LuTrash2 } from 'react-icons/lu';
 import { Link } from 'react-router';
 import { EmptyState, IconBtn, IOutLinedBtn, ISolidBtn, PageHeader, TablePageSkeleton } from '@/components';
 import { getCurriculum, listCurriculumCourses } from '@/apis/curriculum';
-import { solvePlan } from '@/apis/planner';
+import { getInterestTags, solvePlan } from '@/apis/planner';
 import { getMyProfile, listMyCourses } from '@/apis/student';
 import { useApiMutation, useApiQuery } from '@/hooks';
 import {
@@ -36,6 +36,8 @@ interface Scenario {
     recommendationsFirst: boolean;
     english: Flag;
     mos: Flag;
+    /** Clingo only; missing in baselines saved before interests existed. */
+    interests?: string[];
 }
 
 /** Các kỳ sau kỳ hiện tại (cả kỳ hè), đủ cho khoảng 5 năm. */
@@ -105,6 +107,10 @@ const RecommendationsPage = () => {
     const [solver, setSolver] = useState<PlanSolver>('cpsat');
     /** Chỉ bộ giải Clingo (engine ASP): kỳ chủ động nghỉ, không báo là kỳ trống. */
     const [skipped, setSkipped] = useState<string[]>([]);
+    /** Clingo only: interest tags; planned electives with these tags are preferred. */
+    const [interests, setInterests] = useState<string[]>([]);
+    const interestTagsQuery = useApiQuery(['interest-tags', curriculumId], getInterestTags,
+        { enabled: Boolean(curriculumId) && solver === 'clingo' });
     const [maxCredits, setMaxCredits] = useState<number | null>(null);
     const [graduateBy, setGraduateBy] = useState<string | undefined>();
     const [results, setResults] = useState<Record<string, 'pass' | 'fail'>>({});
@@ -125,12 +131,13 @@ const RecommendationsPage = () => {
 
     const snapshot = (): Scenario => ({
         solver, maxCredits, graduateBy, results, summers, locked, notOffered, wanted, balanced,
-        recommendationsFirst, english, mos,
+        recommendationsFirst, english, mos, interests,
     });
     const applyScenario = (s: Scenario) => {
         setSolver(s.solver); setMaxCredits(s.maxCredits); setGraduateBy(s.graduateBy); setResults(s.results);
         setSummers(s.summers); setLocked(s.locked); setNotOffered(s.notOffered); setWanted(s.wanted);
         setBalanced(s.balanced); setRecommendationsFirst(s.recommendationsFirst); setEnglish(s.english); setMos(s.mos);
+        setInterests(s.interests ?? []);
     };
 
     // Mở trang (hoặc đổi tài khoản/chương trình): có mốc đã lưu thì hiện lại mốc cùng kịch bản của nó.
@@ -166,6 +173,13 @@ const RecommendationsPage = () => {
     const openCourseOptions = (coursesQuery.data ?? [])
         .filter(item => statusByCode.get(item.course.code) !== STUDENT_COURSE_STATUS.COMPLETED)
         .map(item => ({ value: item.course.code, label: `${item.course.code} · ${item.course.name}` }));
+    const interestTags = interestTagsQuery.data?.tags ?? [];
+    const interestOptions = interestTags.map(t => ({
+        value: t.tag,
+        label: `${t.tag} (${t.courses.length})`,
+        title: t.courses.map(code => `${code} · ${nameByCode.get(code) ?? code}`).join('\n'),
+    }));
+    const coursesOfTag = new Map(interestTags.map(t => [t.tag, t.courses]));
 
     const solve = useApiMutation({
         mutationFn: (payload: SolvePlanPayload) => solvePlan(payload),
@@ -195,6 +209,7 @@ const RecommendationsPage = () => {
             // What-if: gửi mốc để bộ giải giữ lộ trình gần mốc nhất (S3) và báo môn dời kỳ.
             ...(baseline ? { previous_plan: planOf(baseline.result) } : {}),
             ...(solver === 'clingo' && skipped.length ? { skip_semesters: skipped } : {}),
+            ...(solver === 'clingo' && interests.length ? { interests } : {}),
         };
     };
 
@@ -327,6 +342,23 @@ const RecommendationsPage = () => {
                                         <Text>Kỳ muốn nghỉ (chỉ Clingo)</Text>
                                         <Select mode="multiple" style={{ width: '100%' }} placeholder="Không nghỉ kỳ nào"
                                             value={skipped} options={mainSemesterOptions} onChange={setSkipped} />
+                                        <Text>Interests (Clingo only)</Text>
+                                        <Text type="secondary">
+                                            Electives with these tags are preferred when every other goal (graduating
+                                            early, offering history, balanced load...) is equal. The number is how many
+                                            courses of your program have the tag.
+                                        </Text>
+                                        <Select mode="multiple" style={{ width: '100%' }} placeholder="No interests"
+                                            value={interests} options={interestOptions} onChange={setInterests}
+                                            optionFilterProp="label" loading={interestTagsQuery.isLoading}
+                                            notFoundContent="No interest tags for your program yet" />
+                                        {interests.map(tag => (
+                                            <Text key={tag} type="secondary">
+                                                {tag}: {(coursesOfTag.get(tag) ?? [])
+                                                    .map(code => `${code} ${nameByCode.get(code) ?? ''}`.trim()).join(', ')
+                                                    || 'no course of your program'}
+                                            </Text>
+                                        ))}
                                     </Space>
                                 )}
                                 <ISolidBtn block loading={solve.isPending} onClick={() => solve.mutate(buildPayload())}>

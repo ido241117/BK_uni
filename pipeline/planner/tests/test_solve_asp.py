@@ -324,6 +324,39 @@ def test_tags_are_read_from_json(monkeypatch, tmp_path):
     assert [t for c, t in tags.items() if c in ELECTIVES] == [["AI"]]
 
 
+@pytest.mark.parametrize("interest, chosen", [("web", "EL3003"), ("AI", "EL3002")])
+def test_interest_picks_the_elective_with_that_tag(monkeypatch, tmp_path, interest, chosen):
+    # One 7-credit elective out of three is needed and nothing else tells them apart, so the
+    # interest objective (taste) decides which one is planned.
+    import planner.solve_asp as adapter
+
+    path = tmp_path / "tags.json"
+    path.write_text(json.dumps({"tags": {"AI": ["EL3002"], "web": ["EL3003"]}}), encoding="utf-8")
+    monkeypatch.setattr(adapter, "TAGS_FILE", path)
+    r = solve(small(), scenario(interests=[interest]))
+    planned = [c for c in plan_map(r) if c in ELECTIVES]
+    assert planned == [chosen]
+    assert r["engine_report"]["interests"] == {interest: [chosen]}
+    assert any(interest in a for a in r["assumptions"])
+
+
+def test_interest_without_courses_in_the_program_is_warned(monkeypatch, tmp_path):
+    import planner.solve_asp as adapter
+
+    path = tmp_path / "tags.json"
+    path.write_text(json.dumps({"tags": {"AI": ["EL3002"], "robotics": ["XX9999"]}}), encoding="utf-8")
+    monkeypatch.setattr(adapter, "TAGS_FILE", path)
+    r = solve(small(), scenario(interests=["robotics", "AI"]))
+    assert r["status"] == "OPTIMAL"
+    assert r["engine_report"]["interests"] == {"AI": ["EL3002"], "robotics": []}
+    assert any('"robotics"' in w for w in r["warnings"])
+
+
+def test_malformed_interests_are_an_input_error():
+    with pytest.raises(FixtureError):
+        solve_asp(small(), scenario(interests="AI"))
+
+
 # --- Hoc phi tuy chon --------------------------------------------------------------------------
 
 def test_policy_without_fee_rules_still_plans(monkeypatch, tmp_path):

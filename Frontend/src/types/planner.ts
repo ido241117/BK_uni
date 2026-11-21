@@ -29,6 +29,14 @@ export interface SolvePlanPayload {
     previous_plan?: Record<string, string>;
     /** Chỉ bộ giải Clingo (engine ASP): kỳ sinh viên chủ động nghỉ. */
     skip_semesters?: string[];
+    /** Clingo only: interest tags the student picked (names from GET /plans/interest-tags). */
+    interests?: string[];
+}
+
+/** An interest tag with the courses of the student's program that carry it (GET /plans/interest-tags). */
+export interface InterestTag {
+    tag: string;
+    courses: string[];
 }
 
 export interface PlanCourse {
@@ -86,6 +94,8 @@ export interface EngineReport {
     offering_misses: { course: string; semester: string; missed_percent: number }[];
     fees: Record<string, number>;
     course_tags?: Record<string, string[]>;
+    /** Planned courses carrying each interest the student picked ([] when none was planned). */
+    interests?: Record<string, string[]>;
     degree_complete: boolean;
     ready_to_graduate: boolean;
     ground_and_solve_ms?: number;

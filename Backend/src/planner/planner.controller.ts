@@ -27,6 +27,13 @@ export class PlannerController {
     return this.planner.solve(req.user.id, dto);
   }
 
+  @Get('interest-tags')
+  @SignedIn()
+  @ApiOperation({ summary: 'Interest tags for the Clingo solver: tags with courses in the student program' })
+  interestTags(@Req() req: AuthenticatedRequest) {
+    return this.planner.interestTags(req.user.id);
+  }
+
   @Post('mybk/review')
   @HttpCode(200)
   @SignedIn()

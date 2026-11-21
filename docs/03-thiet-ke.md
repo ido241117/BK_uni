@@ -25,6 +25,7 @@ Cập nhật 21/11/2026 (mục 4b: luồng tải PDF tiến độ ↔ database).
 ```
 Trình duyệt (React, Frontend/src/pages/recommendations)
   │  POST /api/plans/solve          (JSON kịch bản + mốc what-if)
+  │  GET  /api/plans/interest-tags  (interest tags for the Clingo tab)
   │  POST /api/plans/mybk/review    (multipart PDF: xem trước, không ghi; trang Môn học, 21/11)
   │  POST /api/plans/mybk/import    (multipart PDF [+ apply_curriculum]: ghi sau khi xác nhận)
   │  GET  /api/plans/mybk/progress  (nội dung file đã lưu)
@@ -280,7 +281,10 @@ Pipeline riêng tìm tag cho môn học từ đề cương trong database, để
 
 **`POST /api/plans/solve`** — body (mọi trường không bắt buộc):
 `solver`, `max_credits`, `semester_limits`, `graduate_by`, `in_progress_results`, `locked`, `not_offered`, `summer_opt_in`, `preferences {wanted_courses, balanced_load, recommendations_first}`, `student_flags {english_grad_reading, mos}`, `previous_plan {mã môn: mã kỳ}`.
+ASP engine only (`solver: "clingo"`): `skip_semesters`, and `interests` (≤ 50 tag names from `GET /api/plans/interest-tags`; planned electives with these tags are preferred at the lowest objective priority; the result's `engine_report.interests` lists the planned courses for each).
 Trả: `status` (`OPTIMAL` | `SAT_NOT_PROVEN_OPTIMAL` | `UNSAT` | `TIMEOUT` | `INPUT_ERROR`), `semesters[{semester_code, credits, courses[{code, credits, reason, locked}]}]`, `graduation_semester`, `preferences_report`, `assumptions`, `warnings`, `violations`, `diff_vs_previous`, `infeasible_reason`, `unverified_prerequisites`. Lỗi: 401 chưa đăng nhập, 400 chưa chọn chương trình hoặc trường lạ, 502 không chạy được Python.
+
+**`GET /api/plans/interest-tags`** (21/11) — the tags of `pipeline/planner/data/course-tags.json` (written by `pipeline/tag_classifier`) that have courses in the student's program: `{tags: [{tag, courses: [code]}]}`, sorted by tag. Empty when the student has no program or the file does not exist. Reads no student data besides the profile's program. Errors: 401.
 
 **`POST /api/plans/mybk/review`** (21/11, T32) — multipart `file` (chỉ PDF, ≤ 5 MB). **Không ghi gì.** Trả:
 `file` (nguyên JSON của `planner.mybk`, gồm `student`),

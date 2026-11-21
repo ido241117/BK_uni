@@ -31,6 +31,7 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
     const gpa10 = report.gpa.score_10;
     const gpa4 = report.gpa.gpa_4;
     const tags = Object.entries(report.course_tags ?? {});
+    const interests = Object.entries(report.interests ?? {});
 
     return (
         <Card title="Thông tin thêm từ bộ giải Clingo (engine ASP)">
@@ -105,6 +106,20 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
                                 },
                             ]}
                         />
+                    </Space>
+                )}
+
+                {interests.length > 0 && (
+                    <Space orientation="vertical" size={4}>
+                        <Text strong>Your interests in this plan</Text>
+                        {interests.map(([tag, codes]) => (
+                            <Text key={tag}>
+                                <Tag color="blue">{tag}</Tag>
+                                {codes.length
+                                    ? codes.map(code => `${code} ${courseName(code)}`).join(', ')
+                                    : <Text type="secondary">no planned course has this tag</Text>}
+                            </Text>
+                        ))}
                     </Space>
                 )}
 
