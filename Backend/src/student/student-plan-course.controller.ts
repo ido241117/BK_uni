@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Put, Query, Req } 
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { SignedIn } from '../auth/decorators/access.decorator';
 import { AuthenticatedRequest } from '../auth/types/authenticated-request';
+import { BulkUpsertPlanCoursesDto } from './dto/bulk-upsert-plan-courses.dto';
 import { UpsertPlanCourseDto } from './dto/upsert-plan-course.dto';
 import { StudentService } from './student.service';
 
@@ -16,6 +17,17 @@ export class StudentPlanCourseController {
   @ApiOperation({ summary: 'Các môn trong kế hoạch của tôi (kèm thông tin môn)' })
   list(@Req() req: AuthenticatedRequest, @Query('curriculum_id') curriculumId?: string) {
     return this.students.listMyPlanCourses(req.user.id, curriculumId);
+  }
+
+  @Put('me/:curriculumId')
+  @SignedIn()
+  @ApiOperation({ summary: 'Lưu nhiều môn của kế hoạch một lần (thêm/đổi học kỳ và bỏ môn); môn không gửi giữ nguyên' })
+  bulkUpsert(
+    @Req() req: AuthenticatedRequest,
+    @Param('curriculumId', ParseUUIDPipe) curriculumId: string,
+    @Body() dto: BulkUpsertPlanCoursesDto,
+  ) {
+    return this.students.bulkUpsertMyPlanCourses(req.user.id, curriculumId, dto);
   }
 
   @Put('me/:curriculumId/:courseId')

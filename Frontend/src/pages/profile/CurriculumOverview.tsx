@@ -23,7 +23,7 @@ import {
     type CurriculumRegulation,
     type CurriculumSpecialization,
 } from '@/types';
-import { groupRequiredCredits, summarizeCurriculumCredits } from '@/utils/curriculum-credits';
+import { describeGroupRequirement, groupRequiredCredits, summarizeCurriculumCredits } from '@/utils/curriculum-credits';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -31,19 +31,7 @@ type Lang = 'vi' | 'en';
 
 const termLabel = (term: number) => (term === 3 ? 'Học kỳ hè' : `Học kỳ ${term}`);
 
-const groupRequirement = (group: CourseGroup) => {
-    const parts: string[] = [];
-    if (group.required_credits !== null) parts.push(`${group.required_credits} TC`);
-    if (group.required_count !== null) parts.push(`${group.required_count} môn`);
-    if (!parts.length) {
-        const credits = groupRequiredCredits(group);
-        if (credits) parts.push(`${credits} TC`);
-    }
-    if (group.pool_scope === COURSE_GROUP_SCOPE.ANY) {
-        parts.push(group.pool_course_credits ? `môn bất kỳ ${group.pool_course_credits} TC` : 'chọn tự do');
-    }
-    return parts.join(' · ') || '—';
-};
+const groupRequirement = describeGroupRequirement;
 
 const courseColumns: ColumnsType<CourseSummary> = [
     { title: 'Mã môn', dataIndex: 'code', width: 110, render: (code: string) => <Text strong>{code}</Text> },

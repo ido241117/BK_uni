@@ -498,3 +498,226 @@
         .outline-outcome { grid-template-columns: 64px 1fr; }
     }
 }
+
+/* Trang môn học của sinh viên: thẻ môn bấm để đổi trạng thái (pages/courses/board). */
+@layer components {
+    :root {
+        --status-completed: #1f9d55;
+        --status-completed-soft: rgba(31, 157, 85, 0.12);
+        --status-progress: #0066cc;
+        --status-progress-soft: rgba(0, 102, 204, 0.1);
+        --status-failed: #d93a3a;
+        --status-failed-soft: rgba(217, 58, 58, 0.1);
+        --status-not-started: #86868b;
+        --status-not-started-soft: rgba(134, 134, 139, 0.12);
+        --status-dirty: #eda100;
+        --status-planned: #6250d6;
+        --status-planned-soft: rgba(98, 80, 214, 0.1);
+    }
+    [data-theme='dark'] {
+        --status-completed: #3fc27a;
+        --status-completed-soft: rgba(63, 194, 122, 0.16);
+        --status-progress: #4a9eff;
+        --status-progress-soft: rgba(74, 158, 255, 0.16);
+        --status-failed: #ff6b6b;
+        --status-failed-soft: rgba(255, 107, 107, 0.15);
+        --status-not-started: rgba(245, 245, 247, 0.54);
+        --status-not-started-soft: rgba(245, 245, 247, 0.08);
+        --status-dirty: #f2b630;
+        --status-planned: #9085e9;
+        --status-planned-soft: rgba(144, 133, 233, 0.16);
+    }
+
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+        gap: 10px;
+    }
+
+    .course-card {
+        --accent: var(--border-strong);
+        --tint: var(--bg-surface);
+        position: relative;
+        display: grid;
+        /* Cột 1: thân thẻ (bấm đổi trạng thái) + dải kế hoạch; cột 2: link chi tiết, cao hết thẻ. */
+        grid-template-columns: minmax(0, 1fr) 34px;
+        grid-template-rows: 1fr auto;
+        border: 1px solid var(--border-soft);
+        border-left: 4px solid var(--accent);
+        border-radius: var(--radius-sm);
+        background: var(--tint);
+        transition: background 0.12s, border-color 0.12s, transform 0.08s;
+    }
+    .course-card[data-status='completed'] { --accent: var(--status-completed); --tint: var(--status-completed-soft); }
+    .course-card[data-status='in-progress'] { --accent: var(--status-progress); --tint: var(--status-progress-soft); }
+    .course-card[data-status='failed'] { --accent: var(--status-failed); --tint: var(--status-failed-soft); }
+    .course-card[data-status='not-started'] { --accent: var(--status-not-started); --tint: var(--status-not-started-soft); }
+    .course-card[data-status='planned'] { --accent: var(--status-planned); --tint: var(--status-planned-soft); }
+    .course-card:hover { border-color: var(--accent); }
+    .course-card:active { transform: scale(0.99); }
+
+    .course-card-main {
+        grid-column: 1;
+        grid-row: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 4px 8px 10px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        user-select: none;
+    }
+    .course-card-top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+    .course-card-code { font-weight: 700; color: var(--text-primary); }
+    .course-card-credits { color: var(--text-muted); white-space: nowrap; }
+    .course-card-name {
+        font-size: 13px;
+        line-height: 1.35;
+        color: var(--text-primary);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .course-card-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .course-card-status { font-weight: 600; color: var(--accent); }
+    .course-card:not([data-status]) .course-card-status,
+    .course-card[data-status='none'] .course-card-status { color: var(--text-muted); font-weight: 400; }
+    .course-card-plan {
+        padding: 0 6px;
+        border-radius: var(--radius-pill);
+        background: var(--brand-soft);
+        color: var(--brand);
+    }
+    .course-card-dirty { margin-left: auto; color: var(--status-dirty); font-size: 10px; }
+
+    /* Dải link sang trang chi tiết: tách khỏi vùng bấm đổi trạng thái bằng đường kẻ + nền riêng. */
+    .course-card-link {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        display: grid;
+        place-items: center;
+        border-left: 1px solid var(--border-soft);
+        border-radius: 0 calc(var(--radius-sm) - 1px) calc(var(--radius-sm) - 1px) 0;
+        background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+        color: var(--text-secondary);
+        font-size: 16px;
+        transition: background 0.12s, color 0.12s;
+    }
+    .course-card-link:hover,
+    .course-card-link:focus-visible {
+        background: var(--brand-soft-strong);
+        color: var(--brand);
+    }
+
+    /* Dải kế hoạch của môn chưa học: nút riêng, không nằm trong nút đổi trạng thái. */
+    .course-card-planbar {
+        grid-column: 1;
+        grid-row: 2;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 6px 6px 8px;
+        font-size: 12px;
+    }
+    .course-card-planadd,
+    .course-card-planbtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-pill);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        font: inherit;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .course-card-planadd { padding: 4px 10px 4px 8px; }
+    .course-card-planbtn { width: 24px; height: 24px; padding: 0; border-style: solid; }
+    .course-card-planadd:hover,
+    .course-card-planbtn:not(:disabled):hover {
+        border-color: var(--status-planned);
+        background: var(--status-planned-soft);
+        color: var(--status-planned);
+    }
+    .course-card-planbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .course-card-plansem {
+        min-width: 52px;
+        text-align: center;
+        font-weight: 600;
+        color: var(--status-planned);
+        font-variant-numeric: tabular-nums;
+    }
+    .course-card-planremove { margin-left: auto; border-color: transparent; background: transparent; }
+    .course-card-planremove:not(:disabled):hover { border-color: var(--status-failed); background: var(--status-failed-soft); color: var(--status-failed); }
+    .viz-fill-plan-status { background: var(--status-planned); }
+
+    .status-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+    .status-toggle:hover .ant-tag { filter: brightness(0.95); }
+
+    .board-section-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 4px 12px;
+        margin-bottom: 10px;
+    }
+    .board-section-title { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+    .board-section-sub { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+    .board-group {
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-md);
+        padding: 10px 12px;
+    }
+
+    /* Nổi cố định ở đáy màn hình, nằm ngoài luồng bố cục: hiện/ẩn không làm các thẻ bên dưới nhảy chỗ. */
+    .board-savebar {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        z-index: 30;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100vw - 32px);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        padding: 10px 14px;
+        border: 1px solid var(--status-dirty);
+        border-radius: var(--radius-md);
+        background: var(--bg-elevated);
+        box-shadow: var(--shadow-raised);
+        animation: board-savebar-in 0.16s ease-out;
+    }
+    @keyframes board-savebar-in {
+        from { opacity: 0; transform: translate(-50%, 8px); }
+        to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    @media (max-width: 1024px) {
+        .board-savebar { bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 12px); }
+    }
+    .board-savebar-text { flex: 1; min-width: 180px; font-size: 13px; color: var(--text-primary); }
+
+    .board-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-secondary); }
+    .board-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .board-legend-swatch { width: 12px; height: 12px; border-radius: 3px; border-left: 3px solid; }
+}

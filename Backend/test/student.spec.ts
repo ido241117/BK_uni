@@ -230,6 +230,53 @@ describe('Student API', () => {
     await request(server()).delete(`/api/student-courses/me/${extraCourse.id}`).set('Origin', origin).expect(200);
   });
 
+  it('saves and removes course statuses in one request', async () => {
+    await request(server()).put('/api/student-courses/me').set('Origin', origin).send({
+      items: [{ course_id: course.id, status: 'completed' }, { course_id: extraCourse.id, status: 'in-progress' }],
+    }).expect(200);
+
+    const saved = await request(server()).put('/api/student-courses/me').set('Origin', origin).send({
+      items: [{ course_id: course.id, status: 'failed' }],
+      // Môn chưa khai trong danh sách xoá thì bỏ qua.
+      remove_course_ids: [extraCourse.id, randomUUID()],
+    }).expect(200);
+    expect(saved.body.data).toHaveLength(1);
+    expect(saved.body.data[0]).toMatchObject({ course_id: course.id, status: 'failed' });
+
+    // Cùng một môn vừa ghi vừa xoá: từ chối.
+    await request(server()).put('/api/student-courses/me').set('Origin', origin).send({
+      items: [{ course_id: course.id, status: 'completed' }],
+      remove_course_ids: [course.id],
+    }).expect(400);
+
+    await request(server()).put('/api/student-courses/me').set('Origin', origin)
+      .send({ items: [], remove_course_ids: [course.id] }).expect(200);
+    const empty = await request(server()).get('/api/student-courses/me').expect(200);
+    expect(empty.body.data).toHaveLength(0);
+  });
+
+  it('saves many plan courses at once', async () => {
+    const saved = await request(server()).put(`/api/student-plan-courses/me/${curriculum.id}`).set('Origin', origin).send({
+      items: [{ course_id: course.id, semester_code: '261' }, { course_id: extraCourse.id, semester_code: '262' }],
+    }).expect(200);
+    expect(saved.body.data).toHaveLength(2);
+
+    const changed = await request(server()).put(`/api/student-plan-courses/me/${curriculum.id}`).set('Origin', origin).send({
+      items: [{ course_id: course.id, semester_code: '271' }],
+      remove_course_ids: [extraCourse.id],
+    }).expect(200);
+    expect(changed.body.data).toHaveLength(1);
+    expect(changed.body.data[0]).toMatchObject({ course_id: course.id, semester_code: '271' });
+
+    await request(server()).put(`/api/student-plan-courses/me/${curriculum.id}`).set('Origin', origin)
+      .send({ items: [{ course_id: course.id, semester_code: '27' }] }).expect(400);
+    await request(server()).put(`/api/student-plan-courses/me/${randomUUID()}`).set('Origin', origin)
+      .send({ items: [{ course_id: course.id, semester_code: '271' }] }).expect(400);
+
+    await request(server()).put(`/api/student-plan-courses/me/${curriculum.id}`).set('Origin', origin)
+      .send({ items: [], remove_course_ids: [course.id] }).expect(200);
+  });
+
   it('manages plan courses', async () => {
     const planned = await request(server())
       .put(`/api/student-plan-courses/me/${curriculum.id}/${course.id}`)
