@@ -236,13 +236,15 @@ Order of work:
 
 1. Fill in `rename` where a name is wrong or vague (the course lists follow the name).
 2. `classify` (all models, or `--model` for some; Colab for many renames), then `review`.
-3. Fill in `keep` (y / n), adjust `courses` by hand if needed, `note` for the reason.
+3. Fill in `keep` (y or 1 / n or 0), adjust `courses` by hand if needed, `note` for the reason.
 4. `export --dry-run`, then `export`.
 
-`export.py` reads the CSVs and writes `pipeline/planner/data/course-tags.json`: only `keep = y` rows,
-named by `rename`, else the English label, else the Vietnamese one, with the `courses` column as the
-course list. Any `keep` value other than y / n / empty, or a kept row without courses, stops the export
-with the rows listed. `--dry-run` validates and prints without writing. `"tags"` is the format
+`export.py` reads the CSVs and writes `pipeline/planner/data/course-tags.json`: only kept rows
+(`keep` = y or 1), named by `rename`, else the English label, else the Vietnamese one, with the
+`courses` column as the course list. Any `keep` value other than y / 1, n / 0 or empty stops the export
+with the rows listed. A kept row with no courses is skipped with a warning, and renames that classify
+has not re-scored yet are warned about. The CSVs are read as written by `review` or as re-saved by
+Excel (tab-separated or Windows codepage, with a warning); save from Excel as "CSV UTF-8". `--dry-run` validates and prints without writing. `"tags"` is the format
 `solve_asp.py` reads today (all curricula merged; the adapter only uses the student's own curriculum
 courses); `"by_curriculum"` keeps the per-curriculum split for a later adapter change.
 

@@ -22,18 +22,13 @@ from pathlib import Path
 from typing import Any
 
 from tag_classifier.common import (
-    load_candidates, load_config, load_scores, read_decisions, read_renames, review_path, utf8_stdout,
+    load_candidates, load_config, load_scores, read_decisions, read_renames, review_path, stale_models, utf8_stdout,
 )
 from tag_classifier.evaluate import Evaluation
 from tag_classifier.phrases import section_text
 
 COLUMNS = ["tag", "label_vi", "label_en", "label_en_suggested", "sources", "courses", "course_count",
            "alpha", "reliable", "models_assigning", "evidence_1", "evidence_2", "evidence_3", "keep", "rename", "note"]
-
-
-def stale_models(scores: dict[str, Any], renames: dict[str, str]) -> list[str]:
-    """Models whose scores were computed with other renames than the CSV's current ones."""
-    return sorted(m for m in scores["scores"] if scores.get("renamed", {}).get(m, {}) != renames)
 
 
 def evidence(ev: Evaluation, model: str, tag: str, courses: list[str], names: dict[str, str], n: int = 3) -> list[str]:

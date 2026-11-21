@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import gzip
+import io
 import json
 import sys
 import tomllib
@@ -98,14 +99,34 @@ def review_path(cfg: dict[str, Any], code: str) -> Path:
     return resolve(cfg["review"]["out_dir"]) / f"{code}.csv"
 
 
+def read_review_rows(path: Path) -> list[dict[str, str]]:
+    """Rows of a review CSV as written by review.py (UTF-8, commas) or as re-saved by Excel. Excel's
+    plain "CSV" / "Text (Tab delimited)" uses the Windows codepage: it is read with a warning, since
+    Vietnamese letters it cannot store were already replaced by "?" (the generated columns come back
+    on the next review run; the team's columns are usually plain ASCII)."""
+    raw = path.read_bytes()
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = raw.decode("cp1252", errors="replace")
+        print(f"WARNING: {path.name} is not UTF-8 (saved by Excel?). Read it anyway; Vietnamese letters may be "
+              "lost. In Excel, save as 'CSV UTF-8 (Comma delimited)'.", file=sys.stderr)
+    header = text.split("\n", 1)[0]
+    return list(csv.DictReader(io.StringIO(text, newline=""), delimiter="\t" if "\t" in header else ","))
+
+
 def read_decisions(path: Path) -> dict[str, dict[str, str]]:
     """The team's columns of a review CSV, {tag: {keep, rename, note}}; {} if there is no CSV yet."""
     if not path.exists():
         return {}
-    with open(path, encoding="utf-8-sig", newline="") as f:
-        return {row["tag"]: {k: (row.get(k) or "").strip() for k in DECISIONS} for row in csv.DictReader(f)}
+    return {row["tag"]: {k: (row.get(k) or "").strip() for k in DECISIONS} for row in read_review_rows(path)}
 
 
 def read_renames(cfg: dict[str, Any], code: str) -> dict[str, str]:
     """{tag: new English name} from the review CSV's rename column."""
     return {tag: d["rename"] for tag, d in read_decisions(review_path(cfg, code)).items() if d["rename"]}
+
+
+def stale_models(scores: dict[str, Any], renames: dict[str, str]) -> list[str]:
+    """Models whose scores were computed with other renames than the CSV's current ones."""
+    return sorted(m for m in scores["scores"] if scores.get("renamed", {}).get(m, {}) != renames)

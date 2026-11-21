@@ -4,10 +4,11 @@
     tag_classifier/.venv/Scripts/python -m tag_classifier.export --dry-run     # check, print, write nothing
     tag_classifier/.venv/Scripts/python -m tag_classifier.export
 
-Only rows with keep = y are exported, under `rename` if given, else the English label, else the
-Vietnamese one; the `courses` column (which reviewers may edit) is the course list. Any keep value
-other than y / n / empty stops the export with the offending rows listed, so a typo cannot silently
-drop or add a tag.
+Only rows with keep = y (or 1) are exported, under `rename` if given, else the English label, else
+the Vietnamese one; the `courses` column (which reviewers may edit) is the course list. Any keep value
+other than y / 1, n / 0 or empty stops the export with the offending rows listed, so a typo cannot
+silently drop or add a tag. A kept row with an empty `courses` column is skipped with a warning (a tag
+on no course does nothing in the planner). Renames not yet re-scored by classify also give a warning.
 
 Output: "tags" {tag: [courses]} is the format solve_asp.py reads today (tags of all curricula merged;
 the adapter only uses the student's own curriculum courses). "by_curriculum" keeps tags per
@@ -17,37 +18,52 @@ curriculum for a later adapter change.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from tag_classifier.common import load_config, resolve, utf8_stdout, write_json
+from tag_classifier.common import (
+    load_config, load_scores, read_renames, read_review_rows, resolve, stale_models, utf8_stdout, write_json,
+)
+
+# keep column -> kept?  Empty = not decided yet (not exported).
+KEEP = {"y": True, "1": True, "n": False, "0": False, "": False}
 
 
-def read_reviews(folder: Path) -> tuple[dict[str, dict[str, list[str]]], list[str]]:
-    """{curriculum: {tag label: [courses]}} from keep = y rows, and a list of errors."""
+def read_reviews(folder: Path) -> tuple[dict[str, dict[str, list[str]]], list[str], list[str]]:
+    """{curriculum: {tag label: [courses]}} from kept rows; errors (stop the export) and warnings."""
     out: dict[str, dict[str, list[str]]] = {}
-    errors = []
+    errors, warnings = [], []
     for path in sorted(folder.glob("*.csv")):
         tags: dict[str, list[str]] = {}
-        with open(path, encoding="utf-8-sig", newline="") as f:
-            for line, row in enumerate(csv.DictReader(f), start=2):
-                keep = (row.get("keep") or "").strip().lower()
-                if keep not in ("y", "n", ""):
-                    errors.append(f"{path.name}:{line} tag {row.get('tag')}: keep must be y, n or empty, got {row['keep']!r}")
-                    continue
-                if keep != "y":
-                    continue
-                label = (row.get("rename") or row.get("label_en") or row.get("label_vi") or row["tag"]).strip()
-                courses = sorted(set(row.get("courses", "").replace(",", " ").split()))
-                if not courses:
-                    errors.append(f"{path.name}:{line} tag {row.get('tag')}: kept but has no courses")
-                    continue
-                tags[label] = sorted(set(tags.get(label, [])) | set(courses))
+        for line, row in enumerate(read_review_rows(path), start=2):
+            keep = (row.get("keep") or "").strip().lower()
+            if keep not in KEEP:
+                errors.append(f"{path.name}:{line} tag {row.get('tag')}: keep must be y / 1, n / 0 or empty, "
+                              f"got {row['keep']!r}")
+                continue
+            if not KEEP[keep]:
+                continue
+            label = (row.get("rename") or row.get("label_en") or row.get("label_vi") or row["tag"]).strip()
+            courses = sorted(set((row.get("courses") or "").replace(",", " ").split()))
+            if not courses:
+                warnings.append(f"{path.name}:{line} tag {row.get('tag')}: kept but has no courses, skipped")
+                continue
+            tags[label] = sorted(set(tags.get(label, [])) | set(courses))
         out[path.stem] = tags
-    return out, errors
+    return out, errors, warnings
+
+
+def stale_rename_warnings(cfg: dict[str, Any], codes: list[str]) -> list[str]:
+    out = []
+    for code in codes:
+        if (resolve(cfg["classify"]["out_dir"]) / f"{code}.json").exists():
+            stale = stale_models(load_scores(cfg, f"{code}.json"), read_renames(cfg, code))
+            if stale:
+                out.append(f"{code}: renames not re-scored by {', '.join(stale)}, so renamed tags keep the courses "
+                           "of their old names (run classify, then review)")
+    return out
 
 
 def build(by_curriculum: dict[str, dict[str, list[str]]]) -> dict[str, Any]:
@@ -68,8 +84,11 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--dry-run", action="store_true", help="validate and print, write nothing")
     args = ap.parse_args(argv)
     utf8_stdout()
-    cfg = load_config()["review"]
-    by_curriculum, errors = read_reviews(resolve(cfg["out_dir"]))
+    full = load_config()
+    cfg = full["review"]
+    by_curriculum, errors, warnings = read_reviews(resolve(cfg["out_dir"]))
+    for w in warnings + stale_rename_warnings(full, list(by_curriculum)):
+        print(f"WARNING: {w}")
     if errors:
         raise SystemExit("export stopped:\n  " + "\n  ".join(errors))
     data = build(by_curriculum)

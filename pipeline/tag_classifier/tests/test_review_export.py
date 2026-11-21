@@ -7,8 +7,8 @@ import csv
 import pytest
 
 from tag_classifier.export import build, read_reviews
-from tag_classifier.common import read_decisions
-from tag_classifier.review import COLUMNS, stale_models
+from tag_classifier.common import read_decisions, stale_models
+from tag_classifier.review import COLUMNS
 
 
 def write_csv(path, rows):
@@ -42,21 +42,22 @@ def test_read_reviews_exports_kept_rows_with_rename(tmp_path):
         {"tag": "web", "label_en": "web programming", "courses": "CO3049", "keep": ""},
     ])
     write_csv(tmp_path / "C2.csv", [{"tag": "x", "label_vi": "Toán ứng dụng", "courses": "MT2013", "keep": "y"}])
-    by_curr, errors = read_reviews(tmp_path)
-    assert errors == []
+    by_curr, errors, warnings = read_reviews(tmp_path)
+    assert errors == [] and warnings == []
     assert by_curr == {"C1": {"AI": ["CO3061", "CO3117"], "big data": ["CO3137", "CO4033"]},
                        "C2": {"Toán ứng dụng": ["MT2013"]}}
     data = build(by_curr)
     assert data["tags"] == {"AI": ["CO3061", "CO3117"], "Toán ứng dụng": ["MT2013"], "big data": ["CO3137", "CO4033"]}
 
 
-def test_read_reviews_reports_typos_and_empty_course_lists(tmp_path):
+def test_typo_is_an_error_and_kept_row_without_courses_is_skipped(tmp_path):
     write_csv(tmp_path / "C1.csv", [{"tag": "a", "label_en": "a", "courses": "X1", "keep": "yes"},
-                                    {"tag": "b", "label_en": "b", "courses": "", "keep": "y"}])
-    _, errors = read_reviews(tmp_path)
-    assert len(errors) == 2
-    assert "keep must be y, n or empty" in errors[0] and "'yes'" in errors[0]
-    assert "no courses" in errors[1]
+                                    {"tag": "b", "label_en": "b", "courses": "", "keep": "y"},
+                                    {"tag": "c", "label_en": "c", "courses": "X3", "keep": "1"}])
+    by_curr, errors, warnings = read_reviews(tmp_path)
+    assert len(errors) == 1 and "keep must be y / 1, n / 0 or empty" in errors[0] and "'yes'" in errors[0]
+    assert len(warnings) == 1 and "tag b: kept but has no courses, skipped" in warnings[0]
+    assert by_curr == {"C1": {"c": ["X3"]}}
 
 
 def test_build_merges_same_label_across_curricula():
@@ -65,7 +66,24 @@ def test_build_merges_same_label_across_curricula():
     assert data["by_curriculum"]["C2"] == {"logic": ["B", "A"]}
 
 
-@pytest.mark.parametrize("value", ["y", "n", "", " Y ", "N"])
+@pytest.mark.parametrize("value", ["y", "n", "", " Y ", "N", "1", "0"])
 def test_valid_keep_values(tmp_path, value):
     write_csv(tmp_path / "C1.csv", [{"tag": "a", "label_en": "a", "courses": "X1", "keep": value}])
     assert read_reviews(tmp_path)[1] == []
+
+
+def test_keep_1_exports_and_0_does_not(tmp_path):
+    write_csv(tmp_path / "C1.csv", [{"tag": "a", "label_en": "a", "courses": "X1", "keep": "1"},
+                                    {"tag": "b", "label_en": "b", "courses": "X2", "keep": "0"}])
+    assert read_reviews(tmp_path) == ({"C1": {"a": ["X1"]}}, [], [])
+
+
+def test_reads_a_csv_re_saved_by_excel_as_tab_separated_ansi(tmp_path, capsys):
+    path = tmp_path / "C1.csv"
+    text = ("tag\tlabel_vi\tcourses\tkeep\trename\tnote\r\n"
+            "XLA\tXử lý ảnh\tCO3057 CO3059\ty\tcomputer vision\t\r\n")
+    path.write_bytes(text.encode("cp1252", errors="replace"))   # what Excel does: unstorable letters -> "?"
+    assert read_decisions(path) == {"XLA": {"keep": "y", "rename": "computer vision", "note": ""}}
+    assert "not UTF-8" in capsys.readouterr().err
+    by_curriculum, errors, _ = read_reviews(tmp_path)
+    assert errors == [] and by_curriculum == {"C1": {"computer vision": ["CO3057", "CO3059"]}}
