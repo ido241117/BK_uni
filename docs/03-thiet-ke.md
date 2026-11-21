@@ -131,6 +131,25 @@ Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, và
 | `apis/planner/index.ts` | `solvePlan`, `previewMybk` | Gọi API (chờ tối đa 2 phút) |
 | `types/planner.ts` | `SolvePlanPayload`, `PlanResult`, `MybkPreview`… | Kiểu dữ liệu khớp hợp đồng |
 
+### 5.4 Python `pipeline/tag_classifier/` (đang làm, từ 21/11)
+
+Pipeline riêng tìm tag cho môn học từ đề cương trong database, để nhóm chọn tag cuối cùng (file CSV) rồi xuất sang `pipeline/planner/data/course-tags.json`. Không chạy khi giải lộ trình; có venv riêng. Chi tiết: `pipeline/tag_classifier/README.md`.
+
+| File | Vai trò | Hàm chính |
+|---|---|---|
+| `common.py` | Shared by every step: config and paths, JSON / JSON Lines I/O, the topic-section list, loaders for courses, curricula, candidates and scores files | `load_config`, `load_records`, `load_curriculum`, `load_scores` |
+| `extract.py` | Đọc database (chỉ đọc) → `data/snapshot/`; bước duy nhất chạm database | `fetch`, `assemble` |
+| `preprocess.py` + `text.py` | Làm sạch đề cương → `data/courses.jsonl`, log từng thay đổi → `logs/preprocess.csv` | `preprocess`, `assign_languages`, `pick_versions`, `clean_text` |
+| `eda.py` | Báo cáo dữ liệu sau bước 1 → `reports/01-data/report.md` + biểu đồ | `write_report` |
+| `candidates.py` + `candidates_report.py` | Candidate tags per curriculum (structure, profile, clustered syllabus phrases), merge, suggested English labels, coverage, quality numbers → `data/candidates/`, `reports/02-candidates/` | `Builder.build`, `Builder.syllabus`, `Builder.judge`, `quality`, `render` |
+| `models.py`, `phrases.py`, `structure.py` | Lazy embedding model (also used by the embedding scorer) and spaCy; section text, template lines, per-line noun-phrase cache, catalogue rarity, MMR; structure candidates, specialization lists, elective set | `Embedder`, `NounPhraser`, `section_text`, `PhraseIndex`, `template_lines`, `mmr`, `structure_candidates`, `specialization_members` |
+| `classify.py` + `scorers.py` | Step 3: score each elective course × section × candidate tag with NLI, embedding and keyword scorers; SQLite score cache; tags renamed in the review CSV are scored under the new name | `classify`, `units`, `apply_renames`, `NLIScorer`, `EmbeddingScorer`, `KeywordScorer` |
+| `aggregate.py` | Step 4: course tags by rule (a), majority of sections | `course_tags`, `aggregate` |
+| `evaluate.py` + `metrics.py` + `charts.py` | Step 5: automatic evaluation (specialization recall, kappa, Krippendorff's alpha, section consistency, language stability) | `Evaluation`, `krippendorff_alpha`, `cohen_kappa` |
+| `review.py`, `export.py` | Step 6: review CSV per curriculum (keeps the team's answers on regeneration); export kept tags to `pipeline/planner/data/course-tags.json` | `write`, `read_reviews`, `build` |
+| `bundle.py`, `merge_cache.py`, `notebooks/colab_classify.ipynb` | NLI scoring on a Colab GPU without database access; merge the Colab score cache locally | `merge` |
+| `config.toml` | Ngưỡng và mẫu của mọi bước | — |
+
 ---
 
 ## 6. Hợp đồng API

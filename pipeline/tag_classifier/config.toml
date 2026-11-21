@@ -1,0 +1,209 @@
+# Cấu hình tag_classifier. Mọi ngưỡng và mẫu của các bước nằm ở đây để kiểm tra và đổi được
+# mà không sửa code. Đường dẫn tương đối tính từ thư mục pipeline/tag_classifier/.
+
+[database]
+# File .env của backend (DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_SCHEMA, DB_SSL_MODE).
+# Chỉ đọc; không in giá trị nào ra màn hình.
+env_file = "../../Backend/.env"
+
+[paths]
+snapshot_dir = "data/snapshot"
+courses_file = "data/courses.jsonl"
+preprocess_log = "logs/preprocess.csv"
+preprocess_summary = "data/preprocess_summary.json"
+
+[preprocess]
+
+# Một đề cương dùng được khi tổng độ dài các phần nội dung (sau khi làm sạch) của ít nhất một
+# ngôn ngữ đạt ngưỡng này (số ký tự).
+min_topic_chars = 200
+
+# Nhận diện ngôn ngữ từng dòng (từ 12 chữ cái trở lên) bằng tỉ lệ chữ có dấu tiếng Việt trên
+# tổng số chữ cái. Từ vi_diacritic_ratio trở lên: chắc chắn tiếng Việt (nguồn hay điền tiếng Việt
+# vào ô tiếng Anh). Từ en_max_diacritic_ratio trở xuống: chắc chắn tiếng Anh. Ở giữa (tiếng Việt
+# lẫn nhiều thuật ngữ Anh, vd 0.07): để nguyên ở ô nguồn.
+vi_diacritic_ratio = 0.08
+en_max_diacritic_ratio = 0.01
+
+# Một dòng xuất hiện trong ít nhất chừng này môn khác nhau được liệt kê vào bảng "dòng lặp lại"
+# của bản tóm tắt (chỉ báo cáo, không tự xóa) để bổ sung mẫu bên dưới có căn cứ.
+repeated_line_min_courses = 15
+
+# Buổi học chỉ là chỗ trống hoặc mục hành chính: so khớp cả dòng (không phân biệt hoa thường)
+# sau khi làm sạch, thì bỏ buổi đó.
+placeholder_patterns = [
+  '^(topic|chủ đề|chu de)\s*\d*$',
+  '^(mid-?term|midterm exam|mid-term exam|final|final exam|exam|kiểm tra giữa kỳ|thi giữa kỳ|thi cuối kỳ)\.?$',
+  '^(review|revision|review and recess|ôn tập|ôn tập và nghỉ|summary and review)\.?$',
+  '^(review for the final (test|exam)|final review)\.?$',
+  '^(course introduction|course information|giới thiệu môn học)\.?$',
+  # Mục thủ tục của buổi đầu (bảng "dòng lặp lại" của preprocess_summary.json: 70-211 môn mỗi dòng).
+  '^(giới thiệu về môn học|introduction to the (course|subject))\.?$',
+  '^(cách thức dạy và học|teaching and learning methods?)\.?$',
+  '^(các vấn đề liên quan đến môn học|subject-related issues)\.?$',
+  "^(thông tin thầy/cô|teacher'?s information|thông tin giảng viên|lecturer'?s? information)\\.?$",
+  '^(holiday|nghỉ lễ|recess|reserve|dự phòng)\.?$',
+  '^[\W\d_]*$',
+]
+
+# Dòng thủ tục lặp lại trong nhiều đề cương: bỏ dòng (không bỏ cả phần).
+# Không neo ở đầu dòng: có đề cương ghi "Exercise: Self-study requirement for students: 8 hours".
+boilerplate_line_patterns = [
+  'self-?study requirements?',
+  'yêu cầu tự học',
+  '^students should read the material carefully before joining the class\.?$',
+]
+
+[candidates]
+out_dir = "data/candidates"
+report_dir = "reports/02-candidates"
+# Mô hình nhúng đa ngôn ngữ: xếp hạng cụm từ khóa và gộp ứng viên cùng nghĩa giữa hai ngôn ngữ.
+embed_model = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+# Không dịch máy: Helsinki-NLP/opus-mt-vi-en dịch sai ("Trí tuệ nhân tạo ứng dụng" -> "U.S.
+# Intelligence Applications") và chậm; VietAI/envit5-translation không tải được với transformers 5.
+
+# Tên khối / nhóm môn: bỏ phần chung trước khi xét. Tên còn lại thuộc danh sách generic thì bỏ.
+name_prefixes = ["chuyên ngành", "tự chọn ngành", "tự chọn", "cơ sở ngành"]
+generic_names = [
+  "chuyên ngành", "tự chọn", "tự chọn tự do", "tự do", "tự chọn ngành", "tự chọn (khác)/tự do", "tự chọn khác",
+  "cơ sở ngành", "bắt buộc", "bắt buộc (suy ra)", "tốt nghiệp", "điều kiện tốt nghiệp", "nhập môn",
+  "chứng chỉ giáo dục quốc phòng", "giáo dục quốc phòng", "giáo dục thể chất",
+  "kỹ thuật ngoài ngành", "các môn toán và khoa học tự nhiên khác",
+]
+
+# Cụm từ khóa: cụm 1-3 từ liền nhau (từ dừng, dấu câu cắt cụm), xếp theo cosine với văn bản, chọn
+# bằng MMR để các cụm của một văn bản khác nhau (cách của KeyBERT).
+ngram_max = 3
+mmr_diversity = 0.5
+course_top_n = 8          # cụm mỗi đề cương
+profile_top_n = 15        # tối đa số cụm hồ sơ CTĐT giữ (xếp theo cosine tốt nhất với một môn)
+min_courses = 2           # ứng viên phải xuất hiện (từ vựng hoặc thành viên khối) ở >= chừng này môn
+max_syllabus_candidates = 40
+# Từ không mang chủ đề, bỏ khỏi cụm (không đưa "learning", "systems"... vì nằm trong cụm có nghĩa).
+stop_words = [
+  "student", "students", "course", "courses", "lecture", "lectures", "lecturer", "chapter", "chapters",
+  "subject", "knowledge", "skill", "skills", "ability", "abilities", "able", "understand", "understanding",
+  "basic", "concept", "concepts", "introduction", "overview", "graduates", "graduate", "program",
+  "programs", "major", "field", "fields", "provide", "provides", "including", "various",
+  "exam", "exams", "mid-term", "midterm", "final", "quiz", "homework", "assignment", "assignments",
+  "use", "using", "used", "learn", "learner", "learners", "able", "will", "upon", "completion",
+  # Filler adjectives that only add noise to a phrase ("appropriate deep learning").
+  "appropriate", "suitable", "relevant", "typical", "simple", "certain", "necessary", "important",
+  "specific", "particular", "related", "different", "new", "main", "general",
+]
+# Hai ứng viên có cosine nhãn >= ngưỡng này thì gộp.
+merge_threshold = 0.85
+
+# Cụm chỉ gồm danh từ / tính từ / tên riêng (spaCy), kết thúc bằng danh từ; bỏ token là thực thể
+# nơi chốn, người, ngày, số. Không bỏ ORG: mô hình nhỏ gắn ORG cho cả "Artificial Intelligence",
+# "IoT", "Big Data"; tên công ty (VNPT, Facebook) bị loại bởi min_best_match.
+spacy_model = "en_core_web_sm"
+excluded_entity_types = ["GPE", "LOC", "PERSON", "NORP", "DATE", "TIME", "CARDINAL", "ORDINAL", "PERCENT", "MONEY", "QUANTITY"]
+# Cụm có trong hơn tỉ lệ này của mọi đề cương dùng được (toàn trường, tiếng Anh) là từ chung
+# ("implement", "application", "topics"), không phải chủ đề. Chỉ áp cho cụm từ đề cương và hồ sơ.
+max_catalogue_df_ratio = 0.05
+# Cụm của hồ sơ CTĐT gọi tên lĩnh vực, không phải câu chữ trong đề cương, nên độ phủ tính theo
+# nghĩa: môn có cosine(văn bản môn, cụm) >= ngưỡng. 0.40 chọn từ đo trên KHMT 2023 (21/11): cụm rác
+# ("vnpt", "highest", "job", "core") phủ 0 môn, lĩnh vực thật ("big data applications",
+# "network security", "IoT") phủ 6-27 môn; phân vị 90 của mọi cặp (cụm, môn) là 0.375.
+semantic_threshold = 0.40
+# Cụm (hồ sơ và đề cương) phải là chủ đề rõ của ít nhất một môn: cosine tốt nhất >= ngưỡng này.
+# Cùng lần đo: lĩnh vực thật 0.55-0.77, cụm rác <= 0.35.
+min_best_match = 0.50
+
+# Noun phrases are cached per line (the cache never goes stale when thresholds change).
+phrase_cache = "data/line_phrases.jsonl.gz"
+# A line repeated verbatim in at least this many different courses is template text ("Student
+# group reports on major subject matter topics"): skipped when extracting candidate phrases,
+# kept for classification.
+template_min_courses = 3
+# ... and has at least this many words. Measured 2026-11-21: repeated 1-5 word lines are mostly
+# topic headings ("chain drive", "mass moment of inertia"); copied procedural sentences have 10+.
+template_min_words = 8
+# Syllabus phrases of all courses in a curriculum are clustered by meaning (average linkage);
+# phrases in one cluster have average cosine >= this. A cluster is one candidate.
+cluster_threshold = 0.70
+# Peaked match: best course match minus the median match over the curriculum's courses. A vague
+# phrase ("seminars") is a little similar to everything, a topic ("big data") strongly to a few.
+# Measured on KHMT 2023 (2026-11-21): vague phrases 0.15-0.22 ("seminars" 0.21, "technology
+# disciplines" 0.21), topics 0.24 and up ("computer science" 0.28, "artificial intelligence" 0.30).
+min_peak = 0.23
+# A structure name without an English label gets the closest English phrase of the curriculum's
+# own profile and syllabi as a suggestion, if cosine >= this (single-word names get none).
+# Same run: plausible suggestions 0.69-0.83 ("Xử lý ảnh và Thị giác máy tính" -> "computer vision").
+suggest_threshold = 0.65
+
+[classify]
+out_dir = "data/scores"
+cache = "cache/scores.sqlite"
+checkpoint_every = 256    # pairs scored between cache writes and progress lines
+# Only courses in the curriculum's elective groups are scored: the ASP engine uses tags only for
+# electives (score(E, S) is defined for in(E, el)). Set to false to score every course.
+electives_only = true
+# Scorers. lang "en": English text and English labels only (tags with only a Vietnamese label are
+# skipped); "multi": English text, else Vietnamese; "vi": Vietnamese text and labels where they exist
+# (used to check that a model gives the same tags in both languages).
+# max_tokens caps premise + hypothesis length (CPU time grows with it); longer sections are cut.
+# facebook/bart-large-mnli was dropped after the CPU pilot (2026-11-21): oldest, 1024-token limit,
+# and three NLI models triple the GPU time.
+
+[[classify.models]]
+id = "modernbert"
+kind = "nli"
+model = "MoritzLaurer/ModernBERT-large-zeroshot-v2.0"
+hypothesis = "This course is about {label}."
+lang = "en"
+max_tokens = 512
+batch_size = 8
+min_score = 0.5
+
+[[classify.models]]
+id = "bge-m3-zeroshot"
+kind = "nli"
+model = "MoritzLaurer/bge-m3-zeroshot-v2.0"
+hypothesis = "This course is about {label}."
+lang = "multi"
+max_tokens = 512
+batch_size = 8
+min_score = 0.5
+
+[[classify.models]]
+id = "embedding"
+kind = "embedding"
+model = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+lang = "multi"
+# (cosine + 1) / 2 >= 0.70 is cosine >= 0.40, the coverage threshold measured in step 2.
+min_score = 0.70
+
+[[classify.models]]
+id = "embedding-vi"
+kind = "embedding"
+model = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+lang = "vi"
+min_score = 0.70
+
+[[classify.models]]
+id = "keyword"
+kind = "keyword"
+lang = "en"
+min_score = 0.5
+
+[aggregate]
+out_dir = "data/tags"
+# Rule (a): in each topic section take the top section_top_k tags scoring >= the model's min_score;
+# keep a tag for the course if it was picked in >= min_section_share of the course's sections.
+section_top_k = 10
+min_section_share = 0.5
+
+[evaluate]
+report_dir = "reports/03-eval"
+# Krippendorff's usual bar: alpha >= 0.667 for tentative conclusions, >= 0.8 for firm ones.
+reliable_alpha = 0.667
+# Same scorer on English vs Vietnamese text: the tags of a course should not depend on the language.
+stability_pairs = [["embedding", "embedding-vi"]]
+
+[review]
+out_dir = "review"
+# Model whose course assignments fill the `courses` column: the first one present in the scores.
+primary_models = ["modernbert", "bge-m3-zeroshot", "embedding"]
+export_file = "../planner/data/course-tags.json"

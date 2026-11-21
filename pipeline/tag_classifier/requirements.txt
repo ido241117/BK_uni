@@ -1,0 +1,13 @@
+# Bước 1: trích + tiền xử lý + báo cáo dữ liệu
+psycopg[binary]>=3.2
+matplotlib>=3.8
+pytest>=8
+# Bước 2: tag ứng viên. torch bản CPU:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.5
+transformers>=4.48
+sentence-transformers>=3.3
+spacy>=3.8
+# Mô hình spaCy (MIT): python -m spacy download en_core_web_sm
+numpy>=1.26
+scikit-learn>=1.5

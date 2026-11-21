@@ -1,0 +1,4 @@
+# Dữ liệu trích từ database và kết quả trung gian: sinh lại được bằng các bước của pipeline.
+data/
+logs/
+cache/

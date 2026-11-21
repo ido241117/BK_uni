@@ -1,0 +1,574 @@
+{
+ "agreement": {
+  "alpha_mean": 0.29785811630215997,
+  "alpha_per_tag": {
+   "CND": 0.2676809210526315,
+   "CNP": 0.3036521084337349,
+   "MMA": 0.6496978149697814,
+   "TNT": 0.4032888888888889,
+   "XLA": 0.7078891257995736,
+   "adder-circuits": 0.0,
+   "ai-algorithm": 0.1318124207858048,
+   "application-development": 0.16002452483139173,
+   "applied-cryptography": 0.34885931558935357,
+   "artificial-neural-network": 0.2974358974358974,
+   "big-data": 0.9056473829201102,
+   "big-data-applications": 0.38215686274509797,
+   "box-testing-technique": 0.269722814498934,
+   "business-contexts": 0.5371621621621622,
+   "classical-experimental-physics": NaN,
+   "communication-topics": 0.027151211361737815,
+   "complexity-classifier-analysis": 0.30544993662864384,
+   "computer-engineering-disciplines": 0.062311111111111206,
+   "data-applications": 0.42677824267782427,
+   "data-engineering-solutions": 0.2584202085004009,
+   "deep-learning-networks": 0.3705096073517127,
+   "design-organisational-structure": 0.05980392156862735,
+   "develop-management-information": 0.0821402349486049,
+   "digital-competence": 0.028707577870757728,
+   "implement-network-management": 0.17522179974651453,
+   "internet-architecture": 0.23576042278332354,
+   "khoa-hoc-may-tinh": 0.25919830727636073,
+   "khoa-hoc-tu-nhien": -0.014814814814814836,
+   "kinh-te-chinh-tri-xa-hoi-luat": 0.3911111111111112,
+   "language-learning": 0.12366737739872069,
+   "large-language-models": 0.29447565543071164,
+   "leninist-perspective": NaN,
+   "logic": -0.00366300366300365,
+   "mathematical-theory-problems": -0.007352941176470562,
+   "mobile-system-application": 0.7169421487603306,
+   "natural-language": 1.0,
+   "network-systems": 0.6133798140770252,
+   "networking": 0.6694015444015444,
+   "ngoai-ngu": NaN,
+   "parallel-processing-model": 0.5421888053467001,
+   "platforms": 0.08437761069340022,
+   "practical-database-systems": 0.3752849977200182,
+   "programming-code": 0.27470588235294113,
+   "project-management-approaches": 0.2556916177992411,
+   "project-requirement": 0.08840304182509506,
+   "protocols-implementation": 0.35642982971227244,
+   "quan-ly": 0.18774703557312256,
+   "routing-methods": 0.2416974169741697,
+   "semantic-processor": 0.10365013774104681,
+   "software-architecture-styles": 0.11250661025912212,
+   "software-design": 0.25381263616557737,
+   "software-development-methodologies": 0.05841924398625431,
+   "software-projects": 0.18493380258086145,
+   "test-software": 0.5082051282051282,
+   "toan": NaN,
+   "vietnam": NaN,
+   "vocabulary": 0.2416974169741697,
+   "web-programming": 0.47709923664122134
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.31785225032577175,
+   "bge-m3-zeroshot vs embedding-vi": 0.288564667427093,
+   "bge-m3-zeroshot vs keyword": 0.35024765517968165,
+   "bge-m3-zeroshot vs modernbert": 0.5631803535661419,
+   "embedding vs embedding-vi": 0.6748756621509902,
+   "embedding vs keyword": 0.138879022519003,
+   "embedding vs modernbert": 0.3035604331920751,
+   "embedding-vi vs keyword": 0.10802024456019876,
+   "embedding-vi vs modernbert": 0.29658250217150406,
+   "keyword vs modernbert": 0.22200135498328494
+  },
+  "tags_reliable": 5,
+  "tags_with_alpha": 53
+ },
+ "courses": 55,
+ "curriculum": "CS-2023-KHMT",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 12702,
+   "scored": 11310,
+   "seconds": 17920.0,
+   "seconds_per_pair": 1.5844
+  },
+  "embedding": {
+   "pairs": 12702,
+   "scored": 12238,
+   "seconds": 32.3,
+   "seconds_per_pair": 0.0026
+  },
+  "embedding-vi": {
+   "pairs": 12702,
+   "scored": 12296,
+   "seconds": 27.5,
+   "seconds_per_pair": 0.0022
+  },
+  "keyword": {
+   "pairs": 12483,
+   "scored": 12027,
+   "seconds": 1.5,
+   "seconds_per_pair": 0.0001
+  },
+  "modernbert": {
+   "pairs": 12483,
+   "scored": 11115,
+   "seconds": 19271.9,
+   "seconds_per_pair": 1.7339
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.41666666666666663,
+   "courses": 51,
+   "jaccard": 0.47908496732026146
+  },
+  "embedding": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.7819444444444444,
+   "courses": 51,
+   "jaccard": 0.4431273519508814
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.4192890442890443,
+   "courses": 51,
+   "jaccard": 0.42091557679792974
+  },
+  "keyword": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.0,
+   "courses": 51,
+   "jaccard": 0.5418300653594771
+  },
+  "modernbert": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.2,
+   "courses": 51,
+   "jaccard": 0.5586452762923352
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {
+    "CND": {
+     "precision_lb": 1.0,
+     "recall": 0.08333333333333333
+    },
+    "CNP": {
+     "precision_lb": 0.35,
+     "recall": 0.7777777777777778
+    },
+    "MMA": {
+     "precision_lb": 0.5714285714285714,
+     "recall": 0.5
+    },
+    "TNT": {
+     "precision_lb": 0.5,
+     "recall": 0.2
+    },
+    "XLA": {
+     "precision_lb": 1.0,
+     "recall": 0.125
+    }
+   },
+   "precision_lb": 0.6842857142857143,
+   "recall": 0.3372222222222222
+  },
+  "embedding": {
+   "per_specialization": {
+    "CND": {
+     "precision_lb": 0.5,
+     "recall": 0.25
+    },
+    "CNP": {
+     "precision_lb": 0.5384615384615384,
+     "recall": 0.7777777777777778
+    },
+    "MMA": {
+     "precision_lb": 0.5,
+     "recall": 0.25
+    },
+    "TNT": {
+     "precision_lb": 0.5555555555555556,
+     "recall": 0.3333333333333333
+    },
+    "XLA": {
+     "precision_lb": 1.0,
+     "recall": 0.125
+    }
+   },
+   "precision_lb": 0.6188034188034188,
+   "recall": 0.3472222222222222
+  },
+  "embedding-vi": {
+   "per_specialization": {
+    "CND": {
+     "precision_lb": 0.5555555555555556,
+     "recall": 0.4166666666666667
+    },
+    "CNP": {
+     "precision_lb": 0.3333333333333333,
+     "recall": 0.8888888888888888
+    },
+    "MMA": {
+     "precision_lb": 0.4,
+     "recall": 0.25
+    },
+    "TNT": {
+     "precision_lb": 0.4,
+     "recall": 0.6666666666666666
+    },
+    "XLA": {
+     "precision_lb": 1.0,
+     "recall": 0.25
+    }
+   },
+   "precision_lb": 0.5377777777777778,
+   "recall": 0.49444444444444446
+  },
+  "keyword": {
+   "per_specialization": {
+    "CND": {
+     "precision_lb": 1.0,
+     "recall": 0.08333333333333333
+    },
+    "CNP": {
+     "precision_lb": 1.0,
+     "recall": 0.3333333333333333
+    },
+    "MMA": {
+     "precision_lb": 0.42857142857142855,
+     "recall": 0.75
+    },
+    "TNT": {
+     "precision_lb": 0.75,
+     "recall": 0.2
+    },
+    "XLA": {
+     "precision_lb": 1.0,
+     "recall": 0.125
+    }
+   },
+   "precision_lb": 0.8357142857142857,
+   "recall": 0.29833333333333334
+  },
+  "modernbert": {
+   "per_specialization": {
+    "CND": {
+     "precision_lb": 1.0,
+     "recall": 0.16666666666666666
+    },
+    "CNP": {
+     "precision_lb": 0.34782608695652173,
+     "recall": 0.8888888888888888
+    },
+    "MMA": {
+     "precision_lb": 0.5,
+     "recall": 0.375
+    },
+    "TNT": {
+     "precision_lb": 0.8333333333333334,
+     "recall": 0.3333333333333333
+    },
+    "XLA": {
+     "precision_lb": 0.5,
+     "recall": 0.125
+    }
+   },
+   "precision_lb": 0.636231884057971,
+   "recall": 0.37777777777777777
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.5373506796234069
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   4,
+   1,
+   2,
+   3,
+   5,
+   1,
+   1,
+   3,
+   1,
+   2,
+   2,
+   3,
+   5,
+   2,
+   3,
+   4,
+   1,
+   2,
+   1,
+   3,
+   2,
+   2,
+   3,
+   1,
+   3,
+   1,
+   1,
+   3,
+   2,
+   2,
+   4,
+   2,
+   2,
+   4,
+   1,
+   5,
+   2,
+   3,
+   6,
+   5,
+   4,
+   4,
+   0,
+   6,
+   3,
+   1,
+   4,
+   2,
+   1,
+   1,
+   2,
+   0,
+   2,
+   1,
+   1
+  ],
+  "embedding": [
+   10,
+   9,
+   9,
+   10,
+   10,
+   2,
+   6,
+   7,
+   5,
+   1,
+   2,
+   8,
+   9,
+   2,
+   10,
+   4,
+   3,
+   5,
+   3,
+   4,
+   10,
+   7,
+   6,
+   3,
+   1,
+   5,
+   4,
+   10,
+   12,
+   10,
+   7,
+   6,
+   6,
+   9,
+   4,
+   9,
+   13,
+   9,
+   8,
+   7,
+   6,
+   5,
+   4,
+   11,
+   8,
+   9,
+   11,
+   7,
+   9,
+   2,
+   1,
+   7,
+   8,
+   4,
+   8
+  ],
+  "embedding-vi": [
+   11,
+   10,
+   10,
+   10,
+   9,
+   6,
+   12,
+   6,
+   5,
+   0,
+   5,
+   12,
+   11,
+   6,
+   12,
+   5,
+   5,
+   8,
+   9,
+   6,
+   10,
+   11,
+   10,
+   6,
+   8,
+   8,
+   4,
+   9,
+   10,
+   9,
+   7,
+   8,
+   9,
+   11,
+   8,
+   9,
+   8,
+   12,
+   10,
+   12,
+   9,
+   9,
+   9,
+   9,
+   8,
+   12,
+   11,
+   6,
+   11,
+   4,
+   2,
+   8,
+   11,
+   3,
+   7
+  ],
+  "keyword": [
+   1,
+   1,
+   2,
+   1,
+   0,
+   2,
+   1,
+   0,
+   1,
+   0,
+   2,
+   1,
+   2,
+   0,
+   3,
+   3,
+   1,
+   1,
+   1,
+   1,
+   2,
+   1,
+   2,
+   0,
+   2,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   1,
+   5,
+   0,
+   1,
+   1,
+   2,
+   1,
+   1,
+   0,
+   2,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   5,
+   5,
+   4,
+   7,
+   6,
+   2,
+   0,
+   2,
+   1,
+   3,
+   4,
+   4,
+   9,
+   3,
+   5,
+   8,
+   6,
+   3,
+   1,
+   2,
+   3,
+   2,
+   4,
+   2,
+   1,
+   1,
+   1,
+   2,
+   2,
+   2,
+   8,
+   9,
+   9,
+   7,
+   4,
+   7,
+   4,
+   4,
+   7,
+   7,
+   6,
+   7,
+   1,
+   5,
+   4,
+   8,
+   8,
+   3,
+   0,
+   1,
+   0,
+   0,
+   2,
+   1,
+   1
+  ]
+ }
+}
