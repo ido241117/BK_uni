@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { Alert, Card, DatePicker, Descriptions, Form, Input, InputNumber, Select, Typography } from 'antd';
+import { useEffect } from 'react';
+import { Alert, Card, DatePicker, Descriptions, Form, Input, InputNumber, Typography } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
@@ -11,6 +11,7 @@ import { getMyProfile, saveMyProfile } from '@/apis/student';
 import { useApiMutation, useApiQuery, useCurrentUser } from '@/hooks';
 import { ROLE_LABEL, type StudentProfile, type StudentProfilePayload } from '@/types';
 import CurriculumOverview from './CurriculumOverview';
+import CurriculumPicker from './CurriculumPicker';
 
 const { Paragraph, Text } = Typography;
 
@@ -63,11 +64,6 @@ const ProfilePage = () => {
 
     const profile = profileQuery.data ?? null;
 
-    const curricula = curriculaQuery.data;
-    const curriculumOptions = useMemo(
-        () => (curricula ?? []).map(item => ({ value: item.id, label: `${item.code} · ${item.name}` })),
-        [curricula],
-    );
     // Nạp lại form khi hồ sơ về (kể cả `null` ⇒ form trống) và sau mỗi lần lưu.
     // `resetFields` trước để trường đã xoá trên server về đúng trạng thái rỗng.
     useEffect(() => {
@@ -202,18 +198,10 @@ const ProfilePage = () => {
                                 <Form.Item
                                     name="curriculum_id"
                                     label="Chương trình đào tạo"
-                                    extra="Dùng làm chương trình mặc định ở trang Kế hoạch học tập."
+                                    extra="Chọn ngành và khóa theo bảng chương trình đào tạo của trường; bấm “Lưu thay đổi” để áp dụng. Dùng làm chương trình ở trang Môn học & kế hoạch."
+                                    style={{ gridColumn: '1 / -1' }}
                                 >
-                                    <Select
-                                        size="large"
-                                        allowClear
-                                        showSearch
-                                        optionFilterProp="label"
-                                        placeholder="Chọn chương trình đào tạo"
-                                        loading={curriculaQuery.isLoading}
-                                        options={curriculumOptions}
-                                        style={{ width: '100%' }}
-                                    />
+                                    <CurriculumPicker curricula={curriculaQuery.data ?? []} loading={curriculaQuery.isLoading} />
                                 </Form.Item>
                             </div>
 

@@ -721,3 +721,65 @@
     .board-legend-item { display: inline-flex; align-items: center; gap: 6px; }
     .board-legend-swatch { width: 12px; height: 12px; border-radius: 3px; border-left: 3px solid; }
 }
+
+/* Trang Hồ sơ: chọn CTĐT qua bảng chương trình của trường (pages/profile/CurriculumPicker). */
+@layer components {
+    .curriculum-picker-field {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        background: var(--bg-surface);
+    }
+
+    .program-chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .program-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        border: 1px solid transparent;
+        border-radius: var(--radius-pill);
+        font: inherit;
+        font-size: 12px;
+        line-height: 20px;
+        white-space: nowrap;
+    }
+    .program-chip[data-state='available'] {
+        border-color: var(--brand);
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .program-chip[data-state='available']:hover,
+    .program-chip[data-state='available']:focus-visible { background: var(--brand-soft-strong); }
+    .program-chip[data-state='selected'] {
+        border-color: var(--brand);
+        background: var(--brand);
+        color: var(--brand-contrast);
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .program-chip[data-state='unavailable'] {
+        border-color: var(--border-soft);
+        background: var(--bg-subtle);
+        color: var(--text-muted);
+        cursor: not-allowed;
+    }
+
+    .program-chip-legend {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    .program-chip-legend .program-chip { cursor: default; }
+    .program-chip-legend .program-chip + .program-chip,
+    .program-chip-legend .program-chip:nth-of-type(2) { margin-left: 10px; }
+}
