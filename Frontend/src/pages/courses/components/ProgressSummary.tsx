@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ProgressRing } from './charts';
 
 /**
  * Khối số liệu tiến độ dùng chung cho trang Môn học và Phân tích học tập.
@@ -17,23 +18,9 @@ interface ProgressHeroProps {
 
 /** Con số chính: vòng phần trăm + "118 / 128 TC" + chú thích. */
 export const ProgressHero = ({ percent, value, total, unit, label, caption }: ProgressHeroProps) => {
-    const radius = 42;
-    const circumference = 2 * Math.PI * radius;
-    const clamped = Math.max(0, Math.min(100, percent));
     return (
         <div className="progress-hero">
-            <svg viewBox="0 0 100 100" className="progress-hero-ring" role="img" aria-label={`Đã đạt ${clamped.toFixed(0)}%`}>
-                <circle cx="50" cy="50" r={radius} className="viz-ring-track" />
-                <circle
-                    cx="50"
-                    cy="50"
-                    r={radius}
-                    className="viz-ring-value"
-                    strokeDasharray={`${(clamped / 100) * circumference} ${circumference}`}
-                    transform="rotate(-90 50 50)"
-                />
-                <text x="50" y="57" textAnchor="middle" className="viz-ring-text">{clamped.toFixed(0)}%</text>
-            </svg>
+            <ProgressRing percent={percent} />
             <div className="progress-hero-body">
                 <div className="metric-label">{label}</div>
                 <div className="progress-hero-value">

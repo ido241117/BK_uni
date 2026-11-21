@@ -14,6 +14,7 @@ import {
     type OutlineExam,
 } from '@/types';
 import { currentSemester } from '../../analysis/semester';
+import { CategoryStackBar, DonutChart } from '../charts';
 import {
     COMPONENT_LABEL,
     COMPONENT_ORDER,
@@ -51,21 +52,6 @@ const TextBlock = ({ title, text }: { title: string; text: string | null }) => (
     </div>
 ) : null);
 
-/** Danh sách thanh ngang: nhãn, thanh tỉ lệ so với `scale`, giá trị. */
-const BarList = ({ rows, unit, scale }: { rows: { key: string; label: string; value: number }[]; unit: string; scale: number }) => (
-    <div className="outline-bars">
-        {rows.map(row => (
-            <div key={row.key} className="outline-bar-row">
-                <span className="outline-bar-label">{row.label}</span>
-                <span className="outline-bar-track" aria-hidden>
-                    <span className="outline-bar-fill" style={{ width: `${Math.min(100, (row.value / (scale || 1)) * 100)}%` }} />
-                </span>
-                <span className="outline-bar-value">{row.value} {unit}</span>
-            </div>
-        ))}
-    </div>
-);
-
 const componentRows = (components: OutlineComponents) => COMPONENT_ORDER
     .filter(key => (components[key] ?? 0) > 0)
     .map(key => ({ key, label: COMPONENT_LABEL[key], value: components[key]! }));
@@ -91,7 +77,7 @@ const WorkloadTab = ({ content, lang }: { content: OutlineContent; lang: Outline
     return (
         <div className="analysis-grid">
             <Card size="small" title="Cách tính điểm">
-                {weights.length ? <BarList rows={weights} unit="%" scale={100} /> : <Text type="secondary">Đề cương không ghi tỷ lệ đánh giá.</Text>}
+                {weights.length ? <DonutChart rows={weights} centerCaption="tổng điểm" /> : <Text type="secondary">Đề cương không ghi tỷ lệ đánh giá.</Text>}
                 {exams.length > 0 && (
                     <Descriptions column={1} size="small" style={{ marginTop: 16 }}>
                         {exams.map(item => <Descriptions.Item key={item.key} label={item.label}>{item.text}</Descriptions.Item>)}
@@ -104,7 +90,7 @@ const WorkloadTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                     {content.hours.total_study_hours && <Text>≈ <Text strong>{content.hours.total_study_hours}</Text> giờ học tập</Text>}
                     {content.credits_ects && <Text type="secondary">{content.credits_ects} ECTS</Text>}
                 </Space>
-                {hours.length > 0 && <BarList rows={hours} unit="tiết" scale={Math.max(...hours.map(row => row.value))} />}
+                {hours.length > 0 && <CategoryStackBar rows={hours} unit="tiết" title="Số tiết" />}
                 {credits.length > 0 && (
                     <div style={{ marginTop: 12 }}>
                         <Text type="secondary" style={{ fontSize: 12 }}>Phân bổ tín chỉ: </Text>

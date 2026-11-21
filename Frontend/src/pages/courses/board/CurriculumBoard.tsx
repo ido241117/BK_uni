@@ -23,6 +23,7 @@ import { computeCurriculumBlocks, summarizeCurriculumCredits } from '@/utils/cur
 import { toastMessage } from '@/utils/toast';
 import type { StatusChange } from '@/utils/student-course-file';
 import CourseStatusFileActions from '../components/CourseStatusFileActions';
+import { StackedBar } from '../components/charts';
 import { MetricGroup, MetricTile, ProgressHero } from '../components/ProgressSummary';
 import { currentSemester, nextMainSemester, recommendedSemester } from '../analysis/semester';
 import CourseCard from './CourseCard';
@@ -356,21 +357,15 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
                                 </MetricGroup>
                             </div>
                         </div>
-                        <div
-                            className="viz-hbar"
-                            role="img"
-                            aria-label={`Đã tích lũy ${stats.completedCredits} trên ${stats.totalCredits} tín chỉ, đang học ${stats.inProgressCredits} tín chỉ`}
-                        >
-                            <div className="viz-hbar-seg viz-fill-done" style={{ width: `${pct(stats.completedCredits)}%` }} />
-                            <div className="viz-hbar-seg viz-fill-progress" style={{ width: `${pct(stats.inProgressCredits)}%` }} />
-                            <div className="viz-hbar-seg viz-fill-plan-status" style={{ width: `${pct(stats.plannedCredits)}%` }} />
-                        </div>
-                        <div className="viz-legend" style={{ marginTop: 8 }}>
-                            <span className="viz-legend-item"><span className="viz-swatch viz-fill-done" />Đã tích lũy</span>
-                            <span className="viz-legend-item"><span className="viz-swatch viz-fill-progress" />Đang học</span>
-                            <span className="viz-legend-item"><span className="viz-swatch viz-fill-plan-status" />Đã lên kế hoạch</span>
-                            <span className="viz-legend-item"><span className="viz-swatch viz-fill-track" />Còn thiếu</span>
-                        </div>
+                        <StackedBar
+                            title="Tín chỉ chuẩn tốt nghiệp"
+                            total={stats.totalCredits}
+                            segments={[
+                                { key: 'done', value: stats.completedCredits, label: 'Đã tích lũy' },
+                                { key: 'inProgress', value: stats.inProgressCredits },
+                                { key: 'planStatus', value: stats.plannedCredits },
+                            ]}
+                        />
                     </Card>
 
                     {draft.changeCount > 0 && (

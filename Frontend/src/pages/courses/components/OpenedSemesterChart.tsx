@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Tooltip, Typography } from 'antd';
 import { LuCheck, LuMinus } from 'react-icons/lu';
 import { currentSemester, parseSemester, toSemesterCode } from '../analysis/semester';
+import { RatioBar } from './charts';
 
 const { Text } = Typography;
 
@@ -119,11 +120,7 @@ const OpenedSemesterChart = ({ semesterCodes }: OpenedSemesterChartProps) => {
                     <span role="rowheader" className="opened-year">Tần suất</span>
                     {stats.map(stat => (
                         <div key={stat.term} role="cell" className="opened-freq">
-                            <div className="viz-hbar" style={{ height: 8 }}>
-                                {stat.count > 0 && (
-                                    <div className="viz-hbar-seg viz-fill-done" style={{ width: `${(stat.count / Math.max(1, stat.total)) * 100}%` }} />
-                                )}
-                            </div>
+                            <RatioBar value={stat.count} total={stat.total} />
                             <span className="opened-freq-text">{stat.count}/{stat.total} năm</span>
                         </div>
                     ))}

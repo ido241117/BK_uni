@@ -72,7 +72,7 @@
 }
 
 /*
- * Biểu đồ trang "Phân tích học tập". Màu series đã kiểm tra tách biệt cho người mù màu
+ * Token màu biểu đồ (khớp hex trong pages/courses/components/charts.tsx, chart canvas không đọc được biến CSS). Màu series đã kiểm tra tách biệt cho người mù màu
  * (xanh dương / xanh ngọc / vàng) ở cả hai chế độ; chữ luôn dùng màu chữ, không dùng màu series.
  */
 @layer components {
@@ -82,8 +82,6 @@
         --viz-planned: #eda100;
         --viz-suggested: #6250d6;
         --viz-track: #e8e8ea;
-        --viz-grid: #e1e0d9;
-        --viz-axis: #c3c2b7;
     }
 
     [data-theme='dark'] {
@@ -92,130 +90,7 @@
         --viz-planned: #c98500;
         --viz-suggested: #9085e9;
         --viz-track: #2a2f37;
-        --viz-grid: #2c2c2a;
-        --viz-axis: #383835;
     }
-
-    .viz-fill-done { background: var(--viz-done); }
-    .viz-fill-progress { background: var(--viz-progress); }
-    .viz-fill-planned { background: var(--viz-planned); }
-    .viz-fill-suggested { background: var(--viz-suggested); }
-    .viz-fill-track { background: var(--viz-track); }
-
-    .viz-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px 16px;
-        color: var(--text-secondary);
-        font-size: 12px;
-    }
-    .viz-legend-item { display: inline-flex; align-items: center; gap: 6px; }
-    .viz-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-
-    .viz-hbar {
-        display: flex;
-        gap: 2px;
-        width: 100%;
-        border-radius: 4px;
-        overflow: hidden;
-        background: var(--viz-track);
-    }
-    .viz-hbar-seg { height: 100%; min-width: 3px; transition: opacity 0.15s; }
-    .viz-hbar-seg:hover { opacity: 0.8; }
-
-    .viz-rows { display: grid; gap: 14px; }
-    .viz-row {
-        display: grid;
-        grid-template-columns: minmax(120px, 220px) 1fr auto;
-        align-items: center;
-        gap: 12px;
-    }
-    .viz-row-name { font-weight: 500; color: var(--text-primary); }
-    .viz-row-value { color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 13px; }
-    @media (max-width: 640px) {
-        .viz-row { grid-template-columns: 1fr auto; }
-        .viz-row .viz-hbar { grid-column: 1 / -1; grid-row: 2; }
-    }
-
-    .viz-columns-wrap { overflow-x: auto; }
-    .viz-columns { display: flex; min-width: 360px; }
-    .viz-axis {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 28px;
-        flex: none;
-        color: var(--text-muted);
-        font-size: 11px;
-        text-align: right;
-        padding-right: 6px;
-        margin: -6px 0;
-    }
-    .viz-plot {
-        position: relative;
-        flex: 1;
-        display: flex;
-        align-items: flex-end;
-        gap: 6px;
-        border-bottom: 1px solid var(--viz-axis);
-    }
-    .viz-grid { position: absolute; left: 0; right: 0; border-top: 1px solid var(--viz-grid); }
-    .viz-ref {
-        position: absolute;
-        left: 0;
-        right: 0;
-        border-top: 1px dashed var(--text-muted);
-        z-index: 1;
-        pointer-events: none;
-    }
-    .viz-ref span {
-        position: absolute;
-        right: 0;
-        top: -16px;
-        font-size: 11px;
-        color: var(--text-secondary);
-        background: var(--bg-surface);
-        padding: 0 4px;
-    }
-    .viz-col {
-        position: relative;
-        flex: 1;
-        height: 100%;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        border-radius: 6px 6px 0 0;
-        outline: none;
-        cursor: default;
-    }
-    .viz-col:hover, .viz-col:focus-visible { background: var(--brand-soft); }
-    .viz-col.is-highlight { background: var(--bg-subtle); }
-    .viz-col-stack {
-        width: min(36px, 70%);
-        display: flex;
-        flex-direction: column-reverse;
-        gap: 2px;
-        overflow: hidden;
-        border-radius: 4px 4px 0 0;
-    }
-    .viz-col-seg { min-height: 2px; }
-    .viz-xlabels {
-        display: flex;
-        gap: 6px;
-        min-width: 360px;
-        margin-top: 6px;
-        font-size: 11px;
-        color: var(--text-secondary);
-        text-align: center;
-    }
-    .viz-xlabels > span { flex: 1; line-height: 1.3; }
-    .viz-xlabels > span small { display: block; color: var(--text-muted); font-size: 10px; }
-    .viz-xlabels > span.is-highlight { color: var(--text-primary); font-weight: 600; }
-    .viz-axis-spacer { flex: none !important; width: 28px; }
-
-    .viz-ring-track { fill: none; stroke: var(--viz-track); stroke-width: 10; }
-    .viz-ring-value { fill: none; stroke: var(--viz-done); stroke-width: 10; stroke-linecap: round; }
-    .viz-ring-text { fill: var(--text-primary); font-size: 20px; font-weight: 700; }
 
     .analysis-grid {
         display: grid;
@@ -283,7 +158,6 @@
 
     .opened-foot { margin-top: 4px; }
     .opened-freq { display: grid; gap: 4px; justify-items: center; }
-    .opened-freq .viz-hbar { width: 100%; }
     .opened-freq-text { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
     .opened-legend {
@@ -445,19 +319,6 @@
     .outline-block-title.ant-typography { margin: 0; font-size: 15px; }
     .outline-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
 
-    .outline-bars { display: grid; gap: 8px; }
-    .outline-bar-row {
-        display: grid;
-        grid-template-columns: minmax(110px, 180px) 1fr auto;
-        gap: 10px;
-        align-items: center;
-        font-size: 13px;
-    }
-    .outline-bar-label { color: var(--text-secondary); }
-    .outline-bar-track { height: 10px; border-radius: 4px; background: var(--viz-track); overflow: hidden; }
-    .outline-bar-fill { display: block; height: 100%; background: var(--brand); border-radius: 4px; }
-    .outline-bar-value { font-variant-numeric: tabular-nums; min-width: 56px; text-align: right; }
-
     .outline-sessions { display: grid; gap: 12px; }
     .outline-session {
         display: grid;
@@ -491,8 +352,6 @@
 
     @media (max-width: 640px) {
         .outline-session { grid-template-columns: 1fr; gap: 4px; }
-        .outline-bar-row { grid-template-columns: 1fr auto; }
-        .outline-bar-track { grid-column: 1 / -1; grid-row: 2; }
         .outline-outcome { grid-template-columns: 64px 1fr; }
     }
 }
@@ -656,7 +515,6 @@
     }
     .course-card-planremove { margin-left: auto; border-color: transparent; background: transparent; }
     .course-card-planremove:not(:disabled):hover { border-color: var(--status-failed); background: var(--status-failed-soft); color: var(--status-failed); }
-    .viz-fill-plan-status { background: var(--status-planned); }
 
     .status-toggle {
         display: inline-flex;
@@ -802,7 +660,6 @@
         border-radius: var(--radius-md);
         background: var(--bg-subtle);
     }
-    .progress-hero-ring { width: 96px; height: 96px; flex: none; }
     .progress-hero-body { min-width: 0; display: grid; gap: 4px; }
     .progress-hero-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
     .progress-hero-number {
