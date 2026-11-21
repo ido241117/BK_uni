@@ -4,7 +4,7 @@
     tag_classifier/.venv/Scripts/python -m tag_classifier.bundle
 
 Contains the package code, config, data/courses.jsonl, the curricula file, the candidate files and
-the review CSVs (their rename column changes what is scored), plus the current score cache so Colab skips pairs already scored. No database settings (.env), no
+the review workbooks (their Rename column changes what is scored), plus the current score cache so Colab skips pairs already scored. No database settings (.env), no
 raw syllabus snapshot: the notebook never needs database access.
 """
 
@@ -21,7 +21,7 @@ def main() -> None:
     files = sorted(ROOT.glob("*.py")) + [ROOT / "config.toml", ROOT / "requirements.txt"]
     files += [resolve(cfg["paths"]["courses_file"]), resolve(cfg["paths"]["snapshot_dir"]) / "curricula.json"]
     files += sorted(resolve(cfg["candidates"]["out_dir"]).glob("*.json"))
-    files += sorted(resolve(cfg["review"]["out_dir"]).glob("*.csv"))
+    files += sorted(resolve(cfg["review"]["out_dir"]).glob("*.xlsx"))
     cache = resolve(cfg["classify"]["cache"])
     if cache.exists():
         files.append(cache)

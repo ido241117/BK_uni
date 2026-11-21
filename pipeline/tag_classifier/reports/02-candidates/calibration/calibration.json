@@ -1,0 +1,86 @@
+{
+ "courses": 1493,
+ "curricula": 49,
+ "max_false_positive_rate": 0.1,
+ "thresholds": {
+  "cluster_threshold": {
+   "by_threshold": {
+    "0.55": {
+     "candidates": 36.142857142857146,
+     "curricula": 21,
+     "overlap_pairs": 12.142857142857142,
+     "purity": 0.8409523809523808
+    },
+    "0.6": {
+     "candidates": 35.38095238095238,
+     "curricula": 21,
+     "overlap_pairs": 11.666666666666666,
+     "purity": 0.8447619047619048
+    },
+    "0.65": {
+     "candidates": 33.0,
+     "curricula": 21,
+     "overlap_pairs": 10.904761904761905,
+     "purity": 0.8566666666666666
+    },
+    "0.7": {
+     "candidates": 30.333333333333332,
+     "curricula": 21,
+     "overlap_pairs": 9.952380952380953,
+     "purity": 0.8595238095238094
+    },
+    "0.75": {
+     "candidates": 27.142857142857142,
+     "curricula": 20,
+     "overlap_pairs": 8.80952380952381,
+     "purity": 0.8654999999999999
+    },
+    "0.8": {
+     "candidates": 23.142857142857142,
+     "curricula": 20,
+     "overlap_pairs": 8.761904761904763,
+     "purity": 0.8565000000000002
+    }
+   },
+   "current": 0.7,
+   "curricula": 20,
+   "threshold": 0.75
+  },
+  "min_best_match": {
+   "at_current": {
+    "fpr": 0.026706231454005934,
+    "tpr": 0.24588766726327452
+   },
+   "current": 0.5,
+   "fpr": 0.09920420825465336,
+   "negatives": 14828,
+   "positives": 11733,
+   "threshold": 0.40059669017791755,
+   "tpr": 0.42120514787351915
+  },
+  "min_peak": {
+   "at_current": {
+    "fpr": 0.026706231454005934,
+    "tpr": 0.24588766726327452
+   },
+   "current": 0.23,
+   "fpr": 0.09920420825465336,
+   "negatives": 14828,
+   "positives": 11733,
+   "threshold": 0.19940463304519657,
+   "tpr": 0.42120514787351915
+  },
+  "semantic_threshold": {
+   "at_current": {
+    "fpr": 0.07350387604569134,
+    "tpr": 0.41098072087175186
+   },
+   "current": 0.4,
+   "fpr": 0.0999955476182231,
+   "negatives": 404278,
+   "positives": 11930,
+   "threshold": 0.3774797022342682,
+   "tpr": 0.46345347862531433
+  }
+ }
+}

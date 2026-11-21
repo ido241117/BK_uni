@@ -9,11 +9,11 @@ import json
 import numpy as np
 import pytest
 
-from tag_classifier.candidates import quality
+from tag_classifier.candidates import Builder, Curriculum, quality
 from tag_classifier.common import load_config
 from tag_classifier.models import NounPhraser
 from tag_classifier.phrases import PhraseIndex, mmr, specificity, template_lines
-from tag_classifier.structure import clean_structure_name, slug, structure_candidates
+from tag_classifier.structure import clean_structure_name, courses_to_tag, slug, structure_candidates
 
 CFG = load_config()["candidates"]
 PREFIXES = [p.lower() for p in CFG["name_prefixes"]]
@@ -64,6 +64,30 @@ def test_structure_candidates_key_by_specialization_code_and_merge_sources():
     assert c["key"] == "TNT" and c["label_vi"] == "Trí tuệ nhân tạo ứng dụng"
     assert c["members"] == ["CO2003", "CO3061", "CO3117"]
     assert {s["type"] for s in c["sources"]} == {"specialization", "group", "category"}
+
+
+def test_structure_candidates_keep_only_allowed_courses():
+    curr = {
+        "specializations": [{"code": "TNT", "name": "Trí tuệ nhân tạo ứng dụng", "description": None}],
+        "groups": [
+            {"name": "Chuyên ngành - nhóm C - Trí tuệ nhân tạo ứng dụng", "specialization": "TNT",
+             "members": ["CO3117", "CO3061", "CO2003"]},
+            {"name": "Toán", "specialization": None, "members": ["MT1003", "MT1005"]},   # compulsory block
+        ],
+        "categories": [],
+    }
+    [c] = structure_candidates(curr, CFG, allowed={"CO3117", "CO3061", "CO9999"})
+    assert c["key"] == "TNT" and c["members"] == ["CO3061", "CO3117"]
+    assert {x["label_vi"] for x in structure_candidates(curr, CFG)} == {"Trí tuệ nhân tạo ứng dụng", "Toán"}
+
+
+def test_courses_to_tag_are_the_usable_electives_of_the_program():
+    curr = {"courses": ["E1", "E2", "R1", "E3"],
+            "groups": [{"kind": "elective", "members": ["E1", "E2", "E3"]}, {"kind": "required", "members": ["R1"]}]}
+    records = {"E1": {"code": "E1", "usable": True}, "E2": {"code": "E2", "usable": False},
+               "R1": {"code": "R1", "usable": True}}            # E3 has no record (no syllabus)
+    assert [r["code"] for r in courses_to_tag(curr, records, electives_only=True)] == ["E1"]
+    assert [r["code"] for r in courses_to_tag(curr, records, electives_only=False)] == ["E1", "R1"]
 
 
 def course(code, lines):
@@ -151,3 +175,28 @@ def test_noun_phrases_drop_verbs_fillers_and_keep_fields_tagged_org(phraser):
     assert not any(p.startswith(("getting", "identifying", "appropriate")) for p in found)
     assert "deep learning" in found
     assert {"artificial intelligence", "iot", "big data applications"} <= found  # small model tags these ORG
+
+
+class StubEmbedder:
+    """Unit vectors chosen by hand, so the cosines in the test are known."""
+
+    def __init__(self, vectors):
+        self.vectors = vectors
+
+    def encode(self, texts):
+        return np.array([self.vectors[t] for t in texts], dtype=float)
+
+
+def test_judge_counts_a_clusters_own_courses_as_near():
+    # "build web" is a top phrase of A and B, but only A's whole syllabus is close to it (cosine 0.8 vs
+    # 0.3 < semantic_threshold 0.40): with its own courses counted, it covers 2 courses and passes.
+    builder = Builder.__new__(Builder)
+    builder.cfg = dict(CFG, semantic_threshold=0.40, min_best_match=0.50, min_peak=0.23, min_courses=2)
+    builder.embedder = StubEmbedder({"build web": [1.0, 0.0]})
+    docs = np.array([[0.8, 0.6], [0.3, np.sqrt(1 - 0.09)], [0.0, 1.0]])   # courses A, B, C
+    cur = Curriculum({}, [], ["A", "B", "C"], {}, {}, docs)
+    [plain] = builder.judge(["build web"], cur)
+    assert plain["near_courses"] == ["A"] and not plain["ok"]          # whole-syllabus similarity only
+    [own] = builder.judge(["build web"], cur, own=[{"A", "B"}])
+    assert own["near_courses"] == ["A", "B"] and own["ok"]
+    assert own["best_match"] == 0.8 and own["peak"] == 0.5            # 0.8 - median(0.8, 0.3, 0.0)

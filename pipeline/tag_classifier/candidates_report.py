@@ -34,14 +34,15 @@ def render(r: dict[str, Any]) -> str:
     lines = [
         f"# Candidate tags: {r['curriculum']}",
         "",
-        f"{r['name']} ({r['faculty']}). {r['courses_usable']}/{r['courses_total']} courses have a usable syllabus. "
+        f"{r['name']} ({r['faculty']}). {r['courses_usable']} of its {r['courses_total']} courses are used "
+        f"({'electives with a usable syllabus' if r.get('electives_only') else 'usable syllabus'}). "
         f"Raw candidates by source: {r['raw_counts']}; after merging and filtering: **{len(r['candidates'])}**, "
         f"dropped {len(r['dropped'])}.",
         "",
         "Coverage = courses of this curriculum: faculty members (structure), courses close in meaning (profile), "
         "courses where the cluster's phrases are top phrases or appear verbatim (syllabus). No machine translation: "
         "† = English label taken from a merged English phrase of this curriculum; *suggested* = closest English "
-        "phrase of this curriculum, to confirm in the review CSV.",
+        "phrase of this curriculum, to confirm in the review workbook.",
         "",
         "| Key | Vietnamese label | English label | Sources | Coverage | Example courses | Evidence |",
         "|---|---|---|---|---|---|---|",

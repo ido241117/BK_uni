@@ -1,14 +1,19 @@
-"""Step 6b: reviewed CSVs -> the planner's tag file (pipeline/planner/data/course-tags.json)
+"""Step 6b: reviewed workbooks -> the planner's tag file (pipeline/planner/data/course-tags.json)
 
     cd pipeline
     tag_classifier/.venv/Scripts/python -m tag_classifier.export --dry-run     # check, print, write nothing
     tag_classifier/.venv/Scripts/python -m tag_classifier.export
 
-Only rows with keep = y (or 1) are exported, under `rename` if given, else the English label, else
-the Vietnamese one; the `courses` column (which reviewers may edit) is the course list. Any keep value
-other than y / 1, n / 0 or empty stops the export with the offending rows listed, so a typo cannot
-silently drop or add a tag. A kept row with an empty `courses` column is skipped with a warning (a tag
-on no course does nothing in the planner). Renames not yet re-scored by classify also give a warning.
+Reads review/*.xlsx (sheet Tags). Only rows with Keep = Keep are exported, under Rename if given, else
+the Tag column; the course list is the first word of each line of the Courses column (reviewers may
+delete or add lines). Any Keep value other than Keep, Drop or empty stops the export with the rows
+listed, so a typo cannot silently drop or add a tag. A kept row with no courses is skipped with a
+warning (a tag on no course does nothing in the planner).
+
+A renamed tag is exported under its new name with the courses in its row. If classify has not scored
+the new name yet (the primary model's scores are for the old name), the tag is listed under
+"renamed_not_rescored" {curriculum: {new name: old name}}: a display rename the team accepted without
+re-scoring. Re-scoring is only needed when a rename changes what the tag means.
 
 Output: "tags" {tag: [courses]} is the format solve_asp.py reads today (tags of all curricula merged;
 the adapter only uses the student's own curriculum courses). "by_curriculum" keeps tags per
@@ -23,59 +28,64 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from tag_classifier.common import (
-    load_config, load_scores, read_renames, read_review_rows, resolve, stale_models, utf8_stdout, write_json,
-)
+from tag_classifier.common import load_config, load_scores, resolve, utf8_stdout, write_json
+from tag_classifier.workbook import KEEP_VALUES, course_codes, read_review_rows
 
-# keep column -> kept?  Empty = not decided yet (not exported).
-KEEP = {"y": True, "1": True, "n": False, "0": False, "": False}
+# Keep column (any letter case) -> kept?  Empty = not decided yet (not exported).
+KEEP = {"keep": True, "drop": False, "": False}
 
 
-def read_reviews(folder: Path) -> tuple[dict[str, dict[str, list[str]]], list[str], list[str]]:
-    """{curriculum: {tag label: [courses]}} from kept rows; errors (stop the export) and warnings."""
+def read_reviews(folder: Path) -> tuple[dict[str, dict[str, list[str]]], dict[str, dict[str, dict[str, str]]],
+                                         list[str], list[str]]:
+    """From kept rows: {curriculum: {tag name: [courses]}}, the renamed ones {curriculum: {tag key:
+    {"name", "old"}}}, errors (stop the export) and warnings."""
     out: dict[str, dict[str, list[str]]] = {}
+    renamed: dict[str, dict[str, dict[str, str]]] = {}
     errors, warnings = [], []
-    for path in sorted(folder.glob("*.csv")):
+    for path in sorted(folder.glob("*.xlsx")):
+        if path.name.startswith("~$"):  # Excel's lock file while the workbook is open
+            continue
         tags: dict[str, list[str]] = {}
-        for line, row in enumerate(read_review_rows(path), start=2):
-            keep = (row.get("keep") or "").strip().lower()
+        for row in read_review_rows(path):
+            where = f"{path.name} row {row['_row']} (tag {row.get('tag')})"
+            keep = row.get("keep", "").lower()
             if keep not in KEEP:
-                errors.append(f"{path.name}:{line} tag {row.get('tag')}: keep must be y / 1, n / 0 or empty, "
-                              f"got {row['keep']!r}")
+                errors.append(f"{where}: Keep must be {' or '.join(KEEP_VALUES)} or empty, got {row['keep']!r}")
                 continue
             if not KEEP[keep]:
                 continue
-            label = (row.get("rename") or row.get("label_en") or row.get("label_vi") or row["tag"]).strip()
-            courses = sorted(set((row.get("courses") or "").replace(",", " ").split()))
+            label = row.get("rename") or row.get("label") or row["tag"]
+            courses = course_codes(row.get("courses", ""))
             if not courses:
-                warnings.append(f"{path.name}:{line} tag {row.get('tag')}: kept but has no courses, skipped")
+                warnings.append(f"{where}: kept but has no courses, skipped")
                 continue
             tags[label] = sorted(set(tags.get(label, [])) | set(courses))
+            if row.get("rename"):
+                renamed.setdefault(path.stem, {})[row["tag"]] = {"name": row["rename"], "old": row.get("label", "")}
         out[path.stem] = tags
-    return out, errors, warnings
+    return out, renamed, errors, warnings
 
 
-def stale_rename_warnings(cfg: dict[str, Any], codes: list[str]) -> list[str]:
-    out = []
-    for code in codes:
-        if (resolve(cfg["classify"]["out_dir"]) / f"{code}.json").exists():
-            stale = stale_models(load_scores(cfg, f"{code}.json"), read_renames(cfg, code))
-            if stale:
-                out.append(f"{code}: renames not re-scored by {', '.join(stale)}, so renamed tags keep the courses "
-                           "of their old names (run classify, then review)")
-    return out
+def not_rescored(renamed: dict[str, dict[str, str]], scores: dict[str, Any] | None,
+                 primary_models: list[str]) -> dict[str, str]:
+    """{new name: old name} for renamed tags whose new name the primary model has not scored."""
+    model = next((m for m in primary_models if m in (scores or {}).get("scores", {})), None)
+    done = (scores or {}).get("renamed", {}).get(model, {})
+    return {r["name"]: r["old"] for key, r in sorted(renamed.items()) if done.get(key) != r["name"]}
 
 
-def build(by_curriculum: dict[str, dict[str, list[str]]]) -> dict[str, Any]:
+def build(by_curriculum: dict[str, dict[str, list[str]]],
+          unrescored: dict[str, dict[str, str]] | None = None) -> dict[str, Any]:
     merged: dict[str, set[str]] = defaultdict(set)
     for tags in by_curriculum.values():
         for label, courses in tags.items():
             merged[label].update(courses)
     return {
-        "_note": "Generated by pipeline/tag_classifier (export.py) from the reviewed CSVs in "
-                 "tag_classifier/review/. Edit the CSVs and re-export instead of editing this file.",
+        "_note": "Generated by pipeline/tag_classifier (export.py) from the reviewed workbooks in "
+                 "tag_classifier/review/. Edit the workbooks and re-export instead of editing this file.",
         "tags": {label: sorted(c) for label, c in sorted(merged.items())},
         "by_curriculum": {code: dict(sorted(tags.items())) for code, tags in sorted(by_curriculum.items())},
+        "renamed_not_rescored": {code: names for code, names in sorted((unrescored or {}).items()) if names},
     }
 
 
@@ -86,12 +96,19 @@ def main(argv: list[str] | None = None) -> None:
     utf8_stdout()
     full = load_config()
     cfg = full["review"]
-    by_curriculum, errors, warnings = read_reviews(resolve(cfg["out_dir"]))
-    for w in warnings + stale_rename_warnings(full, list(by_curriculum)):
+    by_curriculum, renamed, errors, warnings = read_reviews(resolve(cfg["out_dir"]))
+    for w in warnings:
         print(f"WARNING: {w}")
     if errors:
         raise SystemExit("export stopped:\n  " + "\n  ".join(errors))
-    data = build(by_curriculum)
+    unrescored = {}
+    for code, tags in renamed.items():
+        path = resolve(full["classify"]["out_dir"]) / f"{code}.json"
+        unrescored[code] = not_rescored(tags, load_scores(full, path.name) if path.exists() else None,
+                                        cfg["primary_models"])
+        for new, old in unrescored[code].items():
+            print(f'  {code}: "{new}" exported with the courses chosen for "{old}" (not re-scored)')
+    data = build(by_curriculum, unrescored)
     for code, tags in data["by_curriculum"].items():
         print(f"{code}: {len(tags)} tags kept")
     if args.dry_run:

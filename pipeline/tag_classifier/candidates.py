@@ -4,14 +4,17 @@
     tag_classifier/.venv/Scripts/python -m tag_classifier.candidates --curriculum CS-2023-KHMT
     tag_classifier/.venv/Scripts/python -m tag_classifier.candidates          # all curricula
 
-Three sources, all within one curriculum (thresholds in config.toml, [candidates]):
+Three sources, all within one curriculum and, with electives_only (config [scope]), only its elective
+courses (catalogue-wide statistics such as phrase rarity still use every syllabus). Thresholds in
+config.toml, [candidates]:
     structure  specializations, block and category names, with the faculty's course lists
     profile    noun phrases of the program profile (overview + career opportunities)
     syllabus   each course's top noun phrases, clustered by meaning across the curriculum's courses
 
 A profile or syllabus phrase is kept only if it is clearly about some course: its best match with a
-course is high (min_best_match), it is close to at least min_courses courses (semantic_threshold),
-and its match is peaked rather than vaguely similar to everything (min_peak). Candidates with the
+course is high (min_best_match), it covers at least min_courses courses (close by semantic_threshold,
+or, for a syllabus cluster, a course where its phrases are top phrases), and its match is peaked rather
+than vaguely similar to everything (min_peak). Thresholds are measured by calibrate.py. Candidates with the
 same meaning are merged; structure names without an English label get a suggested one from the
 curriculum's own English phrases (no machine translation).
 """
@@ -33,7 +36,9 @@ from tag_classifier.models import Embedder, NounPhraser
 from tag_classifier.phrases import (
     PhraseIndex, catalogue_ratios, course_lines, course_text, mmr, specificity, template_lines,
 )
-from tag_classifier.structure import slug, specialization_members, structure_candidates
+from tag_classifier.structure import (
+    courses_to_tag, elective_codes, slug, specialization_members, structure_candidates,
+)
 from tag_classifier.text import phrase_pattern
 
 ORIGIN_ORDER = {"structure": 0, "profile": 1, "syllabus": 2}
@@ -41,7 +46,8 @@ ORIGIN_ORDER = {"structure": 0, "profile": 1, "syllabus": 2}
 
 @dataclass
 class Curriculum:
-    """One curriculum's usable courses with their text and document vectors."""
+    """One curriculum's courses to tag (usable syllabi; electives only per config) with their text and
+    document vectors."""
     data: dict[str, Any]
     courses: list[dict[str, Any]]
     codes: list[str]
@@ -53,6 +59,7 @@ class Curriculum:
 class Builder:
     def __init__(self, cfg: dict[str, Any], records: dict[str, dict[str, Any]]) -> None:
         self.cfg = cfg["candidates"]
+        self.electives_only = cfg["scope"]["electives_only"]
         c = self.cfg
         self.records = records
         self.embedder = Embedder(c["embed_model"])
@@ -69,23 +76,25 @@ class Builder:
     # --- shared helpers ---------------------------------------------------------------------------
 
     def curriculum(self, data: dict[str, Any]) -> Curriculum:
-        courses = [self.records[x] for x in data["courses"] if x in self.records and self.records[x]["usable"]]
+        courses = courses_to_tag(data, self.records, self.electives_only)
         texts_en = {r["code"]: course_text(r, "en") for r in courses}
         texts_vi = {r["code"]: course_text(r, "vi") for r in courses}
         docs = [(texts_en[r["code"]] or texts_vi[r["code"]])[:4000] for r in courses]
         return Curriculum(data, courses, [r["code"] for r in courses], texts_en, texts_vi, self.embedder.encode(docs))
 
-    def judge(self, phrases: list[str], cur: Curriculum) -> list[dict[str, Any]]:
-        """How clearly each phrase is about some course of the curriculum."""
+    def judge(self, phrases: list[str], cur: Curriculum, own: list[set[str]] | None = None) -> list[dict[str, Any]]:
+        """How clearly each phrase is about some course of the curriculum. Near courses: syllabi with
+        cosine >= semantic_threshold, plus `own` (a syllabus cluster's source courses, where its phrases
+        are top phrases): a niche topic is rarely close to a whole syllabus, even the one teaching it."""
         if not phrases or not cur.codes:
             return []
         c = self.cfg
         sims = self.embedder.encode(phrases) @ cur.doc_vecs.T
         out = []
-        for phrase, row in zip(phrases, sims):
+        for k, (phrase, row) in enumerate(zip(phrases, sims)):
             best = float(row.max())
             peak = best - float(np.median(row))
-            near = [cur.codes[i] for i in np.where(row >= c["semantic_threshold"])[0]]
+            near = {cur.codes[i] for i in np.where(row >= c["semantic_threshold"])[0]} | (own[k] if own else set())
             out.append({"phrase": phrase, "best_match": round(best, 3), "best_course": cur.codes[int(row.argmax())],
                         "peak": round(peak, 3), "near_courses": sorted(near),
                         "ok": best >= c["min_best_match"] and peak >= c["min_peak"] and len(near) >= c["min_courses"]})
@@ -149,7 +158,7 @@ class Builder:
             courses = set().union(*(pool[p]["courses"] for p in members))
             if len(courses) >= c["min_courses"]:
                 groups.append((members, courses, sum(pool[p]["score"] for p in members)))
-        verdicts = {v["phrase"]: v for v in self.judge([g[0][0] for g in groups], cur)}
+        verdicts = {v["phrase"]: v for v in self.judge([g[0][0] for g in groups], cur, own=[g[1] for g in groups])}
         cands, rejected = [], []
         for members, courses, score in sorted(groups, key=lambda g: -g[2]):
             v = verdicts[members[0]]
@@ -231,7 +240,8 @@ class Builder:
         cur = self.curriculum(data)
         prof, prof_rejected, prof_phrases = self.profile(cur)
         syl, syl_rejected, syl_phrases = self.syllabus(cur)
-        raw = structure_candidates(data, self.cfg) + prof + syl
+        allowed = elective_codes(data) if self.electives_only else None
+        raw = structure_candidates(data, self.cfg, allowed) + prof + syl
         merged = self.merge(raw)
         self.suggest_labels(merged, sorted(set(prof_phrases) | set(syl_phrases)))
         kept, dropped = self.finalize(merged, cur)
@@ -240,6 +250,7 @@ class Builder:
             "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             "models": {"embed": self.cfg["embed_model"], "spacy": self.cfg["spacy_model"]},
             "courses_total": len(data["courses"]), "courses_usable": len(cur.courses),
+            "electives_only": self.electives_only,
             "raw_counts": {o: sum(x["origin"] == o for x in raw) for o in ORIGIN_ORDER},
             "candidates": kept, "dropped": dropped,
             "profile_rejected": sorted(prof_rejected, key=lambda v: -v["best_match"]),

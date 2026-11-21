@@ -12,6 +12,13 @@ courses_file = "data/courses.jsonl"
 preprocess_log = "logs/preprocess.csv"
 preprocess_summary = "data/preprocess_summary.json"
 
+[scope]
+# Tags are for elective courses only: the ASP engine uses them only for electives (score(E, S) is
+# defined for in(E, el)). Decided per program (a course can be elective in one program and compulsory
+# in another), so preprocessing stays catalogue-wide; candidates (step 2) and classify (step 3) use
+# only each program's electives. Set to false to tag every course.
+electives_only = true
+
 [preprocess]
 
 # Một đề cương dùng được khi tổng độ dài các phần nội dung (sau khi làm sạch) của ít nhất một
@@ -102,14 +109,16 @@ excluded_entity_types = ["GPE", "LOC", "PERSON", "NORP", "DATE", "TIME", "CARDIN
 # Cụm có trong hơn tỉ lệ này của mọi đề cương dùng được (toàn trường, tiếng Anh) là từ chung
 # ("implement", "application", "topics"), không phải chủ đề. Chỉ áp cho cụm từ đề cương và hồ sơ.
 max_catalogue_df_ratio = 0.05
-# Cụm của hồ sơ CTĐT gọi tên lĩnh vực, không phải câu chữ trong đề cương, nên độ phủ tính theo
-# nghĩa: môn có cosine(văn bản môn, cụm) >= ngưỡng. 0.40 chọn từ đo trên KHMT 2023 (21/11): cụm rác
-# ("vnpt", "highest", "job", "core") phủ 0 môn, lĩnh vực thật ("big data applications",
-# "network security", "IoT") phủ 6-27 môn; phân vị 90 của mọi cặp (cụm, môn) là 0.375.
-semantic_threshold = 0.40
-# Cụm (hồ sơ và đề cương) phải là chủ đề rõ của ít nhất một môn: cosine tốt nhất >= ngưỡng này.
-# Cùng lần đo: lĩnh vực thật 0.55-0.77, cụm rác <= 0.35.
-min_best_match = 0.50
+# A course is "about" a phrase when cosine(course text, phrase) >= this (profile phrases' coverage).
+# Measured by calibrate.py on 2026-11-21 (49 curricula, electives; report in reports/02-candidates/calibration/):
+# passes 46% of (top phrase, its course) pairs while letting through 10% of (phrase, course without it).
+# Old hand-picked value 0.40.
+semantic_threshold = 0.377
+# A profile phrase or cluster label must be clearly about some course: best cosine >= this.
+# Measured by calibrate.py on 2026-11-21 (49 curricula, electives; report in reports/02-candidates/calibration/):
+# chosen together with min_peak; the pair passes 42% of course top topic phrases and 10% of generic
+# phrases (old 0.50 / 0.23: 25% and 3%, which rejected niche topics such as "web programming").
+min_best_match = 0.401
 
 # Noun phrases are cached per line (the cache never goes stale when thresholds change).
 phrase_cache = "data/line_phrases.jsonl.gz"
@@ -122,24 +131,34 @@ template_min_courses = 3
 template_min_words = 8
 # Syllabus phrases of all courses in a curriculum are clustered by meaning (average linkage);
 # phrases in one cluster have average cosine >= this. A cluster is one candidate.
-cluster_threshold = 0.70
+# Measured by calibrate.py on 2026-11-21 (49 curricula, electives; report in reports/02-candidates/calibration/):
+# highest mean syllabus purity over 20 curricula with specializations (0.865; 0.70 gave 0.860, so the
+# evidence is weak). Silhouette was tried and dropped: it favoured large clusters merging topics.
+cluster_threshold = 0.75
 # Peaked match: best course match minus the median match over the curriculum's courses. A vague
 # phrase ("seminars") is a little similar to everything, a topic ("big data") strongly to a few.
-# Measured on KHMT 2023 (2026-11-21): vague phrases 0.15-0.22 ("seminars" 0.21, "technology
-# disciplines" 0.21), topics 0.24 and up ("computer science" 0.28, "artificial intelligence" 0.30).
-min_peak = 0.23
+# Measured by calibrate.py on 2026-11-21 (49 curricula, electives; report in reports/02-candidates/calibration/):
+# chosen together with min_best_match (see there).
+min_peak = 0.199
 # A structure name without an English label gets the closest English phrase of the curriculum's
 # own profile and syllabi as a suggestion, if cosine >= this (single-word names get none).
 # Same run: plausible suggestions 0.69-0.83 ("Xử lý ảnh và Thị giác máy tính" -> "computer vision").
 suggest_threshold = 0.65
 
+[calibrate]
+# calibrate.py measures min_best_match, min_peak, semantic_threshold and cluster_threshold from data
+# (method in its docstring). Each threshold passes the most positives while letting through at most
+# this share of the negatives (generic phrases, or courses that do not mention the phrase).
+max_false_positive_rate = 0.10
+# Curricula with at least this many courses to tag are measured (fewer give too few phrases).
+min_courses_to_tag = 20
+# cluster_threshold values tried; the one with the highest mean syllabus purity is reported.
+cluster_grid = [0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
+
 [classify]
 out_dir = "data/scores"
 cache = "cache/scores.sqlite"
 checkpoint_every = 256    # pairs scored between cache writes and progress lines
-# Only courses in the curriculum's elective groups are scored: the ASP engine uses tags only for
-# electives (score(E, S) is defined for in(E, el)). Set to false to score every course.
-electives_only = true
 # Scorers. lang "en": English text and English labels only (tags with only a Vietnamese label are
 # skipped); "multi": English text, else Vietnamese; "vi": Vietnamese text and labels where they exist
 # (used to check that a model gives the same tags in both languages).
@@ -172,15 +191,15 @@ id = "embedding"
 kind = "embedding"
 model = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 lang = "multi"
-# (cosine + 1) / 2 >= 0.70 is cosine >= 0.40, the coverage threshold measured in step 2.
-min_score = 0.70
+# (cosine + 1) / 2 >= 0.689 is cosine >= 0.377, semantic_threshold (measured by calibrate.py).
+min_score = 0.689
 
 [[classify.models]]
 id = "embedding-vi"
 kind = "embedding"
 model = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 lang = "vi"
-min_score = 0.70
+min_score = 0.689
 
 [[classify.models]]
 id = "keyword"

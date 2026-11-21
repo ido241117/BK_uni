@@ -26,6 +26,17 @@ def elective_codes(curr: dict[str, Any]) -> set[str]:
     return {m for g in curr["groups"] if g["kind"] == "elective" for m in g["members"]}
 
 
+def courses_to_tag(curr: dict[str, Any], records: dict[str, dict[str, Any]], electives_only: bool) -> list[dict[str, Any]]:
+    """The program's courses that tags are for: usable syllabi, and with electives_only (config [scope])
+    only members of the program's elective groups. A course can be elective in one program and
+    compulsory in another, so this is decided per program."""
+    codes = curr["courses"]
+    if electives_only:
+        electives = elective_codes(curr)
+        codes = [x for x in codes if x in electives]
+    return [records[x] for x in codes if x in records and records[x]["usable"]]
+
+
 def norm(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip().lower())
 
@@ -54,15 +65,20 @@ def clean_structure_name(name: str, prefixes: list[str], generic: set[str]) -> s
     return None if not t or norm(t) in generic else t
 
 
-def structure_candidates(curr: dict[str, Any], cfg: dict[str, Any]) -> list[dict[str, Any]]:
+def structure_candidates(curr: dict[str, Any], cfg: dict[str, Any], allowed: set[str] | None = None) -> list[dict[str, Any]]:
     """One candidate per distinct cleaned name. A specialization is keyed by its code (e.g. TNT);
-    a group or category with the same name joins it."""
+    a group or category with the same name joins it. With `allowed` (the program's electives), only
+    those courses count as members, and a name none of whose courses is allowed is skipped."""
     prefixes = [norm(p) for p in cfg["name_prefixes"]]
     generic = {norm(g) for g in cfg["generic_names"]}
     spec_by_name = {norm(s["name"]): s for s in curr["specializations"]}
     by_name: dict[str, dict[str, Any]] = {}
 
     def add(label: str, members: list[str], source: dict[str, Any]) -> None:
+        if allowed is not None:
+            members = [m for m in members if m in allowed]
+            if not members:
+                return
         spec = spec_by_name.get(norm(label))
         cand = by_name.setdefault(norm(label), {
             "key": spec["code"] if spec else slug(label), "label_vi": label, "label_en": None,

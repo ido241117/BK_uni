@@ -1,7 +1,7 @@
 # tag_classifier: tìm tag cho môn học từ đề cương
 
-Pipeline riêng, tách **tìm tag** (máy làm, đo được) khỏi **chọn tag** (nhóm quyết định trong file
-CSV). Tag cuối cùng được xuất sang `pipeline/planner/data/course-tags.json` để engine ASP dùng
+Pipeline riêng, tách **tìm tag** (máy làm, đo được) khỏi **chọn tag** (the team decides in an Excel
+workbook, `review/<code>.xlsx`). Tag cuối cùng được xuất sang `pipeline/planner/data/course-tags.json` để engine ASP dùng
 (`tag/2`, `interest/2`, mục tiêu `@0`). Không chạy khi giải lộ trình.
 
 Phạm vi: mọi môn có đề cương dùng được, xét **trong từng chương trình đào tạo**. Nguồn dữ liệu
@@ -30,8 +30,8 @@ Kết nối database lấy từ `Backend/.env` (đường dẫn trong `config.to
 | 3 | `python -m tag_classifier.classify --curriculum CODE [--model ID] [--limit N]` | scores per (course, section, tag, model) → `data/scores/<code>.json`, cache `cache/scores.sqlite` | done; NLI models need Colab |
 | 4 | `python -m tag_classifier.aggregate --curriculum CODE` | course tags by rule (a) → `data/tags/<code>.json` | done |
 | 5 | `python -m tag_classifier.evaluate --curriculum CODE` | automatic evaluation → `reports/03-eval/<name>/report.md` + charts | done |
-| 6 | `python -m tag_classifier.review --curriculum CODE`, then `export` | review CSV → `review/<code>.csv`; kept tags → `pipeline/planner/data/course-tags.json` | done |
-| – | `python -m tag_classifier.bundle`, `notebooks/colab_classify.ipynb`, `merge_cache` | NLI scoring on a Colab GPU | done, not yet run on Colab |
+| 6 | `python -m tag_classifier.review --curriculum CODE`, then `export` | review workbook → `review/<code>.xlsx`; kept tags → `pipeline/planner/data/course-tags.json` | done |
+| – | `python -m tag_classifier.bundle`, `notebooks/colab_classify.ipynb`, `merge_cache` | NLI scoring on a Colab GPU | done, run on Colab 2026-11-22 (0.03-0.05 s per pair on a T4) |
 
 `data/`, `logs/`, `cache/` không đưa vào git (sinh lại được). `reports/` đưa vào git.
 `review/` (the team's decisions) and `notebooks/` are committed too.
@@ -103,14 +103,17 @@ lại từ `data/` mỗi lần chạy.
 ## Step 2: candidate tags
 
 Candidates are the tag list the classifier (step 3) scores courses against; zero-shot classifiers
-cannot invent tags. Three sources, all within one curriculum (thresholds in `config.toml`,
-`[candidates]`):
+cannot invent tags. Three sources, all within one curriculum and, with `electives_only` (`[scope]`),
+only its **elective** courses: syllabus phrases, profile matching and the faculty's course lists ignore
+compulsory courses (a course can be elective in one program and compulsory in another, so this is
+decided per program; catalogue-wide statistics such as phrase rarity still use every syllabus).
+Thresholds in `config.toml`, `[candidates]`:
 
 | Source | Candidates | Coverage (courses of the curriculum) |
 |---|---|---|
 | `structure` | Specializations (key = **specialization code**, e.g. `TNT`; Vietnamese name looked up from the code), block and category names with the generic parts removed ("nhóm A", "(học kỳ 5)", "- 2026", "(bắt buộc)"); names that are only generic ("Tự chọn tự do") are dropped | Courses the faculty listed under it |
-| `profile` | Noun phrases of the program profile (overview + career opportunities, English) | Courses close in meaning: cosine(course text, phrase) ≥ 0.40 |
-| `syllabus` | Each course's top noun phrases (cosine with the syllabus × catalogue rarity, MMR), pooled over the curriculum's courses and **clustered by meaning** (average linkage, cosine ≥ 0.70); one cluster = one candidate, labelled by its most central phrase | Courses where the cluster's phrases are top phrases or appear verbatim |
+| `profile` | Noun phrases of the program profile (overview + career opportunities, English) | Courses close in meaning: cosine(course text, phrase) ≥ `semantic_threshold` |
+| `syllabus` | Each course's top noun phrases (cosine with the syllabus × catalogue rarity, MMR), pooled over the curriculum's courses and **clustered by meaning** (average linkage, cosine ≥ `cluster_threshold`); one cluster = one candidate, labelled by its most central phrase | Courses where the cluster's phrases are top phrases or appear verbatim |
 
 Filters:
 
@@ -124,9 +127,12 @@ Filters:
 - **Generic across the catalogue**: phrases in more than 5% of all usable syllabi ("methods", "design",
   "data") are excluded. This does not prevent broad tags inside one curriculum.
 - **Clearly about some course**: a profile phrase or a cluster label must have a best course match
-  ≥ 0.50, be close (≥ 0.40) to ≥ 2 courses, and have a **peaked** match: best minus median over the
-  curriculum ≥ 0.23. Vague phrases are a little similar to everything ("seminars" peak 0.21), topics
-  strongly to a few ("artificial intelligence" 0.30, "big data" 0.56). Company names fail here too.
+  ≥ `min_best_match`, cover ≥ `min_courses` courses, and have a **peaked** match: best minus median
+  over the curriculum ≥ `min_peak` (vague phrases are a little similar to everything, topics strongly
+  to a few). A course is covered when its syllabus is close to the phrase (cosine ≥ `semantic_threshold`)
+  or, for a syllabus cluster, when its phrases are among that course's top phrases: a niche topic is
+  rarely close to a whole syllabus, even the one teaching it ("build web" came from 3 courses but was
+  close to only 1 syllabus, and was rejected before this rule).
 - **Merge** candidates with the same meaning (label cosine ≥ 0.85, multilingual
   `paraphrase-multilingual-MiniLM-L12-v2`). A Vietnamese name that merges with an English phrase takes
   it as its English label (`TNT` ← "artificial intelligence" from the profile).
@@ -138,7 +144,19 @@ Filters:
   transformers 5.
 - **Coverage below 2 courses**: dropped, with the reason in `dropped`.
 
-All thresholds were measured on KHMT 2023 (values in the config comments). Every candidate keeps its
+**Calibration** (`calibrate.py`, settings in `[calibrate]`): `min_best_match`, `min_peak`,
+`semantic_threshold` and `cluster_threshold` are measured from data, without human labels, over the
+curricula with ≥ `min_courses_to_tag` courses to tag. Topic vs vague: positives are phrases the pipeline
+picked as a course's top topic phrases, negatives are generic phrases (common across the catalogue);
+phrase about a course: positive pairs are (top phrase, its course), negatives (top phrase, a course
+whose syllabus does not contain it). Each threshold passes the most positives while letting through at
+most `max_false_positive_rate` of the negatives (best match and peak are chosen together, since the rule
+applies both). `cluster_threshold` is the value with the highest mean syllabus purity of the candidates
+built with those thresholds. Two criteria were tried and dropped on KHMT 2023: maximising TPR - FPR
+(let one generic phrase in three through, 56 candidates with 43 overlapping pairs) and the silhouette
+score for clustering (favoured large clusters that merged distinct topics). Report, figures and values:
+`reports/02-candidates/calibration/`. The other thresholds (template lines, catalogue rarity, merge,
+suggested labels) are measured as noted in the config comments. Every candidate keeps its
 sources, course lists (`members`, `semantic`, `syllabus_courses`, `lexical_courses`, `coverage`) and
 evidence sentences; the report also lists every rejected phrase with its scores.
 
@@ -148,7 +166,8 @@ and **syllabus cluster purity**: the share of a cluster's specialization courses
 best specialization (1.0 = the cluster stays inside one faculty grouping, though the clustering never
 sees those groupings).
 
-Modules: `common.py` (config, file I/O, the topic-section list, loaders shared by all steps), `models.py`
+Modules: `common.py` (config, file I/O, the topic-section list, loaders shared by all steps),
+`calibrate.py` (threshold calibration), `models.py`
 (lazy embedding model, also used by the embedding scorer, and spaCy), `phrases.py` (section text, template lines, noun phrases cached
 per line in `data/line_phrases.jsonl.gz`, rebuilt when the phraser settings change; catalogue rarity;
 MMR), `structure.py` (structure candidates, specialization lists, elective set), `candidates.py` (sources, clustering, merge, labels,
@@ -157,20 +176,21 @@ coverage, quality, CLI), `candidates_report.py` (Markdown).
 Run time (CPU): first run ~2.5 min (noun phrases of 51,442 lines, then cached), then ~1 min per
 curriculum.
 
-### KHMT 2023 result (2026-11-21)
+### KHMT 2023 result (2026-11-21, electives only)
 
-58 candidates: 11 structure, 9 profile, 38 syllabus clusters; cluster purity 0.79. Good: the 5
-specializations (`TNT` "artificial intelligence", `CNP` "software systems", suggested `XLA` "computer
-vision", `CND` "business intelligence system", `MMA` "security"); "big data applications", "software
-design", "application development"; clusters such as "logic", "practical database systems", "artificial
-neural network", "applied cryptography", "web programming", "parallel processing model". Remaining
-noise: clusters joined by a shared surface word ("large language models" with "uml modeling language"),
-a few odd labels ("semantic processor"). Left to step 3 (model agreement) and the review CSV.
+33 candidates from the 55 electives with a usable syllabus: 7 structure, 7 profile, 19 syllabus
+clusters; cluster purity 0.78. Examples: the 5 specializations (`TNT` "artificial intelligence",
+suggested `CNP` "software technical", `XLA` "computer vision", `CND` "business intelligence system",
+`MMA` "security"); "software design", "big data applications", "practical database systems",
+"application architectures", "network threat models", "software testing techniques". Compulsory blocks
+(mathematics, natural sciences, languages, politics) no longer produce candidates. Suggested English
+labels still need checking in the review (e.g. "software technical", "management management tools").
+Full list: `reports/02-candidates/CS-2023-KHMT.md`.
 
 ## Step 3: classify (score every course × section × tag)
 
-`classify.py` scores each topic section of each **elective** course (`electives_only`: the ASP engine
-uses tags only for electives) against every candidate tag of the curriculum, with each scorer in
+`classify.py` scores each topic section of each **elective** course (`electives_only` in `[scope]`: the
+ASP engine uses tags only for electives) against every candidate tag of the curriculum, with each scorer in
 `config.toml` (`[[classify.models]]`):
 
 | id | Kind | Reads | Notes |
@@ -188,17 +208,18 @@ syllabi and courses shared by several curricula are scored once. `--limit N` sco
 courses only (pilot); `--batch-size` overrides the NLI batch size (64 on a GPU). Output:
 `data/scores/<code>.json` (`scores[model][course][section][tag]`, plus run time per model).
 
-**CPU cost (this laptop, i7-8550U, measured 2026-11-21)**: BART 2.1 s per pair (incl. load), ModernBERT
-3.8 s per pair (steady), embedding 0.003 s, keyword ~0. KHMT has 55 elective courses × 4 sections ×
-58 tags ≈ 12,700 pairs per model, i.e. 13 hours per NLI model on this CPU. The NLI models therefore run
-on Colab (below); the cheap scorers run locally in about a minute.
+**CPU cost (this laptop, i7-8550U, measured 2026-11-21)**: full KHMT runs took 1.73 s per pair for
+ModernBERT and 1.58 s for bge-m3 (12,500 pairs each, about 5 hours per model); embedding 0.003 s, keyword
+~0. KHMT now has 55 electives × 4 sections × 33 tags ≈ 7,200 pairs per model; the cache keeps every
+scored (section text, label) pair, so only new tags or renamed labels cost time. A whole-catalogue run
+still needs Colab (below).
 
 ## Step 4: aggregate (rule (a))
 
 `aggregate.py`: per model and course, each section's top `section_top_k` (10) tags scoring at least
 the model's `min_score` are picked; a tag is kept for the course if picked in at least
-`min_section_share` (half) of its sections. `min_score`: 0.5 for NLI and keyword; 0.70 for the
-embedding scorer, i.e. cosine 0.40, the coverage threshold measured in step 2. Output:
+`min_section_share` (half) of its sections. `min_score`: 0.5 for NLI and keyword; 0.689 for the
+embedding scorers, i.e. cosine 0.377 = `semantic_threshold` (measured by `calibrate.py`). Output:
 `data/tags/<code>.json`.
 
 ## Step 5: evaluate (automatic, no human labels)
@@ -218,55 +239,72 @@ Not measured yet: topic sections vs all sections (would need the extra sections 
 
 ## Step 6: review and export
 
-`review.py` writes `review/<code>.csv` (UTF-8 with BOM, opens in Excel), one row per candidate: labels,
-suggested English label, sources, the courses the primary model (first of `primary_models` present)
-assigned it to, Krippendorff's alpha and a reliable flag, which models assigned it anywhere, three
-evidence lines (course, best-scoring section, text), and empty `keep` / `rename` / `note`. Sorted
-doubtful first; tags with no scored course last. Regenerating keeps `keep` / `rename` / `note` (by tag
-key). **These CSVs are the team's decisions and are committed.**
+`review.py` writes **`review/<code>.xlsx`**, an Excel workbook (layout in `workbook.py`). A real Excel
+file rather than a CSV: saving it in Excel keeps Vietnamese text, line breaks and the dropdown (a CSV
+re-saved by Excel can come back tab-separated in the Windows codepage, with Vietnamese letters lost).
 
-**Renaming re-scores the tag.** A `rename` is the English name the models score from then on:
-`classify` reads the column, scores only the renamed tags under their new names (about 220 pairs per
-tag for KHMT: ~6-7 min per NLI model on this CPU, under a minute for the cheap scorers), and records the
-renames each model scored. Then `review` lists the courses for the new names. While the column and the
-scores disagree, `review` prints a warning naming the models to re-run. The `courses` column is
-regenerated on every `review` run, so edit course lists by hand only after the last re-scoring.
+- Sheet **Tags**, one row per candidate. Team columns first: **Keep** (dropdown Keep / Drop), **Rename**
+  (English name), **Note**. Then the tag name (the English label the models scored; "Name source" says
+  when it is only a suggestion to check), the Vietnamese name, the courses the primary model (first of
+  `primary_models` present) assigned it to, one per line as "CODE name", the course count,
+  Krippendorff's alpha across models, which models assigned it, sources, and evidence (best-scoring
+  section of the top courses). Rows below the reliable bar (`reliable_alpha`) are shaded and sorted
+  first; tags with no scored course come last. Header and team columns stay in view (frozen), with
+  filters on every column.
+- Sheet **Courses**: each scored elective with its tags (renamed names where given), to check course by
+  course. Not read back.
 
-Order of work:
+Regenerating keeps Keep / Rename / Note (matched by the Key column). Close the workbook in Excel before
+running `review` or `export`. **The workbooks are the team's decisions and are committed** (git shows
+them as binary: changes are not readable in a diff, and two branches editing the same workbook cannot
+be merged).
 
-1. Fill in `rename` where a name is wrong or vague (the course lists follow the name).
-2. `classify` (all models, or `--model` for some; Colab for many renames), then `review`.
-3. Fill in `keep` (y or 1 / n or 0), adjust `courses` by hand if needed, `note` for the reason.
-4. `export --dry-run`, then `export`.
+**Two kinds of rename.**
 
-`export.py` reads the CSVs and writes `pipeline/planner/data/course-tags.json`: only kept rows
-(`keep` = y or 1), named by `rename`, else the English label, else the Vietnamese one, with the
-`courses` column as the course list. Any `keep` value other than y / 1, n / 0 or empty stops the export
-with the rows listed. A kept row with no courses is skipped with a warning, and renames that classify
-has not re-scored yet are warned about. The CSVs are read as written by `review` or as re-saved by
-Excel (tab-separated or Windows codepage, with a warning); save from Excel as "CSV UTF-8". `--dry-run` validates and prints without writing. `"tags"` is the format
-`solve_asp.py` reads today (all curricula merged; the adapter only uses the student's own curriculum
-courses); `"by_curriculum"` keeps the per-curriculum split for a later adapter change. Students see the
-exported tags as interests on the Clingo tab of the planner page (`GET /api/plans/interest-tags`).
+- **Display name** (the quick way): type the new name, choose Keep, export. The courses stay the ones in
+  the row, chosen under the old name; export lists the tag under `renamed_not_rescored` in
+  `course-tags.json` ({curriculum: {new name: old name}}) and prints it. No re-scoring, no second review.
+- **Change of meaning** (the course list should follow the new name): after renaming, run `classify`
+  (CPU: about 220 pairs per renamed tag for KHMT, ~6 min per NLI model; or build a **new** Colab bundle,
+  which carries the workbook and therefore the renames), then `review`, which lists the courses for the
+  new name, and decide on those. Edit course lines by hand only after the last re-scoring: `review`
+  rebuilds the Courses column.
+
+Order of work: Rename where needed, then Keep / Drop (and Note), then `export --dry-run`, `export`.
+Re-score only the renames that change meaning.
+
+`export.py` reads `review/*.xlsx` and writes `pipeline/planner/data/course-tags.json`: rows with Keep,
+named by Rename, else the Tag column; the course list is the first word of each line of the Courses
+column. Any Keep value other than Keep, Drop or empty stops the export with the rows listed. A kept row
+with no courses is skipped with a warning, and kept renames that classify has not re-scored are listed
+under `renamed_not_rescored`. `--dry-run` validates and prints without writing. `"tags"` is the format `solve_asp.py` reads
+today (all curricula merged; the adapter only uses the student's own curriculum courses);
+`"by_curriculum"` keeps the per-curriculum split for a later adapter change. Students see the exported
+tags as interests on the Clingo tab of the planner page (`GET /api/plans/interest-tags`).
 
 ## Colab (NLI scoring on a GPU)
 
-1. Locally: `python -m tag_classifier.bundle` → `data/colab_bundle.zip` (code, config, cleaned courses,
-   curricula, candidates, review CSVs (for renames), current score cache; **no `.env`, no raw snapshot**).
+1. Locally, **after the last change to candidates or renames** (the bundle carries the candidate files;
+   a bundle made earlier scores the old tags): `python -m tag_classifier.bundle` →
+   `data/colab_bundle.zip` (code, config, cleaned courses,
+   curricula, candidates, review workbooks (for renames), current score cache; **no `.env`, no raw snapshot**).
 2. Colab: open `notebooks/colab_classify.ipynb`, T4 runtime, upload the bundle, run the cells. Scoring
    resumes from the cache if the session stops. Download `colab_scores.zip`.
-3. Locally: `python -m tag_classifier.merge_cache <unzipped>/tag_classifier/cache/scores.sqlite` (adds
-   the Colab scores without overwriting local ones), then `classify` (all models; NLI pairs come from the
-   cache), `evaluate`, `review`.
+3. Locally: unzip `colab_scores.zip` into `data/colab/<date>/` (git-ignored; keep the zip there too),
+   then `python -m tag_classifier.merge_cache data/colab/<date>/tag_classifier/cache/scores.sqlite`. It
+   adds the Colab scores without overwriting local ones and prints, per curriculum, how many pairs of the
+   current candidates are still unscored (non-zero: the bundle was older than the candidates; make a new
+   one). Then `classify` (all models; NLI pairs come from the cache), `evaluate`, `review`.
 
 Model downloads: set `HF_HOME` to choose where models are stored (this laptop used `D:/hf-cache`;
 drive C is nearly full).
 
 ### Status (2026-11-21)
 
-Steps 1-6 and the notebook are written and tested (61 tests). KHMT 2023: cheap scorers run on all 55
-electives; NLI models only on a 4-course CPU sample (pipeline check, too small for conclusions).
-The full NLI run waits for Colab access.
+Steps 1-6 and the notebook are written and tested. KHMT 2023 (restarted 2026-11-21 with electives-only
+candidates and calibrated thresholds): all five scorers done on 50 candidates (NLI on Colab,
+2026-11-22), evaluation in `reports/03-eval/CS-2023-KHMT/`, review workbook ready for the team's
+decisions. Other curricula: candidates not generated yet.
 
 ## Kiểm thử
 

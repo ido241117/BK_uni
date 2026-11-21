@@ -11,3 +11,4 @@ spacy>=3.8
 # Mô hình spaCy (MIT): python -m spacy download en_core_web_sm
 numpy>=1.26
 scikit-learn>=1.5
+openpyxl>=3.1                # review workbooks (review/<code>.xlsx)

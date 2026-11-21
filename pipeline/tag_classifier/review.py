@@ -1,34 +1,31 @@
-"""Step 6a: one CSV per curriculum for the team's final decision -> review/<code>.csv
+"""Step 6a: one Excel workbook per curriculum for the team's final decision -> review/<code>.xlsx
 
     cd pipeline
     tag_classifier/.venv/Scripts/python -m tag_classifier.review --curriculum CS-2023-KHMT
 
-One row per candidate tag: its labels and sources, the courses the primary model assigned it to,
-how far the models agree (Krippendorff's alpha), and evidence (best-scoring section of the top
-courses). Fill in `keep` (y / n), optionally `rename` and `note`, then run export. Regenerating keeps
-what was already filled in (matched by tag key). Rows are sorted doubtful first, so the review
-starts where judgment is needed; tags with no scored course come last. UTF-8 with BOM so Excel shows Vietnamese correctly.
+Sheet "Tags", one row per candidate tag: the tag name, the courses the primary model assigned it to
+(one per line, with names), how far the models agree (Krippendorff's alpha; rows below the reliable
+bar are shaded) and evidence (best-scoring section of the top courses). Fill in Keep (Keep / Drop),
+optionally Rename and Note, then run export. Rows are sorted doubtful first; tags with no scored course
+come last. Sheet "Courses": each elective with its tags, to check course by course. Regenerating keeps
+Keep / Rename / Note (matched by tag key); close the workbook in Excel first.
 
-After filling in `rename`, run classify again: it scores the new names, and this script then
-lists the courses for them. Until then it warns that the renames are not scored yet.
+A Rename is either a display name (export it as is; export marks it as not re-scored) or a change of
+meaning: then run classify again, which scores the new name, and this script lists its courses.
+Layout: workbook.py.
 """
 
 from __future__ import annotations
 
 import argparse
-import csv
 import math
 from pathlib import Path
 from typing import Any
 
-from tag_classifier.common import (
-    load_candidates, load_config, load_scores, read_decisions, read_renames, review_path, stale_models, utf8_stdout,
-)
+from tag_classifier.common import load_candidates, load_config, load_scores, stale_models, utf8_stdout
 from tag_classifier.evaluate import Evaluation
 from tag_classifier.phrases import section_text
-
-COLUMNS = ["tag", "label_vi", "label_en", "label_en_suggested", "sources", "courses", "course_count",
-           "alpha", "reliable", "models_assigning", "evidence_1", "evidence_2", "evidence_3", "keep", "rename", "note"]
+from tag_classifier.workbook import read_decisions, review_path, write_review
 
 
 def evidence(ev: Evaluation, model: str, tag: str, courses: list[str], names: dict[str, str], n: int = 3) -> list[str]:
@@ -44,12 +41,26 @@ def evidence(ev: Evaluation, model: str, tag: str, courses: list[str], names: di
     return out
 
 
-def rows(code: str, cfg: dict[str, Any], scores_name: str) -> list[dict[str, Any]]:
+def tag_name(cand: dict[str, Any]) -> tuple[str, str]:
+    """(name shown and exported unless renamed, where it comes from): the English label the models
+    scored, else the Vietnamese name."""
+    if cand.get("label_en"):
+        return cand["label_en"], ""
+    if cand.get("label_en_suggested"):
+        sug = cand["label_en_suggested"]
+        return sug["phrase"], f"suggested ({sug['similarity']:.2f}), check it"
+    return cand.get("label_vi") or cand["key"], "Vietnamese only"
+
+
+def sheets(code: str, cfg: dict[str, Any], scores_name: str, decisions: dict[str, dict[str, str]]
+           ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Rows of the Tags and Courses sheets."""
     scores = load_scores(cfg, scores_name)
-    stale = stale_models(scores, read_renames(cfg, code))
+    stale = stale_models(scores, {t: d["rename"] for t, d in decisions.items() if d["rename"]})
     if stale:
-        print(f"WARNING: the rename column changed since classify ran for {', '.join(stale)}; their course "
-              f"lists still come from the old names. Run: python -m tag_classifier.classify --curriculum {code}")
+        print(f"Note: renames not re-scored by {', '.join(stale)}; course lists still come from the old names. "
+              "Fine for a display rename (export marks it as not re-scored); if a rename changes what the tag "
+              f"means, run: python -m tag_classifier.classify --curriculum {code}")
     ev = Evaluation(scores, cfg)
     model = next((m for m in cfg["review"]["primary_models"] if m in ev.models), None)
     if model is None:
@@ -57,40 +68,39 @@ def rows(code: str, cfg: dict[str, Any], scores_name: str) -> list[dict[str, Any
     alphas = ev.agreement()["alpha_per_tag"]
     names = {c: (r.get("name_en") or r.get("name_vi") or "") for c, r in ev.records.items()}
     reliable = cfg["evaluate"]["reliable_alpha"]
-    out = []
+    tags, shown = [], {}
     for cand in load_candidates(cfg, code):
         tag = cand["key"]
         courses = sorted(c for c in ev.courses if tag in ev.assign[model].get(c, set()))
         alpha = alphas.get(tag, math.nan)
-        sug = cand.get("label_en_suggested")
-        ev_rows = evidence(ev, model, tag, courses, names)
-        out.append({
-            "tag": tag, "label_vi": cand.get("label_vi") or "", "label_en": cand.get("label_en") or "",
-            "label_en_suggested": f"{sug['phrase']} ({sug['similarity']:.2f})" if sug else "",
-            "sources": ", ".join(cand["source_types"]), "courses": " ".join(courses), "course_count": len(courses),
-            "alpha": "" if math.isnan(alpha) else f"{alpha:.2f}",
-            "reliable": "" if math.isnan(alpha) else ("yes" if alpha >= reliable else "no"),
-            "models_assigning": ", ".join(m for m in ev.models if any(tag in v for v in ev.assign[m].values())),
-            **{f"evidence_{i + 1}": (ev_rows[i] if i < len(ev_rows) else "") for i in range(3)},
-            "keep": "", "rename": "", "note": "", "_alpha": -1 if math.isnan(alpha) else alpha,
+        label, source = tag_name(cand)
+        decided = decisions.get(tag, {})
+        shown[tag] = decided.get("rename") or label
+        tags.append({
+            **{k: decided.get(k, "") for k in ("keep", "rename", "note")},
+            "tag": tag, "label": label, "label_source": source, "label_vi": cand.get("label_vi") or "",
+            "courses": "\n".join(f"{c} {names.get(c, '')}".strip() for c in courses), "course_count": len(courses),
+            "alpha": "" if math.isnan(alpha) else round(alpha, 2),
+            "models": ", ".join(m for m in ev.models if any(tag in v for v in ev.assign[m].values())),
+            "sources": ", ".join(cand["source_types"]),
+            "evidence": "\n\n".join(evidence(ev, model, tag, courses, names)),
+            "doubtful": math.isnan(alpha) or alpha < reliable, "_alpha": -1 if math.isnan(alpha) else alpha,
         })
-    # Doubtful first; tags with no scored course (e.g. only required courses, when electives_only) last.
-    out.sort(key=lambda r: (r["course_count"] == 0, r["_alpha"], -r["course_count"]))
-    return out
+    # Doubtful first; tags with no scored course last.
+    tags.sort(key=lambda r: (r["course_count"] == 0, r["_alpha"], -r["course_count"]))
+    courses = [{"code": c, "name": names.get(c, ""),
+                "tags": ", ".join(sorted(shown[t] for t in ev.assign[model].get(c, set()) if t in shown))}
+               for c in ev.courses]
+    return tags, courses
 
 
 def write(code: str, cfg: dict[str, Any], scores_name: str) -> Path:
     path = review_path(cfg, code)
-    kept = read_decisions(path)
-    table = rows(code, cfg, scores_name)
-    for row in table:
-        row.update(kept.get(row["tag"], {}))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=COLUMNS, extrasaction="ignore")
-        w.writeheader()
-        w.writerows(table)
-    print(f"{code}: {len(table)} rows ({sum(1 for r in table if r['keep'])} already decided) -> {path}")
+    decisions = read_decisions(path)
+    tags, courses = sheets(code, cfg, scores_name, decisions)
+    write_review(path, tags, courses)
+    print(f"{code}: {len(tags)} tags ({sum(1 for r in tags if r['keep'])} already decided), "
+          f"{len(courses)} courses -> {path}")
     return path
 
 

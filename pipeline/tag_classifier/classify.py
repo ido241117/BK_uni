@@ -9,10 +9,10 @@ Each topic section (summary, objectives, learning_outcomes, sessions) is scored 
 can apply the per-section majority rule. English-only models read the English text and need an
 English label (the label, else the suggested one); tags with only a Vietnamese label are skipped for
 them. Multilingual models fall back to Vietnamese text and labels; a "vi" run reads Vietnamese only.
-With electives_only (config), only courses in elective groups are scored. Scores are cached in
+With electives_only (config [scope]), only the program's elective courses are scored. Scores are cached in
 cache/scores.sqlite by (model, text hash, label), so re-runs only score new pairs.
 
-A name in the `rename` column of review/<code>.csv replaces the tag's English label here, so the
+A name in the Rename column of review/<code>.xlsx replaces the tag's English label here, so the
 models score the name the team chose (only the renamed tags are new pairs). The scores file records,
 per model, which renames were scored (`renamed`); review.py warns when they are out of date.
 """
@@ -27,12 +27,13 @@ from pathlib import Path
 from typing import Any
 
 from tag_classifier.common import (
-    TOPIC_SECTIONS, load_candidates, load_config, load_curriculum, load_records, read_json, read_renames, resolve,
+    TOPIC_SECTIONS, load_candidates, load_config, load_curriculum, load_records, read_json, resolve,
     utf8_stdout, write_json,
 )
 from tag_classifier.phrases import section_text
 from tag_classifier.scorers import make_scorer
-from tag_classifier.structure import elective_codes
+from tag_classifier.structure import courses_to_tag
+from tag_classifier.workbook import read_renames
 
 
 def tag_label(cand: dict[str, Any], lang: str, keyword: bool = False) -> str | None:
@@ -57,15 +58,6 @@ def course_section_text(rec: dict[str, Any], section: str, lang: str) -> str:
     if lang == "vi":
         return section_text(rec, section, "vi")
     return section_text(rec, section, "en") or (section_text(rec, section, "vi") if lang == "multi" else "")
-
-
-def scored_courses(curr: dict[str, Any], records: dict[str, dict[str, Any]], electives_only: bool) -> list[dict[str, Any]]:
-    """Usable courses of the curriculum; with electives_only, only members of elective groups."""
-    codes = curr["courses"]
-    if electives_only:
-        electives = elective_codes(curr)
-        codes = [x for x in codes if x in electives]
-    return [records[x] for x in codes if x in records and records[x]["usable"]]
 
 
 class ScoreCache:
@@ -107,14 +99,27 @@ def units(courses: list[dict[str, Any]], cands: list[dict[str, Any]], spec: dict
                     yield rec["code"], section, cand["key"], text, label
 
 
+def missing_pairs(code: str, cfg: dict[str, Any]) -> dict[str, int]:
+    """Distinct (section text, label) pairs of the curriculum's current candidates that are not in the
+    score cache yet, per model: what classify would still have to score."""
+    courses = courses_to_tag(load_curriculum(cfg, code), load_records(cfg), cfg["scope"]["electives_only"])
+    cands = apply_renames(load_candidates(cfg, code), read_renames(cfg, code))
+    cache = ScoreCache(resolve(cfg["classify"]["cache"]))
+    out = {}
+    for spec in cfg["classify"]["models"]:
+        keys = sorted({(digest(text), label) for _, _, _, text, label in units(courses, cands, spec)})
+        out[spec["id"]] = len(keys) - len(cache.get(spec["id"], keys))
+    return out
+
+
 def classify(code: str, cfg: dict[str, Any], model_ids: list[str] | None, limit: int | None,
              batch_size: int | None = None) -> dict[str, Any]:
     c = cfg["classify"]
-    courses = scored_courses(load_curriculum(cfg, code), load_records(cfg), c["electives_only"])[:limit]
+    courses = courses_to_tag(load_curriculum(cfg, code), load_records(cfg), cfg["scope"]["electives_only"])[:limit]
     renames = read_renames(cfg, code)
     cands = apply_renames(load_candidates(cfg, code), renames)
     if renames:
-        print(f"  {len(renames)} renamed tag(s) from the review CSV: {renames}")
+        print(f"  {len(renames)} renamed tag(s) from the review workbook: {renames}")
     cache = ScoreCache(resolve(c["cache"]))
     result: dict[str, Any] = {"curriculum": code, "courses": [r["code"] for r in courses],
                               "tags": [x["key"] for x in cands], "scores": {}, "runtime": {}, "renamed": {}}
