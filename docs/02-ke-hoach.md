@@ -378,6 +378,7 @@ Người duyệt xác nhận **trước khi** code giai đoạn 2. K1–K4 tính
 
 | Ngày | Quyết định | Trạng thái |
 |---|---|---|
+| 23/11 | Gộp 9 commit remote (bộ phân loại tag, thẻ sở thích cho Clingo): giữ trang Gợi ý mới; ô chọn thẻ sở thích chưa hiện vì chọn bộ giải đang ẩn (Q13), phần backend và ASP giữ nguyên. Báo đồng đội | Đề xuất (cần đồng đội đồng ý) |
 | 23/11 | Trang Gợi ý gọn lại: bỏ khung "Ghim môn vào kỳ" và "Môn không mở ở kỳ" ở cột trái; "không mở" thành nút trên thẻ môn (hỏi xác nhận, chip ở đầu kỳ bấm × để bỏ); số TC muốn là ô ngay đầu mỗi kỳ; cảnh báo gắn vào đúng môn / kỳ (nhãn "Lưu ý"), lời nhẹ nhàng; cảnh báo chỉ là nhắc thì sinh viên tự xác nhận (chuẩn tiếng Anh → ghi ENG_GC* Đã hoàn thành). Bỏ nhãn "mới so với mốc", "dời từ" trên bảng. Validator: ô FREE_ và luật mở lớp mềm (Q9) không còn là lỗi kỳ hè | Đã duyệt (người duyệt) |
 | 22/11 | **T46: hoàn toàn tôn trọng lựa chọn của sinh viên về khối.** Môn bất kỳ (kể cả ngoài CTĐT) được tính vào khối sinh viên chọn ở Hiệu chỉnh; web không chặn khối nào, chỉ nhắc sinh viên tự hỏi khoa về việc công nhận. Mặc định: khối của file myBK, môn ngoài CTĐT tính vào tự chọn tự do. Sửa cùng ngày: áp cho **mọi môn** (đã/đang/chưa học), chỉ nhắc "có thể khác cách tính của myBK"; mở trang Gợi ý luôn giải lại từ database | Đã duyệt (người duyệt) |
 | 18/11 | Backend gọi bộ giải Python qua dòng lệnh | Đề xuất |

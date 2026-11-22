@@ -1,4 +1,4 @@
-import { Card, Collapse, Space, Table, Tag, Typography } from 'antd';
+import { Card, Collapse, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import type { EngineReport } from '@/types';
 import { semesterLabel } from '@/pages/courses/analysis/semester';
 
@@ -31,6 +31,8 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
     const gpa10 = report.gpa.score_10;
     const gpa4 = report.gpa.gpa_4;
     const tags = Object.entries(report.course_tags ?? {});
+    const interests = Object.entries(report.interests ?? {});
+    const picked = new Set(Object.keys(report.interests ?? {}));
 
     return (
         <Card title="Thông tin thêm từ bộ giải Clingo (engine ASP)">
@@ -108,14 +110,46 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
                     </Space>
                 )}
 
+                {interests.length > 0 && (
+                    <Space orientation="vertical" size={4} style={{ width: '100%' }}>
+                        <Text strong>Your interests in this plan</Text>
+                        {interests.map(([tag, codes]) => (
+                            <div key={tag}>
+                                <Tag color="blue">{tag}</Tag>
+                                {codes.length
+                                    ? (
+                                        <Space size={[4, 4]} wrap>
+                                            {codes.map(code => <Tooltip key={code} title={courseName(code)}><Tag>{code}</Tag></Tooltip>)}
+                                        </Space>
+                                    )
+                                    : <Text type="secondary">no planned course has this tag</Text>}
+                            </div>
+                        ))}
+                    </Space>
+                )}
+
                 {tags.length > 0 && (
-                    <Space orientation="vertical" size={4}>
-                        <Text strong>Tag của môn trong lộ trình</Text>
-                        <Space wrap>
-                            {tags.map(([code, list]) => (
-                                <Text key={code}>{code} {list.map(t => <Tag key={t}>{t}</Tag>)}</Text>
-                            ))}
-                        </Space>
+                    <Space orientation="vertical" size={4} style={{ width: '100%' }}>
+                        <Text strong>Tags of the planned courses</Text>
+                        <Table
+                            size="small"
+                            rowKey={([code]) => code}
+                            pagination={false}
+                            dataSource={tags}
+                            columns={[
+                                { title: 'Mã', key: 'code', width: 110, render: (_v, [code]) => code },
+                                { title: 'Môn', key: 'name', render: (_v, [code]) => courseName(code) },
+                                {
+                                    title: 'Tags',
+                                    key: 'tags',
+                                    render: (_v, [, list]) => (
+                                        <Space size={[4, 4]} wrap>
+                                            {list.map(t => <Tag key={t} color={picked.has(t) ? 'blue' : undefined}>{t}</Tag>)}
+                                        </Space>
+                                    ),
+                                },
+                            ]}
+                        />
                     </Space>
                 )}
 

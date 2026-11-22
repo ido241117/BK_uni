@@ -35,6 +35,8 @@ export interface SolvePlanPayload {
     frozen_semesters?: string[];
     /** Số TC muốn từng kỳ; bộ giải được lệch tới 2 TC và báo lại (22/11). */
     semester_targets?: Record<string, number>;
+    /** Clingo only: interest tags the student picked (names from GET /plans/interest-tags). */
+    interests?: string[];
 }
 
 /** Mục ưu tiên sinh viên sắp (sprint 11): S1 ra trường sớm, S6 kế hoạch giảng dạy, S4 môn mình chọn,
@@ -47,6 +49,12 @@ export interface PlanRequest {
     item: string;
     status: 'met' | 'warning' | 'partial' | 'unmet';
     detail: string;
+}
+
+/** An interest tag with the courses of the student's program that carry it (GET /plans/interest-tags). */
+export interface InterestTag {
+    tag: string;
+    courses: string[];
 }
 
 export interface PlanCourse {
@@ -112,6 +120,8 @@ export interface EngineReport {
     offering_misses: { course: string; semester: string; missed_percent: number }[];
     fees: Record<string, number>;
     course_tags?: Record<string, string[]>;
+    /** Planned courses carrying each interest the student picked ([] when none was planned). */
+    interests?: Record<string, string[]>;
     degree_complete: boolean;
     ready_to_graduate: boolean;
     ground_and_solve_ms?: number;

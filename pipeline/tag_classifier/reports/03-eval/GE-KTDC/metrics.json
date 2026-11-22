@@ -1,0 +1,423 @@
+{
+ "agreement": {
+  "alpha_mean": 0.22808904245854553,
+  "alpha_per_tag": {
+   "DCM": 0.14357321876118867,
+   "DKT": 0.2277892561983471,
+   "QDK": 0.33333333333333337,
+   "bat-buoc-co-so-nganh": -0.01098901098901095,
+   "bat-buoc-nganh": NaN,
+   "construction-projects": 0.609,
+   "environmental-geology": 0.2114285714285714,
+   "geochemistry-characteristic": 0.14900000000000002,
+   "geological-engineering": 0.1413333333333333,
+   "geological-mapping-federation": 0.06454465075154725,
+   "geotechnical-investigation": 0.07832422586520948,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.008243500317057673,
+   "ky-nang-bo-tro": 0.04761904761904767,
+   "land-resource": 0.3098921706516643,
+   "lifelong-learning": 0.17710196779964227,
+   "managementprocesses": 0.4896449704142012,
+   "mapping": 0.5041217501585289,
+   "mapping-federation": 0.18222222222222217,
+   "mapping-theme": 0.5353535353535352,
+   "mineral-resources": 0.45238095238095244,
+   "previous-learning-process": 0.06172839506172845,
+   "project-implementation": 0.19103448275862067,
+   "proposal-plan": 0.14338919925512106,
+   "quantitative-data": -0.005464480874316946,
+   "resource-activities": 0.31117604090577067,
+   "resource-mapping-plan": 0.10956902848794736,
+   "resources-planning": 0.21799999999999997,
+   "science-disciplines": 0.14934456928838946,
+   "soil-environment": 0.24159797083069112,
+   "solid-mineral-deposits": 0.05772811918063325,
+   "southern-geological-mapping": 0.1588571428571428,
+   "survey-drilling": 0.14940828402366857,
+   "technological-issues": 0.31000000000000005,
+   "technology-development-trends": 0.4238921001926782,
+   "water-quality-conditions": 0.3354735152487961,
+   "water-resources": 0.5193312434691746,
+   "water-sampling": 0.18222222222222217
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.2650082528176335,
+   "bge-m3-zeroshot vs embedding-vi": 0.27119634480570587,
+   "bge-m3-zeroshot vs keyword": 0.1576878945938913,
+   "bge-m3-zeroshot vs modernbert": 0.6827210719417532,
+   "embedding vs embedding-vi": 0.6744715141658569,
+   "embedding vs keyword": 0.08870669085556478,
+   "embedding vs modernbert": 0.25751105966349463,
+   "embedding-vi vs keyword": 0.06733280345179954,
+   "embedding-vi vs modernbert": 0.2508661177630242,
+   "keyword vs modernbert": 0.13842116512693733
+  },
+  "tags_reliable": 0,
+  "tags_with_alpha": 36
+ },
+ "courses": 37,
+ "curriculum": "GE-KTDC",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 5476,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 5476,
+   "scored": 5382,
+   "seconds": 33.6,
+   "seconds_per_pair": 0.0062
+  },
+  "embedding-vi": {
+   "pairs": 5476,
+   "scored": 5305,
+   "seconds": 244.3,
+   "seconds_per_pair": 0.0461
+  },
+  "keyword": {
+   "pairs": 5291,
+   "scored": 5234,
+   "seconds": 2.2,
+   "seconds_per_pair": 0.0004
+  },
+  "modernbert": {
+   "pairs": 5291,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 37,
+   "jaccard": 0.44716859716859714
+  },
+  "embedding": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 37,
+   "jaccard": 0.44085317835317833
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 37,
+   "jaccard": 0.47148002148002155
+  },
+  "keyword": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 36,
+   "jaccard": 0.5410052910052909
+  },
+  "modernbert": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 36,
+   "jaccard": 0.38326118326118325
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {
+    "DCM": {
+     "precision_lb": 1.0,
+     "recall": 0.18181818181818182
+    },
+    "DKT": {
+     "precision_lb": 0.4117647058823529,
+     "recall": 0.6363636363636364
+    },
+    "QDK": {
+     "precision_lb": 0.6666666666666666,
+     "recall": 0.18181818181818182
+    }
+   },
+   "precision_lb": 0.6928104575163397,
+   "recall": 0.3333333333333333
+  },
+  "embedding": {
+   "per_specialization": {
+    "DCM": {
+     "precision_lb": 0.4117647058823529,
+     "recall": 0.6363636363636364
+    },
+    "DKT": {
+     "precision_lb": 0.1111111111111111,
+     "recall": 0.09090909090909091
+    },
+    "QDK": {
+     "precision_lb": 0.5,
+     "recall": 0.36363636363636365
+    }
+   },
+   "precision_lb": 0.340958605664488,
+   "recall": 0.3636363636363636
+  },
+  "embedding-vi": {
+   "per_specialization": {
+    "DCM": {
+     "precision_lb": 0.26666666666666666,
+     "recall": 0.36363636363636365
+    },
+    "DKT": {
+     "precision_lb": 0.35,
+     "recall": 0.6363636363636364
+    },
+    "QDK": {
+     "precision_lb": 0.3,
+     "recall": 0.2727272727272727
+    }
+   },
+   "precision_lb": 0.3055555555555555,
+   "recall": 0.42424242424242425
+  },
+  "keyword": {
+   "per_specialization": {
+    "DCM": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "DKT": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "QDK": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": NaN,
+   "recall": 0.0
+  },
+  "modernbert": {
+   "per_specialization": {
+    "DCM": {
+     "precision_lb": 0.5,
+     "recall": 0.18181818181818182
+    },
+    "DKT": {
+     "precision_lb": 0.4444444444444444,
+     "recall": 0.7272727272727273
+    },
+    "QDK": {
+     "precision_lb": 0.5,
+     "recall": 0.09090909090909091
+    }
+   },
+   "precision_lb": 0.48148148148148145,
+   "recall": 0.3333333333333333
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.5776207254148431
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   2,
+   1,
+   4,
+   6,
+   4,
+   2,
+   1,
+   8,
+   6,
+   4,
+   3,
+   2,
+   5,
+   5,
+   0,
+   2,
+   1,
+   2,
+   3,
+   4,
+   3,
+   6,
+   4,
+   4,
+   2,
+   9,
+   2,
+   4,
+   5,
+   3,
+   3,
+   2,
+   1,
+   1,
+   1,
+   0,
+   1
+  ],
+  "embedding": [
+   7,
+   9,
+   10,
+   10,
+   9,
+   8,
+   10,
+   11,
+   11,
+   10,
+   8,
+   0,
+   10,
+   12,
+   9,
+   8,
+   8,
+   9,
+   8,
+   2,
+   5,
+   11,
+   7,
+   10,
+   9,
+   9,
+   0,
+   11,
+   11,
+   12,
+   14,
+   9,
+   1,
+   10,
+   5,
+   4,
+   4
+  ],
+  "embedding-vi": [
+   8,
+   14,
+   8,
+   10,
+   9,
+   12,
+   11,
+   12,
+   11,
+   10,
+   10,
+   1,
+   12,
+   12,
+   10,
+   10,
+   11,
+   7,
+   10,
+   9,
+   13,
+   10,
+   10,
+   11,
+   11,
+   10,
+   3,
+   12,
+   12,
+   12,
+   13,
+   10,
+   4,
+   8,
+   5,
+   7,
+   3
+  ],
+  "keyword": [
+   1,
+   0,
+   0,
+   2,
+   0,
+   1,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   3,
+   1,
+   0,
+   0,
+   0,
+   1,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   2,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1
+  ],
+  "modernbert": [
+   1,
+   2,
+   3,
+   5,
+   5,
+   3,
+   2,
+   7,
+   7,
+   3,
+   1,
+   0,
+   4,
+   5,
+   2,
+   2,
+   2,
+   3,
+   3,
+   1,
+   2,
+   3,
+   2,
+   6,
+   3,
+   5,
+   1,
+   4,
+   6,
+   5,
+   3,
+   2,
+   0,
+   2,
+   1,
+   0,
+   1
+  ]
+ }
+}

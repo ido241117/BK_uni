@@ -1,0 +1,306 @@
+{
+ "agreement": {
+  "alpha_mean": 0.29612603418489075,
+  "alpha_per_tag": {
+   "analog-cmos-circuits": 0.30827067669172936,
+   "applied-electronics": 0.37209302325581395,
+   "circuit-design-process": 0.44991511035653653,
+   "circuit-technology": 0.4285714285714286,
+   "common-source-amplifier": -0.006993006993006867,
+   "communications": 0.5384615384615384,
+   "computer-networks": 0.40441176470588236,
+   "design-organisational-structure": 0.052631578947368474,
+   "digital-integrated-circuits": 0.32799999999999996,
+   "digital-signal-processing": 0.4285714285714286,
+   "electronic-systems": 0.4128440366972477,
+   "environmental-function": 0.13669064748201443,
+   "initial-cmos": 0.2799999999999999,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.11888111888111885,
+   "kien-thuc-ve-con-nguoi-va-moi-truong-ky-nang-nghe-nghiep-chuyen-nghiep": 0.44259259259259254,
+   "ky-nang-bo-tro": -0.028571428571428692,
+   "level-context": -0.014084507042253502,
+   "machine-learning": 0.6058394160583942,
+   "mobile-communications-systems": 0.4117647058823529,
+   "project-instruction": 0.0037523452157598447,
+   "quan-ly": 0.17647058823529416,
+   "structured-computer": 0.14960629921259838,
+   "telecommunications-engineering": 0.3385826771653543,
+   "telecommunications-systems": 0.49650349650349646,
+   "wireless-communications": 0.5683453237410072
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.37370191335673736,
+   "bge-m3-zeroshot vs embedding-vi": 0.27982463347050995,
+   "bge-m3-zeroshot vs keyword": 0.20381315538608205,
+   "bge-m3-zeroshot vs modernbert": 0.6434661907594684,
+   "embedding vs embedding-vi": 0.7348191853597406,
+   "embedding vs keyword": 0.0615366732535157,
+   "embedding vs modernbert": 0.4240767600133881,
+   "embedding-vi vs keyword": 0.0313684557490523,
+   "embedding-vi vs modernbert": 0.3506444632608896,
+   "keyword vs modernbert": 0.11539568345323696
+  },
+  "tags_reliable": 0,
+  "tags_with_alpha": 25
+ },
+ "courses": 29,
+ "curriculum": "ET-DTVT",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 2900,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 2900,
+   "scored": 2220,
+   "seconds": 13.2,
+   "seconds_per_pair": 0.006
+  },
+  "embedding-vi": {
+   "pairs": 2900,
+   "scored": 2087,
+   "seconds": 11.7,
+   "seconds_per_pair": 0.0056
+  },
+  "keyword": {
+   "pairs": 2784,
+   "scored": 2316,
+   "seconds": 0.5,
+   "seconds_per_pair": 0.0002
+  },
+  "modernbert": {
+   "pairs": 2784,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.0,
+   "courses": 27,
+   "jaccard": 0.7074074074074075
+  },
+  "embedding": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.5555555555555556,
+   "courses": 27,
+   "jaccard": 0.53559670781893
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.45454545454545453,
+   "courses": 27,
+   "jaccard": 0.49034525145636254
+  },
+  "keyword": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.0,
+   "courses": 27,
+   "jaccard": 0.7962962962962963
+  },
+  "modernbert": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.3333333333333333,
+   "courses": 27,
+   "jaccard": 0.7208994708994709
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding-vi": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.6027367268746578
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   0,
+   0,
+   0,
+   1,
+   1,
+   6,
+   6,
+   3,
+   3,
+   4,
+   2,
+   3,
+   0,
+   1,
+   2,
+   1,
+   4,
+   1,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0
+  ],
+  "embedding": [
+   6,
+   1,
+   2,
+   8,
+   7,
+   9,
+   7,
+   1,
+   8,
+   6,
+   0,
+   8,
+   1,
+   2,
+   10,
+   7,
+   8,
+   3,
+   5,
+   0,
+   5,
+   4,
+   1,
+   1,
+   4,
+   3,
+   3,
+   2,
+   1
+  ],
+  "embedding-vi": [
+   7,
+   2,
+   3,
+   8,
+   9,
+   9,
+   10,
+   4,
+   9,
+   9,
+   1,
+   8,
+   3,
+   3,
+   11,
+   9,
+   9,
+   3,
+   5,
+   0,
+   6,
+   5,
+   3,
+   3,
+   5,
+   6,
+   3,
+   6,
+   3
+  ],
+  "keyword": [
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   1,
+   0,
+   0,
+   4,
+   3,
+   5,
+   7,
+   5,
+   4,
+   5,
+   0,
+   5,
+   1,
+   1,
+   3,
+   3,
+   5,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0
+  ]
+ }
+}

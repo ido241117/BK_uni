@@ -1,0 +1,370 @@
+{
+ "agreement": {
+  "alpha_mean": 0.2696479044507305,
+  "alpha_per_tag": {
+   "KTCDT": 0.16479999999999995,
+   "ROB": 0.6920883820384889,
+   "ROBOT": 0.5488721804511278,
+   "artificial-intelligence": 0.3640552995391705,
+   "automation-domains": 0.3305785123966942,
+   "automation-systems": 0.4426705370101597,
+   "control-engineering": 0.2597402597402598,
+   "design-organisational-structure": 0.03759398496240607,
+   "design-system": 0.08108108108108103,
+   "ideation": 0.13669064748201443,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.12790697674418605,
+   "ky-nang-bo-tro": 0.09774436090225569,
+   "materials-experiments": 0.3291925465838509,
+   "matlab-control-toolbox": 0.12075983717774763,
+   "mechatronic-engineering-study": 0.17647058823529416,
+   "models-objectives": 0.10559006211180122,
+   "process-control-solutions": 0.17890235210263716,
+   "quan-ly": 0.2941176470588235,
+   "robotics-engineering": 0.5604395604395604,
+   "robots": 1.0,
+   "sensor-characteristics": -0.021276595744680993,
+   "service-robots": 0.21167883211678828,
+   "term-project": 0.07692307692307687,
+   "time-value": 0.15492957746478875
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.31647763378328975,
+   "bge-m3-zeroshot vs embedding-vi": 0.23628008365982286,
+   "bge-m3-zeroshot vs keyword": 0.40033232814326974,
+   "bge-m3-zeroshot vs modernbert": 0.6214149139579354,
+   "embedding vs embedding-vi": 0.7042162472765581,
+   "embedding vs keyword": 0.14236546346852544,
+   "embedding vs modernbert": 0.40793489318413034,
+   "embedding-vi vs keyword": 0.09411728029429219,
+   "embedding-vi vs modernbert": 0.3117932148626822,
+   "keyword vs modernbert": 0.2590799031477003
+  },
+  "tags_reliable": 2,
+  "tags_with_alpha": 24
+ },
+ "courses": 29,
+ "curriculum": "MCE-CDT",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 2784,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 2784,
+   "scored": 2452,
+   "seconds": 12.5,
+   "seconds_per_pair": 0.0051
+  },
+  "embedding-vi": {
+   "pairs": 2784,
+   "scored": 2356,
+   "seconds": 46.8,
+   "seconds_per_pair": 0.0199
+  },
+  "keyword": {
+   "pairs": 2784,
+   "scored": 2452,
+   "seconds": 1.4,
+   "seconds_per_pair": 0.0006
+  },
+  "modernbert": {
+   "pairs": 2784,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 29,
+   "jaccard": 0.5185550082101806
+  },
+  "embedding": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 29,
+   "jaccard": 0.4853585112205802
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 29,
+   "jaccard": 0.5573941384286212
+  },
+  "keyword": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 29,
+   "jaccard": 0.6896551724137931
+  },
+  "modernbert": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 29,
+   "jaccard": 0.6274220032840723
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {
+    "KTCDT": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "ROB": {
+     "precision_lb": 0.5,
+     "recall": 0.5
+    },
+    "ROBOT": {
+     "precision_lb": 0.75,
+     "recall": 0.21428571428571427
+    }
+   },
+   "precision_lb": 0.625,
+   "recall": 0.2380952380952381
+  },
+  "embedding": {
+   "per_specialization": {
+    "KTCDT": {
+     "precision_lb": 0.8333333333333334,
+     "recall": 0.3333333333333333
+    },
+    "ROB": {
+     "precision_lb": 0.5,
+     "recall": 0.75
+    },
+    "ROBOT": {
+     "precision_lb": 0.8333333333333334,
+     "recall": 0.35714285714285715
+    }
+   },
+   "precision_lb": 0.7222222222222223,
+   "recall": 0.4801587301587302
+  },
+  "embedding-vi": {
+   "per_specialization": {
+    "KTCDT": {
+     "precision_lb": 0.8181818181818182,
+     "recall": 0.6
+    },
+    "ROB": {
+     "precision_lb": 0.5,
+     "recall": 0.75
+    },
+    "ROBOT": {
+     "precision_lb": 0.8333333333333334,
+     "recall": 0.35714285714285715
+    }
+   },
+   "precision_lb": 0.7171717171717171,
+   "recall": 0.569047619047619
+  },
+  "keyword": {
+   "per_specialization": {
+    "KTCDT": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "ROB": {
+     "precision_lb": 0.5,
+     "recall": 0.25
+    },
+    "ROBOT": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": 0.5,
+   "recall": 0.08333333333333333
+  },
+  "modernbert": {
+   "per_specialization": {
+    "KTCDT": {
+     "precision_lb": 0.3333333333333333,
+     "recall": 0.06666666666666667
+    },
+    "ROB": {
+     "precision_lb": 0.4,
+     "recall": 0.5
+    },
+    "ROBOT": {
+     "precision_lb": 0.6666666666666666,
+     "recall": 0.14285714285714285
+    }
+   },
+   "precision_lb": 0.4666666666666666,
+   "recall": 0.23650793650793653
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.6056403366748194
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   0,
+   1,
+   0,
+   0,
+   1,
+   2,
+   0,
+   1,
+   0,
+   1,
+   2,
+   0,
+   2,
+   4,
+   1,
+   6,
+   0,
+   5,
+   4,
+   0,
+   0,
+   2,
+   1,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0
+  ],
+  "embedding": [
+   0,
+   6,
+   5,
+   2,
+   1,
+   4,
+   1,
+   3,
+   3,
+   3,
+   7,
+   4,
+   10,
+   7,
+   4,
+   7,
+   6,
+   8,
+   9,
+   2,
+   4,
+   10,
+   1,
+   2,
+   6,
+   8,
+   1,
+   1,
+   2
+  ],
+  "embedding-vi": [
+   1,
+   7,
+   9,
+   3,
+   5,
+   5,
+   3,
+   7,
+   4,
+   4,
+   9,
+   5,
+   10,
+   8,
+   10,
+   9,
+   7,
+   8,
+   11,
+   4,
+   6,
+   12,
+   4,
+   2,
+   10,
+   9,
+   1,
+   3,
+   2
+  ],
+  "keyword": [
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   2,
+   1,
+   2,
+   0,
+   3,
+   1,
+   0,
+   0,
+   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   2,
+   0,
+   0,
+   0,
+   1,
+   7,
+   0,
+   4,
+   8,
+   1,
+   6,
+   4,
+   8,
+   5,
+   0,
+   1,
+   2,
+   1,
+   0,
+   3,
+   5,
+   0,
+   0,
+   0
+  ]
+ }
+}

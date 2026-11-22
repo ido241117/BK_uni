@@ -23,6 +23,7 @@ import { importedCodes, ImportedFile, planImportStatuses } from './mybk-import';
 import { certificateCourses, reviewMybk, ReviewCurriculum, ReviewFile } from './mybk-review';
 import { currentSemester } from '../advisor/semester';
 import { AdjustMybkDto } from './dto/adjust-mybk.dto';
+import { InterestTag, interestTagsFor } from './interest-tags';
 import { buildPlannerInput, mergeBlockChoices, mergeNotes, savedBlockChoices, PlannerSource, progressFromImport, savedCurrentSemester, savedNotes } from './planner-input';
 import { PlannerRunner } from './planner.runner';
 
@@ -348,6 +349,23 @@ export class PlannerService {
     } catch {
       return {};
     }
+  }
+
+  /** Interest tags (Clingo tab) that have courses in the student's program; none without a program or tag file. */
+  async interestTags(userId: string): Promise<{ tags: InterestTag[] }> {
+    const profile = await this.profiles.findOne({ where: { user_id: userId } });
+    if (!profile?.curriculum_id) return { tags: [] };
+    const [curriculum, items] = await Promise.all([
+      this.curricula.findOne({ where: { id: profile.curriculum_id } }),
+      this.curriculumCourses.find({ where: { curriculum_id: profile.curriculum_id }, relations: { course: true } }),
+    ]);
+    let file: unknown = null;
+    try {
+      file = JSON.parse(readFileSync(join(this.runner.dir, 'planner', 'data', 'course-tags.json'), 'utf8'));
+    } catch {
+      file = null; // no tag file exported yet
+    }
+    return { tags: interestTagsFor(file, new Set(items.map((it) => it.course.code)), curriculum?.code) };
   }
 
   async solve(userId: string, dto: SolvePlanDto): Promise<Record<string, unknown>> {

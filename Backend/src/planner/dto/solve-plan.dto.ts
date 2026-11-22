@@ -1,5 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsIn, IsInt, IsObject, IsOptional, Matches, Max, Min } from 'class-validator';
+import {
+  ArrayMaxSize, IsArray, IsBoolean, IsIn, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, Matches, Max, MaxLength, Min,
+} from 'class-validator';
 
 const SEMESTER = /^\d{2}[123]$/;
 
@@ -48,6 +50,13 @@ export class SolvePlanDto {
   @ApiPropertyOptional({ description: 'Số TC sinh viên muốn từng kỳ, vd {"262": 15}; được lệch tới 2 TC và báo lại (22/11)' })
   @IsOptional() @IsObject()
   semester_targets?: Record<string, number>;
+
+  @ApiPropertyOptional({
+    description: 'Interest tags the student picked (ASP engine only), names from GET /plans/interest-tags, '
+      + 'e.g. ["security"]. Planned electives with these tags are preferred at the lowest priority.',
+  })
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) @IsNotEmpty({ each: true }) @MaxLength(100, { each: true })
+  interests?: string[];
 
   @ApiPropertyOptional({ description: 'Kỳ hè sinh viên muốn học, vd ["263"]' })
   @IsOptional() @IsArray()

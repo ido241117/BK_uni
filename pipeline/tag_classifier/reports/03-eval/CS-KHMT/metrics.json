@@ -1,0 +1,689 @@
+{
+ "agreement": {
+  "alpha_mean": 0.3064814982783345,
+  "alpha_per_tag": {
+   "AI": 0.298641975308642,
+   "ANM": 0.4095822074412804,
+   "CND": 0.1920598628143837,
+   "CNP": 0.2675861334469354,
+   "CNPM": 0.24651999999999996,
+   "KHDL": 0.3110599078341014,
+   "MMA": 0.551948051948052,
+   "TNT": 0.13207547169811318,
+   "XLA": 0.7084349098000975,
+   "ai-algorithm": 0.17517241379310344,
+   "an-ninh-he-thong-va-mang": 0.5383211678832116,
+   "application-architectures": 0.17748679577464788,
+   "application-development": 0.17752234993614302,
+   "applied-cryptography": 0.4329310344827586,
+   "artificial": 0.3188153310104529,
+   "artificial-intelligence": 0.6466447436029186,
+   "artificial-neural-network": 0.3005847953216374,
+   "backtracking-algorithm": 0.0,
+   "big-data": 0.9059452658068575,
+   "big-data-applications": 0.3620925072537976,
+   "box-testing-techniques": 0.36866554054054057,
+   "business-environment-factors": 0.3720885834287896,
+   "businesses": 0.4772727272727273,
+   "communication-genres": 0.1610549943883277,
+   "data-applications": 0.5244305891334775,
+   "deep-learning-networks": 0.34161686064800256,
+   "deployment-challenges": NaN,
+   "design-organisational-structure": 0.04668083714846316,
+   "design-paradigms": 0.08730158730158721,
+   "develop-management-information": 0.12217705510388432,
+   "digital-communication-techniques": 0.1680222602739726,
+   "digital-competence": 0.03897147448774607,
+   "distributional": 0.7474662162162162,
+   "enhance-teamwork": 0.0,
+   "extracurricular-activities": 0.1524943310657596,
+   "geometry-representation": 0.24748322147651003,
+   "input-design": 0.0,
+   "iot-application": 0.9439970031841168,
+   "khoa-hoc-may-tinh": 0.2675861334469354,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.14445716154349253,
+   "ky-nang-bo-tro": -0.010135135135135087,
+   "learning-systems": 0.09829899701816214,
+   "mobile-system-application": 0.7178357974205725,
+   "network-systems": 0.5537918871252204,
+   "network-threat-models": 0.2267241379310344,
+   "networking": 0.6709947183098592,
+   "networking-event": 0.1610549943883277,
+   "parallel-processing-model": 0.5433371515845743,
+   "platforms": 0.5297263290342875,
+   "postgraduate": -0.003355704697986628,
+   "practical-database-systems": 0.37850758678029517,
+   "programming-apis": 0.08669090909090904,
+   "project-management-approaches": 0.2955109126984127,
+   "project-requirement": 0.10648002516514632,
+   "protocols-implementation": 0.39438657407407407,
+   "quan-ly": 0.1875,
+   "security": 0.6539351851851851,
+   "software-application": 0.24955908289241613,
+   "software-design": 0.27010000787463573,
+   "software-development-methodologies": 0.07168829715820091,
+   "software-projects": 0.21693004261363646,
+   "software-specification": 0.058652052238805874,
+   "software-systems": 0.3747462943600467,
+   "software-testing-techniques": 0.5892857142857143,
+   "system-specification": 0.08401968662113302,
+   "technology-disciplines": 0.02084556664709336,
+   "time-environment": 0.1610549943883277,
+   "web-programming": 0.4809027777777778
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.3163756590013578,
+   "bge-m3-zeroshot vs embedding-vi": 0.29527752620002606,
+   "bge-m3-zeroshot vs keyword": 0.28164286184426973,
+   "bge-m3-zeroshot vs modernbert": 0.6636808265098645,
+   "embedding vs embedding-vi": 0.6665542381236543,
+   "embedding vs keyword": 0.1393016707673452,
+   "embedding vs modernbert": 0.3025891260227273,
+   "embedding-vi vs keyword": 0.10903379051413777,
+   "embedding-vi vs modernbert": 0.29410038515620246,
+   "keyword vs modernbert": 0.19502370317595177
+  },
+  "tags_reliable": 6,
+  "tags_with_alpha": 67
+ },
+ "courses": 60,
+ "curriculum": "CS-KHMT",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 16252,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 16252,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding-vi": {
+   "pairs": 16252,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "keyword": {
+   "pairs": 16252,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "modernbert": {
+   "pairs": 16252,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.41666666666666663,
+   "courses": 56,
+   "jaccard": 0.5705782312925171
+  },
+  "embedding": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.6306818181818181,
+   "courses": 56,
+   "jaccard": 0.4491907893693608
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.4426406926406926,
+   "courses": 56,
+   "jaccard": 0.4308618464868465
+  },
+  "keyword": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.125,
+   "courses": 56,
+   "jaccard": 0.4970238095238095
+  },
+  "modernbert": {
+   "copied_summary_courses": 4,
+   "copied_summary_jaccard": 0.19791666666666666,
+   "courses": 56,
+   "jaccard": 0.5561030239601668
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {
+    "AI": {
+     "precision_lb": 1.0,
+     "recall": 0.16666666666666666
+    },
+    "ANM": {
+     "precision_lb": 1.0,
+     "recall": 0.1
+    },
+    "CND": {
+     "precision_lb": 1.0,
+     "recall": 0.08333333333333333
+    },
+    "CNP": {
+     "precision_lb": 0.30434782608695654,
+     "recall": 0.7777777777777778
+    },
+    "CNPM": {
+     "precision_lb": 0.4,
+     "recall": 0.2222222222222222
+    },
+    "KHDL": {
+     "precision_lb": 1.0,
+     "recall": 0.16666666666666666
+    },
+    "MMA": {
+     "precision_lb": 1.0,
+     "recall": 0.125
+    },
+    "TNT": {
+     "precision_lb": 0.4,
+     "recall": 0.13333333333333333
+    },
+    "XLA": {
+     "precision_lb": 1.0,
+     "recall": 0.125
+    }
+   },
+   "precision_lb": 0.7893719806763285,
+   "recall": 0.2111111111111111
+  },
+  "embedding": {
+   "per_specialization": {
+    "AI": {
+     "precision_lb": 0.75,
+     "recall": 0.25
+    },
+    "ANM": {
+     "precision_lb": 0.5714285714285714,
+     "recall": 0.4
+    },
+    "CND": {
+     "precision_lb": 0.6,
+     "recall": 0.25
+    },
+    "CNP": {
+     "precision_lb": 0.5,
+     "recall": 0.6666666666666666
+    },
+    "CNPM": {
+     "precision_lb": 0.3888888888888889,
+     "recall": 0.7777777777777778
+    },
+    "KHDL": {
+     "precision_lb": 0.8,
+     "recall": 0.3333333333333333
+    },
+    "MMA": {
+     "precision_lb": 0.6,
+     "recall": 0.375
+    },
+    "TNT": {
+     "precision_lb": 0.3333333333333333,
+     "recall": 0.4666666666666667
+    },
+    "XLA": {
+     "precision_lb": 1.0,
+     "recall": 0.125
+    }
+   },
+   "precision_lb": 0.6159611992945326,
+   "recall": 0.4049382716049383
+  },
+  "embedding-vi": {
+   "per_specialization": {
+    "AI": {
+     "precision_lb": 0.5,
+     "recall": 0.75
+    },
+    "ANM": {
+     "precision_lb": 0.5714285714285714,
+     "recall": 0.4
+    },
+    "CND": {
+     "precision_lb": 0.5555555555555556,
+     "recall": 0.4166666666666667
+    },
+    "CNP": {
+     "precision_lb": 0.3684210526315789,
+     "recall": 0.7777777777777778
+    },
+    "CNPM": {
+     "precision_lb": 0.3684210526315789,
+     "recall": 0.7777777777777778
+    },
+    "KHDL": {
+     "precision_lb": 0.5,
+     "recall": 0.5
+    },
+    "MMA": {
+     "precision_lb": 0.5,
+     "recall": 0.25
+    },
+    "TNT": {
+     "precision_lb": 0.38461538461538464,
+     "recall": 0.6666666666666666
+    },
+    "XLA": {
+     "precision_lb": 1.0,
+     "recall": 0.25
+    }
+   },
+   "precision_lb": 0.5276046240958521,
+   "recall": 0.5320987654320988
+  },
+  "keyword": {
+   "per_specialization": {
+    "AI": {
+     "precision_lb": 0.6,
+     "recall": 0.25
+    },
+    "ANM": {
+     "precision_lb": 1.0,
+     "recall": 0.1
+    },
+    "CND": {
+     "precision_lb": 1.0,
+     "recall": 0.08333333333333333
+    },
+    "CNP": {
+     "precision_lb": 1.0,
+     "recall": 0.1111111111111111
+    },
+    "CNPM": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "KHDL": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "MMA": {
+     "precision_lb": 1.0,
+     "recall": 0.125
+    },
+    "TNT": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "XLA": {
+     "precision_lb": 1.0,
+     "recall": 0.125
+    }
+   },
+   "precision_lb": 0.9333333333333332,
+   "recall": 0.0882716049382716
+  },
+  "modernbert": {
+   "per_specialization": {
+    "AI": {
+     "precision_lb": 1.0,
+     "recall": 0.08333333333333333
+    },
+    "ANM": {
+     "precision_lb": 1.0,
+     "recall": 0.1
+    },
+    "CND": {
+     "precision_lb": 1.0,
+     "recall": 0.08333333333333333
+    },
+    "CNP": {
+     "precision_lb": 0.23529411764705882,
+     "recall": 0.8888888888888888
+    },
+    "CNPM": {
+     "precision_lb": 0.375,
+     "recall": 0.3333333333333333
+    },
+    "KHDL": {
+     "precision_lb": 1.0,
+     "recall": 0.16666666666666666
+    },
+    "MMA": {
+     "precision_lb": 0.6666666666666666,
+     "recall": 0.25
+    },
+    "TNT": {
+     "precision_lb": 1.0,
+     "recall": 0.06666666666666667
+    },
+    "XLA": {
+     "precision_lb": 0.5,
+     "recall": 0.125
+    }
+   },
+   "precision_lb": 0.7529956427015251,
+   "recall": 0.2330246913580247
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.5625572738808032
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   6,
+   2,
+   4,
+   5,
+   7,
+   3,
+   2,
+   3,
+   3,
+   2,
+   4,
+   9,
+   10,
+   3,
+   4,
+   5,
+   3,
+   4,
+   2,
+   8,
+   4,
+   3,
+   6,
+   3,
+   5,
+   1,
+   2,
+   7,
+   4,
+   3,
+   10,
+   5,
+   5,
+   6,
+   4,
+   4,
+   2,
+   6,
+   9,
+   8,
+   4,
+   6,
+   1,
+   9,
+   6,
+   2,
+   6,
+   4,
+   2,
+   1,
+   0,
+   0,
+   2,
+   0,
+   1,
+   2,
+   2,
+   1,
+   1,
+   0
+  ],
+  "embedding": [
+   11,
+   5,
+   12,
+   12,
+   10,
+   4,
+   8,
+   9,
+   10,
+   3,
+   8,
+   9,
+   10,
+   7,
+   12,
+   5,
+   6,
+   7,
+   5,
+   8,
+   10,
+   11,
+   11,
+   7,
+   7,
+   3,
+   4,
+   13,
+   11,
+   11,
+   9,
+   10,
+   7,
+   12,
+   4,
+   9,
+   15,
+   11,
+   10,
+   7,
+   8,
+   6,
+   7,
+   10,
+   10,
+   11,
+   12,
+   11,
+   11,
+   6,
+   2,
+   10,
+   10,
+   5,
+   3,
+   11,
+   8,
+   5,
+   5,
+   5
+  ],
+  "embedding-vi": [
+   11,
+   11,
+   11,
+   10,
+   10,
+   9,
+   13,
+   10,
+   11,
+   5,
+   10,
+   10,
+   9,
+   9,
+   13,
+   5,
+   9,
+   8,
+   9,
+   9,
+   12,
+   12,
+   12,
+   8,
+   9,
+   7,
+   7,
+   11,
+   12,
+   12,
+   9,
+   10,
+   11,
+   12,
+   10,
+   12,
+   11,
+   11,
+   12,
+   13,
+   10,
+   8,
+   10,
+   11,
+   14,
+   10,
+   12,
+   9,
+   11,
+   11,
+   3,
+   11,
+   11,
+   5,
+   10,
+   9,
+   9,
+   6,
+   8,
+   7
+  ],
+  "keyword": [
+   2,
+   0,
+   4,
+   1,
+   0,
+   2,
+   1,
+   1,
+   2,
+   0,
+   2,
+   3,
+   3,
+   0,
+   3,
+   2,
+   1,
+   1,
+   0,
+   3,
+   2,
+   1,
+   3,
+   1,
+   2,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   2,
+   1,
+   0,
+   1,
+   1,
+   0,
+   1,
+   6,
+   0,
+   3,
+   1,
+   2,
+   1,
+   2,
+   0,
+   3,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   6,
+   6,
+   5,
+   9,
+   7,
+   2,
+   0,
+   3,
+   4,
+   4,
+   9,
+   10,
+   9,
+   3,
+   5,
+   10,
+   10,
+   4,
+   3,
+   6,
+   5,
+   4,
+   7,
+   5,
+   4,
+   1,
+   2,
+   0,
+   3,
+   2,
+   11,
+   10,
+   11,
+   9,
+   5,
+   8,
+   4,
+   7,
+   10,
+   9,
+   7,
+   8,
+   3,
+   6,
+   7,
+   9,
+   9,
+   6,
+   2,
+   2,
+   0,
+   0,
+   2,
+   0,
+   1,
+   2,
+   2,
+   0,
+   0,
+   0
+  ]
+ }
+}

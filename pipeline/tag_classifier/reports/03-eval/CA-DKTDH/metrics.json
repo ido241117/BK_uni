@@ -1,0 +1,254 @@
+{
+ "agreement": {
+  "alpha_mean": 0.24108366941581227,
+  "alpha_per_tag": {
+   "artificial-intelligence": 0.6061007957559681,
+   "automation-devices": 0.2300000000000001,
+   "automation-systems": 0.22352941176470587,
+   "control-engineering": 0.2957317073170731,
+   "control-systems": 0.7426900584795322,
+   "deep-learning-algorithms": 0.2265625,
+   "design-organisational-structure": 0.06500000000000006,
+   "embedded-control-systems": 0.3351648351648352,
+   "environmental-function": 0.12234042553191493,
+   "factory-automation": 0.09765625,
+   "intelligent-control": 0.5066445182724253,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.05440199335548168,
+   "kien-thuc-ve-con-nguoi-va-moi-truong-ky-nang-nghe-nghiep-chuyen-nghiep": 0.38814814814814813,
+   "ky-nang-bo-tro": 0.011520737327188946,
+   "plc-programming": 0.2265625,
+   "precision-control-systems": 0.09765625,
+   "quan-ly": 0.1200000000000001,
+   "robotics": -0.010204081632652962
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.2838196286472149,
+   "bge-m3-zeroshot vs embedding-vi": 0.16749999999999976,
+   "bge-m3-zeroshot vs keyword": 0.4873341375150776,
+   "bge-m3-zeroshot vs modernbert": 0.6290909090909088,
+   "embedding vs embedding-vi": 0.604,
+   "embedding vs keyword": 0.14537075827398432,
+   "embedding vs modernbert": 0.3624999999999999,
+   "embedding-vi vs keyword": 0.10060012634238795,
+   "embedding-vi vs modernbert": 0.2619217081850533,
+   "keyword vs modernbert": 0.3674418604651158
+  },
+  "tags_reliable": 1,
+  "tags_with_alpha": 18
+ },
+ "courses": 20,
+ "curriculum": "CA-DKTDH",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 1440,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 1440,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding-vi": {
+   "pairs": 1440,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "keyword": {
+   "pairs": 1360,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "modernbert": {
+   "pairs": 1360,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.8083333333333333
+  },
+  "embedding": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.6308333333333334
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.5395238095238095
+  },
+  "keyword": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.8
+  },
+  "modernbert": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.7925
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding-vi": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.4875
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   4,
+   1,
+   3,
+   2,
+   0,
+   2,
+   2,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "embedding": [
+   2,
+   4,
+   7,
+   6,
+   2,
+   3,
+   7,
+   1,
+   2,
+   4,
+   0,
+   7,
+   3,
+   0,
+   0,
+   4,
+   3,
+   0,
+   1,
+   0
+  ],
+  "embedding-vi": [
+   8,
+   5,
+   3,
+   8,
+   3,
+   2,
+   9,
+   3,
+   2,
+   4,
+   0,
+   7,
+   5,
+   2,
+   2,
+   5,
+   4,
+   2,
+   4,
+   2
+  ],
+  "keyword": [
+   2,
+   1,
+   0,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   4,
+   1,
+   2,
+   4,
+   0,
+   3,
+   5,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}

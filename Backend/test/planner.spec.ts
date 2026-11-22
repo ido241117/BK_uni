@@ -2,7 +2,8 @@ import { ExecutionContext, INestApplication, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import { DataType, newDb } from 'pg-mem';
 import request from 'supertest';
@@ -385,6 +386,49 @@ describe('Planner API (POST /api/plans/solve)', () => {
   it('rejects a malformed skip_semesters entry', async () => {
     await request(server()).post('/api/plans/solve').set('Origin', origin)
       .send({ skip_semesters: ['26'] }).expect(400);
+  });
+
+  it('passes the chosen interests to the solver scenario', async () => {
+    const spy = jest.spyOn(runner, 'run').mockResolvedValue({ status: 'OPTIMAL' });
+    await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ solver: 'clingo', interests: ['security', 'web programming'] }).expect(200);
+    const [input, solver] = spy.mock.calls[0] as [{ scenario: Record<string, unknown> }, string];
+    spy.mockRestore();
+    expect(solver).toBe('clingo');
+    expect(input.scenario.interests).toEqual(['security', 'web programming']);
+  });
+
+  it('rejects malformed interests', async () => {
+    for (const interests of ['security', [1], [''], Array.from({ length: 51 }, (_, i) => `t${i}`)]) {
+      await request(server()).post('/api/plans/solve').set('Origin', origin).send({ interests }).expect(400);
+    }
+  });
+
+  it('lists the interest tags that have courses in the student program', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'planner-'));
+    mkdirSync(join(dir, 'planner', 'data'), { recursive: true });
+    writeFileSync(join(dir, 'planner', 'data', 'course-tags.json'), JSON.stringify({
+      _note: 'x', tags: { security: ['EL302', 'XX999'], robotics: ['XX998'], logic: ['MA201', 'EL301'] },
+    }));
+    const before = process.env.PLANNER_DIR;
+    process.env.PLANNER_DIR = dir;
+    try {
+      const res = await request(server()).get('/api/plans/interest-tags').set('Origin', origin).expect(200);
+      expect(res.body.data).toEqual({ tags: [{ tag: 'logic', courses: ['EL301', 'MA201'] }, { tag: 'security', courses: ['EL302'] }] });
+      process.env.PLANNER_DIR = join(dir, 'missing');
+      const none = await request(server()).get('/api/plans/interest-tags').set('Origin', origin).expect(200);
+      expect(none.body.data).toEqual({ tags: [] });
+      // Per program family: the student's family list wins over the merged fallback.
+      process.env.PLANNER_DIR = dir;
+      writeFileSync(join(dir, 'planner', 'data', 'course-tags.json'), JSON.stringify({
+        tags: { merged: ['EL301'] }, by_family: { TOY: { web: ['EL302'] }, OTHER: { logic: ['EL301'] } },
+        families: { 'TOY-2025': 'TOY' },
+      }));
+      const fam = await request(server()).get('/api/plans/interest-tags').set('Origin', origin).expect(200);
+      expect(fam.body.data).toEqual({ tags: [{ tag: 'web', courses: ['EL302'] }] });
+    } finally {
+      if (before === undefined) delete process.env.PLANNER_DIR; else process.env.PLANNER_DIR = before;
+    }
   });
 
   it('rejects unknown request fields', async () => {

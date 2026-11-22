@@ -1,0 +1,376 @@
+{
+ "agreement": {
+  "alpha_mean": 0.23464057092051696,
+  "alpha_per_tag": {
+   "MTATSK": 0.015999999999999903,
+   "TNMT": 0.48040082522841143,
+   "air-pollution-treament": 0.25858951175406875,
+   "climate-change-impacts": 1.0,
+   "common-productivity": 0.2360248447204969,
+   "design-environmental-monitoring": 0.016000000000000014,
+   "ecological-protection": 0.15189125295508266,
+   "entrepreneurial-project": 0.47096774193548385,
+   "environmental": 0.6962962962962963,
+   "environmental-manageme": 0.49397590361445787,
+   "environmental-modeling-process": -0.020194734944103843,
+   "environmental-risks": 0.07130872483221484,
+   "green-infrastructure": 0.10869565217391308,
+   "industrial-processing": 0.15637860082304522,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.024513338139870222,
+   "ky-nang-bo-tro": 0.066896551724138,
+   "natural": -0.016528925619834656,
+   "natural-resource-issues": 0.5154403354937095,
+   "natural-sciences": 0.2306172839506173,
+   "nganh": NaN,
+   "pollution-prevention-process": 0.22458628841607564,
+   "practical-tools": 0.10128495842781549,
+   "project-presentation": 0.054848966613672556,
+   "quan-ly": 0.2407407407407407,
+   "safety-criteria": 0.0,
+   "soil-monitoring": 0.31236897274633124,
+   "startup-plans": 0.48427672955974843,
+   "systems-methodology": 0.12765957446808507,
+   "urban-air": NaN,
+   "wastewater-treatment-experiments": 0.066896551724138
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.3215163385970461,
+   "bge-m3-zeroshot vs embedding-vi": 0.30805922687071463,
+   "bge-m3-zeroshot vs keyword": 0.4942355497269471,
+   "bge-m3-zeroshot vs modernbert": 0.6651464147392048,
+   "embedding vs embedding-vi": 0.6805688336520076,
+   "embedding vs keyword": 0.28503424165509283,
+   "embedding vs modernbert": 0.30527743154953507,
+   "embedding-vi vs keyword": 0.21586008089445732,
+   "embedding-vi vs modernbert": 0.25523135227877364,
+   "keyword vs modernbert": 0.45589850230145545
+  },
+  "tags_reliable": 2,
+  "tags_with_alpha": 28
+ },
+ "courses": 33,
+ "curriculum": "NR-QLTNMT",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 3960,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 3960,
+   "scored": 3386,
+   "seconds": 129.5,
+   "seconds_per_pair": 0.0383
+  },
+  "embedding-vi": {
+   "pairs": 3960,
+   "scored": 3240,
+   "seconds": 130.3,
+   "seconds_per_pair": 0.0402
+  },
+  "keyword": {
+   "pairs": 3683,
+   "scored": 3278,
+   "seconds": 1.8,
+   "seconds_per_pair": 0.0005
+  },
+  "modernbert": {
+   "pairs": 3683,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 32,
+   "jaccard": 0.5005208333333333
+  },
+  "embedding": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.4,
+   "courses": 32,
+   "jaccard": 0.5277315566378067
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.42857142857142855,
+   "courses": 32,
+   "jaccard": 0.4818890311077811
+  },
+  "keyword": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 1.0,
+   "courses": 30,
+   "jaccard": 0.47619047619047616
+  },
+  "modernbert": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 30,
+   "jaccard": 0.5753968253968255
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {
+    "MTATSK": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "TNMT": {
+     "precision_lb": 0.75,
+     "recall": 0.8
+    }
+   },
+   "precision_lb": 0.75,
+   "recall": 0.4
+  },
+  "embedding": {
+   "per_specialization": {
+    "MTATSK": {
+     "precision_lb": 0.42857142857142855,
+     "recall": 0.75
+    },
+    "TNMT": {
+     "precision_lb": 0.7777777777777778,
+     "recall": 0.9333333333333333
+    }
+   },
+   "precision_lb": 0.6031746031746031,
+   "recall": 0.8416666666666667
+  },
+  "embedding-vi": {
+   "per_specialization": {
+    "MTATSK": {
+     "precision_lb": 0.2727272727272727,
+     "recall": 0.375
+    },
+    "TNMT": {
+     "precision_lb": 0.6521739130434783,
+     "recall": 1.0
+    }
+   },
+   "precision_lb": 0.4624505928853755,
+   "recall": 0.6875
+  },
+  "keyword": {
+   "per_specialization": {
+    "MTATSK": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "TNMT": {
+     "precision_lb": 0.75,
+     "recall": 0.4
+    }
+   },
+   "precision_lb": 0.75,
+   "recall": 0.2
+  },
+  "modernbert": {
+   "per_specialization": {
+    "MTATSK": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "TNMT": {
+     "precision_lb": 0.6923076923076923,
+     "recall": 0.6
+    }
+   },
+   "precision_lb": 0.6923076923076923,
+   "recall": 0.3
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.5876142376142377
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   0,
+   1,
+   0,
+   4,
+   6,
+   3,
+   6,
+   2,
+   5,
+   6,
+   5,
+   4,
+   5,
+   7,
+   7,
+   6,
+   4,
+   5,
+   0,
+   6,
+   5,
+   7,
+   6,
+   6,
+   0,
+   1,
+   0,
+   1,
+   1,
+   1,
+   0,
+   1,
+   0
+  ],
+  "embedding": [
+   0,
+   0,
+   5,
+   7,
+   6,
+   11,
+   7,
+   8,
+   7,
+   7,
+   7,
+   0,
+   9,
+   8,
+   7,
+   9,
+   1,
+   9,
+   2,
+   11,
+   9,
+   9,
+   9,
+   10,
+   3,
+   4,
+   2,
+   3,
+   3,
+   3,
+   1,
+   1,
+   0
+  ],
+  "embedding-vi": [
+   4,
+   4,
+   7,
+   11,
+   9,
+   12,
+   8,
+   11,
+   8,
+   9,
+   11,
+   0,
+   10,
+   7,
+   12,
+   10,
+   9,
+   11,
+   2,
+   12,
+   11,
+   9,
+   10,
+   11,
+   4,
+   9,
+   9,
+   4,
+   3,
+   4,
+   2,
+   4,
+   3
+  ],
+  "keyword": [
+   0,
+   1,
+   2,
+   5,
+   3,
+   2,
+   6,
+   3,
+   2,
+   3,
+   0,
+   3,
+   3,
+   3,
+   5,
+   3,
+   4,
+   2,
+   0,
+   2,
+   3,
+   2,
+   2,
+   4,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   0,
+   0,
+   1,
+   3,
+   3,
+   3,
+   3,
+   3,
+   2,
+   4,
+   3,
+   3,
+   4,
+   3,
+   5,
+   5,
+   4,
+   5,
+   0,
+   3,
+   2,
+   6,
+   5,
+   3,
+   1,
+   2,
+   0,
+   2,
+   1,
+   1,
+   1,
+   0,
+   0
+  ]
+ }
+}

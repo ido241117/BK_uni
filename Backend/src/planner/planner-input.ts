@@ -289,7 +289,8 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
 
   const scenario: Record<string, unknown> = { id: 'request', label: 'Yeu cau tu trang Goi y', in_progress_results: results };
   for (const key of ['max_credits', 'semester_limits', 'graduate_by', 'locked', 'not_offered', 'summer_opt_in',
-    'preferences', 'use_inferred_relations', 'skip_semesters', 'frozen_semesters', 'semester_targets'] as const) {
+    'preferences', 'use_inferred_relations', 'skip_semesters', 'frozen_semesters', 'semester_targets',
+    'interests'] as const) {
     if (dto[key] !== undefined && dto[key] !== null) scenario[key] = dto[key];
   }
 

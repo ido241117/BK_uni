@@ -86,7 +86,7 @@ Lần chạy cuối (21/11): pytest planner 122 qua + 7 xfail + 1 xpass; jest pl
 
 ## Git (cập nhật 23/11)
 
-- 23/11: commit toàn bộ việc 22–23/11 (trừ file nhạy cảm ở cuối trang, PDF quy định và báo cáo, thư mục cache/công cụ cục bộ), gộp 9 commit mới của remote, đẩy lên `origin/feature/goi-y-hoc-phan`. Commit không có dòng đồng tác giả (người duyệt yêu cầu).
+- 23/11: commit toàn bộ việc 22–23/11 (trừ file nhạy cảm ở cuối trang, PDF quy định và báo cáo, thư mục cache/công cụ cục bộ), gộp 9 commit mới của remote, đẩy lên `origin/feature/goi-y-hoc-phan`. Commit không có dòng đồng tác giả (người duyệt yêu cầu). Gộp remote: xung đột ở `solve-plan.dto.ts`, `planner-input.ts`, `planner.service.ts`, `types/planner.ts` giữ cả hai bên (thêm `interests`); `recommendations/index.tsx` giữ bản trang Gợi ý mới vì đồng đội sửa trên bản cũ. **Ô chọn thẻ sở thích (`InterestTagPicker`, chỉ cho Clingo) chưa hiện trên trang** vì chọn bộ giải đang ẩn (Q13); API `GET /plans/interest-tags`, file component và engine ASP vẫn giữ nguyên. Cần báo đồng đội.
 
 ### Ghi chú cũ (21/11)
 
