@@ -272,7 +272,11 @@ Trả: `status` (`OPTIMAL` | `SAT_NOT_PROVEN_OPTIMAL` | `UNSAT` | `TIMEOUT` | `I
 
 **`POST /api/plans/mybk/import`** (20/11; 21/11 thêm `apply_curriculum`) — multipart `file` (chỉ PDF, ≤ 5 MB) và trường form tùy chọn `apply_curriculum=true`. Ghi trong một transaction: `student_progress_imports` của tài khoản (ghi đè), `student_courses` đúng như file, và khi có `apply_curriculum` thì `student_profiles.curriculum_id` = chương trình có `source_code` của file (bỏ chuyên ngành mục tiêu nếu đổi chương trình). Trả `{imported_at, data, written_courses, unknown_codes, curriculum {id, code, name} | null}`. Lỗi: 400 file không phải PDF tiến độ, hoặc `apply_curriculum` mà không tìm được chương trình; 401.
 
-**`PUT /api/plans/mybk/adjustments`** (21/11, Hiệu chỉnh) — body `{current_semester?: "YYS", items: [{course_id, status}], remove_course_ids?: [uuid]}` (≤ 1000 dòng, chỉ cần môn đổi). Cần đã nhập tiến độ (không thì 400). Ghi `student_courses` và `data.web.current_semester` trong một transaction; trả như `GET mybk/progress` + `written_courses`. Lỗi: 400 kỳ sai định dạng, môn không có trong danh mục, chưa nhập tiến độ; 401.
+**`PUT /api/plans/mybk/adjustments`** (21/11, Hiệu chỉnh) — body `{current_semester?: "YYS", items: [{course_id, status}], remove_course_ids?: [uuid]}` (≤ 1000 dòng, chỉ cần môn đổi). Cần đã nhập tiến độ (không thì 400). Ghi `student_courses` và `data.web.current_semester` trong một transaction; trả như `GET mybk/progress` + `written_courses`. Lỗi: 400 kỳ sai định dạng, môn không có trong danh mục, chưa nhập tiến độ; 401. 22/11 thêm `notes?: [{code, note}]` (`data.web.notes`) và **T46** `block_choices?: [{code, group_id | "required" | null}]` (`required` = khối Bắt buộc do backend suy ra, gửi bộ giải là `Bat buoc (suy ra)`) → `data.web.block_choices` = `{mã môn: id khối}` (null = về khối mặc định). Web không chặn khối nào (người duyệt: hoàn toàn tôn trọng lựa chọn của sinh viên). `GET mybk/progress` trả thêm `notes`, `block_choices`.
+
+**Cảnh báo có cấu trúc (23/11):** `cli.run` trả thêm `warning_items: [{kind, course?, semester?, confirm?, text, message}]` (`report.warning_items`; `warnings` = các `text`, giữ cho test cũ). Trang Gợi ý gắn `message` vào thẻ môn / đầu kỳ; `confirm: "english"` → nút "Mình đạt rồi" ghi ENG_GC* Đã hoàn thành qua `PUT mybk/adjustments`. `validate.py`: kỳ hè không báo "chưa từng mở" cho ô `FREE_` và khi `rules.offering_soft`.
+
+**Khối sinh viên chọn → bộ giải (T46, 22/11):** `progressFromImport` → `PlannerProgress.block_choices` → `buildPlannerInput` đổi id khối thành tên, gửi `student.block_overrides = {mã môn: tên khối}` (bỏ khối không còn, môn không có trong `courses`, môn điều kiện). `normalize.py` bước 0: bỏ môn khỏi mọi khối; khối `listed` thì thêm vào khối đó (môn ngoài CTĐT được thêm vào `curriculum_courses` để bộ giải xét); khối `any` thì tín chỉ tính vào tự chọn tự do. `cli.run` ghi `student._assumed_pass` = môn Đang học mà kịch bản giả định đậu; `normalize` tính chúng như đã đạt khi trừ ô tự chọn tự do (trước 22/11 chỉ tính môn Đã hoàn thành nên xếp dư ô).
 
 **`GET /api/plans/mybk/progress`** (20/11; 21/11 thêm `current_semester`, `current_semester_source: "student" | "auto"`) — trả `{imported_at, data}` của chính tài khoản; `data` = null khi chưa tải. `data` là JSON của `python -m planner.mybk`, có cả họ tên, MSSV, điểm.
 
@@ -361,6 +365,18 @@ Một file JSON duy nhất, **giống nhau cho cả hai bộ giải**. Mẫu: `p
 | `rules` | object | `credits_min`, `credits_max`, `graduation_thresholds`, `max_main_semesters` (năm học lấy từ `curriculum.cohort`) |
 | `scenario` (qua `planner.cli`) hoặc `scenarios` (fixture) | kịch bản | `in_progress_results`, `locked`, `not_offered`, `max_credits`, `semester_limits`, `graduate_by`, `summer_opt_in`, `preferences` |
 | `previous_plan` | map mã môn → mã kỳ | Mốc what-if (S3) |
+| `scenario.skip_semesters` / `frozen_semesters` | danh sách mã kỳ | (22/11) Nghỉ kỳ / khóa kỳ: môn không ghim không xếp vào |
+| `scenario.semester_targets` | map mã kỳ → TC | (22/11) Số TC sinh viên muốn; mục mềm "ST" ưu tiên cao nhất, trần nới +2 |
+| `scenario.preferences.order` | danh sách trong S1, S6, S4, S5, S10, OH, S3 | (22/11) Thứ tự ưu tiên do sinh viên sắp, chỉ gồm mục đang bật |
+| `rules.pins_absolute` | bool | (22/11) Ghim tuyệt đối: luật xung đột với chỗ ghim bỏ qua cho môn đó, chỉ cảnh báo |
+| `rules.year_by_credits` | vd `[28, 56, 84]` | (22/11) Năm học theo TC tích lũy (QĐ 285 Đ24) thay cho theo khóa |
+| `rules.offering_soft` + `offering_history` | bool + map mã môn → loại kỳ (`"1"`, `"2"`, `"3"`) | (22/11) Lịch sử mở lớp là mềm (mục "OH") |
+| `graduation_courses.<loại>` | mã môn **hoặc danh sách** | (22/11) Một loại có thể nhiều môn; backend luôn gửi danh sách; môn nhóm tốt nghiệp không nhận ra loại → `specialized_project` (70%) |
+| `offering_history` | map mã môn → loại kỳ từng mở | (22/11) Backend suy từ `course_opened_semesters` |
+| Học cải thiện | ghim môn đã đạt (`locked`) khi `pins_absolute` | (22/11) Học ở kỳ ghim; tính vào tải kỳ, không cộng TC tích lũy hay yêu cầu khối |
+| Dư khối tự chọn → tự do | — | (22/11) Phần dư của khối tự chọn gốc (kể cả môn sẽ học) bù vào ô tự chọn tự do; CP-SAT và validator cùng luật |
+| Kết quả: `semesters[].courses[].block`, `.slot` | tên khối, bool | (22/11) `slot = true`: môn tự chọn bộ giải tự chọn (sinh viên chưa ghim/chọn) hoặc ô tự do → giao diện hiện "khối (x TC) ▾" |
+| Kết quả: `requests` | danh sách `{kind, item, status, detail}` | (22/11) Mỗi yêu cầu của sinh viên: `met` / `warning` / `partial` / `unmet` + lý do (`planner/student_requests.py`) |
 
 **Bước kiểm tra đầu vào (`facts.validate_input`) từ chối** (không âm thầm bỏ qua) khi gặp: mã môn trùng hoặc không tồn tại; loại quan hệ hay trạng thái lạ; khối tự chọn không có ngưỡng; một môn thuộc hai khối; thiếu giả định cho môn đang học; kỳ bị khóa nằm ngoài các kỳ còn lại; kỳ hiện tại không có trong `semesters`.
 

@@ -332,6 +332,11 @@ Người duyệt chốt 20/11: database là thứ web hiển thị; mọi màn h
 - [x] T35 (21/11, thành nút **Hiệu chỉnh**) sửa trạng thái mọi môn, thêm môn, khai học kỳ hiện tại; `PUT mybk/adjustments` ghi database. jest 25 qua; chạy API trên tài khoản thử B (đã trả lại môn thử). Chưa bấm trên trình duyệt; chưa có chuyển nhóm.
 - [ ] T36 Kịch bản lần 1 → sửa tay → lần 2 chạy đúng trên tài khoản thử.
 
+### Giai đoạn 11: Sprint "Gợi ý theo ý sinh viên" (T38–T50), mở 22/11
+Ghi chú 22/11 (phiên tối): mục này chưa có trong file dù README và phiên trước ghi là đã có; các việc T38–T45, T47–T50 cần ghi lại theo đúng nội dung người duyệt đã chốt.
+- [~] T45b (23/11) Gọn trang Gợi ý theo người duyệt (xem nhật ký 23/11): `warning_items` (report.py, cli.py; `warnings` giữ nguyên), nút không mở / ô TC trên bảng, xác nhận chuẩn tiếng Anh. Sửa lỗi "FREE_6_1: chua tung mo ky he" (validate.py). pytest 68 + 7 xfail + 1 xpass (các bộ liên quan), jest planner 23 qua, typecheck + lint qua. **Chưa bấm thử trên trình duyệt.** Còn (đã hẹn): gõ mã môn bất kỳ vào ô khối / ô tự chọn tự do, thêm môn bất kỳ vào kỳ ngay trên bảng.
+- [~] T46 (22/11) Hiệu chỉnh: ô "Môn đang học kỳ này" mở ra được, hiện mã, tên, TC, khối được tính; **mọi môn trong mọi khối** (đã học, đang học, chưa học, ngoài CTĐT) có cột "Tính vào khối" sửa được, kể cả "Bắt buộc" (id `required`); chọn riêng thì nhắc "Có thể khác cách tính của myBK" (thay nhãn "Bạn chọn", người duyệt 22/11). Trang Gợi ý: mở trang luôn giải lại (đọc trạng thái/khối mới từ database), nút "Giải lại lộ trình" đưa lên đầu cột trái. Test jest tích hợp: PUT adjustments → `data.web.block_choices` → solve nhận `block_overrides`. Chọn khối cho môn bất kỳ (lưu `data.web.block_choices`, gửi bộ giải `student.block_overrides`). Bộ giải: môn đang học giả định đậu (cả ngoài CTĐT) được trừ vào tự chọn tự do (`_assumed_pass`). Trang Gợi ý hiện môn ngoài CTĐT trong "Nếu đậu hoặc rớt", có tên trên bảng. pytest test_normalize 11 qua (bộ đầy đủ 139 + 7 xfail + 1 xpass trước lần sửa cuối), jest 99 qua, typecheck + lint frontend qua. **Chưa bấm thử trên trình duyệt.** Còn: thêm môn ngoài CTĐT vào ô "Muốn học"/ghim ở trang Gợi ý (hiện chỉ có môn trong CTĐT).
+
 ---
 
 ## 7. Ca kiểm tra có đáp án xếp tay
@@ -373,6 +378,8 @@ Người duyệt xác nhận **trước khi** code giai đoạn 2. K1–K4 tính
 
 | Ngày | Quyết định | Trạng thái |
 |---|---|---|
+| 23/11 | Trang Gợi ý gọn lại: bỏ khung "Ghim môn vào kỳ" và "Môn không mở ở kỳ" ở cột trái; "không mở" thành nút trên thẻ môn (hỏi xác nhận, chip ở đầu kỳ bấm × để bỏ); số TC muốn là ô ngay đầu mỗi kỳ; cảnh báo gắn vào đúng môn / kỳ (nhãn "Lưu ý"), lời nhẹ nhàng; cảnh báo chỉ là nhắc thì sinh viên tự xác nhận (chuẩn tiếng Anh → ghi ENG_GC* Đã hoàn thành). Bỏ nhãn "mới so với mốc", "dời từ" trên bảng. Validator: ô FREE_ và luật mở lớp mềm (Q9) không còn là lỗi kỳ hè | Đã duyệt (người duyệt) |
+| 22/11 | **T46: hoàn toàn tôn trọng lựa chọn của sinh viên về khối.** Môn bất kỳ (kể cả ngoài CTĐT) được tính vào khối sinh viên chọn ở Hiệu chỉnh; web không chặn khối nào, chỉ nhắc sinh viên tự hỏi khoa về việc công nhận. Mặc định: khối của file myBK, môn ngoài CTĐT tính vào tự chọn tự do. Sửa cùng ngày: áp cho **mọi môn** (đã/đang/chưa học), chỉ nhắc "có thể khác cách tính của myBK"; mở trang Gợi ý luôn giải lại từ database | Đã duyệt (người duyệt) |
 | 18/11 | Backend gọi bộ giải Python qua dòng lệnh | Đề xuất |
 | 18/11 | Không sửa Supabase chung; dữ liệu thêm để trong file của repo | Đề xuất |
 | 18/11 | Song hành theo QĐ 285: môn liên quan phải đạt | Đề xuất |
@@ -473,3 +480,138 @@ Chỉ cần ghi "Đồng ý" hoặc "Không" vào cột thứ hai.
 | 8 | | | Đã làm 19/11 (PDF + Excel), chờ duyệt; chưa làm T24 |
 | 9 | | | Sprint mở 20/11; T27, T28, T30 xong; T29 chờ bấm thử trên trình duyệt; T31 chờ chọn chương trình cho tài khoản thử |
 | 10 | | | Sprint mở 20/11. T32 xong 21/11 (code + test + API thật, chưa bấm web); T34 một phần; T33, T35, T36 chưa làm. "Hộp xác nhận mọi lần" đã duyệt 21/11. Chờ người duyệt chốt tên nút, việc bỏ thẻ kế hoạch cũ |
+
+---
+
+## 11. Gợi ý học phần: phân tích lại (bản nháp 22/11, chờ người duyệt sửa và chốt)
+
+> Cách dùng mục này: sửa thẳng vào file. Ở bảng quyết định 11.7, ghi lựa chọn vào cột **"Bạn chọn"** (ví dụ `3`, hoặc `khác: ...`). Muốn bình luận thì thêm một dòng bắt đầu bằng `> Góp ý:` ngay dưới chỗ đó. Bản xem đẹp (chỉ đọc): https://claude.ai/artifact/6AQedEe5hhwWSoL9kfTURb. **File này là bản gốc**; hai bản lệch nhau thì tin file này.
+
+### 11.1 Câu hỏi cốt lõi
+
+Sinh viên mở trang Gợi ý để hỏi: *"Với những gì mình đã học, mình còn phải học gì, xếp vào kỳ nào để tốt nghiệp đúng hạn hoặc sớm nhất? Nếu kỳ này rớt hay một môn không mở thì kế hoạch đổi ra sao?"* Giá trị khác biệt của trang là **what-if nhiều học kỳ**. Còn kiểm tra tiên quyết cho một kỳ thì trang đăng ký môn của trường đã làm.
+
+Ba vấn đề lớn nhất hiện nay:
+- **Đầu vào chưa chắc:**
+  - PDF myBK không phân biệt "rớt" với "chưa học", và không có "đang học" (chỉ có khi sinh viên khai ở Hiệu chỉnh).
+  - Điều kiện tốt nghiệp nằm ở hai chỗ: Hiệu chỉnh và trang Quy định của Thiên (đã ẩn 22/11).
+- **Luật chưa chốt lại:**
+  - Tín chỉ mỗi kỳ có 4 con số: 11–25 (của ta), 14–21 (QĐ 285), 11–24 (database), 14–21 (engine ASP).
+  - Năm học đang tính theo khóa, trong khi QĐ Đ24 tính theo tín chỉ tích lũy.
+  - 45/132 chương trình không nhận ra đồ án chuyên ngành.
+- **Kết quả khó tin:**
+  - Bộ giải tự chọn môn tự chọn thay sinh viên.
+  - Hai bộ giải theo luật khác nhau (3 xfail).
+  - Mốc what-if chỉ nằm trên trình duyệt.
+  - Chưa ai bấm thử bằng tài khoản thật.
+
+### 11.2 Workflow 7 bước (xong bước trước mới qua bước sau)
+
+| # | Bước | Làm gì | Xong khi |
+|---|---|---|---|
+| 1 | Chốt câu hỏi sản phẩm | Q1–Q2 | Có 1 câu mô tả và phác giao diện kết quả được duyệt |
+| 2 | Kiểm kê, chuẩn hóa dữ liệu | Mỗi nguồn ở 11.3: giữ, bỏ hay suy ra; ai được sửa; lệch thì tin nguồn nào. Q3, Q4, Q9–Q12, Q16 | Có bảng "trường → nguồn → cách dùng" và phép kiểm trong `check_baseline.py` |
+| 3 | Chốt bộ luật | Luật cứng/mềm cuối cùng, mỗi luật có điều QĐ 285 hoặc ghi "nhóm tự quyết". Q5–Q8 | Mục 3 của file này viết lại và được duyệt |
+| 4 | Thuật toán | Chọn bộ giải cho sinh viên (Q13), sửa theo bộ luật mới, ca kiểm có đáp án xếp tay | pytest qua, không còn xfail do lệch luật ở bộ giải được chọn |
+| 5 | Giao diện, nút bấm | Bỏ nút trùng, đổi tên cho rõ (Q12, Q15) | Mỗi nút ở 11.6 có ý nghĩa một câu; typecheck, lint qua |
+| 6 | Kiểm bằng dữ liệu thật | Tài khoản thử A, B: giải + 3 what-if, so với cách tự xếp tay | Người duyệt xác nhận (T24) |
+| 7 | What-if và mốc | Q14 | Lưu mốc → đổi kịch bản → về mốc chạy đúng trên web |
+
+### 11.3 Dữ liệu thô và ta làm gì với nó
+
+| Nguồn | Có gì | Không có / lệch | Ta đang làm gì | Câu cần chốt |
+|---|---|---|---|---|
+| PDF / chữ dán myBK (`student_progress_imports.data`) | Mã CTĐT, khối, môn của khối (kể cả chưa học), ✓ đạt, điểm, TC tích lũy, điều kiện tốt nghiệp | Không có "đang học"; "--" vừa là chưa học vừa là rớt; không có kỳ đã học | Ghi trạng thái đúng theo file vào `student_courses` mỗi lần nhập | Q3, Q4 |
+| Hiệu chỉnh (`student_courses`, `data.web`) | 4 trạng thái, học kỳ hiện tại, ghi chú | Trạng thái bị ghi đè khi nhập lại file (học kỳ, ghi chú giữ) | Đầu vào duy nhất của bộ giải về trạng thái môn | Q2 |
+| `curricula` (132) | `source_code`, tổng TC, mức TC/kỳ 11–24 | Mức TC/kỳ khác QĐ (14–21) | Tìm chương trình theo mã myBK; bộ giải **không** dùng mức TC của database | Q5 |
+| `curriculum_courses` | Môn, kỳ khuyến nghị | KHMT 2023 chỉ 37/96 môn có kỳ khuyến nghị | Mềm S6 | Q10 |
+| `course_groups` | Bắt buộc/tự chọn, TC hoặc số môn cần, khối con chuyên ngành; mới từ main: kỳ khuyến nghị của khối | Tự chọn tự do không liệt kê môn | H3, H13, H15 | Q7, Q8 |
+| `course_categories` | "Tốt nghiệp" / "Học phần tốt nghiệp" / "Tốt nghiệp bậc cử nhân", "Điều kiện tốt nghiệp" | Tên đồ án không thống nhất ("Đồ án 2", "Đồ án ngành 1"…) | Nhận môn cho ngưỡng 65/70/85% (T37, 22/11) | Q11 |
+| `course_relations` | TQ, HT, SH, KN theo chương trình (KHMT 2023: 37) | Chưa biết lấy từ đề cương hay CTĐT; HT đã bỏ | H4, H5; không dùng quan hệ suy ra | Q16 |
+| `course_opened_semesters` | Kỳ môn **đã từng** mở (KHMT 2023: 201–261, có hè) | Không phải kế hoạch mở lớp | Hè chỉ xếp môn từng mở hè; ASP dùng thêm | Q9 |
+| `curriculum_regulations` + `student_regulation_statuses` | GDQP, GDTC, tiếng Anh, hoạt động SV; sinh viên tự bật | Trùng điều kiện tốt nghiệp của ta; trang đã ẩn 22/11 | Bộ giải chưa đọc | Q12 |
+| `student_profiles` | Chương trình, năm vào trường, chuyên ngành mục tiêu | Chuyên ngành ít ai điền | Năm học theo khóa (H11), H15 | Q6, Q8 |
+| QĐ 285 | TQ/SH, TC/kỳ, cấp độ, ngưỡng tốt nghiệp, 12 kỳ chính | Rải rác; PL1 lệch Đ15.4 | Tóm ở `04-luat-qd285.md` | Q5, Q6 |
+| Học phí, GPA (`policy.lp`, điểm PDF) | Engine ASP tính | CP-SAT bỏ qua | Chỉ ở báo cáo ASP | ngoài phạm vi? |
+
+### 11.4 Luồng khi bấm "Giải lộ trình"
+
+1. Trang gom kịch bản, gọi `POST /api/plans/solve`.
+2. Backend `loadSource` đọc database của tài khoản.
+3. `buildPlannerInput` ghép JSON cho bộ giải (không có tên, MSSV).
+4. `python -m planner.cli` kiểm tra đầu vào và chuẩn hóa.
+5. Chạy bộ giải CP-SAT hoặc Clingo.
+6. `validate_plan` kiểm lại kết quả một cách độc lập.
+7. Có lộ trình thì trả từng kỳ, lý do, mong muốn đáp ứng hay không. Không có thì `_explain_unsat` bỏ thử từng lựa chọn của sinh viên, rồi nới từng luật, để chỉ ra cái đang chặn.
+8. Trang hiện kết quả và so với mốc.
+
+Chi tiết: 03 mục 3, Phụ lục C.
+
+### 11.5 Thuật toán và kết quả (hiện trạng)
+
+- **Bài toán:** biến 0/1 "môn c xếp vào kỳ k" cho mỗi môn chưa đạt, mỗi kỳ còn lại. Thỏa mọi luật cứng; trong các cách thỏa, chọn tốt nhất theo thứ tự mong muốn mềm.
+- **Cứng:**
+  - H1 mỗi môn ≤ 1 kỳ · H2 đủ bắt buộc · H3 đủ TC khối tự chọn
+  - H4 TQ đạt kỳ trước · H5 SH đạt trước hoặc cùng kỳ
+  - H7 11–25 TC/kỳ chính · H8 môn không mở · H9 khóa môn · H10 xong trước kỳ X
+  - H11 cấp độ theo năm · H12 ngưỡng 65/70/85% · H13 tự chọn tự do · H14 ≤ 12 kỳ chính, hè chỉ khi bật · H15 chuyên ngành
+- **Mềm (ưu tiên giảm dần):** S1 xong sớm → S6 giữ khuyến nghị → S4 môn muốn học → S9 hè ưu tiên cấp 1–2 → S7 hè 6–9 TC → S2 không học thừa → S11 kỳ chính đủ 11 TC → S8 kỳ chính 15–18 TC → S5 đều tải → S3 ít đổi so với mốc → S10 ít học hè.
+- **Bộ giải:**
+  - CP-SAT: mặc định, gộp mong muốn thành tổng có trọng số; KHMT 2023 dưới 1 giây, OPTIMAL.
+  - Engine ASP: luật trong `policy.lp`, có GPA, học phí, kỳ nghỉ; lệch luật đã duyệt ở 3 chỗ.
+  - Validator độc lập kiểm lại kết quả của cả hai.
+- **Trả về:** trạng thái (OPTIMAL / SAT_NOT_PROVEN_OPTIMAL / UNSAT / TIMEOUT), kỳ học xong, TC còn lại, môn từng kỳ kèm lý do, mong muốn không đáp ứng, cảnh báo, giả định. UNSAT thì chỉ ra cái chặn.
+
+### 11.6 Từng nút bấm trên trang Gợi ý
+
+| Nút / ô | Sinh viên hiểu là | Hệ thống làm gì | Vấn đề | Gợi ý |
+|---|---|---|---|---|
+| Đậu / Rớt từng môn đang học | "Nếu rớt môn X thì sao?" | `in_progress_results`; rớt thì xếp lại sau | Chỉ hiện khi đã khai Đang học ở Hiệu chỉnh | Giữ: what-if quan trọng nhất |
+| Tối đa TC mỗi kỳ | "Mình muốn học nhẹ" | Hạ trần H7 (11–25) | Mặc định 25 cao hơn QĐ (21) | Q5 |
+| Học xong trước kỳ | "Ra trường trước kỳ X" | H10; không kịp thì UNSAT kèm lý do | — | Giữ |
+| Bật kỳ hè | "Chịu học hè" | `summer_opt_in`; hè ≤ 12 TC, không đồ án, chỉ môn từng mở hè | Thực tập luôn xếp hè được kể cả khi không bật | Giữ, nói rõ trên nút |
+| Khóa môn vào kỳ | "Chắc chắn học kỳ Y" | H9 | — | Giữ |
+| Môn không mở ở kỳ | "Kỳ Y không mở môn này" | H8 | Sinh viên khó biết trước | Q9 |
+| Môn muốn học | "Thích môn tự chọn này" | S4 | Không chọn thì bộ giải tự chọn | Q7 |
+| Các kỳ đều tải | "Đừng dồn một kỳ" | S5 | — | Giữ |
+| Ưu tiên giữ khuyến nghị | "Học đúng kế hoạch khoa" | S6 lên trên S1 | Chỉ 37/96 môn có kỳ khuyến nghị | Q10 |
+| Chuẩn tiếng Anh, MOS | "Có chứng chỉ chưa" | `student_flags`; không khai thì giả định đạt | Trùng ENG_GC_600 ở Hiệu chỉnh | Bỏ, lấy từ Hiệu chỉnh (Q12) |
+| Chọn bộ giải | Sinh viên không hiểu khác gì | `solver` | Hai bộ giải khác luật | Ẩn (Q13) |
+| Kỳ muốn nghỉ (chỉ Clingo) | "Bảo lưu kỳ Y" | `skip_semesters` | CP-SAT không hỗ trợ | Q13 |
+| Giải lộ trình | "Xếp cho mình" | Cả luồng 11.4 | — | Giữ |
+| Lưu làm mốc / Về mốc / Lấy làm mốc mới / Xóa mốc | "Giữ kế hoạch này để so" | localStorage; mỗi lần giải gửi mốc (S3), so ở trình duyệt | Đổi máy mất mốc | Q14 |
+
+### 11.7 Mười sáu quyết định (ghi vào cột "Bạn chọn")
+
+**Chặn** = phải chốt trước khi code bước tương ứng.
+
+| Mã | Câu hỏi | Vì sao hỏi | Lựa chọn | Gợi ý của AI | Bạn chọn |
+|---|---|---|---|---|---|
+| Q1 **chặn** | Trang trả lời câu hỏi gì? | Quyết định mọi thứ phía sau | 1) Lộ trình mọi kỳ tới tốt nghiệp + what-if · 2) Chỉ kỳ tới · 3) Kỳ tới nổi bật, các kỳ sau thu gọn | **3**: sinh viên hành động ở kỳ tới, nhưng chỉ lộ trình đủ mới cho biết có kịp tốt nghiệp | **Chốt 22/11:** bộ giải luôn tính toàn bộ lộ trình tới tốt nghiệp; 1 và 3 chỉ khác cách hiện ở frontend, quyết ở Q15. Kỳ tới phải đáng tin hơn (xem Q9) |
+| Q2 **chặn** | Trạng thái môn đưa vào bộ giải lấy từ đâu? | 3 chỗ cùng ghi `student_courses`: nhập PDF, Hiệu chỉnh, bảng thẻ của Thiên | 1) Chỉ PDF + Hiệu chỉnh, khóa Lưu ở bảng thẻ · 2) Cả ba, lần ghi sau thắng | **1**: một nguồn thì giải thích được kết quả | **Chốt 22/11: 1.** Bộ giải chỉ lấy từ nhập PDF + Hiệu chỉnh. Bảng thẻ của Thiên (tab Chương trình) vẫn ghi được `student_courses`: **chưa xử lý**, người duyệt sẽ trao đổi với Thiên sau |
+| Q3 | "--" trong PDF là chưa học hay rớt? | PDF không phân biệt; rớt tự chọn được chọn môn khác (Đ3) | 1) Mặc định Chưa học, sinh viên tự đổi Rớt · 2) Suy từ điểm | **1**: bộ giải xử lý hai trạng thái như nhau | |
+| Q4 | Môn đang học mặc định ra sao? | — | 1) Giả định đậu (Đ15.1) · 2) Bắt chọn đậu/rớt từng môn | **1**, giữ ô đậu/rớt làm what-if | |
+| Q5 **chặn** | Mức TC mỗi kỳ chính? | Đã chốt 11–25 (18/11) nhưng QĐ Đ15.3 ghi 14–21; ASP dùng 14–21; nguyên nhân chính của xfail | 1) Giữ 11–25 · 2) Mặc định 14–21, sinh viên hạ tới 11 / nâng tới 25 kèm cảnh báo | **2**: mặc định đúng quy định, ngoại lệ là lựa chọn có ý thức | |
+| Q6 | "Năm thứ mấy" (mở môn cấp 3, 4) tính thế nào? | Đang theo khóa; Đ24 theo TC tích lũy (28/56/84), PDF đã có số TC | 1) Theo khóa · 2) Theo TC tích lũy, cộng dần qua từng kỳ | **2**; còn PL1 lệch Đ15.4 thì hỏi Phó Khoa | |
+| Q7 **chặn** | Bộ giải có tự chọn môn tự chọn thay sinh viên? | Sinh viên thấy môn mình không định học | 1) Giữ · 2) Xếp "ô tự chọn X TC khối Y"; hiện tên môn khi sinh viên đã chọn | **2**, kèm cảnh báo môn chọn cho ô phải thỏa tiên quyết | |
+| Q8 | Chuyên ngành hỏi ở đâu? | Có `specialization_required` (main); KHMT 2023 có 5 chuyên ngành | 1) Lấy từ hồ sơ, thiếu thì bộ giải chọn dễ nhất · 2) Trang Gợi ý hỏi trước khi giải nếu bắt buộc | **2** | |
+| Q9 | Môn có mở kỳ tới không? | Chỉ có lịch sử "đã từng mở" | 1) Giả định mở, sinh viên tự khai · 2) Chưa từng mở loại kỳ đó thì cấm · 3) Như 1 + cảnh báo "3 năm chưa mở kỳ 2" | **3** | |
+| Q10 | Kỳ khuyến nghị khi môn không có? | 37/96 môn có | 1) Chỉ của môn · 2) Thiếu thì lấy của khối (main) | **2** | |
+| Q11 | 45 chương trình: "Đồ án 1/2/ngành" có là đồ án chuyên ngành (70%)? | Không nhận thì ngưỡng 70% không áp; KHMT 2023 không ảnh hưởng | 1) Nhận theo quy tắc tên · 2) Để nguyên, hỏi trường | **2** cho tới khi có người dùng ngoài KHMT | |
+| Q12 | Điều kiện tốt nghiệp xử lý ra sao? | Có ở 3 chỗ | 1) Một nguồn là Hiệu chỉnh; Gợi ý chỉ hiện "còn thiếu" · 2) Giữ ô khai riêng ở Gợi ý | **1**, bỏ ô Chuẩn tiếng Anh/MOS; MOS ghi thành giả định | |
+| Q13 **chặn** | Sinh viên dùng bộ giải nào? | Hai bộ giải khác luật | 1) Giữ cả hai trên giao diện · 2) CP-SAT cho SV, ASP chạy ngầm đối chiếu · 3) ASP cho SV | **2**, đưa "kỳ muốn nghỉ" vào CP-SAT; bàn với đồng đội viết ASP | |
+| Q14 | Mốc what-if lưu ở đâu? | Đổi máy mất mốc | 1) Trình duyệt · 2) `data.web.baseline` (không migration) | **2** | |
+| Q15 | Kết quả hiện gì, thứ tự nào? | — | — | (1) "Tốt nghiệp sớm nhất kỳ X, còn Y TC" (2) Kỳ tới: môn nên đăng ký + lý do (3) Các kỳ sau thu gọn (4) Điều kiện còn thiếu, cảnh báo (5) Mong muốn chưa đáp ứng (6) So với mốc | |
+| Q16 | Quan hệ TQ/SH có đáng tin? | KHMT 2023: 37 trên database vs 32 PDF CTĐT; chung 31, mất 1 (HT PE1005 sau PE1003), thêm 6 (2 SH, 1 HT, 3 KN) | 1) Tin database · 2) Kiểm 7 chỗ khác với đề cương trước | **2** cho KHMT 2023; chương trình khác ghi "chưa kiểm" | |
+
+### 11.8 Việc cụ thể sau khi chốt (đề xuất, chưa giao)
+
+| Mã | Việc | Phụ thuộc | Xong khi |
+|---|---|---|---|
+| T38 | Viết lại mục 3 (bộ luật) theo Q5–Q11 | Q1, Q5–Q11 | Người duyệt duyệt |
+| T39 | Kiểm 7 quan hệ khác nhau của KHMT 2023 với đề cương | Q16 | Ghi vào 01 |
+| T40 | Sửa CP-SAT: TC/kỳ (Q5), năm theo TC (Q6), ô tự chọn (Q7), kỳ nghỉ (Q13) | T38 | pytest qua, có ca đáp án xếp tay |
+| T41 | Backend: chuyên ngành, kỳ khuyến nghị khối, điều kiện từ Hiệu chỉnh | Q8, Q10, Q12 | jest qua |
+| T42 | Trang Gợi ý: bỏ ô trùng, ẩn chọn bộ giải, bố cục theo Q15 | T40, T41 | typecheck, lint qua |
+| T43 | Mốc what-if lưu ở `data.web.baseline` | Q14 | Đổi trình duyệt vẫn thấy mốc |
+| T24 | Tài khoản thử A, B với 3 what-if; so với tự xếp tay | T42 | Người duyệt xác nhận |

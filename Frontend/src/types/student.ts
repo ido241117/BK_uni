@@ -15,7 +15,9 @@ export const STUDENT_COURSE_STATUS_LABEL: Record<StudentCourseStatus, string> = 
     'not-started': 'Chưa học',
     'in-progress': 'Đang học',
     completed: 'Đã hoàn thành',
-    failed: 'Chưa đạt',
+    // Người duyệt 22/11 (Q3): nhãn vui "Đã học nhưng gãy"; TRƯỚC KHI RA HỘI ĐỒNG đổi thành "Trượt môn".
+    // Nhập PDF ghi mọi "--" là Chưa học; ai rớt tự đổi ở Hiệu chỉnh.
+    failed: 'Đã học nhưng gãy',
 };
 
 /** Màu Tag của từng trạng thái, dùng chung cho mọi bảng/trang. */

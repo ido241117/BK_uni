@@ -26,9 +26,18 @@ export const listMyCourses = () =>
 export const upsertMyCourse = (courseId: string, status: StudentCourseStatus) =>
     queryMethod.put<StudentCourse>(`/student-courses/me/${courseId}`, { status });
 
-/** Khai nhiều môn một lần (nhập từ file); môn không gửi giữ nguyên. Trả toàn bộ trạng thái sau khi lưu. */
-export const bulkUpsertMyCourses = (items: { course_id: string; status: StudentCourseStatus }[]) =>
-    queryMethod.put<StudentCourse[]>('/student-courses/me', { items });
+/**
+ * Khai nhiều môn một lần (nhập từ file, hoặc lưu bản nháp ở trang môn học); môn không gửi giữ nguyên.
+ * `removeCourseIds`: môn bỏ khai báo. Trả toàn bộ trạng thái sau khi lưu.
+ */
+export const bulkUpsertMyCourses = (
+    items: { course_id: string; status: StudentCourseStatus }[],
+    removeCourseIds: string[] = [],
+) =>
+    queryMethod.put<StudentCourse[]>('/student-courses/me', {
+        items,
+        ...(removeCourseIds.length ? { remove_course_ids: removeCourseIds } : {}),
+    });
 
 export const removeMyCourse = (courseId: string) =>
     queryMethod.delete(`/student-courses/me/${courseId}`);
@@ -43,6 +52,17 @@ export const listMyPlanCourses = (curriculumId?: string) =>
 export const upsertMyPlanCourse = (curriculumId: string, courseId: string, semesterCode: string) =>
     queryMethod.put<StudentPlanCourse>(`/student-plan-courses/me/${curriculumId}/${courseId}`, {
         semester_code: semesterCode,
+    });
+
+/** Lưu nhiều môn của kế hoạch một lần; môn không gửi giữ nguyên. Trả toàn bộ kế hoạch của chương trình. */
+export const bulkUpsertMyPlanCourses = (
+    curriculumId: string,
+    items: { course_id: string; semester_code: string }[],
+    removeCourseIds: string[] = [],
+) =>
+    queryMethod.put<StudentPlanCourse[]>(`/student-plan-courses/me/${curriculumId}`, {
+        items,
+        ...(removeCourseIds.length ? { remove_course_ids: removeCourseIds } : {}),
     });
 
 export const removeMyPlanCourse = (curriculumId: string, courseId: string) =>

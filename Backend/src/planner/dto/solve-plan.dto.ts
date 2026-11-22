@@ -37,15 +37,23 @@ export class SolvePlanDto {
   @IsOptional() @IsArray()
   not_offered?: { course_code: string; semester_code: string }[];
 
-  @ApiPropertyOptional({ description: 'Kỳ sinh viên chủ động nghỉ, vd ["262"] (chỉ engine ASP dùng; không báo là kỳ trống)' })
+  @ApiPropertyOptional({ description: 'Kỳ sinh viên chủ động nghỉ (bảo lưu, đi làm…), vd ["262"]; môn không ghim không xếp vào' })
   @IsOptional() @IsArray() @Matches(SEMESTER, { each: true })
   skip_semesters?: string[];
+
+  @ApiPropertyOptional({ description: 'Kỳ khóa: giữ đúng các môn đã ghim, không xếp thêm (22/11)' })
+  @IsOptional() @IsArray() @Matches(SEMESTER, { each: true })
+  frozen_semesters?: string[];
+
+  @ApiPropertyOptional({ description: 'Số TC sinh viên muốn từng kỳ, vd {"262": 15}; được lệch tới 2 TC và báo lại (22/11)' })
+  @IsOptional() @IsObject()
+  semester_targets?: Record<string, number>;
 
   @ApiPropertyOptional({ description: 'Kỳ hè sinh viên muốn học, vd ["263"]' })
   @IsOptional() @IsArray()
   summer_opt_in?: string[];
 
-  @ApiPropertyOptional({ description: 'wanted_courses, balanced_load, recommendations_first, preferred_load' })
+  @ApiPropertyOptional({ description: 'wanted_courses, balanced_load, recommendations_first, preferred_load, order (thứ tự ưu tiên: S1, S6, S4, S5, S10, OH, S3)' })
   @IsOptional() @IsObject()
   preferences?: Record<string, unknown>;
 

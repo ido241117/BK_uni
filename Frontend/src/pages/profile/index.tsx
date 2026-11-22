@@ -1,15 +1,17 @@
-import { useEffect, useMemo } from 'react';
-import { Alert, Card, DatePicker, Descriptions, Form, Input, InputNumber, Select, Typography } from 'antd';
+import { useEffect } from 'react';
+import { Alert, Card, DatePicker, Descriptions, Form, Input, InputNumber, Typography } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { LuCalendarRange } from 'react-icons/lu';
 import { Link } from 'react-router';
 import { FormField, IOutLinedBtn, ISolidBtn, PageHeader, TablePageSkeleton } from '@/components';
-import { listCurricula } from '@/apis/curriculum';
+import { listAllCurricula } from '@/apis/curriculum';
 import { getMyProfile, saveMyProfile } from '@/apis/student';
 import { useApiMutation, useApiQuery, useCurrentUser } from '@/hooks';
 import { ROLE_LABEL, type StudentProfile, type StudentProfilePayload } from '@/types';
+import CurriculumOverview from './CurriculumOverview';
+import CurriculumPicker from './CurriculumPicker';
 
 const { Paragraph, Text } = Typography;
 
@@ -58,19 +60,9 @@ const ProfilePage = () => {
     const [form] = Form.useForm<ProfileFormValues>();
 
     const profileQuery = useApiQuery(['my-profile'], getMyProfile);
-    const curriculaQuery = useApiQuery(['curricula', 'profile-options'], () => listCurricula({ take: 100 }));
+    const curriculaQuery = useApiQuery(['curricula', 'profile-options'], () => listAllCurricula());
 
     const profile = profileQuery.data ?? null;
-
-    const curricula = curriculaQuery.data?.items;
-    const curriculumOptions = useMemo(
-        () => (curricula ?? []).map(item => ({ value: item.id, label: `${item.code} · ${item.name}` })),
-        [curricula],
-    );
-    const currentCurriculum = useMemo(
-        () => (curricula ?? []).find(item => item.id === profile?.curriculum_id),
-        [curricula, profile?.curriculum_id],
-    );
 
     // Nạp lại form khi hồ sơ về (kể cả `null` ⇒ form trống) và sau mỗi lần lưu.
     // `resetFields` trước để trường đã xoá trên server về đúng trạng thái rỗng.
@@ -206,18 +198,10 @@ const ProfilePage = () => {
                                 <Form.Item
                                     name="curriculum_id"
                                     label="Chương trình đào tạo"
-                                    extra="Dùng làm chương trình mặc định ở trang Kế hoạch học tập."
+                                    extra="Chọn ngành và khóa theo bảng chương trình đào tạo của trường; bấm “Lưu thay đổi” để áp dụng. Dùng làm chương trình ở trang Môn học & kế hoạch."
+                                    style={{ gridColumn: '1 / -1' }}
                                 >
-                                    <Select
-                                        size="large"
-                                        allowClear
-                                        showSearch
-                                        optionFilterProp="label"
-                                        placeholder="Chọn chương trình đào tạo"
-                                        loading={curriculaQuery.isLoading}
-                                        options={curriculumOptions}
-                                        style={{ width: '100%' }}
-                                    />
+                                    <CurriculumPicker curricula={curriculaQuery.data ?? []} loading={curriculaQuery.isLoading} />
                                 </Form.Item>
                             </div>
 
@@ -251,24 +235,11 @@ const ProfilePage = () => {
                         </Link>
                     )}
                 >
-                    {currentCurriculum ? (
-                        <Descriptions column={{ xs: 1, sm: 2 }} size="middle">
-                            <Descriptions.Item label="Mã chương trình">
-                                <Text strong>{currentCurriculum.code}</Text>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Tên chương trình">{currentCurriculum.name}</Descriptions.Item>
-                            <Descriptions.Item label="Ngành">{currentCurriculum.major}</Descriptions.Item>
-                            <Descriptions.Item label="Khoa">{currentCurriculum.faculty}</Descriptions.Item>
-                            <Descriptions.Item label="Khóa">{currentCurriculum.cohort}</Descriptions.Item>
-                            <Descriptions.Item label="Tín chỉ mỗi học kỳ">
-                                {`${currentCurriculum.min_semester_credits} – ${currentCurriculum.max_semester_credits} TC`}
-                            </Descriptions.Item>
-                        </Descriptions>
+                    {profile?.curriculum_id ? (
+                        <CurriculumOverview curriculumId={profile.curriculum_id} />
                     ) : (
                         <Paragraph type="secondary" style={{ margin: 0 }}>
-                            {profile?.curriculum_id
-                                ? 'Chương trình trong hồ sơ không còn trong danh sách — hãy chọn lại ở mục Thông tin sinh viên.'
-                                : 'Bạn chưa chọn chương trình đào tạo. Chọn ở mục Thông tin sinh viên để lập kế hoạch học tập.'}
+                            Bạn chưa chọn chương trình đào tạo. Chọn ở mục Thông tin sinh viên để lập kế hoạch học tập.
                         </Paragraph>
                     )}
                 </Card>

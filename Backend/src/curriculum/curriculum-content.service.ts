@@ -154,8 +154,11 @@ export class CurriculumContentService {
     const requiredCount = inherit ? parent.required_count : dto.required_count ?? null;
     const requiredCredits = inherit ? parent.required_credits : dto.required_credits ?? null;
     const courseIds = dto.course_ids ?? [];
+    const recommendedYear = dto.recommended_year ?? null;
+    const recommendedTerm = dto.recommended_term ?? null;
     this.assertGroupTarget(requiredCount, requiredCredits, scope);
     this.assertScopeMembers(scope, courseIds);
+    this.assertRecommendedSemester(recommendedYear, recommendedTerm);
     if (parent) {
       if (scope !== CourseGroupScope.LISTED) {
         throw new BadRequestException('Khối chuyên ngành phải là khối "listed".');
@@ -173,6 +176,8 @@ export class CurriculumContentService {
           required_credits: requiredCredits,
           pool_scope: scope,
           pool_course_credits: dto.pool_course_credits ?? null,
+          recommended_year: recommendedYear,
+          recommended_term: recommendedTerm,
           specialization_id: specializationId,
           parent_group_id: parentGroupId,
         }));
@@ -194,8 +199,11 @@ export class CurriculumContentService {
     const scope = dto.pool_scope ?? group.pool_scope;
     const requiredCount = dto.required_count !== undefined ? dto.required_count : group.required_count;
     const requiredCredits = dto.required_credits !== undefined ? dto.required_credits : group.required_credits;
+    const recommendedYear = dto.recommended_year !== undefined ? dto.recommended_year : group.recommended_year;
+    const recommendedTerm = dto.recommended_term !== undefined ? dto.recommended_term : group.recommended_term;
     this.assertGroupTarget(requiredCount, requiredCredits, scope);
     this.assertScopeMembers(scope, dto.course_ids ?? []);
+    this.assertRecommendedSemester(recommendedYear, recommendedTerm);
     if (group.parent_group_id) {
       if (scope !== CourseGroupScope.LISTED) {
         throw new BadRequestException('Khối chuyên ngành phải là khối "listed".');
@@ -215,6 +223,8 @@ export class CurriculumContentService {
         group.required_credits = requiredCredits;
         group.pool_scope = scope;
         if (dto.pool_course_credits !== undefined) group.pool_course_credits = dto.pool_course_credits;
+        group.recommended_year = recommendedYear;
+        group.recommended_term = recommendedTerm;
         await manager.save(group);
         if (scope === CourseGroupScope.ANY) {
           // Khối "any" không có thành viên; chuyển từ "listed" sang phải dọn thành viên cũ.
@@ -722,6 +732,12 @@ export class CurriculumContentService {
     }
     if (scope === CourseGroupScope.ANY && !requiredCredits) {
       throw new BadRequestException('Khối "any" phải khai báo required_credits.');
+    }
+  }
+
+  private assertRecommendedSemester(year: number | null, term: number | null): void {
+    if ((year === null) !== (term === null)) {
+      throw new BadRequestException('recommended_year và recommended_term phải cùng có hoặc cùng bỏ trống.');
     }
   }
 

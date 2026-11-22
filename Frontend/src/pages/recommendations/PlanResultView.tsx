@@ -1,7 +1,8 @@
 import { Alert, Card, Collapse, Empty, Space, Statistic, Table, Tag, Tooltip, Typography } from 'antd';
 import { LuCircleCheck, LuCircleX, LuLock } from 'react-icons/lu';
 import { IOutLinedBtn, ISolidBtn } from '@/components';
-import type { PlanCourse, PlanCourseReason, PlanResult } from '@/types';
+import type { ReactNode } from 'react';
+import type { PlanCourse, PlanCourseReason, PlanRequest, PlanResult } from '@/types';
 import { semesterLabel } from '@/pages/courses/analysis/semester';
 import { comparePlans, isSameAsBaseline, type PlanDiff } from './whatIf';
 import EngineReportCard from './EngineReportCard';
@@ -50,7 +51,34 @@ interface PlanResultViewProps {
     onSaveBaseline?: () => void;
     onRestoreBaseline?: () => void;
     onClearBaseline?: () => void;
+    /** Sprint 11: bảng các kỳ (kéo thả, ghim, cài đặt từng kỳ) thay cho danh sách kỳ chỉ đọc. */
+    board?: ReactNode;
 }
+
+/** Bảng `requests` (sprint 11): mỗi yêu cầu của sinh viên được đáp ứng tới đâu, không im lặng bỏ yêu cầu nào. */
+const REQUEST_STATUS: Record<PlanRequest['status'], { color: string; label: string }> = {
+    met: { color: 'green', label: 'Đáp ứng' },
+    warning: { color: 'gold', label: 'Giữ, nhưng trái luật' },
+    partial: { color: 'orange', label: 'Một phần' },
+    unmet: { color: 'red', label: 'Chưa đáp ứng' },
+};
+const REQUEST_KIND: Record<PlanRequest['kind'], string> = {
+    pin: 'Ghim', target: 'Số TC muốn', skip: 'Nghỉ kỳ', frozen: 'Khóa kỳ', wanted: 'Môn muốn học',
+    graduate_by: 'Hạn tốt nghiệp', not_offered: 'Môn không mở',
+};
+const RequestsCard = ({ requests }: { requests: PlanRequest[] }) => (
+    <Card size="small" title="Yêu cầu của bạn">
+        <Space orientation="vertical" style={{ width: '100%' }} size={6}>
+            {requests.map((r, i) => (
+                <Space key={`${r.kind}-${r.item}-${i}`} align="start" wrap>
+                    <Tag color={REQUEST_STATUS[r.status].color}>{REQUEST_STATUS[r.status].label}</Tag>
+                    <Text strong>{REQUEST_KIND[r.kind]} {r.item}</Text>
+                    <Text type="secondary">{r.detail}</Text>
+                </Space>
+            ))}
+        </Space>
+    </Card>
+);
 
 const graduationText = (d: PlanDiff) => {
     const from = d.graduationFrom ? semesterLabel(d.graduationFrom) : '—';
@@ -139,7 +167,7 @@ const WhatIfCard = ({
 
 const PlanResultView = ({
     result, courseName, previousGraduation, recommendationsFirst, onPreferRecommendations,
-    baseline, onSaveBaseline, onRestoreBaseline, onClearBaseline,
+    baseline, onSaveBaseline, onRestoreBaseline, onClearBaseline, board,
 }: PlanResultViewProps) => {
     const alert = STATUS_ALERT[result.status] ?? STATUS_ALERT.INPUT_ERROR;
     const totalCredits = result.semesters.reduce((sum, s) => sum + s.credits, 0);
@@ -195,6 +223,8 @@ const PlanResultView = ({
                 </Card>
             )}
 
+            {(result.requests?.length ?? 0) > 0 && <RequestsCard requests={result.requests!} />}
+
             {(result.warnings?.length ?? 0) > 0 && (
                 <Alert
                     type="warning"
@@ -206,7 +236,7 @@ const PlanResultView = ({
 
             {result.engine_report && <EngineReportCard report={result.engine_report} courseName={courseName} />}
 
-            {result.semesters.map(semester => (
+            {board ?? result.semesters.map(semester => (
                 <Card
                     key={semester.semester_code}
                     size="small"

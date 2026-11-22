@@ -29,6 +29,7 @@ from typing import Any
 from planner.facts import FixtureError
 from planner.normalize import normalize
 from planner.relations import enrich
+from planner.report import warning_items
 from planner.relations import load as load_snapshot
 from planner.result import diff
 from planner.solve_asp import solve_asp
@@ -59,12 +60,15 @@ def _reason(fixture: dict[str, Any], scenario: dict[str, Any], code: str) -> str
 def _explain_unsat(fixture: dict[str, Any], scenario: dict[str, Any], time_limit: float) -> str:
     """Thu bo tung lua chon cua sinh vien (bang CP-SAT) de tim nut gay ra UNSAT."""
     knobs: list[tuple[str, dict[str, Any]]] = []
-    for k, item in enumerate(scenario.get("locked", [])):
+    # Sprint 11: ghim tuyet doi thi khong bao gio de xuat bo ghim (nguoi duyet 22/11).
+    absolute = bool((fixture.get("rules") or {}).get("pins_absolute"))
+    for k, item in enumerate([] if absolute else scenario.get("locked", [])):
         trial = copy.deepcopy(scenario)
         del trial["locked"][k]
         knobs.append((f"khóa {item['course_code']} vào kỳ {item['semester_code']}", trial))
     for key, label in (("graduate_by", "hạn tốt nghiệp"), ("max_credits", "mức tín chỉ tối đa"),
-                       ("semester_limits", "giới hạn tín chỉ từng kỳ")):
+                       ("semester_limits", "giới hạn tín chỉ từng kỳ"), ("skip_semesters", "các kỳ nghỉ"),
+                       ("frozen_semesters", "các kỳ đã khóa")):
         if scenario.get(key):
             trial = copy.deepcopy(scenario)
             trial.pop(key)
@@ -103,6 +107,11 @@ def run(payload: dict[str, Any], solver: str, time_limit: float,
         raw = enrich(raw, snapshot)
         if not use_inferred:
             raw["course_relations"] = [r for r in raw["course_relations"] if r.get("source") != "inferred"]
+    # Mon dang hoc gia dinh dau: normalize tru vao tu chon tu do nhu mon da dat (22/11).
+    results = scenario.get("in_progress_results") or {}
+    raw["student"] = {**raw["student"], "_assumed_pass": sorted(
+        sc["course_code"] for sc in raw["student"]["student_courses"]
+        if sc["status"] == "in-progress" and results.get(sc["course_code"]) == "pass")}
     fixture = normalize(raw)
     previous = payload.get("previous_plan")
     inferred = [{k: r[k] for k in ("course_code", "related_course_code", "type", "inferred_from")}
@@ -114,19 +123,35 @@ def run(payload: dict[str, Any], solver: str, time_limit: float,
 
     locked = {(i["course_code"], i["semester_code"]) for i in scenario.get("locked", [])}
     credits = {c["code"]: c["credits"] for c in fixture["courses"]}
+    # O khoi (Q7, 22/11): mon tu chon bo giai tu chon (sinh vien chua ghim, chua chon) va o tu chon
+    # tu do hien thanh "khoi (x TC) ▾" tren giao dien; mon sinh vien ghim/chon thi hien ten mon.
+    block_of: dict[str, str] = {}
+    for g in fixture["course_groups"]:
+        if g.get("_free_slots") or (g["kind"] == "elective" and not g.get("parent") and not g.get("specialization")):
+            for c in g["members"]:
+                block_of.setdefault(c, g["name"].replace(" (o trong)", ""))
+    chosen = {c for c, _ in locked} | set((scenario.get("preferences") or {}).get("wanted_courses", []))
     semesters = [
         {
             "semester_code": s["semester_code"],
             "credits": s["credits"],
             "courses": [
                 {"code": c, "credits": credits[c], "reason": _reason(fixture, scenario, c),
-                 "locked": (c, s["semester_code"]) in locked}
+                 "locked": (c, s["semester_code"]) in locked,
+                 "block": block_of.get(c),
+                 "slot": c in block_of and c not in chosen}
                 for c in s["courses"]
             ],
         }
         for s in result["semesters"]
     ]
     violations = validate_plan(fixture, scenario, result["semesters"]) if result["semesters"] else []
+    pin_warnings: list[str] = []
+    if (fixture.get("rules") or {}).get("pins_absolute"):
+        # Ghim tuyet doi: vi pham o mon ghim la canh bao (da noi trong bang requests), khong phai loi.
+        pinned_codes = {c for c, _ in locked}
+        pin_warnings = [v for v in violations if any(v.startswith(c) or f" {c}" in v for c in pinned_codes)]
+        violations = [v for v in violations if v not in pin_warnings]
     diff_vs_previous: list[str] = []
     if previous and result["semesters"]:
         diff_vs_previous = diff({"semesters": [{"semester_code": s, "courses": [c]}
@@ -141,7 +166,11 @@ def run(payload: dict[str, Any], solver: str, time_limit: float,
         "assumptions": result["assumptions"] + (
             [f"{len(inferred)} quan hệ tiên quyết/song hành suy ra từ chương trình khác "
              f"(bản chụp {fixture.get('relations_snapshot')})"] if inferred else []),
-        "warnings": result["warnings"],
+        "warnings": result["warnings"] + pin_warnings,
+        # 22/11: canh bao gan voi mon / ky, loi nhe nhang, co the tu xac nhan (giao dien dung thay vi chuoi).
+        "warning_items": warning_items(fixture, scenario, {c: s["semester_code"] for s in result["semesters"]
+                                                           for c in s["courses"]}),
+        "requests": result.get("requests", []),
         "unverified_prerequisites": fixture.get("unverified_prerequisites", []),
         "inferred_relations": inferred,
         "relations_snapshot": fixture.get("relations_snapshot"),

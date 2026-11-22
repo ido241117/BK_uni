@@ -38,6 +38,24 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
         if g["pool_scope"] not in ("listed", "any"):
             raise FixtureError(f"pool_scope khong ho tro: {g['pool_scope']}")
 
+    # 0. Khoi sinh vien tu chon cho mon (T46, 22/11, nguoi duyet: hoan toan ton trong lua chon cua sinh vien):
+    #    ``student.block_overrides`` = {ma mon: ten khoi}. Mon bi bo khoi moi khoi cu; vao khoi ``listed`` thi
+    #    thanh thanh vien khoi do; vao khoi ``any`` (tu chon tu do) thi tin chi tinh vao tu chon tu do.
+    by_group = {g["name"]: g for g in groups}
+    overrides = {code: name for code, name in (fx["student"].get("block_overrides") or {}).items()
+                 if name in by_group and code in credits}
+    for code, name in overrides.items():
+        for g in groups:
+            g["members"] = [c for c in g["members"] if c != code]
+        if by_group[name]["pool_scope"] == "listed":
+            by_group[name]["members"].append(code)
+    to_listed = {c for c, n in overrides.items() if by_group[n]["pool_scope"] == "listed"}
+    to_free = {c for c, n in overrides.items() if by_group[n]["pool_scope"] == "any"}
+    # Mon ngoai CTDT vao khoi listed: bo giai chi xet mon trong ``curriculum_courses`` nen them vao do.
+    listed_curriculum = {cc["course_code"] for cc in fx["curriculum_courses"]}
+    for code in sorted(to_listed - listed_curriculum):
+        fx["curriculum_courses"].append({"course_code": code, "recommended_year": None, "recommended_term": None})
+
     # 1. Mon dieu kien.
     conditions = set(fx.get("conditions", []))
     # Trang thai mon dieu kien truoc khi bo: engine ASP dung lam external_requirement.
@@ -87,13 +105,16 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
     #    bat buoc > tu chon > tu chon tu do; khi xet tu chon tu do thi mon TRONG
     #    chuong trinh (phan hoc vuot nhom tu chon) truoc, mon NGOAI chuong trinh sau.
     in_curriculum = {cc["course_code"] for cc in fx["curriculum_courses"]}
+    #    Mon dang hoc gia dinh dau (``_assumed_pass``, cli.run ghi theo kich ban) tinh nhu da dat (22/11:
+    #    truoc day mon ngoai CTDT dang hoc khong duoc tru, lo trinh xep du mot o tu chon tu do).
     completed = {sc["course_code"] for sc in fx["student"]["student_courses"] if sc["status"] == "completed"}
+    completed |= set(fx["student"].get("_assumed_pass") or [])
     excess = 0
     for g in groups:
         if g["kind"] == "elective" and g["pool_scope"] == "listed" and g["required_credits"]:
             got = sum(credits[c] for c in g["members"] if c in completed)
             excess += max(0, got - g["required_credits"])
-    outside = sum(credits.get(c, 0) for c in completed if c not in in_curriculum)
+    outside = sum(credits.get(c, 0) for c in completed if c not in in_curriculum or c in to_free)
     out_groups = []
     for k, g in enumerate(groups, start=1):
         if g["pool_scope"] != "any":

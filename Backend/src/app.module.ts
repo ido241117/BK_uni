@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdvisorModule } from './advisor/advisor.module';
 import { AuthModule } from './auth/auth.module';
@@ -32,8 +31,10 @@ import { entities } from './database/entities';
         entities,
       }),
     }),
-    // TODO(dev): nới giới hạn chung để import dữ liệu hàng loạt (create-curriculum ~173 request/chương trình).
-    // Trả về { ttl: 60000, limit: 120 } trước khi deploy. Giới hạn riêng của login/advisor/outline vẫn giữ.
+    // TODO(dev): đang TẮT rate limit để import dữ liệu hàng loạt (bỏ ThrottlerGuard ở `providers` bên dưới,
+    // nên cả giới hạn chung lẫn @Throttle của login/advisor/outline đều không có hiệu lực).
+    // Trước khi deploy: đặt lại { ttl: 60000, limit: 120 } và thêm lại
+    // `{ provide: APP_GUARD, useClass: ThrottlerGuard }` vào `providers`.
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100000 }]),
     AuthModule,
     CourseModule,
@@ -43,6 +44,6 @@ import { entities } from './database/entities';
     OutlineModule,
     PlannerModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [],
 })
 export class AppModule {}

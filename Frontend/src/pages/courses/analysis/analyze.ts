@@ -452,7 +452,9 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
         specialization.groups.forEach(child => {
             const parent = child.parent_group_id ? groupById.get(child.parent_group_id) : undefined;
             if (!parent) return;
-            const childNeed = groupRequiredCount(parent);
+            // Khối con mang yêu cầu riêng (vd "4 môn bắt buộc của chuyên ngành"); backend đã chép yêu cầu của
+            // khối gốc vào khối con khi không khai riêng, nên đọc thẳng khối con.
+            const childNeed = groupRequiredCount(child);
             const listIds = new Set(child.members.map(member => member.course_id));
             const takenInParent = parent.members
                 .map(member => member.course_id)
@@ -736,6 +738,36 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
     )).length;
     if (undeclaredPast) {
         warnings.push({ level: 'info', title: `${undeclaredPast} môn đã qua kỳ khuyến nghị nhưng chưa khai trạng thái`, detail: 'Nếu đã học, khai trạng thái để phân tích chính xác hơn.' });
+    }
+    // Khối tự chọn có kỳ gợi ý (kế hoạch giảng dạy myBK) đã qua mà chưa đủ yêu cầu.
+    const overdueBlocks = blocks.filter((block, index) => {
+        const group = blocksDone[index].group;
+        if (!group || group.recommended_year === null || group.recommended_term === null) return false;
+        const semester = recommendedSemester(admissionYear, group.recommended_year, group.recommended_term);
+        return semester < current && (block.remaining > 0 || block.remainingCount > 0);
+    });
+    if (overdueBlocks.length) {
+        warnings.push({
+            level: 'warning',
+            title: `${overdueBlocks.length} khối tự chọn đã qua kỳ gợi ý nhưng chưa đủ yêu cầu`,
+            detail: overdueBlocks.map(block => `${block.name} (còn ${block.remaining} TC)`).join('; '),
+        });
+    }
+    if (curriculum.specialization_required && specializations.length) {
+        const target = specializations.find(option => option.isTarget);
+        if (!target) {
+            warnings.push({
+                level: 'warning',
+                title: 'Chương trình yêu cầu đạt một chuyên ngành',
+                detail: `Cần hoàn thành danh sách môn của đúng một chuyên ngành (${specializations.map(option => option.specialization.name).join(', ')}) mới đủ điều kiện tốt nghiệp. Hãy chọn chuyên ngành mục tiêu.`,
+            });
+        } else if (!target.achievable) {
+            warnings.push({
+                level: 'error',
+                title: `Không còn đạt được chuyên ngành ${target.specialization.name}`,
+                detail: 'Chương trình yêu cầu đạt một chuyên ngành để tốt nghiệp; xem lại các môn đã chọn ngoài danh sách chuyên ngành.',
+            });
+        }
     }
     if (outsideUncountedCredits > 0) {
         warnings.push({ level: 'info', title: `${outsideUncountedCredits} TC đã hoàn thành không được tính vào chuẩn tốt nghiệp`, detail: 'Gồm môn ngoài chương trình không khớp khối tự chọn tự do hoặc môn dư của khối tự chọn.' });

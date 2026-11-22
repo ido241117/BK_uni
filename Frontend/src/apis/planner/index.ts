@@ -40,3 +40,8 @@ export const adjustMybk = (payload: MybkAdjustPayload) =>
 
 /** T28: nội dung file tiến độ đã lưu của tài khoản đang đăng nhập. */
 export const getMybkProgress = () => queryMethod.get<MybkProgress>('/plans/mybk/progress');
+
+/** T43 (22/11): cài đặt trang Gợi ý lưu trong tài khoản (đổi máy vẫn còn). */
+export const getPlannerSettings = () => queryMethod.get<{ settings: Record<string, unknown> | null }>('/plans/settings');
+export const savePlannerSettings = (settings: Record<string, unknown>) =>
+    queryMethod.put<{ settings: Record<string, unknown> }>('/plans/settings', { settings });

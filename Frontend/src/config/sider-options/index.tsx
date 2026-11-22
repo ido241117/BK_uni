@@ -1,7 +1,6 @@
 import {
     LuBookOpen,
     LuBot,
-    LuFileCheck,
     LuGraduationCap,
     LuLayoutGrid,
     LuSparkles,
@@ -24,15 +23,17 @@ export const sidebarMenu: NavItem[] = [
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.COURSES),
     },
-    {
-        key: 'student.regulations',
-        label: 'Quy định tốt nghiệp',
-        path: '/regulations',
-        icon: <LuFileCheck />,
-        group: 'HỌC TẬP',
-        roles: [ROLE.STUDENT],
-        permission: toPageViewPermission(PAGE_RESOURCES.REGULATIONS),
-    },
+    // Người duyệt 22/11: tạm ẩn mục "Quy định tốt nghiệp" (điều kiện tốt nghiệp đã sửa được ở Hiệu chỉnh trang Môn học).
+    // Trang /regulations vẫn còn; bật lại thì bỏ comment và thêm lại import LuFileCheck.
+    // {
+    //     key: 'student.regulations',
+    //     label: 'Quy định tốt nghiệp',
+    //     path: '/regulations',
+    //     icon: <LuFileCheck />,
+    //     group: 'HỌC TẬP',
+    //     roles: [ROLE.STUDENT],
+    //     permission: toPageViewPermission(PAGE_RESOURCES.REGULATIONS),
+    // },
     {
         key: 'student.recommendations',
         label: 'Gợi ý học phần',

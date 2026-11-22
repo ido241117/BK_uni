@@ -52,3 +52,15 @@ export const semesterLabel = (code: string) => {
     const term = parts.term === 3 ? 'hè' : parts.term;
     return `HK ${code} (kỳ ${term} ${parts.year}-${parts.year + 1})`;
 };
+
+/** Học kỳ liền sau, tính cả kỳ hè: 261 -> 262 -> 263 -> 271. */
+export const nextSemester = (code: string): string => {
+    const parts = parseSemester(code)!;
+    return parts.term >= 3 ? toSemesterCode(parts.year + 1, 1) : toSemesterCode(parts.year, parts.term + 1);
+};
+
+/** Học kỳ liền trước, tính cả kỳ hè: 271 -> 263 -> 262 -> 261. */
+export const previousSemester = (code: string): string => {
+    const parts = parseSemester(code)!;
+    return parts.term <= 1 ? toSemesterCode(parts.year - 1, 3) : toSemesterCode(parts.year, parts.term - 1);
+};

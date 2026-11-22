@@ -10,6 +10,7 @@ from typing import Any
 
 from planner.facts import assumptions, plan_semesters
 from planner.report import preferences_report, warnings
+from planner.student_requests import requests_report
 
 
 def make_result(
@@ -39,6 +40,7 @@ def make_result(
         output["graduation_semester"] = None
         output["preferences_report"] = []
         output["warnings"] = warnings(fixture, scenario, {})
+        output["requests"] = requests_report(fixture, scenario, None)
         return output
 
     by_sem: dict[int, list[str]] = {}
@@ -60,6 +62,7 @@ def make_result(
         fixture, scenario, plan, output["graduation_semester"], previous_plan
     )
     output["warnings"] = warnings(fixture, scenario, plan)
+    output["requests"] = requests_report(fixture, scenario, plan)  # sprint 11: khong im lang bo yeu cau
     return output
 
 

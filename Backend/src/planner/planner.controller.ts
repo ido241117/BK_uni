@@ -7,6 +7,7 @@ import { Throttle } from '@nestjs/throttler';
 import { SignedIn } from '../auth/decorators/access.decorator';
 import { AuthenticatedRequest } from '../auth/types/authenticated-request';
 import { AdjustMybkDto } from './dto/adjust-mybk.dto';
+import { PlannerSettingsDto } from './dto/planner-settings.dto';
 import { SolvePlanDto } from './dto/solve-plan.dto';
 import { PlannerService } from './planner.service';
 
@@ -62,6 +63,21 @@ export class PlannerController {
   @ApiOperation({ summary: 'Hiệu chỉnh: sửa trạng thái môn (kể cả thêm môn) và khai học kỳ hiện tại; nội dung file giữ nguyên' })
   adjustMybk(@Req() req: AuthenticatedRequest, @Body() dto: AdjustMybkDto) {
     return this.planner.adjustMybk(req.user.id, dto);
+  }
+
+  @Get('settings')
+  @SignedIn()
+  @ApiOperation({ summary: 'T43: cài đặt trang Gợi ý đã lưu (ghim, khóa kỳ, nghỉ kỳ, số TC muốn, ưu tiên, mốc)' })
+  getSettings(@Req() req: AuthenticatedRequest) {
+    return this.planner.getSettings(req.user.id);
+  }
+
+  @Put('settings')
+  @SignedIn()
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
+  @ApiOperation({ summary: 'T43: lưu cài đặt trang Gợi ý vào tài khoản (đổi máy vẫn còn)' })
+  saveSettings(@Req() req: AuthenticatedRequest, @Body() dto: PlannerSettingsDto) {
+    return this.planner.saveSettings(req.user.id, dto.settings);
   }
 
   @Get('mybk/progress')

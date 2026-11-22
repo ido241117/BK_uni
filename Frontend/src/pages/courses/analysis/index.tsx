@@ -1,12 +1,13 @@
 import { type ReactNode } from 'react';
-import { Alert, Card, Empty, Space, Statistic, Tabs, Tag, Tooltip, Typography } from 'antd';
+import { Alert, Card, Empty, Space, Tabs, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { LuArrowLeft, LuCircleAlert, LuCircleCheck, LuInfo, LuTriangleAlert } from 'react-icons/lu';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { IOutLinedBtn, ISolidBtn, ITable, PageHeader, TablePageSkeleton } from '@/components';
 import { COURSE_RELATION_TYPE_LABEL, STUDENT_COURSE_STATUS_COLOR, STUDENT_COURSE_STATUS_LABEL, type OutlineSummary } from '@/types';
 import { type Analysis, type CourseCheck, type Warning } from './analyze';
-import { BlockBars, ColumnChart, Legend, ProgressRing, StackedBar } from './charts';
+import { BlockBars, ColumnChart, StackedBar } from '../components/charts';
+import { MetricGroup, MetricTile, ProgressHero } from '../components/ProgressSummary';
 import { semesterLabel } from './semester';
 import { useStudentAnalysis } from './useStudentAnalysis';
 
@@ -133,6 +134,7 @@ const CheckTable = ({ rows, analysis, empty, showGroup }: { rows: CourseCheck[];
 
 const AnalysisPage = () => {
     const { profileLoading, curriculumId, curriculum: loadedCurriculum, isError, outlinesUnavailable, analysis } = useStudentAnalysis();
+    const navigate = useNavigate();
 
     const back = <Link to="/courses"><IOutLinedBtn icon={<LuArrowLeft />}>Về trang môn học</IOutLinedBtn></Link>;
 
@@ -184,37 +186,53 @@ const AnalysisPage = () => {
                 )}
                 {/* ----------------------------- Tổng quan ----------------------------- */}
                 <Card>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center' }}>
-                        <ProgressRing
+                    <div className="progress-overview">
+                        <ProgressHero
                             percent={percent}
-                            label={`${overview.completedCredits} / ${overview.totalCredits} TC`}
-                            sublabel={`${overview.completedCourses} / ${overview.requiredCourses} môn được tính vào chuẩn tốt nghiệp`}
+                            value={overview.completedCredits}
+                            total={overview.totalCredits}
+                            unit="TC"
+                            label="Tín chỉ tích lũy / chuẩn tốt nghiệp"
+                            caption={`${overview.completedCourses} / ${overview.requiredCourses} môn được tính vào chuẩn tốt nghiệp`}
                         />
-                        <div className="stat-row" style={{ flex: 1, minWidth: 280 }}>
-                            <Statistic title="Đang học" value={overview.inProgressCredits} suffix="TC" />
-                            <Statistic title="Đã lên kế hoạch" value={overview.plannedCredits} suffix="TC" />
-                            <Statistic title="Còn thiếu (chưa xếp)" value={overview.remainingCredits} suffix="TC" />
-                            <Statistic
-                                title="Nhịp đã học"
-                                value={overview.averagePerSemester !== null ? overview.averagePerSemester.toFixed(1) : '—'}
-                                suffix={overview.averagePerSemester !== null ? `TC/kỳ · ${overview.elapsedSemesters} kỳ` : undefined}
-                            />
-                            <Statistic
-                                title="Cần để tốt nghiệp đúng hạn"
-                                value={overview.neededPerSemester !== null ? overview.neededPerSemester.toFixed(1) : '—'}
-                                suffix={overview.neededPerSemester !== null ? `TC/kỳ · ${overview.semestersLeft} kỳ` : undefined}
-                            />
-                            <Statistic
-                                title="Dự kiến tốt nghiệp"
-                                value={analysis.projectedGraduation ? `HK ${analysis.projectedGraduation}` : 'Chưa xác định'}
-                                suffix={<Text type={lateGraduation ? 'danger' : 'secondary'} style={{ fontSize: 13 }}>chuẩn HK {analysis.standardGraduation}</Text>}
-                            />
+                        <div className="progress-overview-groups">
+                            <MetricGroup title="Tín chỉ">
+                                <MetricTile label="Đang học" value={overview.inProgressCredits} unit="TC" tone="progress" />
+                                <MetricTile label="Đã lên kế hoạch" value={overview.plannedCredits} unit="TC" tone="planned" />
+                                <MetricTile
+                                    label="Còn thiếu"
+                                    value={overview.remainingCredits}
+                                    unit="TC"
+                                    tone="remaining"
+                                    note="chưa học, chưa xếp kỳ"
+                                />
+                            </MetricGroup>
+                            <MetricGroup title="Tiến độ">
+                                <MetricTile
+                                    label="Nhịp đã học"
+                                    value={overview.averagePerSemester !== null ? overview.averagePerSemester.toFixed(1) : '—'}
+                                    unit={overview.averagePerSemester !== null ? 'TC/kỳ' : undefined}
+                                    note={overview.averagePerSemester !== null ? `trung bình ${overview.elapsedSemesters} kỳ đã qua` : 'chưa có kỳ nào'}
+                                />
+                                <MetricTile
+                                    label="Cần để tốt nghiệp đúng hạn"
+                                    value={overview.neededPerSemester !== null ? overview.neededPerSemester.toFixed(1) : '—'}
+                                    unit={overview.neededPerSemester !== null ? 'TC/kỳ' : undefined}
+                                    note={overview.neededPerSemester !== null ? `trong ${overview.semestersLeft} kỳ còn lại` : undefined}
+                                />
+                                <MetricTile
+                                    label="Dự kiến tốt nghiệp"
+                                    value={analysis.projectedGraduation ? `HK ${analysis.projectedGraduation}` : 'Chưa rõ'}
+                                    note={`chuẩn HK ${analysis.standardGraduation}${lateGraduation ? ' · trễ hạn' : ''}`}
+                                    noteTone={lateGraduation ? 'danger' : undefined}
+                                    tone={lateGraduation ? 'danger' : 'neutral'}
+                                />
+                            </MetricGroup>
                         </div>
                     </div>
                     <div style={{ marginTop: 20 }}>
                         <StackedBar
                             title="Tổng tín chỉ chuẩn tốt nghiệp"
-                            height={18}
                             total={overview.totalCredits}
                             segments={[
                                 { key: 'done', value: overview.completedCredits },
@@ -222,7 +240,6 @@ const AnalysisPage = () => {
                                 { key: 'planned', value: overview.plannedCredits },
                             ]}
                         />
-                        <div style={{ marginTop: 8 }}><Legend keys={['done', 'inProgress', 'planned', 'remaining']} /></div>
                     </div>
                 </Card>
 
@@ -257,21 +274,20 @@ const AnalysisPage = () => {
                                         key: column.code,
                                         label: column.label,
                                         sublabel: column.code,
-                                        highlight: column.isCurrent,
+                                        highlight: column.isCurrent ? 'hiện tại' : undefined,
                                         segments: [
                                             { key: 'done', value: column.done },
                                             { key: 'inProgress', value: column.inProgress },
                                             { key: 'planned', value: column.planned },
                                             { key: 'remaining', value: column.remaining },
                                         ],
-                                        tooltip: column.isPast && column.remaining > 0
-                                            ? <div style={{ marginTop: 4 }}>⚠ Kỳ đã qua còn {column.remaining} TC chưa học/chưa xếp</div>
+                                        note: column.isPast && column.remaining > 0
+                                            ? `⚠ kỳ đã qua còn ${column.remaining} TC chưa học/chưa xếp`
                                             : undefined,
                                     }))}
                                 />
-                                <div style={{ marginTop: 8 }}><Legend keys={['done', 'inProgress', 'planned', 'remaining']} /></div>
                                 <Paragraph type="secondary" style={{ margin: '8px 0 0', fontSize: 12 }}>
-                                    Mỗi cột là một học kỳ theo khung (N = năm, K = kỳ) quy ra học kỳ thực theo năm nhập học; cột tô nền là kỳ hiện tại.
+                                    Mỗi cột là một học kỳ theo khung (N = năm, K = kỳ) quy ra học kỳ thực theo năm nhập học; cột có dấu ▲ là kỳ hiện tại.
                                     Phần xám ở các cột bên trái kỳ hiện tại là môn đang bị chậm.
                                 </Paragraph>
                             </>
@@ -352,32 +368,32 @@ const AnalysisPage = () => {
                                     Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách chuyên ngành. Thanh thể hiện số môn đã học/đang học trong danh sách.
                                 </Paragraph>
                                 <BlockBars
+                                    unit="môn"
                                     rows={analysis.specializations.map(option => ({
                                         key: option.specialization.id,
-                                        label: (
-                                            <span>
-                                                {option.specialization.code}
-                                                {option.isTarget && <Tag color="gold" style={{ marginLeft: 6 }}>Mục tiêu</Tag>}
-                                            </span>
-                                        ),
-                                        hint: (
-                                            <span>
-                                                {option.specialization.name}
-                                                {' · '}
-                                                {option.achievable
-                                                    ? <Text type="success" style={{ fontSize: 12 }}>còn khả thi</Text>
-                                                    : <Text type="danger" style={{ fontSize: 12 }}>
-                                                        {option.outsideList.length
-                                                            ? `đã học ngoài danh sách: ${option.outsideList.map(course => course.code).join(', ')}`
-                                                            : 'không đủ môn còn lại'}
-                                                    </Text>}
-                                            </span>
-                                        ),
+                                        label: `${option.specialization.code}${option.isTarget ? ' ★' : ''}`,
+                                        hint: option.specialization.name,
                                         total: option.need,
-                                        segments: [{ key: 'done', value: option.doneInList }],
+                                        segments: [{ key: 'done', value: option.doneInList, label: 'Đã học / đang học' }],
                                         valueText: `${option.doneInList}/${option.need} môn`,
                                     }))}
                                 />
+                                <div className="stack" style={{ gap: 4, marginTop: 4 }}>
+                                    {analysis.specializations.map(option => (
+                                        <div key={option.specialization.id} style={{ fontSize: 12 }}>
+                                            <Text strong style={{ fontSize: 12 }}>{option.specialization.code}</Text>
+                                            {option.isTarget && <Tag color="gold" style={{ marginLeft: 6 }}>Mục tiêu</Tag>}
+                                            <Text type="secondary" style={{ fontSize: 12 }}> {option.specialization.name} · </Text>
+                                            {option.achievable
+                                                ? <Text type="success" style={{ fontSize: 12 }}>còn khả thi</Text>
+                                                : <Text type="danger" style={{ fontSize: 12 }}>
+                                                    {option.outsideList.length
+                                                        ? `đã học ngoài danh sách: ${option.outsideList.map(course => course.code).join(', ')}`
+                                                        : 'không đủ môn còn lại'}
+                                                </Text>}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
@@ -423,17 +439,18 @@ const AnalysisPage = () => {
                     <Card title="Môn “nút thắt” (mở khóa nhiều môn nhất)" size="small">
                         {analysis.bottlenecks.length ? (
                             <BlockBars
+                                unit="môn"
+                                normalize={false}
+                                onRowClick={code => navigate(`/courses/${encodeURIComponent(code)}`)}
                                 rows={analysis.bottlenecks.map(item => ({
-                                    key: item.course.id,
-                                    label: courseLink(item.course.code),
-                                    hint: item.course.name,
+                                    key: item.course.code,
+                                    label: item.course.code,
+                                    hint: `${item.course.name} · mở khóa: ${item.unlocks.join(', ')}`,
                                     total: analysis.bottlenecks[0].unlocks.length,
-                                    segments: [{ key: item.course.status === 'in-progress' ? 'inProgress' : 'remaining', value: item.unlocks.length }],
-                                    valueText: (
-                                        <Tooltip title={`Mở khóa: ${item.unlocks.join(', ')}`}>
-                                            <span>{item.unlocks.length} môn</span>
-                                        </Tooltip>
-                                    ),
+                                    segments: [item.course.status === 'in-progress'
+                                        ? { key: 'inProgress', value: item.unlocks.length, label: 'Đang học' }
+                                        : { key: 'done', value: item.unlocks.length, label: 'Chưa học' }],
+                                    valueText: `${item.unlocks.length} môn`,
                                 }))}
                             />
                         ) : <Empty description="Chương trình chưa có quan hệ tiên quyết/học trước, hoặc bạn đã học hết các môn điều kiện." />}
@@ -460,21 +477,18 @@ const AnalysisPage = () => {
                                 columns={analysis.roadmap.map(semester => ({
                                     key: semester.code,
                                     label: `HK ${semester.code}`,
-                                    highlight: semester.code > analysis.standardGraduation,
+                                    highlight: semester.code > analysis.standardGraduation ? 'sau hạn' : undefined,
                                     segments: [
                                         { key: 'planned', value: semester.items.filter(item => item.fromPlan).reduce((t, item) => t + item.credits, 0) },
                                         { key: 'suggested', value: semester.items.filter(item => !item.fromPlan).reduce((t, item) => t + item.credits, 0) },
                                     ],
-                                    tooltip: semester.code > analysis.standardGraduation
-                                        ? <div style={{ marginTop: 4 }}>Sau mốc tốt nghiệp chuẩn</div>
-                                        : undefined,
+                                    note: semester.code > analysis.standardGraduation ? 'sau mốc tốt nghiệp chuẩn' : undefined,
                                 }))}
                                 references={[
                                     { value: curriculum.max_semester_credits, label: `Tối đa ${curriculum.max_semester_credits}` },
                                     { value: curriculum.min_semester_credits, label: `Tối thiểu ${curriculum.min_semester_credits}` },
                                 ]}
                             />
-                            <Legend keys={['planned', 'suggested']} />
                             <div className="roadmap">
                                 {analysis.roadmap.map(semester => (
                                     <div key={semester.code} className="roadmap-semester">

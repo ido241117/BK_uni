@@ -409,3 +409,24 @@ PowerShell cần thêm header `Origin` như trên; curl trên Windows nhận c�
 
 Ghi chú: message kiểm tra DTO là tiếng Anh (mặc định `class-validator`), message nghiệp vụ là
 tiếng Việt. Không dựa vào `message` để rẽ nhánh — dùng HTTP status + `error`.
+
+## Giới thiệu chương trình từ myBK (`v2/curriculums`)
+
+Cấu trúc chương trình (môn, khối, kế hoạch) vẫn lấy từ API myBK v1 qua `build-from-mybk.cjs`. Phần
+giới thiệu (mô tả ngành, cơ hội việc làm, đối tượng tuyển sinh, quá trình đào tạo, cách đánh giá; tiếng
+Việt và tiếng Anh) chỉ có ở `v2/curriculums`, đổ riêng bằng lệnh sau (không cần chạy server, ghi thẳng
+vào DB theo `curricula.source_id`):
+
+```bash
+npm run curriculum:sync-profiles              # tải từ myBK rồi ghi
+npm run curriculum:sync-profiles -- --dry-run # chỉ in thống kê
+npm run curriculum:sync-profiles -- --file=cur.json   # dùng JSON đã tải
+```
+
+- Ghi `name_en`, `profile` (`{ vi, en }`, HTML đã chuyển sang văn bản thuần), `profile_source_code`,
+  `source_synced_at`.
+- CTĐT khóa 2023 kiểu cũ không có giới thiệu trên myBK: mượn từ khóa gần nhất cùng ngành;
+  `profile_source_code` ghi mã CTĐT đã cho nội dung. Song ngành khóa 2023 không có nguồn nào nên để trống.
+- `profile` chỉ trả ở `GET /api/curricula/{id}`, không có trong danh sách.
+- Chạy lại `create-curriculum.mjs` không xóa `profile` (chỉ PATCH các trường có trong file); sau khi tạo
+  CTĐT mới thì chạy lại lệnh trên.
