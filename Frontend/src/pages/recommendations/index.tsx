@@ -17,6 +17,7 @@ import {
     type SolvePlanPayload,
 } from '@/types';
 import { currentSemester, semesterLabel, toSemesterCode, parseSemester } from '@/pages/courses/analysis/semester';
+import InterestTagPicker from './InterestTagPicker';
 import PlanResultView from './PlanResultView';
 import { baselineKey, loadBaseline, planOf, storeBaseline, type Baseline } from './whatIf';
 
@@ -173,13 +174,6 @@ const RecommendationsPage = () => {
     const openCourseOptions = (coursesQuery.data ?? [])
         .filter(item => statusByCode.get(item.course.code) !== STUDENT_COURSE_STATUS.COMPLETED)
         .map(item => ({ value: item.course.code, label: `${item.course.code} · ${item.course.name}` }));
-    const interestTags = interestTagsQuery.data?.tags ?? [];
-    const interestOptions = interestTags.map(t => ({
-        value: t.tag,
-        label: `${t.tag} (${t.courses.length})`,
-        title: t.courses.map(code => `${code} · ${nameByCode.get(code) ?? code}`).join('\n'),
-    }));
-    const coursesOfTag = new Map(interestTags.map(t => [t.tag, t.courses]));
 
     const solve = useApiMutation({
         mutationFn: (payload: SolvePlanPayload) => solvePlan(payload),
@@ -346,19 +340,11 @@ const RecommendationsPage = () => {
                                         <Text type="secondary">
                                             Electives with these tags are preferred when every other goal (graduating
                                             early, offering history, balanced load...) is equal. The number is how many
-                                            courses of your program have the tag.
+                                            courses of your program have the tag; hover a tag to see them.
                                         </Text>
-                                        <Select mode="multiple" style={{ width: '100%' }} placeholder="No interests"
-                                            value={interests} options={interestOptions} onChange={setInterests}
-                                            optionFilterProp="label" loading={interestTagsQuery.isLoading}
-                                            notFoundContent="No interest tags for your program yet" />
-                                        {interests.map(tag => (
-                                            <Text key={tag} type="secondary">
-                                                {tag}: {(coursesOfTag.get(tag) ?? [])
-                                                    .map(code => `${code} ${nameByCode.get(code) ?? ''}`.trim()).join(', ')
-                                                    || 'no course of your program'}
-                                            </Text>
-                                        ))}
+                                        <InterestTagPicker tags={interestTagsQuery.data?.tags ?? []} value={interests}
+                                            onChange={setInterests} loading={interestTagsQuery.isLoading}
+                                            courseName={code => nameByCode.get(code) ?? code} />
                                     </Space>
                                 )}
                                 <ISolidBtn block loading={solve.isPending} onClick={() => solve.mutate(buildPayload())}>

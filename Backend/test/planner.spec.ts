@@ -280,6 +280,14 @@ describe('Planner API (POST /api/plans/solve)', () => {
       process.env.PLANNER_DIR = join(dir, 'missing');
       const none = await request(server()).get('/api/plans/interest-tags').set('Origin', origin).expect(200);
       expect(none.body.data).toEqual({ tags: [] });
+      // Per program family: the student's family list wins over the merged fallback.
+      process.env.PLANNER_DIR = dir;
+      writeFileSync(join(dir, 'planner', 'data', 'course-tags.json'), JSON.stringify({
+        tags: { merged: ['EL301'] }, by_family: { TOY: { web: ['EL302'] }, OTHER: { logic: ['EL301'] } },
+        families: { 'TOY-2025': 'TOY' },
+      }));
+      const fam = await request(server()).get('/api/plans/interest-tags').set('Origin', origin).expect(200);
+      expect(fam.body.data).toEqual({ tags: [{ tag: 'web', courses: ['EL302'] }] });
     } finally {
       if (before === undefined) delete process.env.PLANNER_DIR; else process.env.PLANNER_DIR = before;
     }

@@ -330,14 +330,17 @@ export class PlannerService {
   async interestTags(userId: string): Promise<{ tags: InterestTag[] }> {
     const profile = await this.profiles.findOne({ where: { user_id: userId } });
     if (!profile?.curriculum_id) return { tags: [] };
-    const items = await this.curriculumCourses.find({ where: { curriculum_id: profile.curriculum_id }, relations: { course: true } });
+    const [curriculum, items] = await Promise.all([
+      this.curricula.findOne({ where: { id: profile.curriculum_id } }),
+      this.curriculumCourses.find({ where: { curriculum_id: profile.curriculum_id }, relations: { course: true } }),
+    ]);
     let file: unknown = null;
     try {
       file = JSON.parse(readFileSync(join(this.runner.dir, 'planner', 'data', 'course-tags.json'), 'utf8'));
     } catch {
       file = null; // no tag file exported yet
     }
-    return { tags: interestTagsFor(file, new Set(items.map((it) => it.course.code))) };
+    return { tags: interestTagsFor(file, new Set(items.map((it) => it.course.code)), curriculum?.code) };
   }
 
   async solve(userId: string, dto: SolvePlanDto): Promise<Record<string, unknown>> {
