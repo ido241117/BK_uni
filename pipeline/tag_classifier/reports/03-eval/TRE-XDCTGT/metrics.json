@@ -1,0 +1,235 @@
+{
+ "agreement": {
+  "alpha_mean": 0.34853825295056695,
+  "alpha_per_tag": {
+   "CTGT": 0.3214285714285714,
+   "DSCT": 0.040000000000000036,
+   "bat-buoc-nganh": 0.0,
+   "bridge-design-fundamentals": 0.5306666666666666,
+   "bridges": 0.6228956228956228,
+   "design-highway-embankments": 0.36,
+   "entrepreneurship": 1.0,
+   "infrastructure": 0.6190476190476191,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.010909090909090868,
+   "ky-nang-bo-tro": 0.00591715976331364,
+   "leadership-tools": 0.368421052631579,
+   "management-boards": 0.21311475409836067,
+   "quan-ly": 0.08196721311475408,
+   "roads": 0.44654088050314467,
+   "social-sciences": 0.08196721311475408,
+   "traffic-planning": 0.18644067796610164,
+   "transportation-engineering": 0.5510204081632653,
+   "transportation-infrastructure-projects": 0.6338672768878719,
+   "urban-traffic-systems": 0.5480225988700564
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.5452719665271967,
+   "bge-m3-zeroshot vs embedding-vi": 0.34976513704640494,
+   "bge-m3-zeroshot vs keyword": 0.3386279926335175,
+   "bge-m3-zeroshot vs modernbert": 0.8500169664065153,
+   "embedding vs embedding-vi": 0.7525050100200402,
+   "embedding vs keyword": 0.21212121212121218,
+   "embedding vs modernbert": 0.5496535796766747,
+   "embedding-vi vs keyword": 0.15250737463126818,
+   "embedding-vi vs modernbert": 0.35248407643312085,
+   "keyword vs modernbert": 0.38268156424581
+  },
+  "tags_reliable": 1,
+  "tags_with_alpha": 19
+ },
+ "courses": 13,
+ "curriculum": "TRE-XDCTGT",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 988,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 988,
+   "scored": 796,
+   "seconds": 7.5,
+   "seconds_per_pair": 0.0094
+  },
+  "embedding-vi": {
+   "pairs": 988,
+   "scored": 790,
+   "seconds": 6.6,
+   "seconds_per_pair": 0.0083
+  },
+  "keyword": {
+   "pairs": 884,
+   "scored": 698,
+   "seconds": 0.2,
+   "seconds_per_pair": 0.0003
+  },
+  "modernbert": {
+   "pairs": 884,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 13,
+   "jaccard": 0.8641025641025641
+  },
+  "embedding": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 13,
+   "jaccard": 0.48626373626373626
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 13,
+   "jaccard": 0.6615606615606615
+  },
+  "keyword": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 13,
+   "jaccard": 0.6923076923076923
+  },
+  "modernbert": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 13,
+   "jaccard": 0.9333333333333333
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {
+    "CTGT": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": NaN,
+   "recall": 0.0
+  },
+  "embedding": {
+   "per_specialization": {
+    "CTGT": {
+     "precision_lb": 1.0,
+     "recall": 0.6
+    }
+   },
+   "precision_lb": 1.0,
+   "recall": 0.6
+  },
+  "embedding-vi": {
+   "per_specialization": {
+    "CTGT": {
+     "precision_lb": 1.0,
+     "recall": 0.8
+    }
+   },
+   "precision_lb": 1.0,
+   "recall": 0.8
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.590986790986791
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   1,
+   5,
+   4,
+   3,
+   3,
+   5,
+   6,
+   4,
+   2,
+   0,
+   0,
+   0,
+   0
+  ],
+  "embedding": [
+   0,
+   4,
+   9,
+   5,
+   4,
+   9,
+   7,
+   10,
+   1,
+   2,
+   1,
+   2,
+   0
+  ],
+  "embedding-vi": [
+   2,
+   2,
+   9,
+   5,
+   5,
+   10,
+   7,
+   9,
+   2,
+   2,
+   2,
+   5,
+   2
+  ],
+  "keyword": [
+   0,
+   3,
+   1,
+   1,
+   1,
+   2,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   0,
+   4,
+   5,
+   2,
+   2,
+   4,
+   6,
+   4,
+   2,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}

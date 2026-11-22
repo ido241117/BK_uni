@@ -1,0 +1,289 @@
+{
+ "agreement": {
+  "alpha_mean": 0.22676308789816274,
+  "alpha_per_tag": {
+   "1": NaN,
+   "2": NaN,
+   "circuit-design-process": 0.3664695737866469,
+   "deep-learning-algorithms": 0.2102272727272727,
+   "design-organisational-structure": 0.11577608142493634,
+   "fundamental-image-processing": 0.5723076923076924,
+   "integrated-circuit-technology": 0.30500000000000005,
+   "mobile-communications-systems": 0.4734848484848485,
+   "project-topics": 0.1799410029498526,
+   "quan-ly": 0.10569852941176472,
+   "simulate-hadware-circuit": 0.02048508685676831,
+   "structured-computer": 0.026610644257703098,
+   "voltage-conversion-circuits": 0.11839323467230445
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.2544200086244069,
+   "bge-m3-zeroshot vs embedding-vi": 0.173800259403372,
+   "bge-m3-zeroshot vs keyword": 0.2776735459662286,
+   "bge-m3-zeroshot vs modernbert": 0.7470671046457064,
+   "embedding vs embedding-vi": 0.7278475604545843,
+   "embedding vs keyword": 0.044275657650981376,
+   "embedding vs modernbert": 0.3110761328804573,
+   "embedding-vi vs keyword": 0.028456375838925903,
+   "embedding-vi vs modernbert": 0.20900443880786312,
+   "keyword vs modernbert": 0.20124481327800767
+  },
+  "tags_reliable": 0,
+  "tags_with_alpha": 11
+ },
+ "courses": 28,
+ "curriculum": "DM-2TD",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 1456,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 1456,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding-vi": {
+   "pairs": 1456,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "keyword": {
+   "pairs": 1232,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "modernbert": {
+   "pairs": 1232,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 27,
+   "jaccard": 0.8148148148148148
+  },
+  "embedding": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.6666666666666666,
+   "courses": 27,
+   "jaccard": 0.6425925925925926
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.6666666666666666,
+   "courses": 27,
+   "jaccard": 0.6080246913580247
+  },
+  "keyword": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 27,
+   "jaccard": 0.8518518518518519
+  },
+  "modernbert": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 27,
+   "jaccard": 0.8148148148148148
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding-vi": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.6254251700680272
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   1,
+   1,
+   0,
+   1,
+   0,
+   2,
+   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0
+  ],
+  "embedding": [
+   4,
+   1,
+   1,
+   6,
+   5,
+   0,
+   1,
+   5,
+   2,
+   3,
+   4,
+   3,
+   1,
+   0,
+   5,
+   4,
+   0,
+   4,
+   0,
+   1,
+   0,
+   4,
+   6,
+   0,
+   3,
+   3,
+   1,
+   2
+  ],
+  "embedding-vi": [
+   5,
+   2,
+   2,
+   6,
+   6,
+   3,
+   3,
+   4,
+   3,
+   4,
+   5,
+   4,
+   2,
+   1,
+   5,
+   5,
+   0,
+   4,
+   2,
+   4,
+   4,
+   5,
+   6,
+   0,
+   4,
+   3,
+   1,
+   3
+  ],
+  "keyword": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   0,
+   1,
+   0,
+   1,
+   1,
+   0,
+   0,
+   2,
+   0,
+   1,
+   2,
+   0,
+   1,
+   0,
+   2,
+   2,
+   0,
+   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0
+  ]
+ }
+}

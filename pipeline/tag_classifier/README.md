@@ -26,14 +26,24 @@ Kết nối database lấy từ `Backend/.env` (đường dẫn trong `config.to
 | 1a | `python -m tag_classifier.extract` | database → `data/snapshot/` | xong |
 | 1b | `python -m tag_classifier.preprocess` | snapshot → `data/courses.jsonl`, `logs/preprocess.csv`, `data/preprocess_summary.json` | xong |
 | 1c | `python -m tag_classifier.eda` | báo cáo dữ liệu → `reports/01-data/report.md` + biểu đồ | xong |
-| 2 | `python -m tag_classifier.candidates [--curriculum MÃ]` | tag ứng viên mỗi chương trình → `data/candidates/<mã>.json`, `reports/02-candidates/<mã>.md` | done, run on KHMT 2023 only |
-| 3 | `python -m tag_classifier.classify --curriculum CODE [--model ID] [--limit N]` | scores per (course, section, tag, model) → `data/scores/<code>.json`, cache `cache/scores.sqlite` | done; NLI models need Colab |
-| 4 | `python -m tag_classifier.aggregate --curriculum CODE` | course tags by rule (a) → `data/tags/<code>.json` | done |
-| 5 | `python -m tag_classifier.evaluate --curriculum CODE` | automatic evaluation → `reports/03-eval/<name>/report.md` + charts | done |
-| 6 | `python -m tag_classifier.review --curriculum CODE`, then `export` | review workbook → `review/<code>.xlsx`; kept tags → `pipeline/planner/data/course-tags.json` | done |
+| 2 | `python -m tag_classifier.candidates [--family ID ...]` | candidate tags per program family (default: every family with ≥ `[scope] min_courses_to_tag` courses to tag, 47 of 55) → `data/candidates/<family>.json`, `reports/02-candidates/<family>.md` | done, run on CS-KHMT only |
+| 3 | `python -m tag_classifier.classify --family ID ... \| --all [--model ID] [--limit N]` | scores per (course, section, tag, model) → `data/scores/<family>.json`, cache `cache/scores.sqlite` | done; NLI models need Colab |
+| 4 | `python -m tag_classifier.aggregate --family ID ... \| --all` | course tags by rule (a) → `data/tags/<family>.json` | done |
+| 5 | `python -m tag_classifier.evaluate --family ID ... \| --all` | automatic evaluation → `reports/03-eval/<name>/report.md` + charts | done |
+| 6 | `python -m tag_classifier.review --family ID ... \| --all`, then `export` | review workbooks → `review/<family>.xlsx` + `review/shared.xlsx`; kept tags → `pipeline/planner/data/course-tags.json` | done |
 | – | `python -m tag_classifier.bundle`, `notebooks/colab_classify.ipynb`, `merge_cache` | NLI scoring on a Colab GPU | done, run on Colab 2026-11-22 (0.03-0.05 s per pair on a T4) |
 
 `data/`, `logs/`, `cache/` không đưa vào git (sinh lại được). `reports/` đưa vào git.
+
+**Program families.** Steps 2-6 work per family: the cohorts of one program, e.g. `CS-KHMT` =
+CS-2023-KHMT, CS-2024-KHMT, CS-2026-KHMT (family id = program code without the cohort year;
+`family.py`). Cohorts share about half their electives (51% of elective-program pairs in families with
+several cohorts are repeats), so a family is tagged, scored and reviewed once over the union of its
+cohorts' electives: 47 families instead of 86 programs, about 40% fewer sections to score. Each cohort
+stays its own program for the planner, which only uses the courses of the student's curriculum. (Major +
+faculty would split programs spelled differently between cohorts, e.g. "Kỹ thuật Điện" vs "Kỹ thuật
+điện".) Steps 3-6 take `--family` several times or `--all` (every family with a candidates file);
+`classify` keeps each model loaded across the families of one run.
 `review/` (the team's decisions) and `notebooks/` are committed too.
 
 ## Bước 1a: trích database
@@ -111,7 +121,7 @@ Thresholds in `config.toml`, `[candidates]`:
 
 | Source | Candidates | Coverage (courses of the curriculum) |
 |---|---|---|
-| `structure` | Specializations (key = **specialization code**, e.g. `TNT`; Vietnamese name looked up from the code), block and category names with the generic parts removed ("nhóm A", "(học kỳ 5)", "- 2026", "(bắt buộc)"); names that are only generic ("Tự chọn tự do") are dropped | Courses the faculty listed under it |
+| `structure` | Block and category names with the generic parts removed ("nhóm A", "(học kỳ 5)", "- 2026", "(bắt buộc)"); names that are only generic ("Tự chọn tự do") are dropped. **Specializations are left out** (blocks tied to a specialization, categories named like one): the planner handles the student's specialization itself | Courses the faculty listed under it |
 | `profile` | Noun phrases of the program profile (overview + career opportunities, English) | Courses close in meaning: cosine(course text, phrase) ≥ `semantic_threshold` |
 | `syllabus` | Each course's top noun phrases (cosine with the syllabus × catalogue rarity, MMR), pooled over the curriculum's courses and **clustered by meaning** (average linkage, cosine ≥ `cluster_threshold`); one cluster = one candidate, labelled by its most central phrase | Courses where the cluster's phrases are top phrases or appear verbatim |
 
@@ -143,6 +153,14 @@ Filters:
   dụng" → "U.S. Intelligence Applications"), `VietAI/envit5-translation` does not load with
   transformers 5.
 - **Coverage below 2 courses**: dropped, with the reason in `dropped`.
+
+**Stable across runs.** When `data/candidates/<family>.json` exists, `candidates` keeps its tags
+(already reviewed): same key, same English / Vietnamese / suggested names; this run's candidates with
+the same meaning join them (adding courses and sources), and only new topics become new rows. A kept tag
+is never dropped. So adding cohorts or rerunning never renames a reviewed tag. A suggested English name
+never repeats another candidate's name. **Specialization lists** become evaluation-only candidates
+(`evaluation_candidates`, keyed by specialization code): scored so the evaluation can check the models
+against the faculty's lists, never reviewed or exported.
 
 **Calibration** (`calibrate.py`, settings in `[calibrate]`): `min_best_match`, `min_peak`,
 `semantic_threshold` and `cluster_threshold` are measured from data, without human labels, over the
@@ -176,16 +194,14 @@ coverage, quality, CLI), `candidates_report.py` (Markdown).
 Run time (CPU): first run ~2.5 min (noun phrases of 51,442 lines, then cached), then ~1 min per
 curriculum.
 
-### KHMT 2023 result (2026-11-21, electives only)
+### Computer Science family result (2026-11-22)
 
-33 candidates from the 55 electives with a usable syllabus: 7 structure, 7 profile, 19 syllabus
-clusters; cluster purity 0.78. Examples: the 5 specializations (`TNT` "artificial intelligence",
-suggested `CNP` "software technical", `XLA` "computer vision", `CND` "business intelligence system",
-`MMA` "security"); "software design", "big data applications", "practical database systems",
-"application architectures", "network threat models", "software testing techniques". Compulsory blocks
-(mathematics, natural sciences, languages, politics) no longer produce candidates. Suggested English
-labels still need checking in the review (e.g. "software technical", "management management tools").
-Full list: `reports/02-candidates/CS-2023-KHMT.md`.
+`CS-KHMT` (cohorts 2023, 2024, 2026): 59 candidates over the 60 electives of the three cohorts (5
+structure, 17 profile, 37 syllabus; purity 0.75) plus 9 evaluation-only specialization lists (old and
+new codes: TNT, CND, CNP, MMA, XLA, AI, KHDL, ANM, CNPM). Seeded from the KHMT 2023 candidates: its 45
+non-specialization tags kept key and name, 14 new ones came from the 2024 and 2026 electives (e.g.
+"artificial intelligence", "information system security", "software specification"); a second run
+changes nothing. Full list: `reports/02-candidates/CS-KHMT.md`.
 
 ## Step 3: classify (score every course × section × tag)
 
@@ -254,7 +270,9 @@ re-saved by Excel can come back tab-separated in the Windows codepage, with Viet
 - Sheet **Courses**: each scored elective with its tags (renamed names where given), to check course by
   course. Not read back.
 
-Regenerating keeps Keep / Rename / Note (matched by the Key column). Close the workbook in Excel before
+**Shared decisions** (`review/shared.xlsx`, rebuilt by every `review` run from all program workbooks): one row per tag name across programs (case and spacing ignored), with the programs it appears in, their courses and the mean agreement. Decide a tag several programs share once there: a program row with an empty Keep / Rename takes the shared decision; a program row's own Keep / Rename wins. Each program row shows the shared decision (as of the last `review` run) in a read-only column. Export and the rename re-scoring resolve decisions the same way.
+
+Regenerating keeps Keep / Rename / Note (matched by the Key column; shared rows by tag name). Close the workbook in Excel before
 running `review` or `export`. **The workbooks are the team's decisions and are committed** (git shows
 them as binary: changes are not readable in a diff, and two branches editing the same workbook cannot
 be merged).
@@ -273,14 +291,15 @@ be merged).
 Order of work: Rename where needed, then Keep / Drop (and Note), then `export --dry-run`, `export`.
 Re-score only the renames that change meaning.
 
-`export.py` reads `review/*.xlsx` and writes `pipeline/planner/data/course-tags.json`: rows with Keep,
+`export.py` reads the family workbooks and writes `pipeline/planner/data/course-tags.json`: rows with Keep,
 named by Rename, else the Tag column; the course list is the first word of each line of the Courses
 column. Any Keep value other than Keep, Drop or empty stops the export with the rows listed. A kept row
 with no courses is skipped with a warning, and kept renames that classify has not re-scored are listed
-under `renamed_not_rescored`. `--dry-run` validates and prints without writing. `"tags"` is the format `solve_asp.py` reads
-today (all curricula merged; the adapter only uses the student's own curriculum courses);
-`"by_curriculum"` keeps the per-curriculum split for a later adapter change. Students see the exported
-tags as interests on the Clingo tab of the planner page (`GET /api/plans/interest-tags`).
+under `renamed_not_rescored`. `--dry-run` validates and prints without writing. Output: `"by_family"` {family: {tag: [courses]}}
+and `"families"` {curriculum code: family}; the planner (`solve_asp.py`, and the interest picker via
+`GET /api/plans/interest-tags`) reads the list of the student's family and keeps the courses of the
+student's curriculum. `"tags"` merges every family, as a fallback for a curriculum without a family
+list. Students see the exported tags as interests on the Clingo tab of the planner page.
 
 ## Colab (NLI scoring on a GPU)
 
@@ -288,7 +307,7 @@ tags as interests on the Clingo tab of the planner page (`GET /api/plans/interes
    a bundle made earlier scores the old tags): `python -m tag_classifier.bundle` →
    `data/colab_bundle.zip` (code, config, cleaned courses,
    curricula, candidates, review workbooks (for renames), current score cache; **no `.env`, no raw snapshot**).
-2. Colab: open `notebooks/colab_classify.ipynb`, T4 runtime, upload the bundle, run the cells. Scoring
+2. Colab: open `notebooks/colab_classify.ipynb`, T4 runtime, upload the bundle, run the cells. The notebook scores every program with a candidates file in one Python process (each model loads once), saves the score cache to Google Drive (`MyDrive/tag_classifier/scores.sqlite`) after every program and model, and merges that copy back in when run again after a disconnect. Measured on KHMT: 0.03-0.05 s per pair on a T4; a run over all 86 programs is roughly 4-6 hours per model (upper bound: tags repeated across programs are scored once per section). Scoring
    resumes from the cache if the session stops. Download `colab_scores.zip`.
 3. Locally: unzip `colab_scores.zip` into `data/colab/<date>/` (git-ignored; keep the zip there too),
    then `python -m tag_classifier.merge_cache data/colab/<date>/tag_classifier/cache/scores.sqlite`. It
@@ -299,12 +318,13 @@ tags as interests on the Clingo tab of the planner page (`GET /api/plans/interes
 Model downloads: set `HF_HOME` to choose where models are stored (this laptop used `D:/hf-cache`;
 drive C is nearly full).
 
-### Status (2026-11-21)
+### Status (2026-11-22)
 
-Steps 1-6 and the notebook are written and tested. KHMT 2023 (restarted 2026-11-21 with electives-only
-candidates and calibrated thresholds): all five scorers done on 50 candidates (NLI on Colab,
-2026-11-22), evaluation in `reports/03-eval/CS-2023-KHMT/`, review workbook ready for the team's
-decisions. Other curricula: candidates not generated yet.
+Steps 1-6 and the notebook are written and tested, per program family. Computer Science (`CS-KHMT`,
+moved from the KHMT 2023 cohort on 2026-11-22): 59 candidates, cheap scorers done, the two NLI models
+need about 5,400 new pairs each (new courses and tags; ~5 min each on a Colab T4), then evaluate and
+review. The team's 27 non-specialization decisions from KHMT 2023 carried over to `review/CS-KHMT.xlsx`.
+Other families: candidates not generated yet.
 
 ## Kiểm thử
 

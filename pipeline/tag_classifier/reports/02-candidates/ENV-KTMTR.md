@@ -1,0 +1,51 @@
+# Candidate tags: ENV-KTMTR
+
+Kỹ thuật Môi trường (Environmental Engineering) (Môi trường và Tài nguyên); cohorts ENV-2023-KTMTR, ENV-2024-KTMTR, ENV-2026-KTMTR. 0 candidates kept from the previous run (key and names unchanged). 29 of its 86 courses are used (electives with a usable syllabus). Raw candidates by source: {'structure': 6, 'profile': 15, 'syllabus': 15}; after merging and filtering: **25**, dropped 1.
+
+Coverage = courses of this curriculum: faculty members (structure), courses close in meaning (profile), courses where the cluster's phrases are top phrases or appear verbatim (syllabus). No machine translation: † = English label taken from a merged English phrase of this curriculum; *suggested* = closest English phrase of this curriculum, to confirm in the review workbook.
+
+| Key | Vietnamese label | English label | Sources | Coverage | Example courses | Evidence |
+|---|---|---|---|---|---|---|
+| `nganh` | Ngành |  (also: Bắt buộc ngành) | category, group | 13 | EN3003, EN3023, EN3037, EN3043, EN3073, EN3079 … (+7) | CI2001: Qua môn học này sinh viên còn được cung cấp các hiểu biết về ứng xử cơ học, các điều kiện  |
+| `ky-nang-bo-tro` | Kỹ năng bổ trợ | *suggested: practical activities (0.67)* | category, group | 8 | SK1001, SK1003, SK2001, SK2003, SK3001, SK3003 … (+2) |  |
+| `kien-thuc-quan-ly-khoi-nghiep` | Kiến thức quản lý/ khởi nghiệp | *suggested: enterprises (0.69)* | category, group | 6 | IM1021, IM1025, IM1027, IM1031, ME1019, ME2173 |  |
+| `quan-ly` | Quản lý | *suggested: consulting (0.69)* | category, group | 3 | IM1021, IM1025, IM1027 | EN2049: Mục tiêu của môn học nhằm cung cấp cho sinh viên (SV) các kiến thức và kỹ năng cơ bản về  |
+| `environmental-technologies` |  | environmental technologies (also: current environmental conditions; environmental) | profile, syllabus | 18 | CI2121, CI3281, EN2049, EN3003, EN3023, EN3037 … (+12) | CI2121: The course introduces loads and impacts, simple analytical methods, preliminary calculatio |
+| `environmental-initiatives` |  | environmental initiatives (also: design environmental monitoring; environmental management; environmental management tools; strategic environmental asses) | profile, syllabus | 17 | CI2121, CI3281, EN2049, EN2055, EN3003, EN3023 … (+11) | EN2049: Apply and compare the advantages and disadvantages of technical and environmental manageme |
+| `environmental-engineering` |  | environmental engineering (also: environmental engineers; sustainable environmental engineering) | profile | 15 | CI2121, CI3281, EN2049, EN3003, EN3023, EN3037 … (+9) | CI2121: Types of steel structures in environmental engineering. |
+| `environmental-consulting` |  | environmental consulting | profile | 13 | CI2121, CI3281, EN2049, EN3003, EN3023, EN3037 … (+7) | profile: Graduates of the program are well-prepared to work in government agencies, environmental c |
+| `development-projects` |  | development projects | profile | 8 | CI2121, CI3281, EN2049, EN2055, EN3003, IM1025 … (+2) | profile: Environmental engineers can take on positions designing, operating, managing, and supervis |
+| `environmental-impact` |  | environmental impact | profile | 7 | EN3003, EN3023, EN3037, EN3083, EN3087, EN3117 … (+1) | EN2049: Applying Systems Analysis in Environmental Impact Assessment |
+| `waste-treatment-technologies` |  | waste treatment technologies (also: waste treatment) | profile | 4 | EN3037, EN3043, EN3117, EN3127 | profile: Furthermore, graduates have opportunities to advance their education through engineering d |
+| `natural-resources` |  | natural resources | profile | 2 | EN3003, EN3113 | EN2049: An ability to apply fundamental engineering principles and methods to address problems in  |
+| `natural` |  | natural (also: natural science) | syllabus | 15 | CI2001, CI2121, CI3281, EN2049, EN2055, EN3003 … (+9) | CI2001: Apply knowledge of mathematics, natural sciences, and information technology to identify a |
+| `energy-management` |  | energy management (also: energy management system; energy conservation engineering; energy security) | syllabus | 4 | EN3087, ME2099, ME2173, SK1003 | EN3087: Energy security |
+| `ecological-industrial-park` |  | ecological industrial park (also: industrial parks) | syllabus | 3 | EN3023, EN3037, EN3127 | EN3023: Models of eco-cities, eco-industrial parks, ecological agriculture, and ecological environ |
+| `common-productivity` |  | common productivity (also: principlesand productivity) | syllabus | 2 | ME1019, ME2173 | ME1019: Being able to apply management principlesand productivity and quality tools in the context |
+| `entrepreneurial-project` |  | entrepreneurial project (also: entrepreneurship process) | syllabus | 2 | IM1021, IM1031 | IM1021: Describe the entrepreneur, entrepreneurship process and roles of entrepreneurship in econo |
+| `environmental-system-analysis` |  | environmental system analysis (also: environmental modeling process) | syllabus | 2 | EN3023, EN3209 | EN3023: Apply ecological and ecological engineering principles in environmental system analysis. |
+| `pollution-risks` |  | pollution risks (also: pollution prevention approaches) | syllabus | 2 | EN3113, EN3127 | EN3113: Assessing pollution risks and selecting pollution treatment technology |
+| `practical-tools` |  | practical tools | syllabus | 2 | SK1003, SK2001 | SK1003: The course content integrates theoretical foundations, the psychological characteristics o |
+| `soil-treatment-techniques` |  | soil treatment techniques (also: soil monitoring) | syllabus | 2 | EN3083, EN3113 | EN3083: Soil monitoring |
+| `startup-plans` |  | startup plans (also: startup process) | syllabus | 2 | IM1021, IM1031 | IM1021: Students will also explore marketing strategies, the importance of intellectual property,  |
+| `structural-design-procedure` |  | structural design procedure | syllabus | 2 | CI2121, CI3281 | CI2121: To understand of structural design procedure |
+| `system-approach` |  | system approach (also: systems methodology) | syllabus | 2 | EN2049, EN3043 | EN2049: Systems Methodology |
+| `waste-incineration-processes` |  | waste incineration processes (also: waste flows) | syllabus | 2 | EN3043, EN3127 | EN3043: System Approach to Waste Incineration Processes and Equipment |
+
+## Quality
+
+- Candidates by origin: {'structure': 4, 'profile': 8, 'syllabus': 13}; with evidence sentence: 20/25; without English label: 4 (suggested: 3)
+- Syllabus cluster purity (share of a cluster's specialization courses inside its best specialization; 1.0 = stays in one faculty grouping): mean None, per candidate {}
+- Candidate pairs sharing ≥ 60% of courses: [{'a': 'entrepreneurial-project', 'b': 'startup-plans', 'jaccard': 1.0}, {'a': 'environmental-initiatives', 'b': 'environmental-engineering', 'jaccard': 0.88}, {'a': 'environmental-engineering', 'b': 'environmental-consulting', 'jaccard': 0.87}, {'a': 'environmental-technologies', 'b': 'environmental-initiatives', 'jaccard': 0.84}, {'a': 'environmental-technologies', 'b': 'environmental-engineering', 'jaccard': 0.83}, {'a': 'environmental-initiatives', 'b': 'natural', 'jaccard': 0.78}, {'a': 'environmental-initiatives', 'b': 'environmental-consulting', 'jaccard': 0.76}, {'a': 'environmental-engineering', 'b': 'natural', 'jaccard': 0.76}, {'a': 'environmental-consulting', 'b': 'natural', 'jaccard': 0.75}, {'a': 'nganh', 'b': 'environmental-technologies', 'jaccard': 0.72}, {'a': 'environmental-technologies', 'b': 'environmental-consulting', 'jaccard': 0.72}, {'a': 'nganh', 'b': 'environmental-initiatives', 'jaccard': 0.67}, {'a': 'nganh', 'b': 'environmental-engineering', 'jaccard': 0.65}, {'a': 'environmental-technologies', 'b': 'natural', 'jaccard': 0.65}]
+
+## Dropped (too few courses)
+
+- Con người và môi trường (category): covers 1 course(s) < 2
+
+## Profile phrases not kept (99)
+
+soil (best 0.62, peak 0.33, near 1), curriculum (best 0.61, peak 0.17, near 21), academic training (best 0.60, peak 0.18, near 20), education (best 0.56, peak 0.17, near 18), climate change (best 0.53, peak 0.38, near 1), qualified lecturers (best 0.53, peak 0.17, near 12), lecturers (best 0.52, peak 0.15, near 13), scientific foundations (best 0.50, peak 0.18, near 7), technical report (best 0.50, peak 0.15, near 8), research institutions (best 0.49, peak 0.13, near 13), practical activities (best 0.49, peak 0.14, near 10), core scientific foundations (best 0.48, peak 0.18, near 6), initiatives (best 0.48, peak 0.15, near 7), sustainable development goals (best 0.47, peak 0.18, near 3), research institutes (best 0.47, peak 0.12, near 11), university (best 0.47, peak 0.12, near 10), faculty (best 0.47, peak 0.12, near 6), scientific research (best 0.47, peak 0.13, near 7), engineers (best 0.46, peak 0.15, near 3), minh city university (best 0.46, peak 0.15, near 5), development goals (best 0.45, peak 0.18, near 1), practical contributions (best 0.45, peak 0.17, near 1), engineering degree (best 0.45, peak 0.10, near 11), degree (best 0.44, peak 0.16, near 2), specialized departments (best 0.44, peak 0.12, near 5), adaptability (best 0.44, peak 0.22, near 1), universities (best 0.43, peak 0.12, near 1), graduation (best 0.42, peak 0.16, near 2), natural (best 0.42, peak 0.21, near 1), consulting (best 0.42, peak 0.19, near 1)
+
+## Syllabus clusters not kept (18)
+
+teaching methods (best 0.57, peak 0.13, near 26), engineering disciplines (best 0.55, peak 0.11, near 19), special topics (best 0.51, peak 0.13, near 14), criteria decision analysis (best 0.49, peak 0.19, near 4), physics processes (best 0.48, peak 0.18, near 9), assessment components (best 0.47, peak 0.14, near 11), term test (best 0.43, peak 0.15, near 4), preliminary calculations (best 0.41, peak 0.20, near 4), application steps (best 0.41, peak 0.15, near 5), quality analysis results (best 0.40, peak 0.16, near 5), safety conditions (best 0.40, peak 0.19, near 3), policy intervention strategies (best 0.40, peak 0.17, near 3), group presentations (best 0.37, peak 0.12, near 2), competitive analysis (best 0.34, peak 0.18, near 2), restraints (best 0.34, peak 0.25, near 2), steel reservoir (best 0.33, peak 0.26, near 2), connection methods (best 0.32, peak 0.16, near 2), stairs (best 0.25, peak 0.12, near 2)

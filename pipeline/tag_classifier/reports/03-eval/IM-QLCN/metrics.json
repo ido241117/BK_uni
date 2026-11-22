@@ -1,0 +1,509 @@
+{
+ "agreement": {
+  "alpha_mean": 0.3090841682656466,
+  "alpha_per_tag": {
+   "QCV": 0.42281033396345313,
+   "QKD": 0.22705710636745113,
+   "QLCN": 0.28507317073170735,
+   "QLCUVH": 0.24986897274633124,
+   "QTKD": 0.005891472868217007,
+   "bat-buoc-nganh": 0.49559471365638774,
+   "business-perspective": 0.3728776426771826,
+   "business-plan-presentation": 0.11016593152699017,
+   "chain-management": 0.7542439024390244,
+   "communication-theories": 0.548704954954955,
+   "control-plans": 0.11338495575221241,
+   "curriculum": 0.02700109649122806,
+   "data-science-tools": 0.33119158878504673,
+   "digital-business": 0.5318341121495327,
+   "digital-communication-techniques": 0.14806547619047628,
+   "digital-marketing-strategy": 0.4320436507936508,
+   "effective-presentation": -0.026905829596412634,
+   "global-dynamics": 0.31845238095238104,
+   "human-resources-management": 0.4197635135135135,
+   "international-bond-market": 0.24004424778761058,
+   "international-business-opportunities": 0.41319666880204997,
+   "khoa-hoc-tu-nhien": 0.5419408955994323,
+   "ky-nang-bo-tro": 0.04911225658648333,
+   "logistics-management": 0.4624413145539906,
+   "marketing-management": 0.5029457364341086,
+   "master-production-schedule": 0.0,
+   "operations-management": 0.30521844660194175,
+   "practical-competencies": 0.13043924466338253,
+   "procurement-management": 0.4865470852017937,
+   "production-management": 0.42606516290726815,
+   "project-life": 0.29969418960244654,
+   "project-management": 0.22045712433133413,
+   "quan-ly-chuoi-cung-ung-va-van-hanh": 0.40984615384615386,
+   "quan-ly-cong-nghiep": 0.15064709595959602,
+   "risk-assessment-techniques": 0.424333836098542,
+   "science-practice": 0.11450441919191923,
+   "supply-chain-management": 0.8012152777777778,
+   "teaching-method": -0.0005699088145896258
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.3570687921367,
+   "bge-m3-zeroshot vs embedding-vi": 0.26300279681667094,
+   "bge-m3-zeroshot vs keyword": 0.24314605003673334,
+   "bge-m3-zeroshot vs modernbert": 0.6702599543128132,
+   "embedding vs embedding-vi": 0.5937630169970233,
+   "embedding vs keyword": 0.12980665866103183,
+   "embedding vs modernbert": 0.3338950899542746,
+   "embedding-vi vs keyword": 0.09036291125150221,
+   "embedding-vi vs modernbert": 0.28376569531446544,
+   "keyword vs modernbert": 0.20978516628652394
+  },
+  "tags_reliable": 2,
+  "tags_with_alpha": 38
+ },
+ "courses": 46,
+ "curriculum": "IM-QLCN",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 6954,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 6954,
+   "scored": 6069,
+   "seconds": 46.9,
+   "seconds_per_pair": 0.0077
+  },
+  "embedding-vi": {
+   "pairs": 6954,
+   "scored": 6113,
+   "seconds": 28.8,
+   "seconds_per_pair": 0.0047
+  },
+  "keyword": {
+   "pairs": 6771,
+   "scored": 5914,
+   "seconds": 1.2,
+   "seconds_per_pair": 0.0002
+  },
+  "modernbert": {
+   "pairs": 6771,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.5,
+   "courses": 44,
+   "jaccard": 0.4810606060606061
+  },
+  "embedding": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 44,
+   "jaccard": 0.44160107569198476
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.5714285714285714,
+   "courses": 44,
+   "jaccard": 0.4403264664628301
+  },
+  "keyword": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 1.0,
+   "courses": 44,
+   "jaccard": 0.5795454545454546
+  },
+  "modernbert": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 44,
+   "jaccard": 0.5240259740259741
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {
+    "QCV": {
+     "precision_lb": 1.0,
+     "recall": 0.2222222222222222
+    },
+    "QKD": {
+     "precision_lb": 0.6666666666666666,
+     "recall": 0.18181818181818182
+    },
+    "QLCN": {
+     "precision_lb": 1.0,
+     "recall": 0.11538461538461539
+    },
+    "QLCUVH": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "QTKD": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": 0.8888888888888888,
+   "recall": 0.10388500388500388
+  },
+  "embedding": {
+   "per_specialization": {
+    "QCV": {
+     "precision_lb": 1.0,
+     "recall": 0.6666666666666666
+    },
+    "QKD": {
+     "precision_lb": 0.6666666666666666,
+     "recall": 0.18181818181818182
+    },
+    "QLCN": {
+     "precision_lb": 1.0,
+     "recall": 0.07692307692307693
+    },
+    "QLCUVH": {
+     "precision_lb": 1.0,
+     "recall": 0.6363636363636364
+    },
+    "QTKD": {
+     "precision_lb": 0.0,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": 0.7333333333333333,
+   "recall": 0.3123543123543123
+  },
+  "embedding-vi": {
+   "per_specialization": {
+    "QCV": {
+     "precision_lb": 0.7272727272727273,
+     "recall": 0.8888888888888888
+    },
+    "QKD": {
+     "precision_lb": 0.5833333333333334,
+     "recall": 0.6363636363636364
+    },
+    "QLCN": {
+     "precision_lb": 0.8666666666666667,
+     "recall": 0.5
+    },
+    "QLCUVH": {
+     "precision_lb": 1.0,
+     "recall": 0.8181818181818182
+    },
+    "QTKD": {
+     "precision_lb": 0.5454545454545454,
+     "recall": 0.6
+    }
+   },
+   "precision_lb": 0.7445454545454545,
+   "recall": 0.6886868686868687
+  },
+  "keyword": {
+   "per_specialization": {
+    "QCV": {
+     "precision_lb": 1.0,
+     "recall": 0.1111111111111111
+    },
+    "QKD": {
+     "precision_lb": 1.0,
+     "recall": 0.09090909090909091
+    },
+    "QLCN": {
+     "precision_lb": 1.0,
+     "recall": 0.038461538461538464
+    },
+    "QLCUVH": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "QTKD": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": 1.0,
+   "recall": 0.04809634809634809
+  },
+  "modernbert": {
+   "per_specialization": {
+    "QCV": {
+     "precision_lb": 1.0,
+     "recall": 0.3333333333333333
+    },
+    "QKD": {
+     "precision_lb": 0.5,
+     "recall": 0.36363636363636365
+    },
+    "QLCN": {
+     "precision_lb": 1.0,
+     "recall": 0.15384615384615385
+    },
+    "QLCUVH": {
+     "precision_lb": 1.0,
+     "recall": 0.18181818181818182
+    },
+    "QTKD": {
+     "precision_lb": 0.3333333333333333,
+     "recall": 0.1
+    }
+   },
+   "precision_lb": 0.7666666666666667,
+   "recall": 0.22652680652680654
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.5221932053453793
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   1,
+   1,
+   1,
+   2,
+   1,
+   2,
+   2,
+   1,
+   2,
+   1,
+   1,
+   5,
+   2,
+   1,
+   4,
+   2,
+   4,
+   3,
+   2,
+   2,
+   4,
+   2,
+   5,
+   4,
+   2,
+   1,
+   0,
+   0,
+   3,
+   3,
+   4,
+   2,
+   2,
+   5,
+   5,
+   5,
+   4,
+   3,
+   4,
+   0,
+   1,
+   2,
+   1,
+   2,
+   0,
+   1
+  ],
+  "embedding": [
+   1,
+   2,
+   2,
+   2,
+   1,
+   2,
+   4,
+   0,
+   2,
+   3,
+   3,
+   9,
+   6,
+   6,
+   5,
+   6,
+   5,
+   11,
+   2,
+   7,
+   7,
+   5,
+   6,
+   6,
+   3,
+   3,
+   6,
+   4,
+   6,
+   7,
+   7,
+   6,
+   3,
+   11,
+   5,
+   7,
+   7,
+   7,
+   4,
+   0,
+   1,
+   2,
+   5,
+   6,
+   5,
+   5
+  ],
+  "embedding-vi": [
+   2,
+   3,
+   3,
+   4,
+   1,
+   2,
+   6,
+   3,
+   2,
+   9,
+   3,
+   12,
+   12,
+   7,
+   8,
+   12,
+   12,
+   7,
+   8,
+   9,
+   11,
+   10,
+   6,
+   8,
+   6,
+   5,
+   2,
+   9,
+   8,
+   11,
+   11,
+   9,
+   9,
+   10,
+   7,
+   11,
+   10,
+   8,
+   6,
+   0,
+   1,
+   6,
+   4,
+   7,
+   7,
+   7
+  ],
+  "keyword": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   2,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   2,
+   0,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   2,
+   3,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1
+  ],
+  "modernbert": [
+   1,
+   1,
+   2,
+   2,
+   2,
+   2,
+   1,
+   2,
+   1,
+   2,
+   2,
+   9,
+   3,
+   0,
+   3,
+   1,
+   4,
+   2,
+   3,
+   0,
+   5,
+   3,
+   5,
+   1,
+   1,
+   1,
+   1,
+   0,
+   5,
+   3,
+   4,
+   4,
+   3,
+   6,
+   4,
+   3,
+   3,
+   4,
+   4,
+   2,
+   3,
+   1,
+   1,
+   2,
+   0,
+   1
+  ]
+ }
+}

@@ -267,14 +267,29 @@ Pipeline riêng tìm tag cho môn học từ đề cương trong database, để
 | `preprocess.py` + `text.py` | Làm sạch đề cương → `data/courses.jsonl`, log từng thay đổi → `logs/preprocess.csv` | `preprocess`, `assign_languages`, `pick_versions`, `clean_text` |
 | `eda.py` | Báo cáo dữ liệu sau bước 1 → `reports/01-data/report.md` + biểu đồ | `write_report` |
 | `candidates.py` + `candidates_report.py` | Candidate tags per curriculum (structure, profile, clustered syllabus phrases), merge, suggested English labels, coverage, quality numbers → `data/candidates/`, `reports/02-candidates/` | `Builder.build`, `Builder.syllabus`, `Builder.judge`, `quality`, `render` |
+| `family.py` | Program families: cohorts of one program (code without the cohort year, e.g. `CS-KHMT`), merged into one record (union of electives, all groups, profiles); steps 2-6 work per family | `family_id`, `merge_family`, `all_families`, `family_of_curricula` |
 | `calibrate.py` | Measures the candidate thresholds from data (no human labels; capped false-positive rate; cluster threshold by syllabus purity) → `reports/02-candidates/calibration/` | `capped`, `capped_joint`, `collect`, `cluster_quality` |
 | `models.py`, `phrases.py`, `structure.py` | Lazy embedding model (also used by the embedding scorer) and spaCy; section text, template lines, per-line noun-phrase cache, catalogue rarity, MMR; structure candidates, specialization lists, elective set | `Embedder`, `NounPhraser`, `section_text`, `PhraseIndex`, `template_lines`, `mmr`, `structure_candidates`, `specialization_members` |
 | `classify.py` + `scorers.py` | Step 3: score each elective course × section × candidate tag with NLI, embedding and keyword scorers; SQLite score cache; tags renamed in the review workbook are scored under the new name | `classify`, `units`, `apply_renames`, `NLIScorer`, `EmbeddingScorer`, `KeywordScorer` |
 | `aggregate.py` | Step 4: course tags by rule (a), majority of sections | `course_tags`, `aggregate` |
 | `evaluate.py` + `metrics.py` + `charts.py` | Step 5: automatic evaluation (specialization recall, kappa, Krippendorff's alpha, section consistency, language stability) | `Evaluation`, `krippendorff_alpha`, `cohen_kappa` |
-| `review.py`, `workbook.py`, `export.py` | Step 6: review workbook per curriculum (sheets Tags and Courses; keeps the team's answers on regeneration); export kept tags to `pipeline/planner/data/course-tags.json` | `write`, `write_review`, `read_review_rows`, `read_reviews`, `build` |
+| `review.py`, `workbook.py`, `export.py` | Step 6: review workbook per curriculum (sheets Tags and Courses) plus `shared.xlsx` (one decision per tag name across programs; a program row's own decision wins); keeps the team's answers on regeneration; export kept tags (renames not re-scored are marked) to `pipeline/planner/data/course-tags.json` | `write`, `shared_rows`, `effective`, `read_reviews`, `not_rescored`, `build` |
 | `bundle.py`, `merge_cache.py`, `notebooks/colab_classify.ipynb` | NLI scoring on a Colab GPU without database access; merge the Colab score cache locally | `merge` |
 | `config.toml` | Ngưỡng và mẫu của mọi bước | — |
+
+### 5.5 Python `pipeline/synthetic/` (prototype, from 22/11)
+
+Synthetic students for one curriculum (CS-2023-KHMT), simulated semester by semester under a curriculum baseline and the planner (CP-SAT), for sensitivity analysis of the planner-vs-baseline comparison. Not used when solving a plan; uses the `pipeline/.venv`. Attrition rules come from QĐ 285 Điều 37 and Điều 24, as amended by QĐ 1260/2026 (sources per rule in the README). Details: `pipeline/synthetic/README.md`.
+
+| File | Role | Main functions |
+|---|---|---|
+| `regulations.py` | Academic warning, suspension, withdrawal, max duration, year level | `warning_reasons`, `Standing`, `year_level` |
+| `curriculum.py` | Fixture, grade scale and fees from `policy.lp`; legality and graduation through `planner.validate` | `Curriculum`, `parse_policy`, `load_config` |
+| `grades.py`, `population.py` | Score model (linear IRT-style, keyed noise), student traits | `draw_score`, `fail_probability`, `sample_students` |
+| `policies.py`, `simulate.py` | Baseline policy, planner policy (deterministic CP-SAT budget, plan reused while followed), agent choice, semester loop | `baseline_bundle`, `PlannerPolicy`, `choose`, `simulate_student` |
+| `outputs.py`, `run.py` | Metrics, paired differences; CLI writing `synthetic/data/<run_id>/` | `metrics`, `paired`, `simulate` |
+| `checks.py`, `recovery.py`, `sensitivity.py` | Prior predictive check, parameter recovery, OAT tornado and Morris (SALib), saved per setting and resumable | `predictive_summary`, `fit`, `oat`, `morris` |
+| `config.toml` | Every parameter with base/low/high | — |
 
 ---
 

@@ -1,0 +1,306 @@
+{
+ "agreement": {
+  "alpha_mean": 0.20445260223599482,
+  "alpha_per_tag": {
+   "common-productivity": 0.23404255319148937,
+   "development-projects": 0.0,
+   "ecological-industrial-park": 0.223021582733813,
+   "energy-management": 0.10638297872340419,
+   "entrepreneurial-project": 0.5294117647058824,
+   "environmental-consulting": -0.015486725663716783,
+   "environmental-engineering": 0.2535885167464116,
+   "environmental-impact": 0.2045616535994298,
+   "environmental-initiatives": 0.09433962264150941,
+   "environmental-system-analysis": 0.1413141314131413,
+   "environmental-technologies": 0.22948870392390008,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.12790697674418605,
+   "ky-nang-bo-tro": -0.06666666666666665,
+   "natural": -0.028571428571428692,
+   "natural-resources": 0.33834586466165417,
+   "nganh": NaN,
+   "pollution-risks": 0.07428571428571418,
+   "practical-tools": 0.07352941176470584,
+   "quan-ly": -0.021276595744680993,
+   "soil-treatment-techniques": 0.36170212765957444,
+   "startup-plans": 0.48201438848920863,
+   "structural-design-procedure": 0.24475524475524468,
+   "system-approach": 0.3713235294117647,
+   "waste-incineration-processes": 0.4782608695652174,
+   "waste-treatment-technologies": 0.47058823529411764
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.1618969746524944,
+   "bge-m3-zeroshot vs embedding-vi": 0.1346955796497085,
+   "bge-m3-zeroshot vs keyword": 0.06194690265486676,
+   "bge-m3-zeroshot vs modernbert": 0.43286788399570364,
+   "embedding vs embedding-vi": 0.6742277306001265,
+   "embedding vs keyword": 0.22430783669638674,
+   "embedding vs modernbert": 0.3994021777809408,
+   "embedding-vi vs keyword": 0.1603273086952612,
+   "embedding-vi vs modernbert": 0.28094085679106723,
+   "keyword vs modernbert": 0.12024620795779256
+  },
+  "tags_reliable": 0,
+  "tags_with_alpha": 24
+ },
+ "courses": 29,
+ "curriculum": "ENV-KTMTR",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 2900,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 2900,
+   "scored": 2645,
+   "seconds": 75.3,
+   "seconds_per_pair": 0.0285
+  },
+  "embedding-vi": {
+   "pairs": 2900,
+   "scored": 2544,
+   "seconds": 13.6,
+   "seconds_per_pair": 0.0053
+  },
+  "keyword": {
+   "pairs": 2736,
+   "scored": 2516,
+   "seconds": 0.6,
+   "seconds_per_pair": 0.0002
+  },
+  "modernbert": {
+   "pairs": 2736,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.0,
+   "courses": 27,
+   "jaccard": 0.6240740740740741
+  },
+  "embedding": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.25,
+   "courses": 27,
+   "jaccard": 0.6533643311421089
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.5,
+   "courses": 27,
+   "jaccard": 0.6087112476001365
+  },
+  "keyword": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 1.0,
+   "courses": 26,
+   "jaccard": 0.6025641025641025
+  },
+  "modernbert": {
+   "copied_summary_courses": 2,
+   "copied_summary_jaccard": 0.5,
+   "courses": 26,
+   "jaccard": 0.48173076923076924
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding-vi": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.5458346251449699
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   0,
+   0,
+   0,
+   2,
+   4,
+   2,
+   2,
+   1,
+   5,
+   0,
+   0,
+   1,
+   2,
+   1,
+   1,
+   1,
+   0,
+   4,
+   0,
+   1,
+   0,
+   0,
+   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "embedding": [
+   1,
+   8,
+   8,
+   9,
+   7,
+   6,
+   8,
+   8,
+   8,
+   1,
+   0,
+   7,
+   6,
+   4,
+   8,
+   8,
+   8,
+   6,
+   6,
+   3,
+   3,
+   0,
+   2,
+   2,
+   0,
+   1,
+   0,
+   0,
+   0
+  ],
+  "embedding-vi": [
+   4,
+   6,
+   6,
+   10,
+   5,
+   6,
+   9,
+   10,
+   9,
+   7,
+   0,
+   9,
+   6,
+   7,
+   10,
+   9,
+   10,
+   6,
+   9,
+   3,
+   6,
+   8,
+   4,
+   3,
+   5,
+   3,
+   1,
+   4,
+   2
+  ],
+  "keyword": [
+   0,
+   1,
+   1,
+   3,
+   0,
+   4,
+   1,
+   2,
+   1,
+   0,
+   2,
+   2,
+   2,
+   1,
+   1,
+   2,
+   2,
+   1,
+   3,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   0,
+   2,
+   2,
+   3,
+   7,
+   3,
+   2,
+   3,
+   3,
+   0,
+   3,
+   3,
+   1,
+   1,
+   5,
+   3,
+   2,
+   4,
+   1,
+   2,
+   0,
+   0,
+   2,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0
+  ]
+ }
+}

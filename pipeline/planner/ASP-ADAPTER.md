@@ -87,7 +87,7 @@ Mã kỳ không đúng dạng `YYS` → `FixtureError` → `INPUT_ERROR`.
 | `graduation_courses` + `rules.graduation_thresholds` (Đ15.5) | `milestone(C, TC cần − TC ngoài chương trình)` |
 | `opened_semesters` (mới, từ `course_opened_semesters`) | `offer_hist(C, S, số kỳ đã mở)`, `offer_seen(S, số kỳ quan sát)` |
 | khối con theo chuyên ngành (`normalize` lưu ở `_specializations`) | `major(M)`, `major_course(M, C)`, `major_min(M, required_count)`; chuyên ngành sinh viên chọn: `student_major(M)` |
-| `planner/data/course-tags.json` | `tag(C, Tag)` |
+| `planner/data/course-tags.json` | `tag(C, Tag)` from the list of the student's program family (`by_family[families[curriculum code]]`), else the merged `tags`; only courses of the student's curriculum |
 
 ### 4.3 Sinh viên
 

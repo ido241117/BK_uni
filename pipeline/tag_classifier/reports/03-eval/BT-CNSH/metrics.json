@@ -1,0 +1,267 @@
+{
+ "agreement": {
+  "alpha_mean": 0.2180800749153628,
+  "alpha_per_tag": {
+   "biology": 0.636,
+   "biology-institute": 0.0870786516853932,
+   "biospring": 0.03703703703703709,
+   "biotech-companies": -0.050505050505050386,
+   "biotechnology": 0.114074074074074,
+   "cell-isolation-techniques": 0.2777777777777778,
+   "cell-metabolisms": 0.3978947368421053,
+   "degree": NaN,
+   "developer": 0.09900990099009899,
+   "education": 0.23110624315443584,
+   "engineering-disciplines": 0.191111111111111,
+   "entrepreneurial-project": 0.39651837524177946,
+   "higher-education": 0.2628865979381444,
+   "industrial-biotechnology-sectors": 0.04448742746615075,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.06947368421052635,
+   "ky-nang-bo-tro": -0.02970297029702973,
+   "microorganisms": 0.6388888888888888,
+   "molecular-biology-techniques": 0.1601123595505618,
+   "project-developer": 0.09477756286266914,
+   "prokaryotes": 0.5217391304347826,
+   "quan-ly": 0.09900990099009899,
+   "research-thinking": 0.03703703703703709,
+   "seminars": 0.16618075801749266,
+   "startup-process": 0.8796296296296297,
+   "tropical-biology-institute": 0.09037900874635563,
+   "university": 0.0
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.3247459949008716,
+   "bge-m3-zeroshot vs embedding-vi": 0.17633255112303078,
+   "bge-m3-zeroshot vs keyword": 0.42701227830832167,
+   "bge-m3-zeroshot vs modernbert": 0.4998383446492084,
+   "embedding vs embedding-vi": 0.6160664819944598,
+   "embedding vs keyword": 0.24879871863320865,
+   "embedding vs modernbert": 0.18628912071535073,
+   "embedding-vi vs keyword": 0.1447963800904976,
+   "embedding-vi vs modernbert": 0.11949685534591224,
+   "keyword vs modernbert": 0.3859649122807032
+  },
+  "tags_reliable": 1,
+  "tags_with_alpha": 25
+ },
+ "courses": 21,
+ "curriculum": "BT-CNSH",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 2184,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 2184,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding-vi": {
+   "pairs": 2184,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "keyword": {
+   "pairs": 2184,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "modernbert": {
+   "pairs": 2184,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 20,
+   "jaccard": 0.5083333333333333
+  },
+  "embedding": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.42857142857142855,
+   "courses": 20,
+   "jaccard": 0.3681349206349206
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.8333333333333334,
+   "courses": 20,
+   "jaccard": 0.6043650793650793
+  },
+  "keyword": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 20,
+   "jaccard": 0.5333333333333333
+  },
+  "modernbert": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 1.0,
+   "courses": 20,
+   "jaccard": 0.7
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding-vi": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.5417594310451453
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   2,
+   3,
+   1,
+   1,
+   0,
+   0,
+   1,
+   0,
+   1,
+   0,
+   0,
+   0,
+   2,
+   0,
+   1,
+   1,
+   3,
+   2,
+   3,
+   2,
+   0
+  ],
+  "embedding": [
+   4,
+   7,
+   10,
+   6,
+   4,
+   0,
+   4,
+   8,
+   1,
+   4,
+   0,
+   0,
+   3,
+   3,
+   5,
+   1,
+   3,
+   5,
+   5,
+   3,
+   4
+  ],
+  "embedding-vi": [
+   6,
+   8,
+   10,
+   9,
+   7,
+   0,
+   8,
+   10,
+   11,
+   10,
+   0,
+   2,
+   6,
+   8,
+   7,
+   3,
+   7,
+   4,
+   4,
+   5,
+   5
+  ],
+  "keyword": [
+   2,
+   3,
+   3,
+   2,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0
+  ],
+  "modernbert": [
+   1,
+   1,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   2,
+   0,
+   1,
+   0,
+   2,
+   0,
+   1,
+   0,
+   0
+  ]
+ }
+}
