@@ -14,7 +14,9 @@ import argparse
 import math
 from typing import Any
 
-from tag_classifier.common import load_config, load_scores, resolve, utf8_stdout, write_json
+from tag_classifier.common import (
+    add_family_args, load_config, load_scores, resolve, scores_names, utf8_stdout, write_json,
+)
 
 
 def course_tags(sections: dict[str, dict[str, float]], top_k: int, min_score: float,
@@ -45,19 +47,20 @@ def aggregate(scores: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--curriculum", required=True)
-    ap.add_argument("--scores", help="scores file name in data/scores (default: <curriculum>.json)")
+    add_family_args(ap)
+    ap.add_argument("--scores", help="scores file name in data/scores, one family only (default: <family>.json)")
     args = ap.parse_args(argv)
     utf8_stdout()
     cfg = load_config()
-    name = args.scores or f"{args.curriculum}.json"
-    result = aggregate(load_scores(cfg, name), cfg)
-    out = resolve(cfg["aggregate"]["out_dir"]) / name
-    write_json(out, result)
-    for model, courses in result["tags"].items():
-        n = [len(v) for v in courses.values()]
-        print(f"  {model}: {sum(n) / max(len(n), 1):.1f} tags per course (min {min(n, default=0)}, max {max(n, default=0)})")
-    print(f"-> {out}")
+    for name in scores_names(cfg, args):
+        result = aggregate(load_scores(cfg, name), cfg)
+        out = resolve(cfg["aggregate"]["out_dir"]) / name
+        write_json(out, result)
+        for model, courses in result["tags"].items():
+            n = [len(v) for v in courses.values()]
+            print(f"  {model}: {sum(n) / max(len(n), 1):.1f} tags per course "
+                  f"(min {min(n, default=0)}, max {max(n, default=0)})")
+        print(f"-> {out}")
 
 
 if __name__ == "__main__":

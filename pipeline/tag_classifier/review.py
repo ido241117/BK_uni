@@ -10,6 +10,10 @@ optionally Rename and Note, then run export. Rows are sorted doubtful first; tag
 come last. Sheet "Courses": each elective with its tags, to check course by course. Regenerating keeps
 Keep / Rename / Note (matched by tag key); close the workbook in Excel first.
 
+Every run also rebuilds review/shared.xlsx from all program workbooks: one row per tag name, so a tag
+several programs share is decided once (a program row's own Keep / Rename wins). Its decisions are
+kept on regeneration.
+
 A Rename is either a display name (export it as is; export marks it as not re-scored) or a change of
 meaning: then run classify again, which scores the new name, and this script lists its courses.
 Layout: workbook.py.
@@ -22,10 +26,17 @@ import math
 from pathlib import Path
 from typing import Any
 
-from tag_classifier.common import load_candidates, load_config, load_scores, stale_models, utf8_stdout
+from tag_classifier.common import (
+    add_family_args, chosen_families, load_candidates, load_config, load_scores, resolve, stale_models,
+    utf8_stdout,
+)
 from tag_classifier.evaluate import Evaluation
+from tag_classifier.family import load_family
 from tag_classifier.phrases import section_text
-from tag_classifier.workbook import read_decisions, review_path, write_review
+from tag_classifier.workbook import (
+    SHARED_FILE, course_codes, describe, norm_name, program_workbooks, read_decisions, read_review_rows, read_shared,
+    review_path, write_review, write_shared,
+)
 
 
 def evidence(ev: Evaluation, model: str, tag: str, courses: list[str], names: dict[str, str], n: int = 3) -> list[str]:
@@ -52,8 +63,8 @@ def tag_name(cand: dict[str, Any]) -> tuple[str, str]:
     return cand.get("label_vi") or cand["key"], "Vietnamese only"
 
 
-def sheets(code: str, cfg: dict[str, Any], scores_name: str, decisions: dict[str, dict[str, str]]
-           ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def sheets(code: str, cfg: dict[str, Any], scores_name: str, decisions: dict[str, dict[str, str]],
+           shared: dict[str, dict[str, str]] | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Rows of the Tags and Courses sheets."""
     scores = load_scores(cfg, scores_name)
     stale = stale_models(scores, {t: d["rename"] for t, d in decisions.items() if d["rename"]})
@@ -67,6 +78,13 @@ def sheets(code: str, cfg: dict[str, Any], scores_name: str, decisions: dict[str
         raise SystemExit(f"none of {cfg['review']['primary_models']} in {scores_name}")
     alphas = ev.agreement()["alpha_per_tag"]
     names = {c: (r.get("name_en") or r.get("name_vi") or "") for c, r in ev.records.items()}
+    cohorts = load_family(cfg, code)["cohort_courses"]
+
+    def course_line(c: str) -> str:
+        """'CODE name', plus the cohorts having it when not all of the family's cohorts do."""
+        having = [k for k, courses in cohorts.items() if c in courses]
+        only = f" [{', '.join(having)} only]" if 0 < len(having) < len(cohorts) else ""
+        return f"{c} {names.get(c, '')}".strip() + only
     reliable = cfg["evaluate"]["reliable_alpha"]
     tags, shown = [], {}
     for cand in load_candidates(cfg, code):
@@ -78,8 +96,9 @@ def sheets(code: str, cfg: dict[str, Any], scores_name: str, decisions: dict[str
         shown[tag] = decided.get("rename") or label
         tags.append({
             **{k: decided.get(k, "") for k in ("keep", "rename", "note")},
+            "shared": describe((shared or {}).get(norm_name(label), {})),
             "tag": tag, "label": label, "label_source": source, "label_vi": cand.get("label_vi") or "",
-            "courses": "\n".join(f"{c} {names.get(c, '')}".strip() for c in courses), "course_count": len(courses),
+            "courses": "\n".join(course_line(c) for c in courses), "course_count": len(courses),
             "alpha": "" if math.isnan(alpha) else round(alpha, 2),
             "models": ", ".join(m for m in ev.models if any(tag in v for v in ev.assign[m].values())),
             "sources": ", ".join(cand["source_types"]),
@@ -97,20 +116,53 @@ def sheets(code: str, cfg: dict[str, Any], scores_name: str, decisions: dict[str
 def write(code: str, cfg: dict[str, Any], scores_name: str) -> Path:
     path = review_path(cfg, code)
     decisions = read_decisions(path)
-    tags, courses = sheets(code, cfg, scores_name, decisions)
+    tags, courses = sheets(code, cfg, scores_name, decisions, read_shared(path.parent))
     write_review(path, tags, courses)
     print(f"{code}: {len(tags)} tags ({sum(1 for r in tags if r['keep'])} already decided), "
           f"{len(courses)} courses -> {path}")
     return path
 
 
+def shared_rows(folder: Path) -> list[dict[str, Any]]:
+    """One row per tag name across the program workbooks, with the shared decisions kept."""
+    decided = read_shared(folder)
+    groups: dict[str, dict[str, Any]] = {}
+    for path in program_workbooks(folder):
+        for row in read_review_rows(path):
+            name = norm_name(row.get("label") or "")
+            if not name:
+                continue
+            g = groups.setdefault(name, {"name": row["label"], "programs": {}, "courses": set(), "alphas": []})
+            codes = course_codes(row.get("courses", ""))
+            g["programs"][path.stem] = len(codes)
+            g["courses"].update(codes)
+            if row.get("alpha"):
+                g["alphas"].append(float(row["alpha"]))
+    rows = [{**decided.get(name, {}), "name": g["name"], "program_count": len(g["programs"]),
+             "programs": "\n".join(f"{code}: {n}" for code, n in sorted(g["programs"].items())),
+             "course_count": len(g["courses"]),
+             "alpha": round(sum(g["alphas"]) / len(g["alphas"]), 2) if g["alphas"] else ""}
+            for name, g in groups.items()]
+    return sorted(rows, key=lambda r: (-r["program_count"], -r["course_count"], r["name"].lower()))
+
+
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--curriculum", required=True)
-    ap.add_argument("--scores", help="scores file name in data/scores (default: <curriculum>.json)")
+    add_family_args(ap)
+    ap.add_argument("--scores", help="scores file name in data/scores, one family only (default: <family>.json)")
     args = ap.parse_args(argv)
     utf8_stdout()
-    write(args.curriculum, load_config(), args.scores or f"{args.curriculum}.json")
+    cfg = load_config()
+    codes = chosen_families(cfg, args)
+    if args.scores and len(codes) != 1:
+        raise SystemExit("--scores needs exactly one --family")
+    for code in codes:
+        write(code, cfg, args.scores or f"{code}.json")
+    folder = resolve(cfg["review"]["out_dir"])
+    rows = shared_rows(folder)
+    write_shared(folder / SHARED_FILE, rows)
+    print(f"shared: {len(rows)} tag names, {sum(1 for r in rows if r['program_count'] > 1)} in several programs "
+          f"-> {folder / SHARED_FILE}")
 
 
 if __name__ == "__main__":

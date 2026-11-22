@@ -1,8 +1,14 @@
-"""Step 2: candidate tags per curriculum -> data/candidates/<code>.json + reports/02-candidates/<code>.md
+"""Step 2: candidate tags per program family -> data/candidates/<family>.json + reports/02-candidates/<family>.md
 
     cd pipeline
-    tag_classifier/.venv/Scripts/python -m tag_classifier.candidates --curriculum CS-2023-KHMT
-    tag_classifier/.venv/Scripts/python -m tag_classifier.candidates          # all curricula
+    tag_classifier/.venv/Scripts/python -m tag_classifier.candidates --family CS-KHMT
+    tag_classifier/.venv/Scripts/python -m tag_classifier.candidates          # every family with >= [scope] min_courses_to_tag
+
+A family is the cohorts of one program (family.py), built over the union of their electives.
+Stable across runs: when data/candidates/<family>.json exists, its candidates (already reviewed) keep
+their key and names; this run's candidates with the same meaning join them, and only new topics become
+new candidates. Specialization lists give evaluation-only candidates (evaluation_candidates): scored
+so the evaluation can check the models against the faculty's lists, never reviewed or exported.
 
 Three sources, all within one curriculum and, with electives_only (config [scope]), only its elective
 courses (catalogue-wide statistics such as phrase rarity still use every syllabus). Thresholds in
@@ -36,8 +42,9 @@ from tag_classifier.models import Embedder, NounPhraser
 from tag_classifier.phrases import (
     PhraseIndex, catalogue_ratios, course_lines, course_text, mmr, specificity, template_lines,
 )
+from tag_classifier.family import all_families
 from tag_classifier.structure import (
-    courses_to_tag, elective_codes, slug, specialization_members, structure_candidates,
+    courses_to_tag, elective_codes, slug, specialization_candidates, specialization_members, structure_candidates,
 )
 from tag_classifier.text import phrase_pattern
 
@@ -172,14 +179,16 @@ class Builder:
 
     # --- merge, labels, coverage ------------------------------------------------------------------
 
-    def merge(self, cands: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def merge(self, cands: list[dict[str, Any]], seed: list[dict[str, Any]] = ()) -> list[dict[str, Any]]:
         """Greedy: in source order, each candidate joins the first head whose label has cosine >=
-        merge_threshold. A head without an English label takes the joining English phrase."""
+        merge_threshold. A head without an English label takes the joining English phrase, except a
+        seeded head (an earlier run's candidate, possibly reviewed), which keeps its names."""
+        out: list[dict[str, Any]] = [dict(s, merged_from=[]) for s in seed]
+        fixed = len(out)
         cands = sorted(cands, key=lambda x: (ORIGIN_ORDER[x["origin"]], -len(x["members"])))
-        vecs = self.embedder.encode([x["label_en"] or x["label_vi"] for x in cands])
-        heads: list[int] = []
-        out: list[dict[str, Any]] = []
-        for i, cand in enumerate(cands):
+        vecs = self.embedder.encode([x["label_en"] or x["label_vi"] for x in out + cands])
+        heads: list[int] = list(range(fixed))
+        for i, cand in enumerate(cands, start=fixed):
             j = next((k for k, h in enumerate(heads) if float(vecs[i] @ vecs[h]) >= self.cfg["merge_threshold"]), None)
             if j is None:
                 heads.append(i)
@@ -191,7 +200,7 @@ class Builder:
             for field in ("members", "semantic", "syllabus_courses", "phrases"):
                 if cand.get(field):
                     head[field] = sorted(set(head.get(field, [])) | set(cand[field]))
-            if head["label_en"] is None and cand["label_en"]:
+            if j >= fixed and head["label_en"] is None and cand["label_en"]:
                 head["label_en"], head["label_en_from"] = cand["label_en"], cand["origin"]
         return out
 
@@ -199,16 +208,26 @@ class Builder:
         """Structure names still without an English label get the closest English phrase of the
         curriculum's own profile and syllabi, if close enough. Marked as a suggestion to confirm."""
         # Single-word names are skipped: the model is unreliable on them ("Toán" -> "iot", 0.85).
-        todo = [x for x in cands if x["label_en"] is None and x["label_vi"] and len(x["label_vi"].split()) > 1]
+        todo = [x for x in cands if x["label_en"] is None and x["label_vi"] and len(x["label_vi"].split()) > 1
+                and "label_en_suggested" not in x]  # a seeded candidate keeps its suggestion
+        # A suggestion never repeats another candidate's name (English label or suggestion, including
+        # ones given earlier in this loop): the closest phrase still free wins.
+        taken = {x["label_en"] for x in cands if x.get("label_en")} | {
+            x["label_en_suggested"]["phrase"] for x in cands if x.get("label_en_suggested")}
         if not todo or not english_pool:
             return
         sims = self.embedder.encode([x["label_vi"] for x in todo]) @ self.embedder.encode(english_pool).T
         for cand, row in zip(todo, sims):
-            i = int(row.argmax())
-            if row[i] >= self.cfg["suggest_threshold"]:
-                cand["label_en_suggested"] = {"phrase": english_pool[i], "similarity": round(float(row[i]), 3)}
+            for i in np.argsort(-row):
+                if row[i] < self.cfg["suggest_threshold"]:
+                    break
+                if english_pool[i] not in taken:
+                    cand["label_en_suggested"] = {"phrase": english_pool[i], "similarity": round(float(row[i]), 3)}
+                    taken.add(english_pool[i])
+                    break
 
-    def finalize(self, cands: list[dict[str, Any]], cur: Curriculum) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    def finalize(self, cands: list[dict[str, Any]], cur: Curriculum, keep: frozenset[str] | set[str] = frozenset()
+                 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Coverage = faculty members (structure) + courses close in meaning (profile) + courses where
         the cluster's phrases are top phrases or appear verbatim (syllabus). Exact matches of short
         Vietnamese names are reported but not counted ("Toán" also matches "tính toán")."""
@@ -227,7 +246,7 @@ class Builder:
             cand.update(lexical_courses=sorted(set(lex_en) | set(lex_vi)), coverage=sorted(coverage),
                         coverage_count=len(coverage), evidence=(ev_en + ev_vi)[:3],
                         source_types=sorted({s["type"] for s in cand["sources"]}))
-            if len(coverage) < self.cfg["min_courses"]:
+            if len(coverage) < self.cfg["min_courses"] and cand["key"] not in keep:
                 dropped.append(dict(cand, drop_reason=f"covers {len(coverage)} course(s) < {self.cfg['min_courses']}"))
             else:
                 kept.append(cand)
@@ -236,27 +255,41 @@ class Builder:
 
     # --- one curriculum ---------------------------------------------------------------------------
 
-    def build(self, data: dict[str, Any]) -> dict[str, Any]:
+    def build(self, data: dict[str, Any], existing: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+        """Candidates of one family (or curriculum-shaped record). `existing`: the previous run's
+        candidates, kept with their key and names (see merge)."""
         cur = self.curriculum(data)
         prof, prof_rejected, prof_phrases = self.profile(cur)
         syl, syl_rejected, syl_phrases = self.syllabus(cur)
         allowed = elective_codes(data) if self.electives_only else None
         raw = structure_candidates(data, self.cfg, allowed) + prof + syl
-        merged = self.merge(raw)
-        self.suggest_labels(merged, sorted(set(prof_phrases) | set(syl_phrases)))
-        kept, dropped = self.finalize(merged, cur)
+        seed = [_identity(c) for c in existing or []
+                if not any(s["type"] == "specialization" for s in c.get("sources", []))]
+        merged = self.merge(raw, seed)
+        spec = specialization_candidates(data, allowed)
+        self.suggest_labels(merged + spec, sorted(set(prof_phrases) | set(syl_phrases)))
+        kept, dropped = self.finalize(merged, cur, keep={c["key"] for c in seed})
+        evaluation, _ = self.finalize(spec, cur, keep={c["key"] for c in spec})
         return {
             "curriculum": data["code"], "name": data["name"], "faculty": data["faculty"],
+            "cohorts": [c["code"] for c in data.get("cohorts", [])], "seeded": len(seed),
             "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             "models": {"embed": self.cfg["embed_model"], "spacy": self.cfg["spacy_model"]},
             "courses_total": len(data["courses"]), "courses_usable": len(cur.courses),
             "electives_only": self.electives_only,
             "raw_counts": {o: sum(x["origin"] == o for x in raw) for o in ORIGIN_ORDER},
-            "candidates": kept, "dropped": dropped,
+            "candidates": kept, "evaluation_candidates": evaluation, "dropped": dropped,
             "profile_rejected": sorted(prof_rejected, key=lambda v: -v["best_match"]),
             "syllabus_rejected": sorted(syl_rejected, key=lambda v: -v["best_match"]),
             "quality": quality(kept, data),
         }
+
+
+def _identity(c: dict[str, Any]) -> dict[str, Any]:
+    """What a candidate of an earlier run keeps: key, names and cluster phrases. Courses and sources are
+    recomputed from this run (candidates that mean the same join it in merge)."""
+    keep = {k: c[k] for k in ("key", "label_vi", "label_en", "origin", "label_en_suggested", "label_en_from") if k in c}
+    return {**keep, "phrases": list(c.get("phrases", [])), "members": [], "sources": [{"type": "earlier run"}]}
 
 
 def _brief(v: dict[str, Any]) -> dict[str, Any]:
@@ -308,28 +341,38 @@ def quality(cands: list[dict[str, Any]], data: dict[str, Any]) -> dict[str, Any]
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--curriculum", action="append", help="curriculum code (repeatable); default: all")
+    ap.add_argument("--family", action="append",
+                    help="program family, e.g. CS-KHMT (repeatable); default: every family with >= "
+                         "[scope] min_courses_to_tag courses to tag")
     args = ap.parse_args(argv)
     utf8_stdout()
     cfg = load_config()
-    curricula = read_json(resolve(cfg["paths"]["snapshot_dir"]) / "curricula.json")
-    if args.curriculum:
-        curricula = [x for x in curricula if x["code"] in set(args.curriculum)]
-        if not curricula:
-            raise SystemExit(f"no curriculum {args.curriculum}")
     records = load_records(cfg)
+    families = all_families(cfg)
+    if args.family:
+        unknown = sorted(set(args.family) - families.keys())
+        if unknown:
+            raise SystemExit(f"no program family {unknown} (family = program code without the cohort year)")
+        curricula = [families[f] for f in dict.fromkeys(args.family)]
+    else:
+        scope = cfg["scope"]
+        curricula = [f for f in families.values()
+                     if len(courses_to_tag(f, records, scope["electives_only"])) >= scope["min_courses_to_tag"]]
+        print(f"  {len(curricula)} of {len(families)} program families have >= {scope['min_courses_to_tag']} courses to tag")
     builder = Builder(cfg, records)
     print(f"  {len(builder.templates)} template lines, {len(builder.generic)} generic phrases "
           f"(> {builder.cfg['max_catalogue_df_ratio']:.0%} of {builder.n_catalogue} syllabi)")
     out_dir, rep_dir = resolve(builder.cfg["out_dir"]), resolve(builder.cfg["report_dir"])
     rep_dir.mkdir(parents=True, exist_ok=True)
     for data in curricula:
-        result = builder.build(data)
+        previous = out_dir / f"{data['code']}.json"
+        result = builder.build(data, read_json(previous)["candidates"] if previous.exists() else None)
         write_json(out_dir / f"{data['code']}.json", result)
         (rep_dir / f"{data['code']}.md").write_text(render(result), encoding="utf-8", newline="\n")
         q = result["quality"]
-        print(f"{data['code']}: {len(result['candidates'])} candidates {q['by_origin']}, dropped "
-              f"{len(result['dropped'])}, purity {q['syllabus_purity_mean']}")
+        print(f"{data['code']} ({len(result['cohorts'])} cohorts): {len(result['candidates'])} candidates "
+              f"{q['by_origin']}, {result['seeded']} kept from the previous run, dropped {len(result['dropped'])}, "
+              f"purity {q['syllabus_purity_mean']}, {len(result['evaluation_candidates'])} specialization lists")
 
 
 if __name__ == "__main__":

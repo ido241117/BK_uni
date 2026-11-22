@@ -18,6 +18,10 @@ preprocess_summary = "data/preprocess_summary.json"
 # in another), so preprocessing stays catalogue-wide; candidates (step 2) and classify (step 3) use
 # only each program's electives. Set to false to tag every course.
 electives_only = true
+# `candidates` without --curriculum skips programs with fewer courses to tag than this: with a handful
+# of electives, interests barely change a plan, and each program costs review time. 42 of the 128
+# programs with electives have fewer than 10 (2026-11-22).
+min_courses_to_tag = 10
 
 [preprocess]
 

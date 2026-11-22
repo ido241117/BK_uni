@@ -37,7 +37,8 @@ import numpy as np
 
 from tag_classifier.candidates import Builder
 from tag_classifier.charts import BLUE, ORANGE, TEXT_2, md_table, save, style
-from tag_classifier.common import load_config, load_records, read_json, resolve, utf8_stdout, write_json
+from tag_classifier.common import load_config, load_records, resolve, utf8_stdout, write_json
+from tag_classifier.family import all_families
 from tag_classifier.structure import courses_to_tag, specialization_members
 
 
@@ -195,15 +196,15 @@ def report(m: dict[str, Any], figs: dict[str, str], parts: list[dict[str, Any]])
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--curriculum", action="append", help="curriculum code (repeatable); default: per [calibrate]")
+    ap.add_argument("--family", action="append", help="program family (repeatable); default: per [calibrate]")
     args = ap.parse_args(argv)
     utf8_stdout()
     cfg = load_config()
     cal = cfg["calibrate"]
     records = load_records(cfg)
-    curricula = read_json(resolve(cfg["paths"]["snapshot_dir"]) / "curricula.json")
-    if args.curriculum:
-        curricula = [x for x in curricula if x["code"] in set(args.curriculum)]
+    curricula = list(all_families(cfg).values())
+    if args.family:
+        curricula = [x for x in curricula if x["code"] in set(args.family)]
     else:
         curricula = [x for x in curricula if len(courses_to_tag(x, records, cfg["scope"]["electives_only"]))
                      >= cal["min_courses_to_tag"]]

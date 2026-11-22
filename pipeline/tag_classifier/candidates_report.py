@@ -34,7 +34,9 @@ def render(r: dict[str, Any]) -> str:
     lines = [
         f"# Candidate tags: {r['curriculum']}",
         "",
-        f"{r['name']} ({r['faculty']}). {r['courses_usable']} of its {r['courses_total']} courses are used "
+        f"{r['name']} ({r['faculty']}); cohorts {', '.join(r.get('cohorts') or []) or '-'}. "
+        f"{r.get('seeded', 0)} candidates kept from the previous run (key and names unchanged). "
+        f"{r['courses_usable']} of its {r['courses_total']} courses are used "
         f"({'electives with a usable syllabus' if r.get('electives_only') else 'usable syllabus'}). "
         f"Raw candidates by source: {r['raw_counts']}; after merging and filtering: **{len(r['candidates'])}**, "
         f"dropped {len(r['dropped'])}.",

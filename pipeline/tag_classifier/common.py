@@ -73,16 +73,11 @@ def load_records(cfg: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {r["code"]: r for r in read_jsonl(resolve(cfg["paths"]["courses_file"]))}
 
 
-def load_curriculum(cfg: dict[str, Any], code: str) -> dict[str, Any]:
-    curricula = read_json(resolve(cfg["paths"]["snapshot_dir"]) / "curricula.json")
-    found = next((x for x in curricula if x["code"] == code), None)
-    if found is None:
-        raise SystemExit(f"no curriculum {code}")
-    return found
-
-
-def load_candidates(cfg: dict[str, Any], code: str) -> list[dict[str, Any]]:
-    return read_json(resolve(cfg["candidates"]["out_dir"]) / f"{code}.json")["candidates"]
+def load_candidates(cfg: dict[str, Any], code: str, evaluation: bool = False) -> list[dict[str, Any]]:
+    """A family's candidates (reviewed and exported); with evaluation, also the evaluation-only ones
+    (specialization lists, scored for the evaluation only)."""
+    data = read_json(resolve(cfg["candidates"]["out_dir"]) / f"{code}.json")
+    return data["candidates"] + (data.get("evaluation_candidates", []) if evaluation else [])
 
 
 def load_scores(cfg: dict[str, Any], name: str) -> dict[str, Any]:
@@ -93,3 +88,34 @@ def load_scores(cfg: dict[str, Any], name: str) -> dict[str, Any]:
 def stale_models(scores: dict[str, Any], renames: dict[str, str]) -> list[str]:
     """Models whose scores were computed with other renames than the review workbook's current ones."""
     return sorted(m for m in scores["scores"] if scores.get("renamed", {}).get(m, {}) != renames)
+
+
+# --- choosing program families on the command line -----------------------------------------------
+
+def add_family_args(ap: Any) -> None:
+    ap.add_argument("--family", action="append", help="program family, e.g. CS-KHMT (repeatable)")
+    ap.add_argument("--all", action="store_true", help="every family that has a candidates file")
+
+
+def chosen_families(cfg: dict[str, Any], args: Any) -> list[str]:
+    """Family ids from --family (repeatable) or --all (every family with a candidates file)."""
+    if args.family and args.all:
+        raise SystemExit("give --family or --all, not both")
+    if args.family:
+        return list(dict.fromkeys(args.family))
+    if args.all:
+        codes = sorted(p.stem for p in resolve(cfg["candidates"]["out_dir"]).glob("*.json"))
+        if not codes:
+            raise SystemExit("no candidate files yet: run candidates first")
+        return codes
+    raise SystemExit("give --family ID (repeatable, e.g. CS-KHMT) or --all")
+
+
+def scores_names(cfg: dict[str, Any], args: Any) -> list[str]:
+    """Scores file names for aggregate / evaluate / review: --scores (one family) or <family>.json."""
+    codes = chosen_families(cfg, args)
+    if getattr(args, "scores", None):
+        if len(codes) != 1:
+            raise SystemExit("--scores needs exactly one --family")
+        return [args.scores]
+    return [f"{code}.json" for code in codes]

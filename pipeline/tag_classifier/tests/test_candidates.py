@@ -13,7 +13,9 @@ from tag_classifier.candidates import Builder, Curriculum, quality
 from tag_classifier.common import load_config
 from tag_classifier.models import NounPhraser
 from tag_classifier.phrases import PhraseIndex, mmr, specificity, template_lines
-from tag_classifier.structure import clean_structure_name, courses_to_tag, slug, structure_candidates
+from tag_classifier.structure import (
+    clean_structure_name, courses_to_tag, slug, specialization_candidates, structure_candidates,
+)
 
 CFG = load_config()["candidates"]
 PREFIXES = [p.lower() for p in CFG["name_prefixes"]]
@@ -50,35 +52,37 @@ def test_specificity_is_monotonic_and_bounded():
     assert specificity(0.01, n) > specificity(0.04, n) > specificity(0.5, n)
 
 
-def test_structure_candidates_key_by_specialization_code_and_merge_sources():
-    curr = {
-        "specializations": [{"code": "TNT", "name": "Trí tuệ nhân tạo ứng dụng", "description": None}],
-        "groups": [
-            {"name": "Chuyên ngành - nhóm C - Trí tuệ nhân tạo ứng dụng", "specialization": "TNT",
-             "members": ["CO3117", "CO3061"]},
-            {"name": "Tự chọn tự do", "specialization": None, "members": []},
-        ],
-        "categories": [{"name": "Chuyên ngành Trí tuệ nhân tạo ứng dụng", "members": ["CO3061", "CO2003"]}],
-    }
-    [c] = structure_candidates(curr, CFG)
-    assert c["key"] == "TNT" and c["label_vi"] == "Trí tuệ nhân tạo ứng dụng"
-    assert c["members"] == ["CO2003", "CO3061", "CO3117"]
-    assert {s["type"] for s in c["sources"]} == {"specialization", "group", "category"}
+CURR = {
+    "specializations": [{"code": "TNT", "name": "Trí tuệ nhân tạo ứng dụng", "description": None}],
+    "groups": [
+        {"name": "Chuyên ngành - nhóm C - Trí tuệ nhân tạo ứng dụng", "specialization": "TNT",
+         "members": ["CO3117", "CO3061", "CO2003"]},
+        {"name": "Quản lý - nhóm D (học kỳ 7)", "specialization": None, "members": ["IM1013", "IM1023"]},
+        {"name": "Toán", "specialization": None, "members": ["MT1003", "MT1005"]},     # compulsory block
+        {"name": "Tự chọn tự do", "specialization": None, "members": []},
+    ],
+    "categories": [{"name": "Chuyên ngành Trí tuệ nhân tạo ứng dụng", "members": ["CO3061", "CO2003"]},
+                   {"name": "Quản lý", "members": ["IM1025"]}],
+}
+
+
+def test_structure_candidates_leave_specializations_out():
+    # The specialization block and the category named like it give no candidate (the planner handles
+    # specializations); "Quản lý" joins its group and category.
+    [c] = structure_candidates(CURR, CFG)[:1]
+    assert [x["label_vi"] for x in structure_candidates(CURR, CFG)] == ["Quản lý", "Toán"]
+    assert c["key"] == "quan-ly" and c["members"] == ["IM1013", "IM1023", "IM1025"]
+    assert {s["type"] for s in c["sources"]} == {"group", "category"}
 
 
 def test_structure_candidates_keep_only_allowed_courses():
-    curr = {
-        "specializations": [{"code": "TNT", "name": "Trí tuệ nhân tạo ứng dụng", "description": None}],
-        "groups": [
-            {"name": "Chuyên ngành - nhóm C - Trí tuệ nhân tạo ứng dụng", "specialization": "TNT",
-             "members": ["CO3117", "CO3061", "CO2003"]},
-            {"name": "Toán", "specialization": None, "members": ["MT1003", "MT1005"]},   # compulsory block
-        ],
-        "categories": [],
-    }
-    [c] = structure_candidates(curr, CFG, allowed={"CO3117", "CO3061", "CO9999"})
-    assert c["key"] == "TNT" and c["members"] == ["CO3061", "CO3117"]
-    assert {x["label_vi"] for x in structure_candidates(curr, CFG)} == {"Trí tuệ nhân tạo ứng dụng", "Toán"}
+    assert [x["label_vi"] for x in structure_candidates(CURR, CFG, allowed={"IM1013", "CO3061"})] == ["Quản lý"]
+
+
+def test_specialization_lists_become_evaluation_only_candidates():
+    [s] = specialization_candidates(CURR, allowed={"CO3117", "CO3061", "XX1"})
+    assert s["key"] == "TNT" and s["evaluation_only"] and s["members"] == ["CO3061", "CO3117"]
+    assert specialization_candidates(CURR, allowed={"IM1013"}) == []          # no listed elective: none
 
 
 def test_courses_to_tag_are_the_usable_electives_of_the_program():
@@ -200,3 +204,51 @@ def test_judge_counts_a_clusters_own_courses_as_near():
     [own] = builder.judge(["build web"], cur, own=[{"A", "B"}])
     assert own["near_courses"] == ["A", "B"] and own["ok"]
     assert own["best_match"] == 0.8 and own["peak"] == 0.5            # 0.8 - median(0.8, 0.3, 0.0)
+
+
+
+def test_merge_keeps_seeded_candidates_and_their_names():
+    # A seeded (earlier, reviewed) candidate keeps its key and names when a candidate of this run with
+    # the same meaning joins it; a new topic becomes a new candidate.
+    builder = Builder.__new__(Builder)
+    builder.cfg = dict(CFG, merge_threshold=0.85)
+    builder.embedder = StubEmbedder({"quản lý": [1.0, 0.0], "management": [0.99, np.sqrt(1 - 0.99 ** 2)],
+                                     "web programming": [0.0, 1.0]})
+    seed = [{"key": "quan-ly", "label_vi": "quản lý", "label_en": None, "origin": "structure",
+             "phrases": [], "members": [], "sources": [{"type": "earlier run"}]}]
+    raw = [{"key": "management", "label_vi": None, "label_en": "management", "origin": "profile",
+            "members": [], "semantic": ["IM1013"], "sources": [{"type": "profile"}]},
+           {"key": "web-programming", "label_vi": None, "label_en": "web programming", "origin": "syllabus",
+            "members": [], "syllabus_courses": ["CO3049"], "phrases": ["web programming"], "sources": [{"type": "syllabus"}]}]
+    out = builder.merge(raw, seed)
+    assert [c["key"] for c in out] == ["quan-ly", "web-programming"]
+    assert out[0]["label_en"] is None and out[0]["semantic"] == ["IM1013"]     # joined, names unchanged
+    assert {s["type"] for s in out[0]["sources"]} == {"earlier run", "profile"}
+
+
+def test_seeded_structure_name_with_a_suggestion_still_absorbs_the_same_block():
+    # Regression (2026-11-22): the seed was compared by its suggested English name, so this run's
+    # identical "Quản lý" block did not join it and became a duplicate "quan-ly-2".
+    builder = Builder.__new__(Builder)
+    builder.cfg = dict(CFG, merge_threshold=0.85)
+    builder.embedder = StubEmbedder({"Quản lý": [1.0, 0.0], "management tools": [0.0, 1.0]})
+    seed = [{"key": "quan-ly", "label_vi": "Quản lý", "label_en": None, "origin": "structure",
+             "label_en_suggested": {"phrase": "management tools", "similarity": 0.78},
+             "phrases": [], "members": [], "sources": [{"type": "earlier run"}]}]
+    raw = [{"key": "quan-ly", "label_vi": "Quản lý", "label_en": None, "origin": "structure",
+            "members": ["IM1013"], "sources": [{"type": "group"}]}]
+    out = builder.merge(raw, seed)
+    assert len(out) == 1 and out[0]["members"] == ["IM1013"] and out[0]["label_en_suggested"]["phrase"] == "management tools"
+
+
+
+def test_suggested_names_never_repeat_another_candidates_name():
+    builder = Builder.__new__(Builder)
+    builder.cfg = dict(CFG, suggest_threshold=0.65)
+    builder.embedder = StubEmbedder({"Quản lý chung": [1.0, 0.0], "Kiến thức quản lý": [1.0, 0.0],
+                                     "management tools": [1.0, 0.0], "business management": [0.8, 0.6]})
+    seeded = {"label_en": None, "label_vi": "Quản lý chung", "label_en_suggested": {"phrase": "management tools"}}
+    new = {"label_en": None, "label_vi": "Kiến thức quản lý"}
+    builder.suggest_labels([seeded, new], ["management tools", "business management"])
+    assert new["label_en_suggested"]["phrase"] == "business management"       # the closer one is taken
+    assert seeded["label_en_suggested"] == {"phrase": "management tools"}      # seeded keeps its own

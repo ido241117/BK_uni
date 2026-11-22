@@ -27,7 +27,11 @@ import numpy as np
 
 from tag_classifier.aggregate import aggregate, course_tags
 from tag_classifier.charts import BLUE, ORANGE, SEQUENTIAL, SURFACE, TEXT_2, md_table, save, style
-from tag_classifier.common import load_config, load_curriculum, load_records, load_scores, resolve, utf8_stdout, write_json
+from tag_classifier.common import (
+    add_family_args, load_config, load_records, load_scores, resolve, scores_names, utf8_stdout,
+    write_json,
+)
+from tag_classifier.family import load_family
 from tag_classifier.metrics import jaccard, krippendorff_alpha, mean, pairwise_kappa, recall_precision
 from tag_classifier.structure import specialization_members
 
@@ -47,7 +51,7 @@ class Evaluation:
         self.assign = {m: {c: {t["tag"] for t in v} for c, v in self.tags[m].items()} for m in self.models}
         self.scorable = {m: {t for secs in scores["scores"][m].values() for s in secs.values() for t in s}
                          for m in self.models}
-        self.curriculum = load_curriculum(cfg, self.code)
+        self.curriculum = load_family(cfg, self.code)
         self.records = load_records(cfg)
 
     def specialization_recall(self) -> dict[str, Any]:
@@ -242,20 +246,20 @@ def report(m: dict[str, Any], figs: dict[str, str | None], cfg: dict[str, Any]) 
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--curriculum", required=True)
-    ap.add_argument("--scores", help="scores file name in data/scores (default: <curriculum>.json)")
+    add_family_args(ap)
+    ap.add_argument("--scores", help="scores file name in data/scores, one family only (default: <family>.json)")
     args = ap.parse_args(argv)
     utf8_stdout()
     cfg = load_config()
-    name = args.scores or f"{args.curriculum}.json"
-    metrics = Evaluation(load_scores(cfg, name), cfg).run()
-    folder = resolve(cfg["evaluate"]["report_dir"]) / Path(name).stem
     style()
-    figs = {"recall": chart_recall(metrics, folder), "kappa": chart_kappa(metrics, folder),
-            "tags": chart_tags_per_course(metrics, folder), "runtime": chart_runtime(metrics, folder)}
-    write_json(folder / "metrics.json", metrics)
-    (folder / "report.md").write_text(report(metrics, figs, cfg), encoding="utf-8", newline="\n")
-    print(f"-> {folder / 'report.md'}")
+    for name in scores_names(cfg, args):
+        metrics = Evaluation(load_scores(cfg, name), cfg).run()
+        folder = resolve(cfg["evaluate"]["report_dir"]) / Path(name).stem
+        figs = {"recall": chart_recall(metrics, folder), "kappa": chart_kappa(metrics, folder),
+                "tags": chart_tags_per_course(metrics, folder), "runtime": chart_runtime(metrics, folder)}
+        write_json(folder / "metrics.json", metrics)
+        (folder / "report.md").write_text(report(metrics, figs, cfg), encoding="utf-8", newline="\n")
+        print(f"-> {folder / 'report.md'}")
 
 
 if __name__ == "__main__":

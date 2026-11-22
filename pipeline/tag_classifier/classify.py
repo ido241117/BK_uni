@@ -27,11 +27,16 @@ from pathlib import Path
 from typing import Any
 
 from tag_classifier.common import (
-    TOPIC_SECTIONS, load_candidates, load_config, load_curriculum, load_records, read_json, resolve,
+    TOPIC_SECTIONS, add_family_args, chosen_families, load_candidates, load_config,
+    load_records, read_json, resolve,
     utf8_stdout, write_json,
 )
 from tag_classifier.phrases import section_text
+from tag_classifier.family import load_family
 from tag_classifier.scorers import make_scorer
+
+# Scorers stay loaded across the curricula of one run (a model loads once, not once per curriculum).
+_SCORERS: dict[tuple[str, int | None], Any] = {}
 from tag_classifier.structure import courses_to_tag
 from tag_classifier.workbook import read_renames
 
@@ -99,11 +104,17 @@ def units(courses: list[dict[str, Any]], cands: list[dict[str, Any]], spec: dict
                     yield rec["code"], section, cand["key"], text, label
 
 
+def scored_candidates(cfg: dict[str, Any], code: str, renames: dict[str, str]) -> list[dict[str, Any]]:
+    """The family's candidates (renames applied) plus the evaluation-only specialization lists."""
+    reviewed = load_candidates(cfg, code)
+    return apply_renames(reviewed, renames) + load_candidates(cfg, code, evaluation=True)[len(reviewed):]
+
+
 def missing_pairs(code: str, cfg: dict[str, Any]) -> dict[str, int]:
     """Distinct (section text, label) pairs of the curriculum's current candidates that are not in the
     score cache yet, per model: what classify would still have to score."""
-    courses = courses_to_tag(load_curriculum(cfg, code), load_records(cfg), cfg["scope"]["electives_only"])
-    cands = apply_renames(load_candidates(cfg, code), read_renames(cfg, code))
+    courses = courses_to_tag(load_family(cfg, code), load_records(cfg), cfg["scope"]["electives_only"])
+    cands = scored_candidates(cfg, code, read_renames(cfg, code))
     cache = ScoreCache(resolve(cfg["classify"]["cache"]))
     out = {}
     for spec in cfg["classify"]["models"]:
@@ -115,9 +126,9 @@ def missing_pairs(code: str, cfg: dict[str, Any]) -> dict[str, int]:
 def classify(code: str, cfg: dict[str, Any], model_ids: list[str] | None, limit: int | None,
              batch_size: int | None = None) -> dict[str, Any]:
     c = cfg["classify"]
-    courses = courses_to_tag(load_curriculum(cfg, code), load_records(cfg), cfg["scope"]["electives_only"])[:limit]
+    courses = courses_to_tag(load_family(cfg, code), load_records(cfg), cfg["scope"]["electives_only"])[:limit]
     renames = read_renames(cfg, code)
-    cands = apply_renames(load_candidates(cfg, code), renames)
+    cands = scored_candidates(cfg, code, renames)
     if renames:
         print(f"  {len(renames)} renamed tag(s) from the review workbook: {renames}")
     cache = ScoreCache(resolve(c["cache"]))
@@ -132,7 +143,10 @@ def classify(code: str, cfg: dict[str, Any], model_ids: list[str] | None, limit:
         todo = sorted({k: (rows[i][3], k[1]) for i, k in enumerate(keys) if k not in known}.items())
         started = time.perf_counter()
         if todo:
-            scorer = make_scorer({**spec, "batch_size": batch_size or spec.get("batch_size")})
+            size = batch_size or spec.get("batch_size")
+            if (spec["id"], size) not in _SCORERS:
+                _SCORERS[(spec["id"], size)] = make_scorer({**spec, "batch_size": size})
+            scorer = _SCORERS[(spec["id"], size)]
             print(f"  {spec['id']}: scoring {len(todo)} new pairs ({len(set(keys)) - len(todo)} distinct pairs cached)")
             for i in range(0, len(todo), c["checkpoint_every"]):
                 chunk = todo[i:i + c["checkpoint_every"]]
@@ -156,22 +170,24 @@ def classify(code: str, cfg: dict[str, Any], model_ids: list[str] | None, limit:
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--curriculum", required=True)
+    add_family_args(ap)
     ap.add_argument("--model", action="append", help="model id from config (repeatable); default: all")
     ap.add_argument("--limit", type=int, help="only the first N courses (pilot)")
     ap.add_argument("--batch-size", type=int, help="override the NLI batch size (e.g. 64 on a GPU)")
     args = ap.parse_args(argv)
     utf8_stdout()
     cfg = load_config()
-    result = classify(args.curriculum, cfg, args.model, args.limit, args.batch_size)
-    suffix = f".limit{args.limit}" if args.limit else ""
-    out = resolve(cfg["classify"]["out_dir"]) / f"{args.curriculum}{suffix}.json"
-    if out.exists():  # keep scores of models not run this time
-        old = read_json(out)
-        for key in ("scores", "runtime", "renamed"):
-            result[key] = {**old.get(key, {}), **result[key]}
-    write_json(out, result)
-    print(f"-> {out}")
+    for code in chosen_families(cfg, args):
+        print(code)
+        result = classify(code, cfg, args.model, args.limit, args.batch_size)
+        suffix = f".limit{args.limit}" if args.limit else ""
+        out = resolve(cfg["classify"]["out_dir"]) / f"{code}{suffix}.json"
+        if out.exists():  # keep scores of models not run this time
+            old = read_json(out)
+            for key in ("scores", "runtime", "renamed"):
+                result[key] = {**old.get(key, {}), **result[key]}
+        write_json(out, result)
+        print(f"-> {out}")
 
 
 if __name__ == "__main__":

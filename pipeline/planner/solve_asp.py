@@ -221,8 +221,13 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
             if spec["code"] == target:
                 out.append(f"student_major({major}).")
 
-    # Tag (pipeline/planner/data/course-tags.json: tag -> danh sach mon).
-    tags = (_load_json(TAGS_FILE, {}).get("tags") or {})
+    # Tags (pipeline/planner/data/course-tags.json, written by pipeline/tag_classifier): the list of the
+    # student's program family (all cohorts of the program), else the merged list of every family.
+    tag_file = _load_json(TAGS_FILE, {})
+    family = (tag_file.get("families") or {}).get(fixture["curriculum"].get("code"))
+    tags = (tag_file.get("by_family") or {}).get(family) if family else None
+    if tags is None:
+        tags = tag_file.get("tags") or {}
     course_tags: dict[str, list[str]] = {}
     for tag, codes in sorted(tags.items()):
         for code in codes:

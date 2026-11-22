@@ -324,6 +324,25 @@ def test_tags_are_read_from_json(monkeypatch, tmp_path):
     assert [t for c, t in tags.items() if c in ELECTIVES] == [["AI"]]
 
 
+def test_tags_come_from_the_students_program_family(monkeypatch, tmp_path):
+    # SMALL belongs to family F1: its list is used, not another family's nor the merged fallback.
+    import planner.solve_asp as adapter
+
+    path = tmp_path / "tags.json"
+    path.write_text(json.dumps({
+        "tags": {"merged": ELECTIVES},
+        "by_family": {"F1": {"web": ["EL3001"]}, "F2": {"security": ELECTIVES}},
+        "families": {"SMALL": "F1", "OTHER-2025": "F2"},
+    }), encoding="utf-8")
+    monkeypatch.setattr(adapter, "TAGS_FILE", path)
+    fx = small()
+    fx["curriculum"]["code"] = "NO-FAMILY"                      # no family list: merged fallback
+    facts, _ = build_program(normalize(fx), scenario())
+    assert 'tag("EL3001", "merged").' in facts and '"web"' not in facts
+    facts, _ = build_program(normalize(small()), scenario())
+    assert 'tag("EL3001", "web").' in facts and '"security"' not in facts and '"merged"' not in facts
+
+
 @pytest.mark.parametrize("interest, chosen", [("web", "EL3003"), ("AI", "EL3002")])
 def test_interest_picks_the_elective_with_that_tag(monkeypatch, tmp_path, interest, chosen):
     # One 7-credit elective out of three is needed and nothing else tells them apart, so the

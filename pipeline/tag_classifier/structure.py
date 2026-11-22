@@ -66,33 +66,41 @@ def clean_structure_name(name: str, prefixes: list[str], generic: set[str]) -> s
 
 
 def structure_candidates(curr: dict[str, Any], cfg: dict[str, Any], allowed: set[str] | None = None) -> list[dict[str, Any]]:
-    """One candidate per distinct cleaned name. A specialization is keyed by its code (e.g. TNT);
-    a group or category with the same name joins it. With `allowed` (the program's electives), only
-    those courses count as members, and a name none of whose courses is allowed is skipped."""
+    """One candidate per distinct cleaned block or category name, with the courses the faculty listed.
+    Specializations are left out (the planner handles the student's specialization itself): blocks
+    tied to a specialization, and categories named like one. With `allowed` (the electives to tag),
+    only those courses count as members, and a name none of whose courses is allowed is skipped."""
     prefixes = [norm(p) for p in cfg["name_prefixes"]]
     generic = {norm(g) for g in cfg["generic_names"]}
-    spec_by_name = {norm(s["name"]): s for s in curr["specializations"]}
+    spec_names = {norm(s["name"]) for s in curr["specializations"]}
     by_name: dict[str, dict[str, Any]] = {}
-
-    def add(label: str, members: list[str], source: dict[str, Any]) -> None:
-        if allowed is not None:
-            members = [m for m in members if m in allowed]
-            if not members:
-                return
-        spec = spec_by_name.get(norm(label))
-        cand = by_name.setdefault(norm(label), {
-            "key": spec["code"] if spec else slug(label), "label_vi": label, "label_en": None,
-            "origin": "structure", "sources": [], "members": set(),
-        })
-        cand["sources"].append(source)
-        cand["members"].update(members)
-
-    spec_members = specialization_members(curr)
-    for s in curr["specializations"]:
-        add(s["name"], sorted(spec_members[s["code"]]), {"type": "specialization", "name": s["name"], "code": s["code"]})
     for kind, items in (("group", curr["groups"]), ("category", curr["categories"])):
         for g in items:
+            if g.get("specialization"):
+                continue
             label = clean_structure_name(g["name"], prefixes, generic)
-            if label:
-                add(label, g["members"], {"type": kind, "name": g["name"]})
+            if not label or norm(label) in spec_names:
+                continue
+            members = [m for m in g["members"] if allowed is None or m in allowed]
+            if not members:
+                continue
+            cand = by_name.setdefault(norm(label), {"key": slug(label), "label_vi": label, "label_en": None,
+                                                    "origin": "structure", "sources": [], "members": set()})
+            cand["sources"].append({"type": kind, "name": g["name"]})
+            cand["members"].update(members)
     return [dict(c, members=sorted(c["members"])) for c in by_name.values()]
+
+
+def specialization_candidates(curr: dict[str, Any], allowed: set[str] | None = None) -> list[dict[str, Any]]:
+    """One evaluation-only candidate per specialization (key = its code), with the courses the faculty
+    listed. Scored so the evaluation can check the models against the faculty's lists; never reviewed or
+    exported."""
+    members = specialization_members(curr)
+    out = []
+    for s in curr["specializations"]:
+        listed = sorted(m for m in members.get(s["code"], ()) if allowed is None or m in allowed)
+        if listed:
+            out.append({"key": s["code"], "label_vi": s["name"], "label_en": None, "origin": "structure",
+                        "sources": [{"type": "specialization", "name": s["name"], "code": s["code"]}],
+                        "members": listed, "evaluation_only": True})
+    return out

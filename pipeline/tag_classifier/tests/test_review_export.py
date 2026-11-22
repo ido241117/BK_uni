@@ -25,7 +25,7 @@ def test_workbook_round_trip_keeps_text_and_layout(tmp_path):
     assert row["label_vi"] == "Trí tuệ nhân tạo" and row["_row"] == 2
     wb = load_workbook(path)
     ws = wb["Tags"]
-    assert ws.freeze_panes == "E2" and ws.auto_filter.ref
+    assert ws.freeze_panes == "F2" and ws.auto_filter.ref
     assert [dv.formula1 for dv in ws.data_validations.dataValidation] == ['"Keep,Drop"']
     assert ws["D2"].fill.fgColor.rgb.endswith("FBE3D6")          # doubtful row shaded (not the decision cells)
     assert ws["A2"].fill.fgColor.rgb in (None, "00000000")
@@ -70,10 +70,12 @@ def test_valid_keep_values(tmp_path, value):
     assert read_reviews(tmp_path)[2] == []
 
 
-def test_build_merges_same_label_across_curricula():
-    data = build({"C1": {"logic": ["A"]}, "C2": {"logic": ["B", "A"]}})
-    assert data["tags"] == {"logic": ["A", "B"]}
-    assert data["by_curriculum"]["C2"] == {"logic": ["B", "A"]}
+def test_build_keeps_family_lists_and_maps_curricula_to_families():
+    data = build({"CS-KHMT": {"logic": ["A"]}, "CE-KTMT": {"logic": ["B", "A"]}}, None,
+                 {"CS-2023-KHMT": "CS-KHMT", "CS-2024-KHMT": "CS-KHMT", "XX-2023-Y": "XX-Y"})
+    assert data["by_family"]["CE-KTMT"] == {"logic": ["B", "A"]}
+    assert data["families"] == {"CS-2023-KHMT": "CS-KHMT", "CS-2024-KHMT": "CS-KHMT"}   # families without tags left out
+    assert data["tags"] == {"logic": ["A", "B"]}                                        # merged fallback
 
 
 def test_stale_models_compares_scored_renames_with_the_workbook():
@@ -102,3 +104,37 @@ def test_renamed_tags_not_rescored_are_exported_and_marked(tmp_path):
     data = build(by_curr, {"C1": marked, "C2": {}})
     assert data["renamed_not_rescored"] == {"C1": {"cryptography and network security": "security"}}
     assert data["tags"]["cryptography and network security"] == ["CO3069"]
+
+
+def test_shared_decision_applies_unless_the_program_row_decides(tmp_path):
+    from tag_classifier.review import shared_rows
+    from tag_classifier.workbook import SHARED_FILE, read_shared, write_shared
+    write_review(tmp_path / "A.xlsx", [tag("ai", label="Artificial  Intelligence", courses="X1 a\nX2 b", alpha=0.8),
+                                       tag("web", label="web programming", keep="Keep", courses="X3 c")], [])
+    write_review(tmp_path / "B.xlsx", [tag("ai2", label="artificial intelligence", courses="X2 b\nX4 d", alpha=0.6),
+                                       tag("bio", label="biology", keep="Drop", courses="X5 e")], [])
+    rows = shared_rows(tmp_path)
+    ai = rows[0]                                                   # in two programs: listed first
+    assert (ai["name"], ai["program_count"], ai["course_count"], ai["alpha"]) == ("Artificial  Intelligence", 2, 3, 0.7)
+    assert ai["programs"] == "A: 2\nB: 2"
+    # The team decides "artificial intelligence" once, for both programs.
+    write_shared(tmp_path / SHARED_FILE, [dict(r, keep="Keep", rename="AI") if r is ai else r for r in rows])
+    assert read_shared(tmp_path)["artificial intelligence"] == {"keep": "Keep", "rename": "AI", "note": ""}
+    assert shared_rows(tmp_path)[0]["keep"] == "Keep"              # kept when the shared sheet is rebuilt
+    by_curr, renamed, errors, _ = read_reviews(tmp_path)           # shared.xlsx itself is not a program
+    assert errors == [] and set(by_curr) == {"A", "B"}
+    assert by_curr == {"A": {"AI": ["X1", "X2"], "web programming": ["X3"]}, "B": {"AI": ["X2", "X4"]}}
+    assert renamed["B"] == {"ai2": {"name": "AI", "old": "artificial intelligence"}}
+    # A program row's own decision wins over the shared one.
+    write_review(tmp_path / "B.xlsx", [tag("ai2", label="artificial intelligence", keep="Drop", courses="X2 b")], [])
+    assert read_reviews(tmp_path)[0]["B"] == {}
+
+
+def test_read_renames_takes_the_shared_rename_when_the_row_has_none(tmp_path):
+    from tag_classifier.workbook import SHARED_FILE, read_renames, write_shared
+    write_review(tmp_path / "C1.xlsx", [tag("ai", label="artificial intelligence"),
+                                        tag("web", label="web programming", rename="web development")], [])
+    write_shared(tmp_path / SHARED_FILE, [{"name": "Artificial Intelligence", "rename": "AI"},
+                                          {"name": "web programming", "rename": "ignored: the row has its own"}])
+    cfg = {"review": {"out_dir": str(tmp_path)}}
+    assert read_renames(cfg, "C1") == {"ai": "AI", "web": "web development"}
