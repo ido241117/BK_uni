@@ -25,6 +25,8 @@ export interface SolvePlanPayload {
         recommendations_first?: boolean;
         /** Sprint 11: thứ tự ưu tiên do sinh viên sắp, chỉ gồm mục đang bật. */
         order?: PlanPriorityId[];
+        /** Giai đoạn 12: S2, S8 mặc định bật; nằm ở đây là tắt. */
+        disabled?: PlanPriorityId[];
     };
     student_flags?: { english_grad_reading?: boolean; mos?: boolean };
     use_inferred_relations?: boolean;
@@ -37,15 +39,21 @@ export interface SolvePlanPayload {
     semester_targets?: Record<string, number>;
     /** Clingo only: interest tags the student picked (names from GET /plans/interest-tags). */
     interests?: string[];
+    /** Giai đoạn 12 (W1): giả định rớt môn ở kỳ trong lộ trình; học lại ở kỳ sau. */
+    assumed_fail?: CourseAtSemester[];
+    /** Giai đoạn 12 (W2): sinh viên báo môn có mở ở kỳ (gỡ cảnh báo lịch sử mở lớp). */
+    offered?: CourseAtSemester[];
+    /** Giai đoạn 12 (T62): môn gõ mã vào ô tự chọn tự do, ghim vào kỳ của ô. */
+    free_choices?: CourseAtSemester[];
 }
 
 /** Mục ưu tiên sinh viên sắp (sprint 11): S1 ra trường sớm, S6 kế hoạch giảng dạy, S4 môn mình chọn,
  *  S5 đều tải, S10 hạn chế hè, OH lịch sử mở lớp, S3 giữ gần mốc. */
-export type PlanPriorityId = 'S1' | 'S6' | 'S4' | 'S5' | 'S10' | 'OH' | 'S3';
+export type PlanPriorityId = 'S1' | 'S6' | 'S4' | 'S5' | 'S10' | 'OH' | 'S3' | 'S2' | 'S8';
 
 /** Một yêu cầu của sinh viên và bộ giải đáp ứng tới đâu (bảng `requests`, 22/11). */
 export interface PlanRequest {
-    kind: 'pin' | 'target' | 'skip' | 'frozen' | 'wanted' | 'graduate_by' | 'not_offered';
+    kind: 'pin' | 'target' | 'skip' | 'frozen' | 'wanted' | 'graduate_by' | 'not_offered' | 'assumed_fail' | 'offered';
     item: string;
     status: 'met' | 'warning' | 'partial' | 'unmet';
     detail: string;
@@ -66,6 +74,27 @@ export interface PlanCourse {
     block?: string | null;
     /** `true`: môn bộ giải tạm chọn trong khối (sinh viên chưa ghim/chọn) → hiện thành ô khối. */
     slot?: boolean;
+    /** Giai đoạn 12 (W1): lần học sinh viên giả định rớt (tính TC của kỳ, không đạt). */
+    assumed_fail?: boolean;
+}
+
+/** Cách gỡ khi không giải được (giai đoạn 12, M11): bấm là áp dụng vào kịch bản. */
+export interface PlanFix {
+    kind: 'unpin' | 'unskip' | 'remove_not_offered' | 'remove_target' | 'remove_assumed_fail' | 'assume_pass'
+        | 'enable_summer' | 'remove_graduate_by' | 'remove_frozen' | 'remove_max_credits' | 'remove_semester_limits';
+    label: string;
+    course?: string;
+    semester?: string;
+}
+
+/** Dữ liệu để trang tự tô kỳ được / không được khi chọn môn, không gọi bộ giải (giai đoạn 12, M6). */
+export interface PlanCourseFact {
+    prerequisites: string[];
+    corequisites: string[];
+    /** internship: thực tập (hè luôn được); excluded: đồ án (không học hè); history / no_history: từng mở hè hay chưa. */
+    summer: 'internship' | 'excluded' | 'history' | 'no_history';
+    /** Loại kỳ từng mở ('1', '2', '3' = hè); null: không có dữ liệu. */
+    terms: string[] | null;
 }
 
 export interface PlanSemester {
@@ -99,6 +128,9 @@ export interface PlanResult {
     violations: string[];
     diff_vs_previous?: string[];
     infeasible_reason?: string | null;
+    infeasible_fixes?: PlanFix[];
+    course_facts?: Record<string, PlanCourseFact>;
+    credit_rules?: { main_max: number; summer_max: number };
     /** Mỗi yêu cầu của sinh viên: đáp ứng / trái luật nhưng giữ / một phần / không, kèm lý do. */
     requests?: PlanRequest[];
     /** Chỉ bộ giải Clingo (engine ASP), xem pipeline/planner/ASP-ADAPTER.md mục 6. */
@@ -261,7 +293,9 @@ export interface PlanWarningItem {
     kind: 'english' | 'mos' | 'limit' | 'corequisite' | 'low_credits' | string;
     course?: string;
     semester?: string;
-    confirm?: 'english' | 'mos';
+    confirm?: 'english' | 'mos' | 'offered';
+    /** Điều quy định (giai đoạn 12, T56). */
+    rule?: string | null;
     /** Câu cũ (trùng một dòng trong `warnings`). */
     text: string;
     /** Lời nhắc ngắn, nhẹ nhàng để hiện trên thẻ. */

@@ -58,11 +58,26 @@ export class SolvePlanDto {
   @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) @IsNotEmpty({ each: true }) @MaxLength(100, { each: true })
   interests?: string[];
 
+  @ApiPropertyOptional({ description: 'Giai đoạn 12 (W1): giả định rớt môn trong lộ trình, [{course_code, semester_code}]; học lại ở kỳ sau' })
+  @IsOptional() @IsArray() @ArrayMaxSize(100)
+  assumed_fail?: { course_code: string; semester_code: string }[];
+
+  @ApiPropertyOptional({ description: 'Giai đoạn 12 (W2): sinh viên báo môn có mở ở kỳ, [{course_code, semester_code}]; gỡ cảnh báo lịch sử mở lớp' })
+  @IsOptional() @IsArray() @ArrayMaxSize(200)
+  offered?: { course_code: string; semester_code: string }[];
+
+  @ApiPropertyOptional({
+    description: 'Giai đoạn 12 (T62): môn bất kỳ sinh viên gõ mã vào ô tự chọn tự do, [{course_code, semester_code}]. '
+      + 'Backend tra mã trong bảng môn; môn ngoài chương trình tính vào tự chọn tự do. Mã không có thì 400.',
+  })
+  @IsOptional() @IsArray() @ArrayMaxSize(20)
+  free_choices?: { course_code: string; semester_code: string }[];
+
   @ApiPropertyOptional({ description: 'Kỳ hè sinh viên muốn học, vd ["263"]' })
   @IsOptional() @IsArray()
   summer_opt_in?: string[];
 
-  @ApiPropertyOptional({ description: 'wanted_courses, balanced_load, recommendations_first, preferred_load, order (thứ tự ưu tiên: S1, S6, S4, S5, S10, OH, S3)' })
+  @ApiPropertyOptional({ description: 'wanted_courses, balanced_load, recommendations_first, preferred_load, order (thứ tự ưu tiên: S1, S6, S4, S5, S10, OH, S3, S2, S8), disabled (tắt S2/S8)' })
   @IsOptional() @IsObject()
   preferences?: Record<string, unknown>;
 

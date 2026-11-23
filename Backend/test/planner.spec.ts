@@ -398,6 +398,35 @@ describe('Planner API (POST /api/plans/solve)', () => {
     expect(input.scenario.interests).toEqual(['security', 'web programming']);
   });
 
+  it('passes what-if fields of phase 12 to the solver (assumed_fail, offered, disabled priorities)', async () => {
+    const spy = jest.spyOn(runner, 'run').mockResolvedValue({ status: 'OPTIMAL' });
+    const assumed = [{ course_code: 'CS301', semester_code: '262' }];
+    const offered = [{ course_code: 'CS302', semester_code: '263' }];
+    await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ assumed_fail: assumed, offered, preferences: { order: ['S8', 'S1'], disabled: ['S2'] } }).expect(200);
+    const [input] = spy.mock.calls[0] as [{ scenario: Record<string, unknown> }, string];
+    spy.mockRestore();
+    expect(input.scenario.assumed_fail).toEqual(assumed);
+    expect(input.scenario.offered).toEqual(offered);
+    expect(input.scenario.preferences).toEqual({ order: ['S8', 'S1'], disabled: ['S2'] });
+  });
+
+  it('looks up a course typed into the free elective slot and pins it (T62)', async () => {
+    await app.get<Repository<Course>>(getRepositoryToken(Course)).save({ code: 'XX777', name: 'Mon ngoai chuong trinh', credits: 3 });
+    const spy = jest.spyOn(runner, 'run').mockResolvedValue({ status: 'OPTIMAL' });
+    await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ free_choices: [{ course_code: 'xx777 ', semester_code: '271' }] }).expect(200);
+    const [input] = spy.mock.calls[0] as [{ scenario: Record<string, unknown>; courses: { code: string }[];
+      student: { free_choices: string[] } }, string];
+    spy.mockRestore();
+    expect(input.courses.map((c) => c.code)).toContain('XX777');
+    expect(input.student.free_choices).toEqual(['XX777']);
+    expect(input.scenario.locked).toEqual([{ course_code: 'XX777', semester_code: '271' }]);
+    const bad = await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ free_choices: [{ course_code: 'NOPE01', semester_code: '271' }] }).expect(400);
+    expect(JSON.stringify(bad.body)).toContain('NOPE01');
+  });
+
   it('rejects malformed interests', async () => {
     for (const interests of ['security', [1], [''], Array.from({ length: 51 }, (_, i) => `t${i}`)]) {
       await request(server()).post('/api/plans/solve').set('Origin', origin).send({ interests }).expect(400);

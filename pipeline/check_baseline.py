@@ -199,8 +199,10 @@ def check_phases_6_and_8() -> None:
     """GD 6 (what-if, T17) va GD 8 (file tien do myBK, T19-T24). Lam ngay 19/11."""
     rec = ROOT / "Frontend" / "src" / "pages" / "recommendations"
     page = (rec / "index.tsx").read_text(encoding="utf-8")
-    check("What-if: trang Gợi ý lưu mốc và gửi previous_plan (T17)",
-          (rec / "whatIf.ts").exists() and "previous_plan" in page and "storeBaseline" in page)
+    # 23/11 (giai doan 12): moc la ban luu gan sao trong tai khoan; payload dung o scenario.ts.
+    check("What-if: trang Gợi ý gửi previous_plan theo mốc (bản gắn sao) (T17, giai đoạn 12)",
+          (rec / "whatIf.ts").exists() and "planOf(starred" in page
+          and "previous_plan" in (rec / "scenario.ts").read_text(encoding="utf-8"))
     check("Có bộ đọc file tiến độ myBK (planner/mybk.py) (T19)", (PIPELINE / "planner" / "mybk.py").exists())
     # GD 9 (20/11): PDF la nguon duy nhat; man hinh xac nhan cu (MybkImport) khong con duoc dung.
     courses = ROOT / "Frontend" / "src" / "pages" / "courses"
@@ -324,6 +326,42 @@ def check_phase_10() -> None:
               "'học phần tốt nghiệp', 'tốt nghiệp bậc cử nhân'" in pinput and "prefixes: ['điều kiện tốt nghiệp'" in pinput)
 
 
+def check_phase_12() -> None:
+    """Giai doan 12 (23/11): what-if theo dac ta muc 12, chuc nang M1-M18 (02 muc 12.12)."""
+    planner = PIPELINE / "planner"
+    facts = (planner / "facts.py").read_text(encoding="utf-8")
+    cpsat = (planner / "solve_cpsat.py").read_text(encoding="utf-8")
+    cli = (planner / "cli.py").read_text(encoding="utf-8")
+    report_py = (planner / "report.py").read_text(encoding="utf-8")
+    check("T51: S2, S8 sinh viên xếp được, tắt được (preferences.disabled)",
+          '"S2", "S8")' in facts and '"disabled"' in facts)
+    check("T52: cảnh báo nghỉ 2 kỳ chính liên tiếp, ô TC vượt luật, kèm điều quy định (rule)",
+          "skip_consecutive" in report_py and "target_over_law" in report_py and "RULE_OF_KIND" in report_py)
+    check("T53: lời nhắn nêu lý do thật khi không đạt số TC (_explain_targets)", "def _explain_targets" in cli)
+    check("T54: giả định rớt môn trong lộ trình (assumed_fail): tính TC kỳ rớt, học lại sau",
+          "assumed_fails" in cpsat and "failed_attempts" in (planner / "result.py").read_text(encoding="utf-8"))
+    check("T55: 'Kỳ này có mở' (offered) gỡ phạt và cảnh báo lịch sử mở lớp",
+          "offered_pairs" in cpsat and "offering_history" in report_py)
+    check("M11, M6: kết quả có infeasible_fixes và course_facts", "infeasible_fixes" in cli and "course_facts" in cli)
+    check("T62: ô tự chọn tự do gõ mã bất kỳ (student.free_choices)",
+          "free_choices" in (planner / "normalize.py").read_text(encoding="utf-8"))
+    check("Test giai đoạn 12 có (tests/test_whatif12.py)", (planner / "tests" / "test_whatif12.py").exists())
+    backend = ROOT / "Backend" / "src" / "planner"
+    dto = (backend / "dto" / "solve-plan.dto.ts").read_text(encoding="utf-8")
+    check("T57: API nhận assumed_fail, offered, free_choices; backend tra mã môn ô tự do",
+          all(k in dto for k in ("assumed_fail?", "offered?", "free_choices?"))
+          and "Không tìm thấy môn" in (backend / "planner.service.ts").read_text(encoding="utf-8"))
+    rec = ROOT / "Frontend" / "src" / "pages" / "recommendations"
+    page = (rec / "index.tsx").read_text(encoding="utf-8")
+    check("T59: trang chỉ giải khi bấm Giải (không còn tự giải trong useEffect), có Hoàn tác",
+          "solve.mutate(buildPayload(scenario));\n            firstSolve" not in page and "firstSolve" not in page
+          and "const undo" in page)
+    check("T61, T64, T65: chọn môn → kỳ được/không (localHints.ts), lịch sử 10 bản, tab So sánh",
+          (rec / "localHints.ts").exists() and (rec / "ComparePanel.tsx").exists() and "addPlan" in page)
+    check("W13: trang Gợi ý bỏ nút Khóa kỳ", "Khóa kỳ" not in (rec / "SemesterBoard.tsx").read_text(encoding="utf-8"))
+    report("CHUA_LAM", "Giai đoạn 12: chưa bấm thử trên web (05 mục G, bảng M1–M18)", "T66")
+
+
 def check_last_semester_minimum() -> None:
     """QĐ 285 Đ15.3 không có ngoại lệ kỳ cuối; kế hoạch mục 3.3: cho phép nhưng phải cảnh báo."""
     src = (PIPELINE / "planner" / "solve_asp.py").read_text(encoding="utf-8")
@@ -435,6 +473,7 @@ def main() -> None:
     check_phases_3_to_5()
     check_phases_6_and_8()
     check_phase_10()
+    check_phase_12()
     check_database()
 
     counts = {}

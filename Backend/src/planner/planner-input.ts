@@ -32,6 +32,8 @@ export type PlannerSource = {
   studentCourses: { course: PlannerCourse; status: string }[];
   /** Từ file tiến độ myBK đã nhập (bảng `student_progress_imports`); không có file thì bỏ trống. */
   progress?: PlannerProgress | null;
+  /** Giai đoạn 12 (T62): môn sinh viên gõ mã vào ô tự chọn tự do, backend đã tra trong bảng `courses`. */
+  freeCourses?: PlannerCourse[];
 };
 
 export type PlannerProgress = {
@@ -290,9 +292,25 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
   const scenario: Record<string, unknown> = { id: 'request', label: 'Yeu cau tu trang Goi y', in_progress_results: results };
   for (const key of ['max_credits', 'semester_limits', 'graduate_by', 'locked', 'not_offered', 'summer_opt_in',
     'preferences', 'use_inferred_relations', 'skip_semesters', 'frozen_semesters', 'semester_targets',
-    'interests'] as const) {
+    'interests', 'assumed_fail', 'offered'] as const) {
     if (dto[key] !== undefined && dto[key] !== null) scenario[key] = dto[key];
   }
+
+  // T62 (giai đoạn 12): môn gõ vào ô tự chọn tự do = ghim môn đó vào kỳ của ô. Môn ngoài chương trình thêm vào
+  // `courses` và `student.free_choices` (bộ giải trừ vào tự chọn tự do); môn trong chương trình chỉ cần ghim.
+  const freeChoices: string[] = [];
+  const known = new Map((src.freeCourses ?? []).map((c) => [c.code, c]));
+  const locked = [...((scenario.locked as { course_code: string; semester_code: string }[] | undefined) ?? [])];
+  for (const item of dto.free_choices ?? []) {
+    const course = known.get(item.course_code);
+    if (!course || conditions.includes(course.code)) continue;
+    if (!allCourses.has(course.code)) allCourses.set(course.code, course);
+    if (!inCurriculum.has(course.code)) freeChoices.push(course.code);
+    if (!locked.some((l) => l.course_code === course.code)) {
+      locked.push({ course_code: course.code, semester_code: item.semester_code });
+    }
+  }
+  if (locked.length) scenario.locked = locked;
 
   return {
     schema_version: 1,
@@ -322,6 +340,7 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
       flags: { ...(dto.student_flags ?? {}), ...englishFlag(src.studentCourses) },
       student_courses: studentCourses,
       block_overrides: blockOverrides,
+      free_choices: freeChoices,
       scores: src.progress?.scores ?? [],
       graduation_conditions: src.progress?.graduation_conditions ?? [],
     },

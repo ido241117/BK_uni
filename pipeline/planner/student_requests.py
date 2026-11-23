@@ -16,7 +16,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from planner.facts import graduation_needs, is_summer, plan_semesters, preferences, summer_allowed
+from planner.facts import (
+    assumed_fails,
+    graduation_needs,
+    is_summer,
+    plan_semesters,
+    preferences,
+    summer_allowed,
+)
 
 
 def _passed(fixture: dict[str, Any], scenario: dict[str, Any]) -> set[str]:
@@ -122,6 +129,15 @@ def requests_report(fixture: dict[str, Any], scenario: dict[str, Any], plan: dic
         last = max(plan.values()) if plan else fixture["student"]["current_semester"]
         rows.append(_row("graduate_by", deadline, "met" if last <= deadline else "unmet",
                          f"học xong ở {last}" if last <= deadline else f"học xong ở {last}, trễ hơn hạn"))
+    # Giai doan 12 (W1, W2): gia dinh rot mon trong lo trinh; "ky nay co mo".
+    for c, sem in assumed_fails(scenario).items():
+        again = plan.get(c)
+        rows.append(_row("assumed_fail", f"{c} ở {sem}", "met" if again else "unmet",
+                         f"học lại ở {again}" if again else "chưa xếp được lần học lại vào các kỳ còn lại"))
+    for rec in scenario.get("offered") or []:
+        c, sem = rec["course_code"], rec["semester_code"]
+        rows.append(_row("offered", f"{c} ở {sem}", "met",
+                         f"xếp ở {plan[c]}" if c in plan else "không xếp môn này"))
     for rec in scenario.get("not_offered", []):
         c, sem = rec["course_code"], rec["semester_code"]
         if plan.get(c) == sem:

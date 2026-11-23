@@ -20,8 +20,13 @@ def make_result(
     status: str,
     takes: list[tuple[str, int]] | None,
     previous_plan: dict[str, str] | None = None,
+    attempts: list[tuple[str, int]] | None = None,
 ) -> dict[str, Any]:
-    """Dung chung cho moi bo giai. ``takes``: [(ma mon, chi so ky 1..n)] hoac None."""
+    """Dung chung cho moi bo giai. ``takes``: [(ma mon, chi so ky 1..n)] hoac None.
+
+    ``attempts`` (W1, 23/11): lan hoc sinh vien gia dinh RỚT, [(ma mon, chi so ky)]. Hien trong ky do
+    (``failed_attempts``, cong vao TC cua ky) nhung khong nam trong ``courses`` va ``plan``.
+    """
     semesters = plan_semesters(fixture)
     credits = {c["code"]: c["credits"] for c in fixture["courses"]}
     output: dict[str, Any] = {
@@ -46,11 +51,16 @@ def make_result(
     by_sem: dict[int, list[str]] = {}
     for code, i in takes:
         by_sem.setdefault(i, []).append(code)
+    failed: dict[int, list[str]] = {}
+    for code, i in attempts or []:
+        failed.setdefault(i, []).append(code)
+        by_sem.setdefault(i, [])
     output["semesters"] = [
         {
             "semester_code": semesters[i - 1],
             "courses": sorted(by_sem[i]),
-            "credits": sum(credits[c] for c in by_sem[i]),
+            "credits": sum(credits[c] for c in by_sem[i]) + sum(credits[c] for c in failed.get(i, [])),
+            **({"failed_attempts": sorted(failed[i])} if i in failed else {}),
         }
         for i in sorted(by_sem)
     ]

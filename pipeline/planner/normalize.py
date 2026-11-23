@@ -115,6 +115,12 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
             got = sum(credits[c] for c in g["members"] if c in completed)
             excess += max(0, got - g["required_credits"])
     outside = sum(credits.get(c, 0) for c in completed if c not in in_curriculum or c in to_free)
+    #    Giai doan 12 (T62, 23/11): mon NGOAI chuong trinh sinh vien go ma vao o tu chon tu do
+    #    (``student.free_choices``, backend ghim kem). Tru vao o trong sau mon da dat; mon nay thanh khoi
+    #    bat buoc rieng de bo giai xep dung cho ghim.
+    planned_free = sorted({c for c in fx["student"].get("free_choices") or []
+                           if c in credits and c not in in_curriculum and c not in completed})
+    planned_credits = sum(credits[c] for c in planned_free)
     out_groups = []
     for k, g in enumerate(groups, start=1):
         if g["pool_scope"] != "any":
@@ -126,7 +132,9 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
         excess -= used_excess
         used_outside = min(outside, need - used_excess)
         outside -= used_outside
-        left = max(0, need - used_excess - used_outside)
+        used_planned = min(planned_credits, need - used_excess - used_outside)
+        planned_credits -= used_planned
+        left = max(0, need - used_excess - used_outside - used_planned)
         slots = [f"FREE_{k}_{j}" for j in range(1, math.ceil(left / per) + 1)]
         for code in slots:
             fx["courses"].append({"code": code, "name": f"O tu chon tu do ({g['name']})", "credits": per})
@@ -137,6 +145,11 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
                            "_free_slots": True})
         fx.setdefault("_free_outside_credits", 0)
         fx["_free_outside_credits"] += used_outside
+    if planned_free:
+        for code in planned_free:
+            fx["curriculum_courses"].append({"course_code": code, "recommended_year": None, "recommended_term": None})
+        out_groups.append({"name": "Tu chon tu do ban chon", "kind": "required", "required_count": None,
+                           "required_credits": None, "pool_scope": "listed", "members": planned_free})
     fx["course_groups"] = out_groups
     fx["_total_credits"] = total
     fx["_normalized"] = True

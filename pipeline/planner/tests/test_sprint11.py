@@ -105,6 +105,15 @@ def test_semester_target_is_reported_honestly(toy):
     assert str(got) in row["detail"]
 
 
+def test_semester_target_beats_max_credits(toy):
+    # Loi 23/11: o TC dau ky (muon 9) phai thang "Toi da moi ky" (6); truoc day bien max_load
+    # lay can tren tu muc toi da cu nen ky 262 bi chan o 6 ma khong bao gi.
+    r = solve_cpsat(toy, scen(toy, max_credits=6, semester_targets={"262": 9}))
+    got = next((s["credits"] for s in r["semesters"] if s["semester_code"] == "262"), 0)
+    assert got == 9
+    assert req(r, "target")[0]["status"] == "met"
+
+
 def test_user_priority_order_is_accepted(toy):
     r = solve_cpsat(toy, scen(toy, preferences={"order": ["S5", "S1"]}))
     assert r["status"] in ("OPTIMAL", "SAT_NOT_PROVEN_OPTIMAL")

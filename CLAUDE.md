@@ -45,8 +45,8 @@ Có mục KHAC thì báo người dùng và chưa làm tiếp cho tới khi th�
 ## Quy tắc làm việc
 
 - Mỗi lần chỉ làm một giai đoạn của kế hoạch; xong thì dừng, báo cáo theo mẫu ở mục 1 của kế hoạch, chờ duyệt. Trong một giai đoạn, từng việc nhỏ đi theo mục "Nhịp làm việc với người dùng" bên dưới.
-- Làm xong một việc thì **cập nhật cả ba nơi**: kế hoạch (mục Duyệt, nhật ký quyết định), tài liệu bối cảnh (sự thật mới), và `pipeline/check_baseline.py` (mục CHUA_LAM tương ứng phải chuyển thành DUNG, hoặc thêm phép kiểm tra mới). Đổi code hoặc API thì sửa `docs/03-thiet-ke.md`; cuối phiên sửa mục "Đang ở đâu" của `docs/README.md`.
-- Giữ `docs/` gọn: không tạo file tài liệu mới ngoài `01`–`05` và `README.md`; thông tin mới đưa vào đúng file theo mục lục. Tài liệu hết dùng thì chuyển vào `docs/luu-tru/`, không xóa.
+- Làm xong một việc thì **cập nhật cả ba nơi**: kế hoạch (mục Duyệt, nhật ký quyết định), tài liệu bối cảnh (sự thật mới), và `pipeline/check_baseline.py` (mục CHUA_LAM tương ứng phải chuyển thành DUNG, hoặc thêm phép kiểm tra mới). Đổi code hoặc API thì sửa `docs/03-thiet-ke.md` (và `docs/06-tong-ket.md` nếu đổi chức năng, luồng của trang Môn học / Gợi ý); cuối phiên sửa mục "Đang ở đâu" của `docs/README.md`.
+- Giữ `docs/` gọn: không tạo file tài liệu mới ngoài `01`–`06` và `README.md` (`06-tong-ket.md` thêm 23/11 theo người duyệt); thông tin mới đưa vào đúng file theo mục lục. Tài liệu hết dùng thì chuyển vào `docs/luu-tru/`, không xóa.
 - Không sửa Supabase dùng chung (schema, migration, dữ liệu).
 - Không đưa dữ liệu cá nhân (tên, MSSV, điểm, file tiến độ thật) vào code, test hay commit.
 - Không commit `docs/luu-tru/2026-11-15-ban-giao-claude-web-va-pipeline.md` (chứa mật khẩu), các file `Mon_hoc_CTDT_*`, `Bảng điểm.pdf`, `ctdt-ben-tien-do-mon-tra-ve-cua-tao.json` (file tiến độ thật) và `function.js` (mã của trường). Người dùng chưa muốn commit; chỉ commit khi được yêu cầu.

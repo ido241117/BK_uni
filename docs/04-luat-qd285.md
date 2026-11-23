@@ -39,7 +39,7 @@ Việc T2 của [kế hoạch](02-ke-hoach.md). Đọc ngày 18/11/2026, đủ 5
 | Lớp chính quy mở trong kỳ chính. Riêng **thực tập ngoài trường thường mở vào kỳ hè**. Kỳ hè chủ yếu là lớp dự thính | Đ14.1, tr.10; Đ29.1, tr.19; PL13, tr.52 | Cứng: chỉ thực tập ngoài trường được xếp vào kỳ hè |
 | Chính quy: kế hoạch 8 kỳ, **tối đa 12 kỳ chính**. PFIEV 10, tối đa 14. Vừa làm vừa học: tối đa 16 | Đ5.2, tr.4 | Cứng: giới hạn số kỳ được xếp |
 | Được kéo dài thêm 1 kỳ (đối tượng ưu tiên) hoặc theo xét đặc biệt | Đ5.3, tr.4–5 | Ngoài |
-| Nghỉ học tạm thời: tối đa 4 kỳ, có tính vào thời gian học | Đ32.1, tr.21 | Ngoài (có thể thành what-if sau này) |
+| Nghỉ học tạm thời: tối đa 4 kỳ, có tính vào thời gian học | Đ32.1, tr.21 | What-if "nghỉ kỳ" (sprint 11); nghỉ từ 2 kỳ chính liên tiếp thì cảnh báo xin phép Phòng Đào tạo (giai đoạn 12) |
 
 **Giới hạn tín chỉ kỳ hè:** đã đọc đủ 58 trang, không thấy điều nào quy định.
 
@@ -114,8 +114,8 @@ Bộ giải không tự suy ra chuẩn ngoại ngữ. Nó nhận đầu vào d�
 | Môn không có thông tin mở lớp được giả định có mở | Giữ (giả định) | — |
 | Kỳ cuối được dưới 14 TC | **Bác bỏ** theo quy định hiện hành. Chỉ có ở phần chuyển tiếp đã hết hạn | Đ15.3, tr.11–12; PL14, tr.54; Đ37.2, tr.24 |
 | Cấp độ môn đoán theo chữ số đầu của mã môn | **Xác nhận**: chữ số đầu là L (cấp độ) | PL1, tr.27 |
-| Năm học tính từ khóa | **Bác bỏ** theo văn bản: năm học tính theo tín chỉ tích lũy, kèm chuẩn ngoại ngữ. Người duyệt vẫn chọn tính theo khóa cho dễ (18/11) | Đ24, tr.17 |
-| Không học kỳ hè | Giữ cho môn thường. **Ngoại lệ**: thực tập ngoài trường thường ở kỳ hè. Không thấy giới hạn tín chỉ kỳ hè | Đ14.1, tr.10; Đ29.1, tr.19 |
+| Năm học tính từ khóa | **Bác bỏ** theo văn bản: năm học tính theo tín chỉ tích lũy, kèm chuẩn ngoại ngữ. Người duyệt chọn tính theo khóa cho dễ (18/11); **từ 22/11 (Q6) bộ giải tính theo tín chỉ tích lũy 28/56/84** | Đ24, tr.17 |
+| Không học kỳ hè | Giữ cho môn thường (18/11); **từ 19/11 sinh viên tự bật kỳ hè, ≤ 12 TC (nhóm tự đặt), không đồ án**. **Ngoại lệ**: thực tập ngoài trường thường ở kỳ hè. Không thấy giới hạn tín chỉ kỳ hè | Đ14.1, tr.10; Đ29.1, tr.19 |
 | H6 "học trước" chưa có trong QĐ 285 | **Xác nhận** là không có định nghĩa | Đ2, tr.2; PL14, tr.55 |
 | H12: 65%, 70%, 85% + chuẩn tiếng Anh | **Xác nhận và bổ sung**: mẫu số là tổng TC chương trình; khóa luận thêm rèn luyện 70%, MOS (khóa ≥ 2021), chỉ cần Nghe–Đọc | Đ15.5, tr.12; PL7, tr.36; PL9, tr.40 |
 

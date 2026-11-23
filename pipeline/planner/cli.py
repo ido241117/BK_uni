@@ -26,7 +26,15 @@ import time
 from pathlib import Path
 from typing import Any
 
-from planner.facts import FixtureError
+from planner.facts import (
+    FixtureError,
+    assumed_fails,
+    base_credit_limits,
+    is_summer,
+    offered_terms,
+    plan_semesters,
+    summer_courses,
+)
 from planner.normalize import normalize
 from planner.relations import enrich
 from planner.report import warning_items
@@ -57,28 +65,73 @@ def _reason(fixture: dict[str, Any], scenario: dict[str, Any], code: str) -> str
     return "required"
 
 
-def _explain_unsat(fixture: dict[str, Any], scenario: dict[str, Any], time_limit: float) -> str:
-    """Thu bo tung lua chon cua sinh vien (bang CP-SAT) de tim nut gay ra UNSAT."""
-    knobs: list[tuple[str, dict[str, Any]]] = []
-    # Sprint 11: ghim tuyet doi thi khong bao gio de xuat bo ghim (nguoi duyet 22/11).
-    absolute = bool((fixture.get("rules") or {}).get("pins_absolute"))
-    for k, item in enumerate([] if absolute else scenario.get("locked", [])):
-        trial = copy.deepcopy(scenario)
-        del trial["locked"][k]
-        knobs.append((f"khóa {item['course_code']} vào kỳ {item['semester_code']}", trial))
-    for key, label in (("graduate_by", "hạn tốt nghiệp"), ("max_credits", "mức tín chỉ tối đa"),
-                       ("semester_limits", "giới hạn tín chỉ từng kỳ"), ("skip_semesters", "các kỳ nghỉ"),
-                       ("frozen_semesters", "các kỳ đã khóa")):
-        if scenario.get(key):
-            trial = copy.deepcopy(scenario)
-            trial.pop(key)
-            knobs.append((label, trial))
-    culprits = [label for label, trial in knobs
-                if solve_cpsat(fixture, trial, None, time_limit)["status"] != "UNSAT"]
-    if culprits:
-        return "Bỏ một trong các lựa chọn sau thì có lộ trình: " + "; ".join(culprits)
+def _feasible(fixture: dict[str, Any], scenario: dict[str, Any], time_limit: float) -> bool:
+    return solve_cpsat(fixture, scenario, None, time_limit)["status"] not in ("UNSAT", "TIMEOUT")
 
-    # Khong do lua chon cua sinh vien: thu noi tung luat cua truong de chi ra luat nao chan.
+
+def _without(items: list[Any], k: int) -> list[Any]:
+    return [x for j, x in enumerate(items) if j != k]
+
+
+def _knobs(fixture: dict[str, Any], scenario: dict[str, Any], skip_target: str | None = None
+           ) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """Tung lua chon cua sinh vien, bo rieng tung cai: [(cach go, kich ban da bo)].
+
+    ``cach go`` (giai doan 12, M11) co ``kind`` de giao dien bam la ap dung: unpin, unskip, remove_not_offered,
+    remove_target, remove_assumed_fail, assume_pass, enable_summer, remove_graduate_by, remove_frozen.
+    """
+    out: list[tuple[dict[str, Any], dict[str, Any]]] = []
+
+    def add(fix: dict[str, Any], **changes: Any) -> None:
+        t = copy.deepcopy(scenario)
+        for key, value in changes.items():
+            if value is None:
+                t.pop(key, None)
+            else:
+                t[key] = value
+        out.append((fix, t))
+
+    # Ghim tuyet doi thi khong bao gio de xuat bo ghim (nguoi duyet 22/11).
+    if not (fixture.get("rules") or {}).get("pins_absolute"):
+        for k, item in enumerate(scenario.get("locked", [])):
+            add({"kind": "unpin", "course": item["course_code"], "semester": item["semester_code"],
+                 "label": f"Bỏ ghim {item['course_code']} ở {item['semester_code']}"},
+                locked=_without(scenario["locked"], k))
+    for sem in scenario.get("skip_semesters") or []:
+        add({"kind": "unskip", "semester": sem, "label": f"Không nghỉ kỳ {sem}"},
+            skip_semesters=[x for x in scenario["skip_semesters"] if x != sem])
+    for k, item in enumerate(scenario.get("not_offered") or []):
+        add({"kind": "remove_not_offered", "course": item["course_code"], "semester": item["semester_code"],
+             "label": f"Cho {item['course_code']} mở lại kỳ {item['semester_code']}"},
+            not_offered=_without(scenario["not_offered"], k))
+    for sem in list(scenario.get("semester_targets") or {}):
+        if sem != skip_target:
+            add({"kind": "remove_target", "semester": sem, "label": f"Bỏ số TC muốn ở kỳ {sem}"},
+                semester_targets={k: v for k, v in scenario["semester_targets"].items() if k != sem})
+    for code in assumed_fails(scenario):
+        add({"kind": "remove_assumed_fail", "course": code, "label": f"Bỏ giả định rớt {code}"},
+            assumed_fail=[i for i in scenario["assumed_fail"] if i["course_code"] != code])
+    for code, r in sorted((scenario.get("in_progress_results") or {}).items()):
+        if r == "fail":
+            add({"kind": "assume_pass", "course": code, "label": f"Giả định đậu {code}"},
+                in_progress_results={**scenario["in_progress_results"], code: "pass"})
+    opted = scenario.get("summer_opt_in") or []
+    summers = [x for x in plan_semesters(fixture) if is_summer(x) and x not in opted]
+    for sem in summers[:3]:
+        add({"kind": "enable_summer", "semester": sem, "label": f"Học hè {sem}"}, summer_opt_in=[*opted, sem])
+    if scenario.get("graduate_by"):
+        add({"kind": "remove_graduate_by", "label": "Bỏ hạn tốt nghiệp"}, graduate_by=None)
+    if scenario.get("frozen_semesters"):
+        add({"kind": "remove_frozen", "label": "Bỏ các kỳ đã khóa"}, frozen_semesters=None)
+    if scenario.get("max_credits"):
+        add({"kind": "remove_max_credits", "label": "Bỏ mức tín chỉ tối đa"}, max_credits=None)
+    if scenario.get("semester_limits"):
+        add({"kind": "remove_semester_limits", "label": "Bỏ giới hạn tín chỉ từng kỳ"}, semester_limits=None)
+    return out
+
+
+def _blocking_rules(fixture: dict[str, Any], scenario: dict[str, Any], time_limit: float) -> list[str]:
+    """Noi tung luat cua truong de chi ra luat nao chan (dung khi bo lua chon cua sinh vien khong du)."""
     rules = fixture.get("rules") or {}
     relaxations: list[tuple[str, dict[str, Any]]] = []
     if rules.get("course_level"):
@@ -87,12 +140,95 @@ def _explain_unsat(fixture: dict[str, Any], scenario: dict[str, Any], time_limit
     if rules.get("graduation_thresholds"):
         relaxations.append(("ngưỡng tín chỉ của môn tốt nghiệp (QĐ 285 Điều 15.5)",
                             {**fixture, "rules": {**rules, "graduation_thresholds": {}}}))
-    blocking = [label for label, fx in relaxations if solve_cpsat(fx, scenario, None, time_limit)["status"] != "UNSAT"]
+    relaxations.append(("tiên quyết, song hành (QĐ 285 Điều 2.1)",
+                        {**fixture, "course_relations": [r for r in fixture["course_relations"]
+                                                         if r["type"] not in ("prerequisite", "corequisite")]}))
+    return [label for label, fx in relaxations if _feasible(fx, scenario, time_limit)]
+
+
+def _explain_unsat(fixture: dict[str, Any], scenario: dict[str, Any], time_limit: float
+                   ) -> tuple[str, list[dict[str, Any]]]:
+    """Thu bo tung lua chon cua sinh vien (bang CP-SAT) de tim nut gay ra UNSAT. Tra (loi giai thich, cach go)."""
+    knobs = _knobs(fixture, scenario)
+    fixes = [fix for fix, trial in knobs if _feasible(fixture, trial, time_limit)]
+    if fixes:
+        return "Bỏ một trong các lựa chọn sau thì có lộ trình: " + "; ".join(f["label"] for f in fixes), fixes
+    blocking = _blocking_rules(fixture, scenario, time_limit)
     prefix = "Bỏ từng lựa chọn một vẫn không có lộ trình. " if knobs else ""
     if blocking:
-        return prefix + "Luật đang chặn lộ trình: " + "; ".join(blocking) + \
-            ". Thường gặp khi còn ít môn học được ở một kỳ; nên hỏi phòng đào tạo"
-    return prefix + "Không có lộ trình trong các kỳ còn lại với dữ liệu chương trình hiện tại"
+        return (prefix + "Luật đang chặn lộ trình: " + "; ".join(blocking)
+                + ". Thường gặp khi còn ít môn học được ở một kỳ; nên hỏi phòng đào tạo"), []
+    return prefix + "Không có lộ trình trong các kỳ còn lại với dữ liệu chương trình hiện tại", []
+
+
+def _explain_targets(fixture: dict[str, Any], scenario: dict[str, Any], requests: list[dict[str, Any]],
+                     plan: dict[str, str], time_limit: float, limit: int = 2) -> None:
+    """T53 (23/11): thay loi doan "khong con mon du dieu kien" bang ly do that, cho toi da ``limit`` ky.
+
+    1) Ky cuoi cung co mon: chi con bay nhieu TC de hoc. 2) Giai lai voi so TC muon thanh muc toi thieu cung:
+    khong giai duoc thi bo tung lua chon cua sinh vien, roi noi tung luat, de chi ra cai chan.
+    """
+    targets = scenario.get("semester_targets") or {}
+    semesters = plan_semesters(fixture)
+    credits = {c["code"]: c["credits"] for c in fixture["courses"]}
+    last = max(plan.values(), key=semesters.index) if plan else None
+    done = 0
+    for row in requests:
+        if row["kind"] != "target" or row["status"] == "met" or done >= limit:
+            continue
+        sem = row["item"].split(":")[0]
+        want = targets.get(sem)
+        got = sum(credits[c] for c, s in plan.items() if s == sem)
+        if want is None or got >= want:
+            continue
+        done += 1
+        if last is None or semesters.index(sem) >= semesters.index(last):
+            row["detail"] = f"xếp được {got} TC: đây là kỳ cuối, các môn còn lại chỉ có {got} TC"
+            continue
+        hard = copy.deepcopy(scenario)
+        limits = hard.setdefault("semester_limits", {})
+        limits[sem] = {**limits.get(sem, {}), "min": want}
+        hard["semester_targets"] = {k: v for k, v in targets.items() if k != sem}
+        if _feasible(fixture, hard, time_limit):
+            continue  # giu loi cu: co cach xep du nhung pha uu tien cao hon
+        culprits = [fix["label"] for fix, trial in _knobs(fixture, hard, skip_target=sem)
+                    if _feasible(fixture, trial, time_limit)]
+        if culprits:
+            row["detail"] = f"xếp được {got} TC; muốn đủ {want} TC thì: " + " hoặc ".join(culprits)
+            continue
+        rules = _blocking_rules(fixture, hard, time_limit)
+        if rules:
+            row["detail"] = f"xếp được {got} TC; các môn còn lại chưa đủ điều kiện học ở kỳ này (" + "; ".join(rules) + ")"
+        else:
+            row["detail"] = f"xếp được {got} TC; không có tổ hợp môn đủ điều kiện để đạt {want} TC ở kỳ này"
+
+
+def _course_facts(fixture: dict[str, Any], passed: set[str]) -> dict[str, Any]:
+    """Giai doan 12 (M6, T61): du lieu de trang tu to ky duoc / khong duoc khi sinh vien chon mon, khong goi bo giai."""
+    internships = summer_courses(fixture)
+    excluded = set(fixture.get("summer_excluded", []))
+    history = fixture.get("summer_history")
+    out: dict[str, Any] = {}
+    in_curriculum = {cc["course_code"] for cc in fixture["curriculum_courses"]}
+    for code in sorted(in_curriculum - passed):
+        rels = [r for r in fixture["course_relations"]
+                if r["course_code"] == code and r["related_course_code"] not in passed]
+        if code in internships:
+            summer = "internship"
+        elif code in excluded:
+            summer = "excluded"
+        elif history is None or code in history or code.startswith("FREE_"):
+            summer = "history"
+        else:
+            summer = "no_history"
+        terms = offered_terms(fixture, code)
+        out[code] = {
+            "prerequisites": sorted(r["related_course_code"] for r in rels if r["type"] == "prerequisite"),
+            "corequisites": sorted(r["related_course_code"] for r in rels if r["type"] == "corequisite"),
+            "summer": summer,
+            "terms": sorted(terms) if terms is not None else None,
+        }
+    return out
 
 
 def run(payload: dict[str, Any], solver: str, time_limit: float,
@@ -141,6 +277,11 @@ def run(payload: dict[str, Any], solver: str, time_limit: float,
                  "block": block_of.get(c),
                  "slot": c in block_of and c not in chosen}
                 for c in s["courses"]
+            ] + [
+                # W1: lan hoc gia dinh rot (tinh TC cua ky, khong dat)
+                {"code": c, "credits": credits[c], "reason": _reason(fixture, scenario, c), "locked": False,
+                 "block": block_of.get(c), "slot": False, "assumed_fail": True}
+                for c in s.get("failed_attempts", [])
             ],
         }
         for s in result["semesters"]
@@ -152,6 +293,14 @@ def run(payload: dict[str, Any], solver: str, time_limit: float,
         pinned_codes = {c for c, _ in locked}
         pin_warnings = [v for v in violations if any(v.startswith(c) or f" {c}" in v for c in pinned_codes)]
         violations = [v for v in violations if v not in pin_warnings]
+    plan_now = {c: s["semester_code"] for s in result["semesters"] for c in s["courses"]}
+    if result["semesters"]:
+        _explain_targets(fixture, scenario, result.get("requests", []), plan_now, time_limit)
+    reason, fixes = _explain_unsat(fixture, scenario, time_limit) if result["status"] == "UNSAT" else (None, [])
+    results_now = scenario.get("in_progress_results") or {}
+    passed_now = {sc["course_code"] for sc in fixture["student"]["student_courses"]
+                  if sc["status"] == "completed"
+                  or (sc["status"] == "in-progress" and results_now.get(sc["course_code"]) == "pass")}
     diff_vs_previous: list[str] = []
     if previous and result["semesters"]:
         diff_vs_previous = diff({"semesters": [{"semester_code": s, "courses": [c]}
@@ -176,7 +325,13 @@ def run(payload: dict[str, Any], solver: str, time_limit: float,
         "relations_snapshot": fixture.get("relations_snapshot"),
         "violations": violations,
         "diff_vs_previous": diff_vs_previous,
-        "infeasible_reason": _explain_unsat(fixture, scenario, time_limit) if result["status"] == "UNSAT" else None,
+        "infeasible_reason": reason,
+        # Giai doan 12 (M11): cach go co cau truc, giao dien bam la ap dung.
+        "infeasible_fixes": fixes,
+        # Giai doan 12 (M6): tien quyet, song hanh, ky he, loai ky tung mo cua tung mon chua dat.
+        "course_facts": _course_facts(fixture, passed_now),
+        "credit_rules": {"main_max": base_credit_limits(fixture)[1],
+                         "summer_max": (fixture.get("rules") or {}).get("summer_credits_max", 12)},
         # Chi engine ASP co: GPA, chuyen nganh, dieu kien tot nghiep, lich su mo lop, hoc phi, tag.
         "engine_report": result.get("engine_report"),
     }

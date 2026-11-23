@@ -369,7 +369,18 @@ export class PlannerService {
   }
 
   async solve(userId: string, dto: SolvePlanDto): Promise<Record<string, unknown>> {
-    const input = buildPlannerInput(await this.loadSource(userId), dto);
+    const source = await this.loadSource(userId);
+    // T62 (giai đoạn 12): tra mã môn sinh viên gõ vào ô tự chọn tự do; mã không có thì báo rõ, không giải.
+    const codes = [...new Set((dto.free_choices ?? []).map((f) => String(f?.course_code ?? '').trim().toUpperCase()))]
+      .filter(Boolean);
+    if (codes.length) {
+      const found = await this.courses.find({ where: { code: In(codes) } });
+      const missing = codes.filter((c) => !found.some((f) => f.code === c));
+      if (missing.length) throw new BadRequestException(`Không tìm thấy môn: ${missing.join(', ')}`);
+      source.freeCourses = found.map((c) => ({ id: c.id, code: c.code, name: c.name, credits: c.credits }));
+      dto = { ...dto, free_choices: (dto.free_choices ?? []).map((f) => ({ ...f, course_code: f.course_code.trim().toUpperCase() })) };
+    }
+    const input = buildPlannerInput(source, dto);
     try {
       return await this.runner.run(input, dto.solver ?? 'cpsat');
     } catch (error) {

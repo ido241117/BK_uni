@@ -1,10 +1,9 @@
-import { Alert, Card, Collapse, Empty, Space, Statistic, Table, Tag, Tooltip, Typography } from 'antd';
+import { Alert, Button, Card, Collapse, Empty, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import { LuCircleCheck, LuCircleX, LuLock } from 'react-icons/lu';
-import { IOutLinedBtn, ISolidBtn } from '@/components';
+import { IOutLinedBtn } from '@/components';
 import type { ReactNode } from 'react';
-import type { PlanCourse, PlanCourseReason, PlanRequest, PlanResult } from '@/types';
+import type { PlanCourse, PlanCourseReason, PlanFix, PlanRequest, PlanResult } from '@/types';
 import { semesterLabel } from '@/pages/courses/analysis/semester';
-import { comparePlans, isSameAsBaseline, type PlanDiff } from './whatIf';
 import EngineReportCard from './EngineReportCard';
 
 const { Text } = Typography;
@@ -42,15 +41,14 @@ const STATUS_ALERT: Record<string, { type: 'success' | 'info' | 'warning' | 'err
 interface PlanResultViewProps {
     result: PlanResult;
     courseName: (code: string) => string;
-    /** Kỳ tốt nghiệp của lần giải trước, để so sánh khi đổi tùy chọn. */
-    previousGraduation?: string | null;
+    /** Kết quả lần giải trước: dải số đầu trang so với nó để sinh viên thấy thay đổi vừa rồi kéo theo gì. */
+    previous?: PlanResult | null;
     recommendationsFirst: boolean;
     onPreferRecommendations?: () => void;
-    /** What-if (T17): lộ trình mốc đã lưu. */
-    baseline?: { savedAt: string; result: PlanResult } | null;
-    onSaveBaseline?: () => void;
-    onRestoreBaseline?: () => void;
-    onClearBaseline?: () => void;
+    /** Giai đoạn 12 (M1): có sửa chưa giải → dải chỉ số mờ đi. */
+    stale?: boolean;
+    /** M11: áp dụng một cách gỡ khi không giải được (trang tự giải lại). */
+    onApplyFix?: (fix: PlanFix) => void;
     /** Sprint 11: bảng các kỳ (kéo thả, ghim, cài đặt từng kỳ) thay cho danh sách kỳ chỉ đọc. */
     board?: ReactNode;
 }
@@ -64,7 +62,7 @@ const REQUEST_STATUS: Record<PlanRequest['status'], { color: string; label: stri
 };
 const REQUEST_KIND: Record<PlanRequest['kind'], string> = {
     pin: 'Ghim', target: 'Số TC muốn', skip: 'Nghỉ kỳ', frozen: 'Khóa kỳ', wanted: 'Môn muốn học',
-    graduate_by: 'Hạn tốt nghiệp', not_offered: 'Môn không mở',
+    graduate_by: 'Hạn tốt nghiệp', not_offered: 'Môn không mở', assumed_fail: 'Giả định rớt', offered: 'Báo có mở',
 };
 const RequestsCard = ({ requests }: { requests: PlanRequest[] }) => (
     <Card size="small" title="Yêu cầu của bạn">
@@ -80,119 +78,103 @@ const RequestsCard = ({ requests }: { requests: PlanRequest[] }) => (
     </Card>
 );
 
-const graduationText = (d: PlanDiff) => {
-    const from = d.graduationFrom ? semesterLabel(d.graduationFrom) : '—';
-    const to = d.graduationTo ? semesterLabel(d.graduationTo) : '—';
-    if (d.graduationFrom === d.graduationTo) return `Vẫn học xong ở ${to}, như mốc.`;
-    if (d.mainSemesterShift === null) return `Học xong đổi từ ${from} sang ${to}.`;
-    const n = Math.abs(d.mainSemesterShift);
-    return `Học xong ${d.mainSemesterShift > 0 ? 'muộn' : 'sớm'} hơn ${n} kỳ chính: ${from} → ${to}.`;
+/** Mẫu 1 (23/11): ba con số chính của lộ trình. Kỳ hè có mã tận cùng bằng 3. */
+const summarize = (r: PlanResult) => {
+    const isSummer = (code: string) => code.endsWith('3');
+    const main = r.semesters.filter(s => !isSummer(s.semester_code)).map(s => s.credits);
+    return {
+        graduation: r.graduation_semester ?? null,
+        heaviest: main.length ? Math.max(...main) : 0,
+        summer: r.semesters.filter(s => isSummer(s.semester_code)).reduce((sum, s) => sum + s.credits, 0),
+        total: r.semesters.reduce((sum, s) => sum + s.credits, 0),
+    };
 };
 
-const WhatIfCard = ({
-    result, baseline, courseName, onSaveBaseline, onRestoreBaseline, onClearBaseline,
-}: Pick<PlanResultViewProps, 'result' | 'baseline' | 'courseName' | 'onSaveBaseline' | 'onRestoreBaseline' | 'onClearBaseline'>) => {
-    const usable = result.semesters.length > 0 && result.violations.length === 0
-        && (result.status === 'OPTIMAL' || result.status === 'SAT_NOT_PROVEN_OPTIMAL');
+/** Nhãn thay đổi: xanh = tốt hơn, cam = tệ hơn (phân biệt cả độ sáng, không chỉ màu). */
+const Delta = ({ text, good }: { text: string; good: boolean }) => (
+    <span style={{
+        fontSize: 13, fontWeight: 600, padding: '2px 10px', borderRadius: 999,
+        background: good ? '#EAF1FF' : '#FFF1E6', color: good ? '#1D4ED8' : '#9A3F07',
+    }}>{text}</span>
+);
 
-    if (!baseline) {
-        return usable && onSaveBaseline ? (
-            <Card size="small">
-                <Space style={{ justifyContent: 'space-between', width: '100%' }} wrap>
-                    <Text type="secondary">
-                        Muốn thử "nếu… thì sao"? Lưu lộ trình này làm mốc, rồi đổi kịch bản bên trái: trang sẽ chỉ ra
-                        môn nào dời kỳ và kỳ tốt nghiệp đổi ra sao.
-                    </Text>
-                    <ISolidBtn onClick={onSaveBaseline}>Lưu làm mốc</ISolidBtn>
-                </Space>
-            </Card>
-        ) : null;
-    }
+const signed = (n: number) => `${n > 0 ? '+' : ''}${n} TC`;
 
-    const isBaseline = baseline.result === result;
-    const diff = comparePlans(baseline.result, result);
-    const same = isSameAsBaseline(diff);
-    const savedAt = new Date(baseline.savedAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
-    const name = (code: string) => `${code} · ${courseName(code)}`;
-
+const KpiStrip = ({ result, previous, stale }: { result: PlanResult; previous?: PlanResult | null; stale?: boolean }) => {
+    const now = summarize(result);
+    const before = previous && previous.semesters.length > 0 ? summarize(previous) : null;
+    const gradChanged = before && before.graduation && now.graduation && before.graduation !== now.graduation;
+    const items = [
+        {
+            label: 'Ra trường',
+            value: now.graduation ? semesterLabel(now.graduation) : '—',
+            delta: gradChanged
+                ? <Delta text={`trước: ${before!.graduation}`} good={now.graduation! < before!.graduation!} />
+                : null,
+        },
+        {
+            label: 'Kỳ chính nặng nhất',
+            value: `${now.heaviest} TC`,
+            delta: before && before.heaviest !== now.heaviest
+                ? <Delta text={signed(now.heaviest - before.heaviest)} good={now.heaviest < before.heaviest} />
+                : null,
+        },
+        {
+            label: 'Học hè',
+            value: `${now.summer} TC`,
+            delta: before && before.summer !== now.summer
+                ? <Delta text={signed(now.summer - before.summer)} good={now.summer < before.summer} />
+                : null,
+        },
+    ];
     return (
-        <Card
-            size="small"
-            title={isBaseline ? 'Đang xem lộ trình mốc' : 'So với lộ trình mốc'}
-            extra={<Text type="secondary">Mốc lưu lúc {savedAt} (trên trình duyệt này)</Text>}
-        >
-            <Space orientation="vertical" style={{ width: '100%' }}>
-                {result.semesters.length === 0
-                    ? <Text>Kịch bản này không có lộ trình. Mốc vẫn được giữ nguyên.</Text>
-                    : isBaseline
-                        ? <Text type="secondary">Đổi kịch bản bên trái rồi bấm Giải lộ trình để so với mốc này.</Text>
-                        : same
-                            ? <Text><LuCircleCheck color="#389e0d" /> Giống hệt mốc.</Text>
-                            : (
-                                <>
-                                    <Text strong>{graduationText(diff)}</Text>
-                                    {diff.moved.length > 0 && (
-                                        <div>
-                                            <Text>{diff.moved.length} môn dời kỳ:</Text>
-                                            <ul>{diff.moved.map(m => (
-                                                <li key={m.code}>{name(m.code)}: {semesterLabel(m.from)} → {semesterLabel(m.to)}</li>
-                                            ))}</ul>
-                                        </div>
-                                    )}
-                                    {diff.added.length > 0 && (
-                                        <div>
-                                            <Text>{diff.added.length} môn mới so với mốc:</Text>
-                                            <ul>{diff.added.map(m => <li key={m.code}>{name(m.code)} ở {semesterLabel(m.to)}</li>)}</ul>
-                                        </div>
-                                    )}
-                                    {diff.removed.length > 0 && (
-                                        <div>
-                                            <Text>{diff.removed.length} môn không còn trong lộ trình:</Text>
-                                            <ul>{diff.removed.map(m => <li key={m.code}>{name(m.code)} (mốc: {semesterLabel(m.from)})</li>)}</ul>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                <Space wrap>
-                    {!isBaseline && onRestoreBaseline && <IOutLinedBtn onClick={onRestoreBaseline}>Về mốc</IOutLinedBtn>}
-                    {!isBaseline && usable && onSaveBaseline && (
-                        <IOutLinedBtn onClick={onSaveBaseline}>Lấy lộ trình này làm mốc mới</IOutLinedBtn>
-                    )}
-                    {onClearBaseline && <IOutLinedBtn onClick={onClearBaseline}>Xóa mốc</IOutLinedBtn>}
-                </Space>
-            </Space>
-        </Card>
+        <div style={{ opacity: stale ? 0.45 : 1 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                {items.map((k, i) => (
+                    <div key={k.label} style={{ padding: i ? '2px 20px' : '2px 20px 2px 0', borderLeft: i ? '1px solid var(--border-soft)' : undefined }}>
+                        <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '.06em' }}>{k.label}</Text>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
+                            <span style={{ fontSize: i ? 26 : 32, fontWeight: 700, color: i ? undefined : 'var(--brand)' }}>{k.value}</span>
+                            {k.delta}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <Text type="secondary" style={{ display: 'block', marginTop: 6, fontSize: 13 }}>
+                Còn {now.total} TC phải học. Nhãn màu so với lần giải ngay trước.{stale ? ' Đã sửa sau lần giải này: bấm Giải để cập nhật.' : ''}
+            </Text>
+        </div>
     );
 };
 
 const PlanResultView = ({
-    result, courseName, previousGraduation, recommendationsFirst, onPreferRecommendations,
-    baseline, onSaveBaseline, onRestoreBaseline, onClearBaseline, board,
+    result, courseName, previous, recommendationsFirst, onPreferRecommendations, stale, onApplyFix, board,
 }: PlanResultViewProps) => {
     const alert = STATUS_ALERT[result.status] ?? STATUS_ALERT.INPUT_ERROR;
-    const totalCredits = result.semesters.reduce((sum, s) => sum + s.credits, 0);
     const s6 = result.preferences_report?.find(p => p.id === 'S6');
-    const diff = baseline && baseline.result !== result ? comparePlans(baseline.result, result) : null;
-    const movedFrom = new Map(diff?.moved.map(m => [m.code, m.from]) ?? []);
-    const added = new Set(diff?.added.map(m => m.code) ?? []);
+    const fixes = result.status === 'UNSAT' ? result.infeasible_fixes ?? [] : [];
 
     return (
         <div className="stack">
+            {result.semesters.length > 0 && <KpiStrip result={result} previous={previous} stale={stale} />}
+
             <Alert
                 type={alert.type}
                 showIcon
                 title={alert.title}
-                description={result.status === 'UNSAT' ? result.infeasible_reason
+                description={result.status === 'UNSAT'
+                    ? (
+                        <Space orientation="vertical" size={6}>
+                            <span>{result.infeasible_reason}</span>
+                            {fixes.length > 0 && onApplyFix && (
+                                <Space wrap size={6}>
+                                    <Text strong>Cách gỡ:</Text>
+                                    {fixes.map(f => <Button key={f.label} size="small" onClick={() => onApplyFix(f)}>{f.label}</Button>)}
+                                </Space>
+                            )}
+                        </Space>
+                    )
                     : result.status === 'INPUT_ERROR' ? result.error : undefined}
-            />
-
-            <WhatIfCard
-                result={result}
-                baseline={baseline}
-                courseName={courseName}
-                onSaveBaseline={onSaveBaseline}
-                onRestoreBaseline={onRestoreBaseline}
-                onClearBaseline={onClearBaseline}
             />
 
             {result.violations.length > 0 && (
@@ -202,25 +184,6 @@ const PlanResultView = ({
                     title="Bộ giải có lỗi: lộ trình vi phạm ràng buộc. Đừng dùng lộ trình này"
                     description={<ul>{result.violations.map(v => <li key={v}>{v}</li>)}</ul>}
                 />
-            )}
-
-            {result.semesters.length > 0 && (
-                <Card>
-                    <Space size={48} wrap>
-                        <Statistic title="Học xong dự kiến" value={result.graduation_semester ? semesterLabel(result.graduation_semester) : '—'} />
-                        <Statistic title="Tín chỉ còn phải học" value={totalCredits} suffix="TC" />
-                        <Statistic title="Số kỳ còn lại" value={result.semesters.length} />
-                        <Statistic title="Bộ giải" value={`${result.solver} · ${result.solve_ms ?? '?'} ms`} />
-                    </Space>
-                    {!baseline && previousGraduation && previousGraduation !== result.graduation_semester && (
-                        <Alert
-                            style={{ marginTop: 12 }}
-                            type="info"
-                            showIcon
-                            title={`Kỳ tốt nghiệp đổi từ ${previousGraduation} sang ${result.graduation_semester}`}
-                        />
-                    )}
-                </Card>
             )}
 
             {(result.requests?.length ?? 0) > 0 && <RequestsCard requests={result.requests!} />}
@@ -262,8 +225,6 @@ const PlanResultView = ({
                                     <Space>
                                         {c.locked && <Tooltip title="Bạn đã khóa môn vào kỳ này"><LuLock /></Tooltip>}
                                         <span>{c.reason === 'free_elective' ? 'Một môn tự chọn tự do bất kỳ' : courseName(c.code)}</span>
-                                        {movedFrom.has(c.code) && <Tag color="orange">dời từ {movedFrom.get(c.code)}</Tag>}
-                                        {added.has(c.code) && <Tag color="green">mới so với mốc</Tag>}
                                     </Space>
                                 ),
                             },

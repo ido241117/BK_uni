@@ -15,12 +15,14 @@ from typing import Any
 from ortools.sat.python import cp_model
 
 from planner.facts import (
+    assumed_fails,
     base_credit_limits,
     course_level,
     credit_limits,
     graduation_needs,
     is_summer,
     level_enabled,
+    offered_pairs,
     offered_terms,
     offering_soft,
     pinned,
@@ -83,7 +85,10 @@ def solve_cpsat(
     # voi cho ghim thi bo qua cho rieng mon do (validator bao canh bao). Khong co co thi nhu cu.
     rules = fixture.get("rules") or {}
     absolute = bool(rules.get("pins_absolute"))
-    pins = {c: index[s] for c, s in pinned(scenario).items() if s in index and c in taken}
+    # W1 (23/11): mon gia dinh rot o ky f: lan hoc do tinh TC cua ky f nhung KHONG dat; phai hoc lai sau f.
+    fails = {c: index[s] for c, s in assumed_fails(scenario).items() if s in index and c in taken}
+    pins = {c: index[s] for c, s in pinned(scenario).items()
+            if s in index and c in taken and fails.get(c) != index[s]}
 
     def free(c: str, i: int) -> bool:
         """Luat cung ap cho (c, i) khong? False khi do la cho sinh vien ghim (ghim tuyet doi)."""
@@ -155,8 +160,14 @@ def solve_cpsat(
         key = (rec["course_code"], index.get(rec["semester_code"]))
         if key in x and free(*key):
             model.add(x[key] == 0)
+    for c, f in fails.items():  # hoc lai phai sau ky rot
+        for i in sems:
+            if i <= f:
+                model.add(x[c, i] == 0)
     for item in scenario.get("locked", []):
         key = (item["course_code"], index[item["semester_code"]])
+        if fails.get(key[0]) == key[1]:
+            continue  # ghim dung ky gia dinh rot: lan hoc do la lan rot, da tinh o ``fails``
         if key in x:
             model.add(x[key] == 1)
         elif not absolute:
@@ -179,7 +190,8 @@ def solve_cpsat(
     # ghim van hoc o ky do; tinh vao tai cua ky, KHONG cong vao TC tich luy hay yeu cau khoi.
     retakes = [(c, index[sem]) for c, sem in pinned(scenario).items()
                if absolute and c in passed and c in credits and sem in index]
-    retake_load = {i: sum(credits[c] for c, j in retakes if j == i) for i in sems}
+    retake_load = {i: sum(credits[c] for c, j in retakes if j == i)
+                      + sum(credits[c] for c, j in fails.items() if j == i) for i in sems}
     load = {i: sum(credits[c] * x[c, i] for c in open_courses) + retake_load[i] for i in sems}
     base_acc = sum(credits[c] for c in passed if c in credits) + fixture.get("_free_outside_credits", 0)
 
@@ -214,12 +226,17 @@ def solve_cpsat(
                 model.add(acc_before(i) >= need_credits).only_enforce_if(x[g, i])
     used = {i: model.new_bool_var(f"used_{i}") for i in sems}
     targets = {index[s]: v for s, v in (scenario.get("semester_targets") or {}).items() if s in index}
+    # caps: muc toi da THAT cua tung ky (sau khi noi theo o TC dau ky va ghim). Moi bien phu ben
+    # duoi (max_load, over, s_over) phai lay can tren tu day, khong lay tu ``limits``; neu khong
+    # thi phan noi bi chan lai im lang (loi 23/11: muon 14 TC, toi da 11 -> chi xep 11).
+    caps: dict[int, int] = {}
     for i in sems:
         hi = limits[semesters[i - 1]][1]
         if i in targets:  # Q5: duoc lech toi 2 TC so voi so sinh vien muon
             hi = max(hi, targets[i] + 2)
         if absolute:  # ghim vuot muc toi da van giu
             hi = max(hi, sum(credits[c] for c, j in pins.items() if j == i) + retake_load[i])
+        caps[i] = hi
         model.add(load[i] <= hi)
         for c in open_courses:
             model.add_implication(x[c, i], used[i])
@@ -255,7 +272,7 @@ def solve_cpsat(
         for i in sems:
             if is_summer(semesters[i - 1]):
                 continue
-            over = model.new_int_var(0, limits[semesters[i - 1]][1], f"over_{i}")
+            over = model.new_int_var(0, caps[i], f"over_{i}")
             model.add(over >= load[i] - hi_pref)
             deviation.append(over)
             if i in used_after:
@@ -277,7 +294,7 @@ def solve_cpsat(
         for c in regular:
             model.add_implication(x[c, i], studied)
         model.add(sum(x[c, i] for c in regular) >= studied)
-        s_over = model.new_int_var(0, limits[semesters[i - 1]][1], f"s_over_{i}")
+        s_over = model.new_int_var(0, caps[i], f"s_over_{i}")
         s_under = model.new_int_var(0, s_lo, f"s_under_{i}")
         model.add(s_over >= s_load - s_hi)
         model.add(s_under >= s_lo * studied - s_load)
@@ -293,7 +310,7 @@ def solve_cpsat(
     for i in sems:
         model.add(last >= i * used[i])
     total_credits = sum(credits[c] * taken[c] for c in open_courses)
-    max_cap = max((hi for _, hi in limits.values()), default=0)
+    max_cap = max(caps.values(), default=0)
     max_load = model.new_int_var(0, max_cap, "max_load")
     for i in sems:
         model.add(max_load >= load[i])
@@ -309,7 +326,7 @@ def solve_cpsat(
     if offering_soft(fixture):
         for (c, i), var in x.items():
             terms_ok = offered_terms(fixture, c)
-            if terms_ok is not None and semesters[i - 1][-1] not in terms_ok and pins.get(c) != i:
+            if terms_ok is not None and semesters[i - 1][-1] not in terms_ok and pins.get(c) != i                     and (c, semesters[i - 1]) not in offered_pairs(scenario):
                 off_history.append(var)
     prev = [(c, index[s]) for c, s in (previous_plan or {}).items() if s in index]
     terms = {
@@ -347,4 +364,4 @@ def solve_cpsat(
         return make_result(fixture, scenario, "cp-sat", "TIMEOUT", None, previous_plan)
     takes = [(c, i) for (c, i), var in x.items() if solver.value(var)] + retakes
     status = "OPTIMAL" if code == cp_model.OPTIMAL else "SAT_NOT_PROVEN_OPTIMAL"
-    return make_result(fixture, scenario, "cp-sat", status, takes, previous_plan)
+    return make_result(fixture, scenario, "cp-sat", status, takes, previous_plan, attempts=sorted(fails.items()))

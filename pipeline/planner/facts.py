@@ -30,8 +30,11 @@ DEFAULT_SUMMER_MAX = 12  # nguoi duyet chon 19/11; QD 285 khong quy dinh
 # Sprint 11 (22/11). "ST": lech so TC sinh vien muon o tung ky (uu tien cao nhat).
 # "OH": xep mon vao loai ky ma 3 nam gan day mon khong mo (lich su mo lop la mem, Q9).
 # Sinh vien sap thu tu cac muc USER_PRIORITIES; cac muc con lai giu co dinh ben trong.
-USER_PRIORITIES = ("S1", "S6", "S4", "S5", "S10", "OH", "S3")
+# Giai doan 12 (23/11, muc 12.3): S2 (khong hoc du tu chon) va S8 (ky chinh 15-18 TC) sinh vien xep duoc.
+# Hai muc nay mac dinh BAT (giu cho cu trong INTERNAL_PRIORITIES) tru khi nam trong ``preferences.disabled``.
+USER_PRIORITIES = ("S1", "S6", "S4", "S5", "S10", "OH", "S3", "S2", "S8")
 INTERNAL_PRIORITIES = ("S9", "S7", "S2", "S11", "S8")
+DEFAULT_ON = ("S2", "S8")
 
 
 class FixtureError(ValueError):
@@ -86,9 +89,11 @@ def preference_order(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[
     prefs = preferences(scenario)
     user_order = (scenario.get("preferences") or {}).get("order")
     summer = bool(scenario.get("summer_opt_in"))
+    disabled = set((scenario.get("preferences") or {}).get("disabled") or [])
     if user_order is not None:
         order = [s for s in user_order if s in USER_PRIORITIES]
-        order += list(INTERNAL_PRIORITIES)
+        order += [s for s in INTERNAL_PRIORITIES
+                  if s not in order and not (s in DEFAULT_ON and s in disabled)]
         active = {"S7": summer, "S9": summer, "S8": preferred_load(fixture, scenario) is not None,
                   "OH": offering_soft(fixture)}
     else:
@@ -102,6 +107,7 @@ def preference_order(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[
             "S10": summer,
             "S8": preferred_load(fixture, scenario) is not None,
         }
+    order = [s for s in order if not (s in DEFAULT_ON and s in disabled)]
     if scenario.get("semester_targets"):
         order.insert(0, "ST")
     return [s for s in order if active.get(s, True)]
@@ -116,6 +122,16 @@ def offered_terms(fixture: dict[str, Any], course: str) -> set[str] | None:
     """Loai ky (1, 2, 3 = he) ma mon tung mo trong lich su; None neu khong co du lieu."""
     hist = (fixture.get("offering_history") or {}).get(course)
     return set(hist) if hist else None
+
+
+def offered_pairs(scenario: dict[str, Any]) -> set[tuple[str, str]]:
+    """W2 (23/11): (mon, ky) sinh vien bao "ky nay co mo": bo phat lich su mo lop (OH) va canh bao cho cap do."""
+    return {(i["course_code"], i["semester_code"]) for i in scenario.get("offered") or []}
+
+
+def assumed_fails(scenario: dict[str, Any]) -> dict[str, str]:
+    """W1 (23/11): {mon: ky} sinh vien gia dinh se RỚT o ky do: van hoc (tinh TC cua ky), khong dat, hoc lai sau."""
+    return {i["course_code"]: i["semester_code"] for i in scenario.get("assumed_fail") or []}
 
 
 def pinned(scenario: dict[str, Any]) -> dict[str, str]:
@@ -165,6 +181,8 @@ def summer_allowed(fixture: dict[str, Any], scenario: dict[str, Any], course: st
         return False
     if semester not in (scenario.get("summer_opt_in") or []):
         return False
+    if (course, semester) in offered_pairs(scenario):  # W2: sinh vien bao ky he nay co mo
+        return True
     history = fixture.get("summer_history")
     if offering_soft(fixture):  # Q9: lich su chi con la uu tien mem (muc "OH")
         return True
@@ -317,8 +335,8 @@ def validate_input(fixture: dict[str, Any], scenario: dict[str, Any]) -> None:
         if result not in ("pass", "fail"):
             raise FixtureError(f"ket qua gia dinh khong hop le cho {code}: {result}")
 
-    for key in ("locked", "not_offered"):
-        for item in scenario.get(key, []):
+    for key in ("locked", "not_offered", "offered", "assumed_fail"):
+        for item in scenario.get(key) or []:
             need(item["course_code"], f"scenario.{key}")
             if item["semester_code"] not in plan:
                 raise FixtureError(
@@ -347,9 +365,13 @@ def validate_input(fixture: dict[str, Any], scenario: dict[str, Any]) -> None:
         for sem in scenario.get(key) or []:
             if sem not in plan:
                 raise FixtureError(f"scenario.{key}: ky {sem} khong nam trong cac ky se xep")
-    for item in (scenario.get("preferences") or {}).get("order") or []:
-        if item not in USER_PRIORITIES:
-            raise FixtureError(f"scenario.preferences.order: muc la {item} (cho phep {', '.join(USER_PRIORITIES)})")
+    for key in ("order", "disabled"):
+        for item in (scenario.get("preferences") or {}).get(key) or []:
+            if item not in USER_PRIORITIES:
+                raise FixtureError(f"scenario.preferences.{key}: muc la {item} (cho phep {', '.join(USER_PRIORITIES)})")
+    for code in assumed_fails(scenario):
+        if statuses.get(code) == "completed" or code not in in_curriculum:
+            raise FixtureError(f"scenario.assumed_fail: {code} da dat hoac khong thuoc chuong trinh")
     deadline = scenario.get("graduate_by")
     if deadline is not None and deadline not in plan:
         raise FixtureError(f"scenario.graduate_by: ky {deadline} khong nam trong cac ky se xep")
@@ -359,7 +381,7 @@ def validate_input(fixture: dict[str, Any], scenario: dict[str, Any]) -> None:
             raise FixtureError(f"scenario.summer_opt_in: {sem} khong phai ky he con lai")
     raw_prefs = scenario.get("preferences") or {}
     for k in raw_prefs:
-        if k not in ("wanted_courses", "balanced_load", "recommendations_first", "preferred_load", "order"):
+        if k not in ("wanted_courses", "balanced_load", "recommendations_first", "preferred_load", "order", "disabled"):
             raise FixtureError(f"scenario.preferences: khoa la {k}")
     band = preferred_load(fixture, scenario)
     if band is not None and not (isinstance(band[0], int) and isinstance(band[1], int) and 0 <= band[0] <= band[1]):
@@ -403,4 +425,8 @@ def assumptions(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[str]:
         notes.append(f"Bạn khóa {item['course_code']} vào kỳ {item['semester_code']}")
     for item in scenario.get("not_offered", []):
         notes.append(f"Giả định {item['course_code']} không mở kỳ {item['semester_code']}")
+    for code, sem in sorted(assumed_fails(scenario).items()):
+        notes.append(f"Giả định rớt {code} ở kỳ {sem}: học lại ở kỳ sau")
+    for item in scenario.get("offered") or []:
+        notes.append(f"Bạn báo {item['course_code']} có mở kỳ {item['semester_code']}")
     return notes
