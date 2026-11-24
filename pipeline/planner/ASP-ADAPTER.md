@@ -51,6 +51,8 @@ cd pipeline
 ```python
 from planner.solve_asp import solve_asp, build_program
 result = solve_asp(fixture, scenario, previous_plan=None, time_limit=30.0)
+# reproducible run (synthetic pipeline): 1 thread, stop after N conflicts (clasp --solve-limit)
+result = solve_asp(fixture, scenario, None, 120.0, threads=1, solve_limit=20000)
 ```
 
 Từ web: `POST /api/plans/solve` với `"solver": "clingo"`. Không cần sửa frontend: khóa `clingo` giữ nguyên, chỉ đổi bộ giải phía sau.
@@ -84,7 +86,8 @@ Mã kỳ không đúng dạng `YYS` → `FixtureError` → `INPUT_ERROR`.
 | quan hệ `prerequisite` / `corequisite` | `prereq(C, R)` / `coreq(C, R)`; `prior` và `recommended` không xuất |
 | cấp độ (chữ số đầu của mã) | `course_level(C, L)` |
 | `rules.course_level` (QĐ 285 Đ15.4) | `ban(C, I)` cho các kỳ chưa đủ năm học |
-| `graduation_courses` + `rules.graduation_thresholds` (Đ15.5) | `milestone(C, TC cần − TC ngoài chương trình)` |
+| `rules.summer_courses` (internship, KHMT 2023: CO3335; added 22/11/2026) | `fills_next(C)`: credits and fee in the term where C is placed, and the following term kept empty (`extension.lp` §17). No placement restriction (usually semester 6, carried out in the summer after) |
+| `graduation_courses` + `rules.graduation_thresholds` (Đ15.5) | `milestone(C, TC cần − TC ngoài chương trình)`. Counting (23/11/2026, all graduation courses: internship, specialized project, thesis): credits before C's term plus the other courses of C's own term (C itself excluded). On the official KHMT plan, internship: 82 TC before semester 6 + 13 TC of semester 6 = 95 ≥ 84. `planner.validate` uses the same rule; CP-SAT keeps the stricter "before the term" rule |
 | `opened_semesters` (mới, từ `course_opened_semesters`) | `offer_hist(C, S, số kỳ đã mở)`, `offer_seen(S, số kỳ quan sát)` |
 | khối con theo chuyên ngành (`normalize` lưu ở `_specializations`) | `major(M)`, `major_course(M, C)`, `major_min(M, required_count)`; chuyên ngành sinh viên chọn: `student_major(M)` |
 | `planner/data/course-tags.json` | `tag(C, Tag)` from the list of the student's program family (`by_family[families[curriculum code]]`), else the merged `tags`; only courses of the student's curriculum |
@@ -148,6 +151,7 @@ Giống CP-SAT (mục 4 của `README.md`), thêm `engine_report`:
 | `interests` | `{tag: [planned courses with that tag]}` for each requested interest (`[]` when none was planned) |
 | `degree_complete`, `ready_to_graduate` | Cờ của engine |
 | `ground_and_solve_ms` | Thời gian grounding + giải |
+| `stopped_by` | `proven` (optimal or UNSAT), `time_limit` (wall clock) or `solve_limit` (conflict limit) |
 
 `status`: `OPTIMAL` (đã chứng minh tối ưu), `SAT_NOT_PROVEN_OPTIMAL` (hết giờ khi đang tối ưu), `UNSAT`, `TIMEOUT` (hết giờ chưa có lộ trình). `infeasible_reason` khi UNSAT vẫn do CP-SAT tính (cố ý: hai bộ giải có thể không đồng ý).
 
@@ -178,6 +182,7 @@ Cố ý giữ, để so sánh hai bộ giải. Các test tương ứng được 
 | Luật kỳ hè của engine: bật một kỳ hè là mở mọi kỳ hè (`extra_sem` toàn cục); mọi môn được xếp vào kỳ hè; không S7/S9, không loại đồ án | `test_k8_opt_in_summer_used_minimally`, `test_k8c_*`, `test_k8d_*` |
 | Chưa có S3 giữ lộ trình mốc | (what-if có thể đổi cả môn không liên quan) |
 | Kỳ trống là mềm có cảnh báo; nghỉ kỳ bằng `skip_semesters` | `test_solve_asp.py` |
+| Internship (`rules.summer_courses`): ASP keeps the term after it empty (`fills_next`); CP-SAT treats it as an ordinary course | `test_internship_fills_next_term_without_placement_ban` |
 
 Các test toy khác chạy engine ASP với tải tín chỉ của toy (fixture `toy_policy` trong `tests/conftest.py`, ghi bản sao `policy.lp` vào thư mục tạm) để kiểm tra phần còn lại của luật: song hành, cấp độ môn, khóa môn, hạn tốt nghiệp, ngưỡng môn tốt nghiệp, giới hạn từng kỳ.
 
@@ -186,11 +191,13 @@ Các test toy khác chạy engine ASP với tải tín chỉ của toy (fixture 
 - Giới hạn mềm `--time-limit` (backend gửi 30 giây cho `clingo`): Clingo chỉ kiểm tra giữa các bước lan truyền; grounding không ngắt được.
 - Giới hạn cứng: `PLANNER_TIMEOUT_MS` của backend (mặc định 60 giây) giết tiến trình và trả `TIMEOUT`.
 - Clingo chạy `THREADS = 4` luồng (`solve_asp.py`). Kết quả nhiều luồng không tất định: giữa các lộ trình tốt ngang nhau, mỗi lần chạy có thể trả một lộ trình khác.
+- `threads` and `solve_limit` (23/11/2026, for `pipeline/synthetic`): with `threads=1` and a conflict limit the result is reproducible. Pilot on two fresh KHMT students (`synthetic/README.md` §6): no setting proved optimality; all reached the same graduation term; 4 threads × 30 s gave a 0.6–3% lower cost than 1 thread × 10k–50k conflicts.
 - Đo 20/11/2026 (Clingo 5.8.3, máy dev 8 luồng):
   - Fixture `khmt2023.json`: `OPTIMAL` trong khoảng 1–2,5 giây kể cả grounding; toy.json dưới 0,1 giây.
   - **Dữ liệu thật** (KHMT trên database chung, 21 kỳ, lịch sử mở lớp 19 kỳ, sinh viên thử), sau khi `ENG_GC_600`, `SA4001` thành điều kiện: engine ASP `OPTIMAL` 8,6 giây cho cả request (6,6 giây grounding + giải); thêm kỳ hè và nghỉ kỳ: `OPTIMAL` 14,7 giây. CP-SAT: `OPTIMAL` 2,5 giây.
   - Trước khi sửa (hai mã trên còn là môn 0 TC phải xếp): 1 luồng hết 30 giây vẫn `SAT_NOT_PROVEN_OPTIMAL`; 4 luồng tìm được lộ trình tốt nhất ở cả 3 lần chạy nhưng chỉ chứng minh tối ưu 1/3 lần; CP-SAT 17 giây.
   - Nhiều luồng hiếm khi kẹt ở bước chứng minh tới hết giới hạn kể cả trên fixture dễ (khoảng 1/13 lần chạy bộ test); lộ trình trả về vẫn hợp lệ, `status` là `SAT_NOT_PROVEN_OPTIMAL`. Giới hạn mềm có thể vượt vài giây.
+  - **Internship `fills_next` (22/11/2026).** On `khmt2023.json` scenario 0 (1 thread) the plan keeps graduation 271 but CO3335 moves from 261 to 262 (placing it in 261 would empty 262). Proving optimality became much harder: `OPTIMAL` in 1.2 s before, `SAT_NOT_PROVEN_OPTIMAL` at 60 s after. `test_khmt_real_size_is_optimal_and_valid` (expects `OPTIMAL` within 30 s, 1 thread) fails since then.
   - Mỗi lần gọi `planner.cli` mất thêm khoảng 12 giây chỉ để nạp thư viện Python (clingo, ortools) trên máy đo.
 
 ## 9. Sửa, thêm, gỡ

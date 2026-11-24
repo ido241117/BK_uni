@@ -186,8 +186,18 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
                 if semester_year(cal.code(i), cohort) < need:
                     out.append(f"ban({_q(code)}, {i}).")
 
-    # Mon tot nghiep (QD 285 Dieu 15.5): TC tich luy truoc ky hoc. TC ngoai chuong trinh
-    # (da tinh vao tu chon tu do) khong nam trong engine nen tru truoc.
+    # Internship (rules.summer_courses, KHMT 2023: CO3335): registered in a term with its
+    # credits and fee there, carried out in the following term, which the engine keeps empty
+    # (fills_next, extension.lp section 17). No placement restriction: usually semester 6
+    # with the internship in the summer after.
+    internships = set((fixture.get("rules") or {}).get("summer_courses", [])) & members
+    for code in sorted(internships):
+        out.append(f"fills_next({_q(code)}).")
+
+    # Mon tot nghiep (QD 285 Dieu 15.5). TC ngoai chuong trinh (da tinh vao tu chon tu do)
+    # khong nam trong engine nen tru truoc.
+    # Counting (23/11/2026): credits before the course's term plus the other courses of that
+    # term (the course itself excluded), for every graduation course.
     outside = fixture.get("_free_outside_credits", 0)
     for code, need in sorted(graduation_needs(fixture).items()):
         if code in members:
@@ -365,14 +375,23 @@ def solve_asp(
     scenario: dict[str, Any],
     previous_plan: dict[str, str] | None = None,
     time_limit: float = 30.0,
+    threads: int = THREADS,
+    solve_limit: int | None = None,
 ) -> dict[str, Any]:
     """Giai bang engine ASP. ``previous_plan`` khong dung (engine chua co muc tieu S3);
-    khac biet so voi lo trinh moc do ``cli.py`` tinh."""
+    khac biet so voi lo trinh moc do ``cli.py`` tinh.
+
+    ``solve_limit``: stop after this many conflicts (clasp ``--solve-limit``). With
+    ``threads=1`` the result is then reproducible, unlike the wall-clock ``time_limit``
+    (still applied as a safety net; ``engine_report.stopped_by`` says which limit hit).
+    """
     fixture = normalize(fixture)
     validate_input(fixture, scenario)
     facts, ctx = build_program(fixture, scenario)
 
-    args = ["--opt-mode=opt", "--warn=none", f"--parallel-mode={THREADS}", f"-c t={ctx['t']}", f"-c n={ctx['n']}"]
+    args = ["--opt-mode=opt", "--warn=none", f"--parallel-mode={threads}", f"-c t={ctx['t']}", f"-c n={ctx['n']}"]
+    if solve_limit is not None:
+        args.append(f"--solve-limit={solve_limit}")
     if ctx["allow_summer"]:
         args.append("-c extra_sem=1")
     ctl = clingo.Control(args)
@@ -399,8 +418,10 @@ def solve_asp(
     # Gioi han thoi gian: mem (Clingo chi kiem tra giua cac buoc lan truyen; grounding
     # khong ngat duoc). Gioi han cung la PLANNER_TIMEOUT_MS cua backend (giet tien trinh).
     remaining = max(0.1, time_limit - (time.perf_counter() - started))
+    timed_out = False
     with ctl.solve(on_model=on_model, async_=True) as handle:
         if not handle.wait(remaining):
+            timed_out = True
             handle.cancel()
         outcome = handle.get()
     proven = proven or (best is not None and outcome.exhausted)
@@ -416,6 +437,8 @@ def solve_asp(
         takes, report, more = _decode(best, cost, ctx)
         report["ground_and_solve_ms"] = round((time.perf_counter() - started) * 1000)
         engine_warnings += more
+    report["stopped_by"] = ("proven" if proven or outcome.unsatisfiable
+                            else "time_limit" if timed_out else "solve_limit")
 
     result = make_result(fixture, scenario, "clingo", status, takes, previous_plan)
     result["assumptions"] = _assumptions(fixture, scenario, ctx)

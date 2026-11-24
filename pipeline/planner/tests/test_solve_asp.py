@@ -439,3 +439,44 @@ def test_time_limit_is_respected(khmt):
     r = solve_asp(khmt, sc, None, 0.05)
     assert time.perf_counter() - start < 10  # grounding (~1 s) + gioi han mem
     assert r["status"] in ("OPTIMAL", "SAT_NOT_PROVEN_OPTIMAL", "TIMEOUT")
+
+
+def test_internship_fills_next_term_without_placement_ban(khmt):
+    # CO3335 (rules.summer_courses): credits in the registration term, the next term kept
+    # empty by the engine (fills_next). No ban: it may go in any term.
+    facts, _ = build_program(normalize(khmt), copy.deepcopy(khmt["scenarios"][0]))
+    lines = facts.splitlines()
+    assert 'fills_next("CO3335").' in lines
+    assert not [l for l in lines if l.startswith('ban("CO3335"')]
+
+
+# Graduation-course threshold (23/11/2026): the other courses of the course's own term count.
+# small() with RQ2004 as the internship, threshold 0.8 of 35 TC -> 28 TC. 261 holds at most
+# 21 TC (3 courses). Counting 262 too (RQ2004 excluded): 21 + 7 = 28 -> RQ2004 fits in 262
+# next to one more course, graduation 262. Strict rule ("before the term") would need 28 TC
+# before RQ2004, i.e. RQ2004 alone in 271.
+def internship_small() -> dict:
+    fx = small()
+    fx["rules"] = {"summer_courses": ["RQ2004"], "graduation_thresholds": {"internship": 0.8}}
+    fx["graduation_courses"] = {"internship": "RQ2004"}
+    return fx
+
+
+def test_threshold_counts_its_own_term():
+    facts, _ = build_program(normalize(internship_small()), scenario())
+    assert 'milestone("RQ2004", 28).' in facts.splitlines()
+    r = solve(internship_small())
+    assert r["graduation_semester"] == "262"
+    assert plan_map(r)["RQ2004"] == "262"
+
+
+def test_validator_threshold_excludes_the_course_itself():
+    fx = internship_small()
+    ok = [{"semester_code": "261", "courses": ["RQ1001", "RQ1002", "RQ2003"]},
+          {"semester_code": "262", "courses": ["RQ2004", "EL3001"]}]
+    assert validate_plan(fx, scenario(), ok) == []
+    short = [{"semester_code": "261", "courses": ["RQ1001", "RQ1002"]},
+             {"semester_code": "262", "courses": ["RQ2004", "RQ2003"]},
+             {"semester_code": "271", "courses": ["EL3001"]}]
+    assert ("RQ2004: can 28 TC tich luy den het ky hoc (khong tinh mon nay), moi co 21"
+            in validate_plan(fx, scenario(), short))

@@ -138,19 +138,23 @@ def validate_plan(
         elif history is not None and course not in history:
             errors.append(f"{course}: chua tung mo ky he, khong xep vao {sem_code}")
 
-    # Mon tot nghiep (QD 285 Dieu 15.5): du TC tich luy truoc ky hoc.
+    # Mon tot nghiep (QD 285 Dieu 15.5): du TC tich luy den het ky hoc.
     thresholds = rules.get("graduation_thresholds", {})
     total_program = fixture.get("_total_credits")
     in_curr = {cc["course_code"] for cc in fixture["curriculum_courses"]}
+    # Counting (23/11/2026): credits before the course's term plus the other courses of that
+    # term (the course itself excluded), for every graduation course.
     for kind, course in (fixture.get("graduation_courses") or {}).items():
         if course not in when or kind not in thresholds or not total_program:
             continue
         need = math.ceil(thresholds[kind] * total_program - 1e-9)
         have = (sum(credits[c] for c in passed if c in in_curr)
-                + sum(credits[c] for c, t in when.items() if t < when[course])
+                + sum(credits[c] for c, t in when.items()
+                      if t <= when[course] and c != course)
                 + fixture.get("_free_outside_credits", 0))
         if have < need:
-            errors.append(f"{course}: can {need} TC tich luy truoc ky hoc, moi co {have}")
+            errors.append(f"{course}: can {need} TC tich luy den het ky hoc (khong tinh mon nay), "
+                          f"moi co {have}")
 
     # Tin chi moi ky.
     load: dict[int, int] = {}

@@ -1,10 +1,10 @@
 # Student agent model
 
-**Status (22/11/2026):**
-- Sections 1–4: the model **as currently implemented** in the closed-loop prototype (`population.py`, `simulate.py: choose`, `config.toml [population] [agent]`). There it is used only in the **planner arm**; the baseline arm follows the curriculum rule (README section 4).
+**Status (23/11/2026):**
+- Sections 1–4: the agent of the closed-loop prototype (planner arm), **removed** on 23/11/2026 with the prototype. Kept because sections 5–7 refer to it; `trust` and the planner candidates no longer exist in the code.
 - Section 5: known flaws, with the decision on each (reviewed 22/11/2026).
-- Section 6: the agreed changes. Accepted in principle, **not implemented**; they come after the open-loop pipeline (`DESIGN.md`) is built.
-- Section 7: the agent's role in the open-loop pipeline.
+- Section 6: the agreed changes. Accepted in principle, **not implemented**.
+- Section 7: the agent of the open-loop pipeline, **implemented** (`agent.py`), with the section-3 utility minus `trust` and without the section-6 changes.
 
 ## 1. What the agent is for
 
@@ -107,11 +107,38 @@ Flaws 1–3 inflate summer use in the prototype's planner arm, and with it part 
 
 Each change ships with a pilot and an update to this file.
 
-## 7. The agent in the open-loop pipeline (`DESIGN.md`)
+## 7. The agent in the open-loop pipeline (`DESIGN.md`, implemented 23/11/2026)
 
-In the open-loop design the agent only produces the student records (step 2). It runs once per student, with **no solver**:
-- It starts from the official plan. Each semester it chooses among options built from it, for example: the plan's semester; the same minus a course; the same plus an overdue or retake course; in summer, retakes or nothing.
+In the open-loop design the agent only produces the student records (step 2). It runs once per student, with **no solver** (`agent.py`, `simulate.py`):
+- It starts from the official plan (`official_plan.json`), with electives filled from the student's own order: courses sharing more tags with the student's interests first, ties in a fixed random order.
+- Each term it picks one option by utility plus Gumbel noise (multinomial logit), the noise keyed on (seed, student, term).
 - The score model grades the chosen courses, and the attrition rules apply.
-- The internship follows the `fills_next` rule (`DESIGN.md` B1).
+- The internship fills the next term (`DESIGN.md` B1).
 
-The utility is the one in section 3 with the agreed changes of section 6, minus the planner-specific `trust` term. The exact option set is part of the agent redesign, still to be detailed.
+**Options** (main semester `k`; backlog = retakes first, then courses of the plan's earlier semesters):
+
+| Option | Courses | Offered |
+|---|---|---|
+| `plan` | The plan's courses for semester `k` (legal part) | If non-empty |
+| `drop_hardest` | `plan` minus its course with the highest difficulty b_c | If `plan` has 2+ courses and the rest is legal |
+| `plus_one` | `plan` plus the first legal backlog course | If there is a backlog |
+| `catch_up` | Backlog then `plan`, greedily within max(preferred max, plan credits), at most 25 | If there is a backlog |
+| `all_left` | Every still-needed course that can be registered | Only when no option above reaches 11 credits |
+| `nothing` / `retakes` | Summer, opted-in students only: nothing, or open retakes (internship excluded) within 12 credits | Summer |
+
+Rules on the option set:
+- Empty options are never offered in a main semester; identical bundles are offered once.
+- **Minimum load** (QĐ1260 Điều 1.2b): options under 11 credits are dropped when another option reaches 11. Without this, the cost term (per-credit fee below 13 credits) and the risk term made the agent pick 2–3 credit bundles, which trigger suspension (n = 200 pilot: 52 suspensions, 19 withdrawals at the 12-semester limit; after the rule: 0 and 9).
+- **Internship placement:** within semesters 1–8 only in a term followed by a summer; past semester 8, as the last course, or when nothing else can be registered, in any term. Without it the agent registered the internship in semester 7 and lost semester 8 to it.
+
+**Utility:** section 3 without `trust`:
+
+```
+U = - w_load     * |cr - preferred_mid| / 3
+    - w_cost     * cost_sensitivity * fee(cr, summer) / fee_ref
+    - w_risk     * (1 + panic_gain * shock) * expected_failed_credits / 3
+    + w_progress * early_pref * cr / 3
+    + Gumbel noise
+```
+
+Flaws 1–3 (summer) and 5 still apply; the summer options are limited to retakes, which limits flaw 2's effect (n = 200: opted-in students used 0.41 summers on average). Flaw 6 shows in the records: the agent picks `drop_hardest` in about a quarter of the terms, so only about 20% graduate within 8 semesters (`README.md` §6).

@@ -231,6 +231,8 @@ Cách đọc kết quả này:
 
 Giới hạn ở mục 7 áp dụng cho cả hai bộ giải, vì chúng cùng dựa trên một cách hiểu quy chế.
 
+**Update 22/11/2026 (measured by `synthetic/`).** The "under 1 second" figures above come from the old three-objective model. With the current objectives (S1–S11) and mid-program student states from the KHMT 2023 simulation, 6 of 30 captured solves did not prove optimality within 10 s. With 60 s, 4 of those 6 proved optimal and their final plan differed from the 10 s plan. With the wall-clock `time_limit`, such plans therefore depend on machine load.
+
 ## 7. Giới hạn hiện tại
 
 **Ngữ nghĩa**

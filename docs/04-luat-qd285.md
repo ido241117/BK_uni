@@ -80,9 +80,9 @@ Hệ quả nếu theo Đ24: năm học **phụ thuộc vào chính lộ trình**
 | Luật | Điều, trang | Bộ giải |
 |---|---|---|
 | Thực tập ngoài trường, đồ án chuyên ngành, khóa luận nằm cuối chương trình; cần đủ chuẩn ngoại ngữ và tín chỉ tích lũy | Đ15.5, tr.12 | Cứng (H12) |
-| Thực tập ngoài trường: tích lũy ≥ **65%** tổng tín chỉ chương trình | Đ15.5, tr.12 | Cứng |
-| Đồ án chuyên ngành: ≥ **70%** | Đ15.5, tr.12 | Cứng |
-| Khóa luận: ≥ **85%**, cộng ≥ 70% chương trình rèn luyện, cộng chuẩn ngoại ngữ tốt nghiệp | Đ15.5, tr.12 | Cứng; rèn luyện và ngoại ngữ là đầu vào |
+| Thực tập ngoài trường: tích lũy ≥ **65%** tổng tín chỉ chương trình | Đ15.5, tr.12 | Cứng. Counting (decided 23/11/2026, same for the 70% and 85% thresholds): credits before the course's term plus the other courses of that term (the course itself excluded). ASP engine and `planner.validate`; CP-SAT still counts only credits before the term |
+| Đồ án chuyên ngành: ≥ **70%** | Đ15.5, tr.12 | Cứng; counted as for the internship (own term included, the course itself excluded) |
+| Khóa luận: ≥ **85%**, cộng ≥ 70% chương trình rèn luyện, cộng chuẩn ngoại ngữ tốt nghiệp | Đ15.5, tr.12 | Cứng; credits counted as for the internship (own term included, the course itself excluded); rèn luyện và ngoại ngữ là đầu vào |
 | Khi xét đăng ký khóa luận, chuẩn tiếng Anh tốt nghiệp **chỉ cần kỹ năng Nghe–Đọc** | PL7, tr.36 | Đầu vào |
 | Từ khóa 2021: phải có chứng chỉ **MOS** (Excel và PowerPoint) mới được đăng ký khóa luận | PL9, tr.40 | Đầu vào |
 | Thực tập **song hành** đồ án chuyên ngành; thực tập và đồ án chuyên ngành là **tiên quyết** của khóa luận | Đ15.5, tr.12 | Cứng (thêm quan hệ nếu chương trình chưa ghi) |

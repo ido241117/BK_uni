@@ -55,7 +55,7 @@ Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, t�
 4. **`cli.run`**: `normalize` → bộ giải → `validate_plan` (độc lập) → `diff` so với mốc → nếu UNSAT thì `_explain_unsat` thử bỏ từng lựa chọn của sinh viên, rồi nới từng luật của trường, để nói cái gì chặn.
 5. **Trang** hiện kết quả (`PlanResultView`); what-if so mốc ở trình duyệt (`whatIf.comparePlans`).
 
-**Ràng buộc cứng** (kế hoạch mục 3.1): H1 mỗi môn ≤ 1 kỳ · H2 đủ môn bắt buộc · H3 đủ TC/số môn từng khối tự chọn · H4 tiên quyết phải **đạt** kỳ trước · H5 song hành đạt trước hoặc cùng kỳ (cùng kỳ thì cảnh báo) · H7 11–25 TC/kỳ chính, sinh viên hạ được · H8 môn không mở · H9 khóa môn · H10 xong trước kỳ X · H11 cấp độ môn theo năm (năm tính theo khóa) · H12 ngưỡng 65/70/85% cho thực tập/đồ án chuyên ngành/khóa luận · H13 ô tự chọn tự do · H14 tối đa 12 kỳ chính; hè chỉ xếp khi sinh viên bật (≤ 12 TC, không đồ án, chỉ môn từng mở hè), thực tập luôn xếp hè được · H15 chuyên ngành. "Học trước" (HT) đã bỏ.
+**Ràng buộc cứng** (kế hoạch mục 3.1): H1 mỗi môn ≤ 1 kỳ · H2 đủ môn bắt buộc · H3 đủ TC/số môn từng khối tự chọn · H4 tiên quyết phải **đạt** kỳ trước · H5 song hành đạt trước hoặc cùng kỳ (cùng kỳ thì cảnh báo) · H7 11–25 TC/kỳ chính, sinh viên hạ được · H8 môn không mở · H9 khóa môn · H10 xong trước kỳ X · H11 cấp độ môn theo năm (năm tính theo khóa) · H12 ngưỡng 65/70/85% cho thực tập/đồ án chuyên ngành/khóa luận (the other courses of the course's own term count too, 23/11/2026; ASP and validator only) · H13 ô tự chọn tự do · H14 tối đa 12 kỳ chính; hè chỉ xếp khi sinh viên bật (≤ 12 TC, không đồ án, chỉ môn từng mở hè), thực tập luôn xếp hè được · H15 chuyên ngành. "Học trước" (HT) đã bỏ.
 
 **Mong muốn mềm, theo thứ tự ưu tiên**: S1 xong sớm nhất > S6 giữ khuyến nghị > S4 môn muốn học > S9 hè ưu tiên môn cấp 1–2 > S7 hè 6–9 TC > S2 không học thừa > S11 kỳ chính đủ 11 TC > S8 kỳ chính 15–18 TC > S5 đều tải > S3 ít đổi so với mốc > S10 ít học hè. Bật "ưu tiên giữ khuyến nghị" thì S6 lên trên S1. Mỗi mong muốn được báo lại là đáp ứng hay không.
 
@@ -277,19 +277,22 @@ Pipeline riêng tìm tag cho môn học từ đề cương trong database, để
 | `bundle.py`, `merge_cache.py`, `notebooks/colab_classify.ipynb` | NLI scoring on a Colab GPU without database access; merge the Colab score cache locally | `merge` |
 | `config.toml` | Ngưỡng và mẫu của mọi bước | — |
 
-### 5.5 Python `pipeline/synthetic/` (prototype, from 22/11)
+### 5.5 Python `pipeline/synthetic/` (open loop, from 23/11)
 
-Synthetic students for one curriculum (CS-2023-KHMT), simulated semester by semester under a curriculum baseline and the planner (CP-SAT), for sensitivity analysis of the planner-vs-baseline comparison. Not used when solving a plan; uses the `pipeline/.venv`. Attrition rules come from QĐ 285 Điều 37 and Điều 24, as amended by QĐ 1260/2026 (sources per rule in the README). Details: `pipeline/synthetic/README.md`.
+Synthetic students for one curriculum (CS-2023-KHMT), for evaluating the ASP planner without real data. Open loop (`pipeline/synthetic/DESIGN.md`): synthesize students and their records once with no solver, solve once per case with a pluggable solver (ASP by default; cached on disk), then evaluate and run sensitivity from stored data. Not used when solving a plan; uses the `pipeline/.venv`. Attrition rules come from QĐ 285 Điều 37 and Điều 24, as amended by QĐ 1260/2026 (sources per rule in the README). Details: `pipeline/synthetic/README.md`.
 
 | File | Role | Main functions |
 |---|---|---|
+| `official_plan.json`, `official_plan.py` | Official plan transcribed from the PDF; check against the fixture (step 0) | `check` |
 | `regulations.py` | Academic warning, suspension, withdrawal, max duration, year level | `warning_reasons`, `Standing`, `year_level` |
-| `curriculum.py` | Fixture, grade scale and fees from `policy.lp`; legality and graduation through `planner.validate` | `Curriculum`, `parse_policy`, `load_config` |
-| `grades.py`, `population.py` | Score model (linear IRT-style, keyed noise), student traits | `draw_score`, `fail_probability`, `sample_students` |
-| `policies.py`, `simulate.py` | Baseline policy, planner policy (deterministic CP-SAT budget, plan reused while followed), agent choice, semester loop | `baseline_bundle`, `PlannerPolicy`, `choose`, `simulate_student` |
-| `outputs.py`, `run.py` | Metrics, paired differences; CLI writing `synthetic/data/<run_id>/` | `metrics`, `paired`, `simulate` |
-| `checks.py`, `recovery.py`, `sensitivity.py` | Prior predictive check, parameter recovery, OAT tornado and Morris (SALib), saved per setting and resumable | `predictive_summary`, `fit`, `oat`, `morris` |
-| `config.toml` | Every parameter with base/low/high | — |
+| `curriculum.py` | Fixture, grade scale, fees, tags; legality and graduation through `planner.validate` | `Curriculum`, `parse_policy`, `load_config` |
+| `grades.py`, `population.py` | Score model (linear IRT-style, keyed noise); traits, interests, per-student parameters (step 1) | `draw_score`, `fail_probability`, `sample_students` |
+| `plans.py`, `agent.py`, `simulate.py` | Official and baseline plans; the agent's options and utility; semester loop (step 2) | `official_spec`, `baseline_bundle`, `allpass_plan`, `options`, `record`, `run_student` |
+| `solvers.py`, `solve.py` | Solver adapters (ASP, CP-SAT, plug-ins); solves with a disk cache; cut records (step 3) | `get_solver`, `solve_all`, `select_cuts` |
+| `evaluate.py` | Full-plan comparison, first-attempt grades, replay after a fail, cut evaluation (step 4) | `evaluate_full`, `evaluate_cuts` |
+| `sensitivity.py`, `checks.py`, `recovery.py` | Sensitivity from a pooled per-student design; legality, determinism, CRN and predictive checks; parameter recovery (steps 5–6) | `analyze`, `pool_checks`, `fit` |
+| `visualize.py`, `EVALUATION.md` | Figures and report from stored results; definitions of every metric | `build` |
+| `run.py`, `config.toml` | Pipeline driver writing `synthetic/data/<pool>/` (solver outputs in `solver-<label>/`); every parameter with base/low/high | `main` |
 
 ---
 
@@ -300,7 +303,7 @@ Synthetic students for one curriculum (CS-2023-KHMT), simulated semester by seme
 ASP engine only (`solver: "clingo"`): `skip_semesters`, and `interests` (≤ 50 tag names from `GET /api/plans/interest-tags`; planned electives with these tags are preferred at the lowest objective priority; the result's `engine_report.interests` lists the planned courses for each).
 Trả: `status` (`OPTIMAL` | `SAT_NOT_PROVEN_OPTIMAL` | `UNSAT` | `TIMEOUT` | `INPUT_ERROR`), `semesters[{semester_code, credits, courses[{code, credits, reason, locked}]}]`, `graduation_semester`, `preferences_report`, `assumptions`, `warnings`, `violations`, `diff_vs_previous`, `infeasible_reason`, `unverified_prerequisites`. Lỗi: 401 chưa đăng nhập, 400 chưa chọn chương trình hoặc trường lạ, 502 không chạy được Python.
 
-**`GET /api/plans/interest-tags`** (21/11) — the tags of `pipeline/planner/data/course-tags.json` (written by `pipeline/tag_classifier`) that have courses in the student's program: `{tags: [{tag, courses: [code]}]}`, sorted by tag. Empty when the student has no program or the file does not exist. Reads no student data besides the profile's program. Errors: 401.
+**`GET /api/plans/interest-tags`** (21/11) — the tags of `pipeline/planner/data/course-tags.json` (written by `pipeline/tag_classifier`) that have courses in the student's program, taken from the list of the program's family (`families[curriculum code]` → `by_family`), else the merged `tags` list: `{tags: [{tag, courses: [code]}]}`, sorted by tag. Empty when the student has no program or the file does not exist. Reads no student data besides the profile's program. Errors: 401.
 
 **`POST /api/plans/mybk/review`** (21/11, T32) — multipart `file` (chỉ PDF, ≤ 5 MB). **Không ghi gì.** Trả:
 `file` (nguyên JSON của `planner.mybk`, gồm `student`),

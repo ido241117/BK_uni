@@ -160,9 +160,13 @@ in(X, noff(I)) :- base(X, E), I = t+1..n, not avail(E, I).
 empty(int(noff(I), s(I))) :- I = t+1..n.
 
 % =====================================================================
-% 8. Milestones (credits accumulated strictly before the course's term)
+% 8. Milestones (credits accumulated through the course's own term)
 % =====================================================================
-sum(ok_before(J), c, geq, Min) :-
+% milestone(C, Min): when C is in term J, the credits passed before J plus
+% the other courses of term J itself (C excluded) reach Min.
+in(E, ok_through(C, J)) :-
+    milestone(C, _), in(E, ok(I)), I <= J, J = 1..n, E != C.
+sum(ok_through(C, J), c, geq, Min) :-
     milestone(C, Min), in(X, s(J)), base(X, C), J > t.
 
 % =====================================================================

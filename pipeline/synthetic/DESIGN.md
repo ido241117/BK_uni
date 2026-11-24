@@ -1,6 +1,6 @@
 # Synthetic pipeline: design (open loop)
 
-**Status (22/11/2026):** design approved; Part B records the approved choices and marks what is still open. **Nothing in this file is implemented yet.** The current code (`README.md`) is the earlier closed-loop prototype: the planner is called every semester inside the simulation, which takes hours on a laptop. This design replaces it.
+**Status (23/11/2026):** implemented (steps 0–6, `README.md`); the closed-loop prototype was removed. Part B records the approved choices, the choices made during implementation (B6), and what is still open. Open items are config options with a stated default (`config.toml`).
 
 **Idea:** synthesize students once, call the solver once per evaluated case, then evaluate from stored data. There is no simulation with the solver in the loop.
 
@@ -109,12 +109,16 @@ Every plan and registration goes through `planner.validate`. Plus: reruns give i
 | Approach | Open loop: synthesize once, solve once per case, evaluate from stored data; two evaluations (4.1 full plans, 4.2 solver on cut records) | Approved |
 | B1 | Official plan from the PDF as a reference plan; the current baseline kept | Approved |
 | B1 | Internship: ordinary course, usually semester 6; ASP `fills_next` | Approved |
-| B2 | ASP only | Approved |
+| B2 | ASP only (the default); the pipeline itself is solver-agnostic (`solvers.py`, 23/11/2026), so CP-SAT or a modified solver can be evaluated on the same pool | Approved |
 | B2 | ASP stopping rule; mapping the preferred load to ASP | Open (pilot first) |
 | B3 | Cut-point mix | Approved |
 | B4 | First attempts only as the main evaluation; replay after a fail as a separate option | Approved |
 | B5 | Agent model changes | Accepted in principle, after the pipeline (`AGENT-MODEL.md` section 6) |
-| – | Population and interest distributions (step 1), sensitivity method (step 5) | Open |
+| B2 | Stopping rule default: 1 thread, 20 000 conflicts (`[solver]`); preferred load not passed (`load_mapping = "none"`). Pilot in `README.md` §6 | Open (default set) |
+| – | Interests: 1–3 tags, weighted by the specialization's group-C courses (23/11/2026) | Approved |
+| – | Population traits as in the prototype (`AGENT-MODEL.md` §2) | Kept |
+| – | Sensitivity: one pool with per-student Latin-hypercube draws; method `src` (default) or SALib `delta` | Open (default set) |
+| B6 | Choices made during implementation | See B6 |
 
 ### B1. Official plan (step 0)
 
@@ -123,6 +127,7 @@ Every plan and registration goes through `planner.validate`. Plus: reruns give i
 - **Group C:** 2 courses in semester 7, 3 in semester 8 (PDF: 6 + 9 credits).
 - **Groups A, B, D:** semesters 5, 6, 7.
 - **Internship CO3335:** may go in any semester once its prerequisites and the accumulated-credit threshold are met. Semester 6 is the usual place (soft, not a rule); the official plan puts it there, with the internship carried out in the summer after.
+  - **Credit threshold (65%, decided 23/11/2026):** counted as credits before the internship's term plus the other courses of that term, the internship excluded, since it is carried out after that term. The official plan as written has 82 credits before semester 6 (< 84) and 95 counting semester 6. The same counting applies to the specialized project and thesis thresholds. Implemented in the ASP engine (`milestone`) and `planner.validate`; CP-SAT is unchanged (stricter).
   - **ASP:** the adapter marks it `fills_next` (22/11/2026). Its credits and fee count in the term where it is placed, and the following term is kept empty. No placement restriction. Side effect: proving optimality got much slower on the fixture scenario (`planner/ASP-ADAPTER.md` §8).
   - **This pipeline:** the same rule for every plan and record, so they are comparable with ASP's plans. Credits and fee count in the term where it is registered, and the next term takes no other courses. A main semester kept empty this way is not "no registration" (QĐ 1260 withdrawal rule); the student is on the internship.
 
@@ -161,13 +166,26 @@ For each student, every course that appears in any of the four plans gets a scor
 
 ### B5. Agent model
 
-The agent is only used in step 2, to produce the records. Its changes were accepted in principle and come after the pipeline (`AGENT-MODEL.md`, sections 5–7).
+The agent is only used in step 2, to produce the records. Its changes were accepted in principle and come after the pipeline (`AGENT-MODEL.md`, sections 5–7). Step 2 uses the section-3 utility without `trust` and without the section-6 changes (decided 23/11/2026).
 
 ---
 
-## Changes this design implies for the existing code
+### B6. Choices made during implementation (23/11/2026)
+
+| Choice | Where |
+|---|---|
+| Step 2 reference plan: the official plan (`AGENT-MODEL.md` §7). The baseline rule is one of the four plans in step 4 | `agent.py`, `plans.py` |
+| Agent option set: `plan`, `drop_hardest`, `plus_one`, `catch_up`, `all_left`; summer: `nothing` / `retakes` | `agent.py`, `AGENT-MODEL.md` §7 |
+| Minimum load: options under 11 credits are dropped when another reaches 11; otherwise only "everything still registrable" is offered | `agent.py` |
+| Suspension exemption: a sub-11 main semester is not a suspension reason when it holds every still-needed course that can be registered (`[rules] forced_underload_exempt`). The prototype exempted only the final semester | `simulate.py` |
+| Internship placement (agent, baseline, replay): within semesters 1–8 only in a term followed by a summer; past semester 8, or as the last course, in any term; also when nothing else can be registered | `plans.internship_allowed` |
+| A main semester kept empty by the internship counts toward the 12-semester limit and leaves the warning streak unchanged | `regulations.Standing.internship_semester` |
+| Cuts: if the record's next main semester is a suspension, ASP gets it as `skip_semesters` | `solve.py` |
+| Free electives in plans are named `ELECTIVE_j` (j-th in term order), the name of the j-th free-elective attempt in a record, so they share score draws | `plans.canonical` |
+
+## Changes made to the existing code
 
 | Kept | Replaced or removed |
 |---|---|
-| `regulations.py`, `curriculum.py`, `grades.py`, `population.py`, `checks.py`, `recovery.py`, legality via `planner.validate` | Closed-loop planner arm (`PlannerPolicy` in the loop, plan reuse), OAT/Morris drivers that rerun the simulation per setting |
-| Baseline rule (as one of the four plans) | Baseline internship handling: no longer forced into the summer after semester 6; registered at its recommended semester 6 with the `fills_next` rule (B1) |
+| `regulations.py`, `curriculum.py`, `grades.py`, `population.py`, `checks.py`, `recovery.py`, legality via `planner.validate` | Closed-loop planner arm (`PlannerPolicy`, plan reuse), `policies.py`, `outputs.py`, OAT/Morris drivers |
+| Baseline rule (as one of the four plans) | Baseline internship: registered at semester 6 with the `fills_next` rule, no longer forced into the summer |
