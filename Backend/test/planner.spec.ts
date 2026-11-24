@@ -24,7 +24,7 @@ import { Curriculum } from '../src/curriculum/entities/curriculum.entity';
 import { CourseGroupKind } from '../src/curriculum/enum/course-group-kind';
 import { CourseRelationType } from '../src/curriculum/enum/course-relation-type';
 import { analyzeMybk, MybkParsed } from '../src/planner/mybk-check';
-import { buildPlannerInput, progressFromImport, savedCurrentSemester, semestersFor } from '../src/planner/planner-input';
+import { buildPlannerInput, englishFlag, isCategory, mergeBlockChoices, mergeNotes, progressFromImport, savedBlockChoices, savedCurrentSemester, savedNotes, semestersFor } from '../src/planner/planner-input';
 import { PlannerController } from '../src/planner/planner.controller';
 import { PlannerRunner } from '../src/planner/planner.runner';
 import { PlannerService } from '../src/planner/planner.service';
@@ -154,7 +154,13 @@ describe('Planner API (POST /api/plans/solve)', () => {
     const spy = jest.spyOn(runner, 'run').mockResolvedValue({ status: 'OPTIMAL' });
     await request(server()).post('/api/plans/solve').set('Origin', origin)
       .send({ max_credits: 9, in_progress_results: { CS201: 'fail' }, summer_opt_in: ['263'] }).expect(200);
-    const [input, solver] = spy.mock.calls[0] as [Record<string, any>, string];
+    type SolverInput = {
+      course_groups: { members: string[] }[];
+      course_relations: unknown[];
+      scenario: unknown;
+      curriculum: { cohort: number };
+    };
+    const [input, solver] = spy.mock.calls[0] as unknown as [SolverInput, string];
     spy.mockRestore();
     expect(solver).toBe('cpsat');
     expect(input.course_groups[0].members).toEqual(
@@ -216,6 +222,138 @@ describe('Planner API (POST /api/plans/solve)', () => {
     expect((input.course_groups[0] as { members: string[] }).members).toEqual(['CO1005']);
   });
 
+  it('reads graduation courses from the "Tốt nghiệp" category of the myBK data (T37, 22/11)', () => {
+    const c = (code: string, name: string, credits: number) => ({ id: code, code, name, credits });
+    const courses = [c('CO1005', 'Nhap mon', 3), c('CO3335', 'Thực tập ngoài trường', 2),
+      c('CO4029', 'Đồ án tốt nghiệp', 4), c('CO4337', 'Đồ án chuyên ngành', 2), c('IM1027', 'Kinh te', 3)];
+    const input = buildPlannerInput({
+      curriculum: { code: 'X', name: 'X', cohort: 2023, duration_years: 4, min_semester_credits: 14, max_semester_credits: 21 },
+      items: courses.map((course) => ({ course, recommended_year: 1, recommended_term: 1 })),
+      groups: [], relations: [], specializations: [], openedSemesters: [],
+      categories: [
+        { name: 'Tốt nghiệp', member_course_ids: ['CO3335', 'CO4029', 'CO4337'] },
+        { name: 'Quản lý - nhóm D', member_course_ids: ['IM1027'] },
+      ],
+      profile: { admission_year: 2023, target_specialization_id: null }, studentCourses: [],
+    }, {}, new Date('2026-11-20T00:00:00Z'));
+    expect(input.graduation_courses).toEqual({ internship: ['CO3335'], thesis: ['CO4029'], specialized_project: ['CO4337'] });
+    expect(isCategory('Điều kiện tốt nghiệp', 'conditions')).toBe(true);
+    expect(isCategory('E. Điều kiện tốt nghiệp', 'conditions')).toBe(true);
+    expect(isCategory('Điều kiện tốt nghiệp', 'graduation')).toBe(false);
+    expect(isCategory('Quản lý - nhóm D', 'graduation')).toBe(false);
+    expect(isCategory('Học phần tốt nghiệp', 'graduation')).toBe(true);
+    expect(isCategory('Tốt nghiệp bậc cử nhân', 'graduation')).toBe(true);
+    expect(isCategory('Điều kiện tốt nghiệp - nhóm I', 'conditions')).toBe(true);
+    expect(isCategory('Kiến thức quản lý/ khởi nghiệp', 'graduation')).toBe(false);
+  });
+
+  it('applies sprint 11 rules: English 1-4 not scheduled, unknown project = 70%, offering terms, absolute pins', () => {
+    const c = (code: string, name: string, credits: number) => ({ id: code, code, name, credits });
+    const courses = [c('LA1003', 'Anh văn 1', 2), c('CO1005', 'Nhap mon', 3), c('EE4345', 'Đồ án 2 (Thiết kế vi mạch)', 2),
+      c('EE4349', 'Đồ án tốt nghiệp (Thiết kế vi mạch)', 4)];
+    const input = buildPlannerInput({
+      curriculum: { code: 'X', name: 'X', cohort: 2023, duration_years: 4, min_semester_credits: 14, max_semester_credits: 21 },
+      items: courses.map((course) => ({ course, recommended_year: 1, recommended_term: 1 })),
+      groups: [], relations: [], specializations: [],
+      openedSemesters: [{ course_id: 'CO1005', semester_code: '241' }, { course_id: 'CO1005', semester_code: '243' }],
+      categories: [{ name: 'Tốt nghiệp bậc cử nhân', member_course_ids: ['EE4345', 'EE4349'] }],
+      profile: { admission_year: 2023, target_specialization_id: null }, studentCourses: [],
+    }, { semester_targets: { '262': 15 }, frozen_semesters: ['271'] }, new Date('2026-11-20T00:00:00Z'));
+    expect(input.conditions).toContain('LA1003');
+    expect(input.graduation_courses).toEqual({ specialized_project: ['EE4345'], thesis: ['EE4349'] });
+    expect(input.offering_history).toEqual({ CO1005: ['1', '3'] });
+    expect(input.rules).toMatchObject({ pins_absolute: true, offering_soft: true, year_by_credits: [28, 56, 84] });
+    expect(input.student.target_specialization).toBeNull();
+    expect(input.scenario).toMatchObject({ semester_targets: { '262': 15 }, frozen_semesters: ['271'] });
+  });
+
+  it('saves planner settings in data.web.planner and reads them back (T43, 22/11)', async () => {
+    const repo = app.get<Repository<StudentProgressImport>>(getRepositoryToken(StudentProgressImport));
+    await repo.delete({ user_id: studentId });
+    await request(server()).put('/api/plans/settings').set('Origin', origin).send({ settings: { a: 1 } }).expect(400);
+    expect((await request(server()).get('/api/plans/settings').set('Origin', origin).expect(200)).body.data)
+      .toEqual({ settings: null });
+    await repo.save({ user_id: studentId, format: 'pdf', official_program_code: null, source_updated_at: null,
+      data: { blocks: [], web: { current_semester: '261', notes: { CO1005: 'x' } } } });
+    const settings = { locked: [{ course_code: 'CS301', semester_code: '262' }], skip_semesters: ['271'] };
+    await request(server()).put('/api/plans/settings').set('Origin', origin).send({ settings }).expect(200);
+    const got = await request(server()).get('/api/plans/settings').set('Origin', origin).expect(200);
+    expect(got.body.data).toEqual({ settings });
+    const row = await repo.findOneByOrFail({ user_id: studentId });
+    expect((row.data as { web: Record<string, unknown> }).web).toMatchObject({ current_semester: '261', notes: { CO1005: 'x' } });
+    await request(server()).put('/api/plans/settings').set('Origin', origin).send({ settings: 'x' }).expect(400);
+  });
+
+  it('saves the blocks a student picks to the database and the solver reads them back (T46, 22/11)', async () => {
+    // Chạy sau test T43: đã có dòng tiến độ và hồ sơ trỏ tới chương trình đồ chơi.
+    const group = await app.get<Repository<CourseGroup>>(getRepositoryToken(CourseGroup))
+      .findOneByOrFail({ curriculum_id: curriculumId, name: 'Tu chon' });
+    await request(server()).put('/api/plans/mybk/adjustments').set('Origin', origin)
+      .send({ items: [], block_choices: [{ code: 'CS302', group_id: group.id }, { code: 'EL301', group_id: 'required' }] })
+      .expect(200);
+    await request(server()).put('/api/plans/mybk/adjustments').set('Origin', origin)
+      .send({ items: [], block_choices: [{ code: 'CS302', group_id: 'khong-phai-id' }] }).expect(400);
+    const row = await app.get<Repository<StudentProgressImport>>(getRepositoryToken(StudentProgressImport))
+      .findOneByOrFail({ user_id: studentId });
+    expect((row.data as { web: Record<string, unknown> }).web).toMatchObject({
+      current_semester: '261', block_choices: { CS302: group.id, EL301: 'required' } });
+    const progress = await request(server()).get('/api/plans/mybk/progress').set('Origin', origin).expect(200);
+    expect(progress.body.data.block_choices).toEqual({ CS302: group.id, EL301: 'required' });
+
+    const spy = jest.spyOn(runner, 'run').mockResolvedValue({ status: 'OPTIMAL' });
+    await request(server()).post('/api/plans/solve').set('Origin', origin).send({}).expect(200);
+    const [input] = spy.mock.calls[0] as unknown as [{ student: { block_overrides: Record<string, string> } }];
+    spy.mockRestore();
+    expect(input.student.block_overrides).toEqual({ CS302: 'Tu chon', EL301: 'Bat buoc (suy ra)' });
+
+    // Về khối mặc định thì bỏ khỏi database (dọn luôn để test sau không bị ảnh hưởng: EL301 bắt buộc làm trễ 1 kỳ).
+    await request(server()).put('/api/plans/mybk/adjustments').set('Origin', origin)
+      .send({ items: [], block_choices: [{ code: 'CS302', group_id: null }] }).expect(200);
+    const after = await request(server()).get('/api/plans/mybk/progress').set('Origin', origin).expect(200);
+    expect(after.body.data.block_choices).toEqual({ EL301: 'required' });
+    await request(server()).put('/api/plans/mybk/adjustments').set('Origin', origin)
+      .send({ items: [], block_choices: [{ code: 'EL301', group_id: null }] }).expect(200);
+  });
+
+  it('reads the English standard from ENG_GC status (Q12, 22/11)', () => {
+    const c = (code: string) => ({ id: code, code, name: code, credits: 0 });
+    expect(englishFlag([])).toEqual({});
+    expect(englishFlag([{ course: c('ENG_GC_600'), status: 'not-started' }])).toEqual({ english_grad_reading: false });
+    expect(englishFlag([{ course: c('ENG_GC_600'), status: 'completed' }])).toEqual({ english_grad_reading: true });
+  });
+
+  it('keeps student notes per course in data.web.notes (22/11)', () => {
+    expect(savedNotes({})).toEqual({});
+    expect(savedNotes({ web: { notes: ['x'] } })).toEqual({});
+    expect(savedNotes({ web: { notes: { CO3335: 'Hỏi thầy', CO4029: ' ', X: 3 } } })).toEqual({ CO3335: 'Hỏi thầy' });
+    const merged = mergeNotes({ CO3335: 'cũ', ENG_GC_600: 'nộp IELTS' },
+      [{ code: 'CO3335', note: '  mới  ' }, { code: 'ENG_GC_600', note: '' }, { code: 'CCGDTC', note: 'đã đủ' }]);
+    expect(merged).toEqual({ CO3335: 'mới', CCGDTC: 'đã đủ' });
+  });
+
+  it('keeps the block a student picks for a course and sends it by group name (T46, 22/11)', () => {
+    const G = '11111111-1111-4111-8111-111111111111';
+    const F = '22222222-2222-4222-8222-222222222222';
+    expect(savedBlockChoices({ web: { block_choices: { XX101: G, BAD: 'x', N: 3 } } })).toEqual({ XX101: G });
+    expect(mergeBlockChoices({ XX101: G, CO1005: F }, [{ code: 'XX101', group_id: F }, { code: 'CO1005', group_id: null }]))
+      .toEqual({ XX101: F });
+    expect(progressFromImport({ blocks: [], web: { block_choices: { XX101: G } } })?.block_choices).toEqual({ XX101: G });
+    const c = (code: string, credits: number) => ({ id: code, code, name: code, credits });
+    const group = (id: string, name: string, pool_scope: string) => ({ id, name, kind: 'elective', required_count: null,
+      required_credits: 6, pool_scope, pool_course_credits: 3, specialization_id: null, parent_group_id: null, member_course_ids: [] });
+    const input = buildPlannerInput({
+      curriculum: { code: 'X', name: 'X', cohort: 2023, duration_years: 4, min_semester_credits: 14, max_semester_credits: 21 },
+      items: [c('CO1005', 3)].map((course) => ({ course, recommended_year: 1, recommended_term: 1 })),
+      groups: [group(G, 'Tự chọn A', 'listed'), group(F, 'Tự do', 'any')],
+      relations: [], categories: [], specializations: [], openedSemesters: [],
+      profile: { admission_year: 2023, target_specialization_id: null },
+      studentCourses: [{ course: c('XX101', 3), status: 'in-progress' }],
+      progress: { scores: [], graduation_conditions: [], block_choices: { XX101: G, CO1005: 'missing', ZZ: F } },
+    }, {}, new Date('2026-11-20T00:00:00Z'));
+    // Môn không có trong đầu vào (ZZ) hoặc khối không còn ('missing') thì bỏ qua.
+    expect(input.student.block_overrides).toEqual({ XX101: 'Tự chọn A' });
+  });
+
   it('uses the current semester declared in Hiệu chỉnh (data.web), else the date (21/11)', () => {
     expect(savedCurrentSemester({ web: { current_semester: '253' } })).toBe('253');
     expect(savedCurrentSemester({ web: { current_semester: '2025' } })).toBeNull();
@@ -232,6 +370,27 @@ describe('Planner API (POST /api/plans/solve)', () => {
     expect(buildPlannerInput(src, {}, date).student.current_semester).toBe('261');
     expect(buildPlannerInput({ ...src, progress: { scores: [], graduation_conditions: [], current_semester: '253' } }, {}, date)
       .student.current_semester).toBe('253');
+  });
+
+  it('treats an in-progress course the myBK file marks as passed as an improvement: passed even if it fails (24/11)', () => {
+    const c = (code: string, credits: number) => ({ id: code, code, name: code, credits });
+    const progress = progressFromImport({ blocks: [{ courses: [
+      { code: 'XX101', passed: true, score: '6.5', letter: 'C+' },
+      { code: 'XX102', passed: false, score: null, letter: null },
+    ] }] });
+    expect(progress?.passed_codes).toEqual(['XX101']);
+    const input = buildPlannerInput({
+      curriculum: { code: 'X', name: 'X', cohort: 2023, duration_years: 4, min_semester_credits: 14, max_semester_credits: 21 },
+      items: [c('XX101', 4), c('XX102', 3)].map((course) => ({ course, recommended_year: 1, recommended_term: 1 })),
+      groups: [], relations: [], categories: [], specializations: [], openedSemesters: [],
+      profile: { admission_year: 2023, target_specialization_id: null },
+      studentCourses: [{ course: c('XX101', 4), status: 'in-progress' }, { course: c('XX102', 3), status: 'in-progress' }],
+      progress,
+    }, { in_progress_results: { XX101: 'fail', XX102: 'fail' } }, new Date('2026-11-20T00:00:00Z'));
+    // XX101 đã đạt theo file: học cải thiện, gửi là đã đạt, không cần giả định đậu/rớt. XX102 chưa đạt: rớt thì học lại.
+    expect(input.student.student_courses).toEqual([
+      { course_code: 'XX101', status: 'completed' }, { course_code: 'XX102', status: 'in-progress' }]);
+    expect(input.scenario.in_progress_results).toEqual({ XX102: 'fail' });
   });
 
   it('does not schedule physical education (PE1003, PE1005 become conditions, 21/11)', () => {
@@ -258,6 +417,35 @@ describe('Planner API (POST /api/plans/solve)', () => {
     spy.mockRestore();
     expect(solver).toBe('clingo');
     expect(input.scenario.interests).toEqual(['security', 'web programming']);
+  });
+
+  it('passes what-if fields of phase 12 to the solver (assumed_fail, offered, disabled priorities)', async () => {
+    const spy = jest.spyOn(runner, 'run').mockResolvedValue({ status: 'OPTIMAL' });
+    const assumed = [{ course_code: 'CS301', semester_code: '262' }];
+    const offered = [{ course_code: 'CS302', semester_code: '263' }];
+    await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ assumed_fail: assumed, offered, preferences: { order: ['S8', 'S1'], disabled: ['S2'] } }).expect(200);
+    const [input] = spy.mock.calls[0] as [{ scenario: Record<string, unknown> }, string];
+    spy.mockRestore();
+    expect(input.scenario.assumed_fail).toEqual(assumed);
+    expect(input.scenario.offered).toEqual(offered);
+    expect(input.scenario.preferences).toEqual({ order: ['S8', 'S1'], disabled: ['S2'] });
+  });
+
+  it('looks up a course typed into the free elective slot and pins it (T62)', async () => {
+    await app.get<Repository<Course>>(getRepositoryToken(Course)).save({ code: 'XX777', name: 'Mon ngoai chuong trinh', credits: 3 });
+    const spy = jest.spyOn(runner, 'run').mockResolvedValue({ status: 'OPTIMAL' });
+    await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ free_choices: [{ course_code: 'xx777 ', semester_code: '271' }] }).expect(200);
+    const [input] = spy.mock.calls[0] as [{ scenario: Record<string, unknown>; courses: { code: string }[];
+      student: { free_choices: string[] } }, string];
+    spy.mockRestore();
+    expect(input.courses.map((c) => c.code)).toContain('XX777');
+    expect(input.student.free_choices).toEqual(['XX777']);
+    expect(input.scenario.locked).toEqual([{ course_code: 'XX777', semester_code: '271' }]);
+    const bad = await request(server()).post('/api/plans/solve').set('Origin', origin)
+      .send({ free_choices: [{ course_code: 'NOPE01', semester_code: '271' }] }).expect(400);
+    expect(JSON.stringify(bad.body)).toContain('NOPE01');
   });
 
   it('rejects malformed interests', async () => {
@@ -303,12 +491,18 @@ describe('Planner API (POST /api/plans/solve)', () => {
     // Khoa 2025: ky 262 la nam 2, chi hoc duoc MA102 (3 TC). 11 TC la mem (19/11): co lo trinh,
     // khong hoc thua, kem ghi chu ky 262 duoi 11 TC.
     await profiles.update({ user_id: studentId }, { admission_year: 2025 });
-    const short = await runner.run(buildPlannerInput(await service.loadSource(studentId), {}, today), 'cpsat');
+    // Test này kiểm năm học THEO KHÓA (luật cũ). Mặc định từ 22/11 là theo TC tích lũy (Q6: 28/56/84),
+    // mà chương trình giả chỉ ~40 TC nên không bao giờ tới năm 3: tắt riêng ở đây.
+    const byCohort = (input: ReturnType<typeof buildPlannerInput>) => {
+      expect(input.rules.year_by_credits).toEqual([28, 56, 84]);
+      return { ...input, rules: { ...input.rules, year_by_credits: undefined } };
+    };
+    const short = await runner.run(byCohort(buildPlannerInput(await service.loadSource(studentId), {}, today)), 'cpsat');
     expect(short).toMatchObject({ status: 'OPTIMAL', graduation_semester: '272', violations: [] });
     expect((short.warnings as string[]).some((w) => w.startsWith('Kỳ 262 chỉ 3 TC'))).toBe(true);
     // Khoa 2024: ky 262 la nam 3. 262 phai du 11 TC: CS301, CS302, MA102, EL303 (12); 271 con 8 TC.
     await profiles.update({ user_id: studentId }, { admission_year: 2024 });
-    const input = buildPlannerInput(await service.loadSource(studentId), {}, today);
+    const input = byCohort(buildPlannerInput(await service.loadSource(studentId), {}, today));
     const cpsat = await runner.run(input, 'cpsat');
     const clingo = await runner.run(input, 'clingo');
     expect(cpsat).toMatchObject({ status: 'OPTIMAL', graduation_semester: '271', violations: [] });

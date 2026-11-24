@@ -20,7 +20,7 @@ export class CurriculumController {
   @Get(':id')
   @ApiOperation({ summary: 'Chi tiết chương trình đào tạo' })
   detail(@Param('id', ParseUUIDPipe) id: string) {
-    return this.curricula.findOne(id);
+    return this.curricula.findDetail(id);
   }
 
   @Post()

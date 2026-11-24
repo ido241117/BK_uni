@@ -31,6 +31,7 @@ const { Text } = Typography;
 interface PendingImport {
     fileName: string;
     analysis: ImportAnalysis;
+    courses: CourseSummary[];
 }
 
 interface CourseStatusFileActionsProps {
@@ -41,13 +42,18 @@ interface CourseStatusFileActionsProps {
      * Không dùng cả danh mục (hàng nghìn môn); môn khác sinh viên tự thêm dòng.
      */
     templateCourses: CourseSummary[];
+    /**
+     * Có thì thay đổi từ file được đưa vào bản nháp của trang (lưu cùng nút "Lưu") thay vì ghi thẳng server;
+     * khi đó `statusByCourseId` là trạng thái hiệu lực của bản nháp.
+     */
+    onApply?: (changes: StatusChange[], courses: CourseSummary[]) => void;
 }
 
 /**
  * Tải file mẫu (Excel/CSV, điền sẵn trạng thái hiện tại) và nộp lại file đã điền.
  * Trước khi lưu luôn hiện bảng xem trước: môn thay đổi và dòng lỗi.
  */
-const CourseStatusFileActions = ({ statusByCourseId, templateCourses }: CourseStatusFileActionsProps) => {
+const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }: CourseStatusFileActionsProps) => {
     const queryClient = useQueryClient();
     const inputRef = useRef<HTMLInputElement>(null);
     const [exporting, setExporting] = useState(false);
@@ -74,7 +80,7 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses }: CourseSt
             const rows = await readStatusFile(file);
             // Chỉ tra các mã có trong file thay vì tải cả danh mục.
             const courses = await listCoursesByCodes(rows.map(row => row.code));
-            setPending({ fileName: file.name, analysis: analyzeStatusFile(rows, courses, statusByCourseId) });
+            setPending({ fileName: file.name, analysis: analyzeStatusFile(rows, courses, statusByCourseId), courses });
         } catch (error) {
             if (!(error instanceof ApiError)) {
                 const message = error instanceof Error ? error.message : 'Lỗi không xác định.';
@@ -166,12 +172,17 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses }: CourseSt
                 open={pending !== null}
                 width={760}
                 title={pending ? `Xem trước: ${pending.fileName}` : 'Xem trước'}
-                okText={analysis?.changes.length ? `Lưu ${analysis.changes.length} môn` : 'Đóng'}
+                okText={analysis?.changes.length
+                    ? `${onApply ? 'Đưa vào bản nháp' : 'Lưu'} ${analysis.changes.length} môn`
+                    : 'Đóng'}
                 cancelText="Huỷ"
                 confirmLoading={save.isPending}
                 onCancel={() => setPending(null)}
                 onOk={() => {
-                    if (analysis?.changes.length) save.mutate(analysis.changes);
+                    if (analysis?.changes.length && onApply) {
+                        onApply(analysis.changes, pending?.courses ?? []);
+                        setPending(null);
+                    } else if (analysis?.changes.length) save.mutate(analysis.changes);
                     else setPending(null);
                 }}
                 destroyOnHidden

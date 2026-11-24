@@ -1,30 +1,33 @@
 # 03 · Thiết kế: tính năng "Gợi ý học phần"
 
-Cập nhật 21/11/2026 (mục 4b: luồng tải PDF tiến độ ↔ database). Mô tả **cái đã có trong code**: tính năng, kiến trúc, từng file và hàm chính, hợp đồng API, quyết định thiết kế, bên trong hai bộ giải. Trạng thái việc và duyệt xem [02-ke-hoach.md](02-ke-hoach.md); sự thật đã kiểm chứng xem [01-boi-canh.md](01-boi-canh.md); cách kiểm tra xem [05-kiem-thu.md](05-kiem-thu.md).
+Cập nhật 24/11/2026. Mô tả **cái đã có trong code**: tính năng, kiến trúc, từng file và hàm chính, hợp đồng API, quyết định thiết kế, bên trong hai bộ giải. Trạng thái việc và duyệt xem [02-ke-hoach.md](02-ke-hoach.md); sự thật đã kiểm chứng xem [01-boi-canh.md](01-boi-canh.md); cách kiểm tra xem [05-kiem-thu.md](05-kiem-thu.md).
 
 ---
 
 ## 1. Sinh viên làm được gì
 
-| # | Tính năng | Ở đâu trên trang Gợi ý (`/recommendations`) |
+Bản đầy đủ theo từng trang, kèm luồng UX: [06-tong-ket.md](06-tong-ket.md). Tóm tắt (24/11):
+
+| # | Tính năng | Ở đâu |
 |---|---|---|
-| F1 | **Giải lộ trình** các kỳ còn lại theo QĐ 285 và chương trình đào tạo, từ trạng thái môn đã khai | Nút "Giải lộ trình" |
-| F2 | **Giả định đậu/rớt** từng môn đang học | Thẻ "Bạn đang học gì…" |
-| F3 | **Ràng buộc cứng do sinh viên đặt**: tối đa TC mỗi kỳ (11–25), học xong trước kỳ X, bật kỳ hè, khóa môn vào kỳ, môn không mở ở kỳ | Thẻ "Bắt buộc phải theo" |
-| F4 | **Mong muốn mềm**: môn muốn học, các kỳ đều tải, ưu tiên giữ khuyến nghị, đã có chuẩn tiếng Anh/MOS | Thẻ "Mong muốn" |
-| F5 | **Chọn bộ giải** CP-SAT (mặc định, nhanh) hoặc Clingo | Thẻ cuối cột trái |
-| F6 | **Kết quả**: kỳ học xong, TC còn lại, từng kỳ và lý do từng môn, mong muốn nào không đáp ứng được, cảnh báo, giả định, độ tin cậy dữ liệu tiên quyết; không có lộ trình thì nói **lựa chọn nào/luật nào** đang chặn; validator bắt lỗi thì cảnh báo đỏ | Cột phải |
-| F7 | **What-if**: lưu lộ trình làm mốc, đổi kịch bản rồi giải lại, xem kỳ tốt nghiệp trước/sau, môn dời kỳ, môn mới, môn bỏ; nút Về mốc / Lấy làm mốc mới / Xóa mốc | Thẻ "So với lộ trình mốc" |
-| F8 | **Nhập file tiến độ myBK** (PDF hoặc Excel): đọc file, nhận chương trình, cảnh báo chọn sai chương trình, so dữ liệu chương trình của web với myBK, sinh viên xác nhận rồi mới lưu trạng thái môn | Nút "Tải file tiến độ myBK" |
-| F9 | **Tiến độ theo PDF myBK** (giai đoạn 9–10): tải PDF ở trang Môn học → backend đọc file, **tìm chương trình theo mã CTĐT myBK** (`curricula.source_code`), liệt kê mâu thuẫn, **chưa ghi gì** → hộp xác nhận → bấm "Xác nhận và lưu" mới ghi nội dung file, trạng thái môn và chương trình của tài khoản theo mã CTĐT của file (người dùng chỉ thấy mã myBK, không thấy mã nội bộ). Thẻ tiến độ hiện đủ mọi trường đọc được: thông tin sinh viên, khối, môn, điểm số, điểm chữ, ✓, ghi chú, điều kiện tốt nghiệp (mục 4b). Thay F8 trên giao diện | Trang Môn học (`/courses`) |
+| F1 | **Giải lộ trình** các kỳ còn lại theo QĐ 285 và chương trình, từ trạng thái môn đã có; **chỉ bấm Giải mới giải** | Trang Gợi ý, nút Giải dưới lộ trình |
+| F2 | **What-if**: đậu/rớt môn đang học, giả định rớt môn tương lai, nghỉ kỳ, học hè, số TC muốn từng kỳ, ghim / chuyển môn, môn không mở / có mở, đổi môn cùng khối, ô tự chọn tự do gõ mã bất kỳ, 3 mục ưu tiên | Trang Gợi ý: bảng kỳ, khối Kịch bản |
+| F3 | **Kiểm nhanh tại trang**: chọn một môn → kỳ nào chuyển vào được / không + lý do (không gọi bộ giải) | Bảng kỳ |
+| F4 | **Kết quả**: kỳ ra trường, kỳ nặng nhất, học hè (so với lần giải trước), từng kỳ, cảnh báo kèm điều QĐ 285, yêu cầu của sinh viên đáp ứng tới đâu, mong muốn, giả định; không giải được thì lý do + nút **cách gỡ** | Trang Gợi ý |
+| F5 | **Lưu bản, lịch sử, mốc, so sánh** (tối đa 10 bản; so với "Kế hoạch giảng dạy") | Khối Kịch bản, tab So sánh |
+| F6 | **Giữ trạng thái trang** trong tài khoản (đổi máy, đăng xuất vẫn còn) | `data.web.planner` |
+| F7 | **Nhập tiến độ myBK** (PDF hoặc chữ dán) → hộp xác nhận → lưu; **Hiệu chỉnh** trạng thái, học kỳ hiện tại, khối của môn, ghi chú | Trang Môn học, tab "Tiến độ myBK" (mục 4b) |
+| F8 | (cũ, giao diện không còn dùng) Nhập file myBK ở trang Gợi ý qua `mybk/preview` | Mục 4 |
 
 ---
 
 ## 2. Kiến trúc
 
 ```
-Trình duyệt (React, Frontend/src/pages/recommendations)
-  │  POST /api/plans/solve          (JSON kịch bản + mốc what-if)
+Trình duyệt (React, Frontend/src/pages/recommendations và pages/courses)
+  │  POST /api/plans/solve          (JSON kịch bản + mốc what-if; chỉ khi bấm Giải)
+  │  GET/PUT /api/plans/settings    (trạng thái trang Gợi ý: kịch bản, lộ trình đang xem, lịch sử 10 bản)
+  │  PUT /api/plans/mybk/adjustments (Hiệu chỉnh ở trang Môn học)
   │  GET  /api/plans/interest-tags  (interest tags for the Clingo tab)
   │  POST /api/plans/mybk/review    (multipart PDF: xem trước, không ghi; trang Môn học, 21/11)
   │  POST /api/plans/mybk/import    (multipart PDF [+ apply_curriculum]: ghi sau khi xác nhận)
@@ -47,13 +50,13 @@ Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, t�
 
 ---
 
-## 3. Luồng giải lộ trình (F1–F7)
+## 3. Luồng giải lộ trình (F1–F6)
 
-1. **Trang** gom kịch bản thành `SolvePlanPayload`; nếu có mốc thì thêm `previous_plan` (`index.tsx → buildPayload`).
-2. **Backend** `PlannerService.loadSource` đọc database theo tài khoản; `buildPlannerInput` (hàm thuần) ghép JSON cho bộ giải: môn bắt buộc suy ra, khối và khối con chuyên ngành, quan hệ TQ/SH/KN của chính chương trình, môn tốt nghiệp (nhóm D), điều kiện (nhóm E), môn không xếp hè (tên có "đồ án"), lịch sử mở hè, luật `PLANNER_RULES`, danh sách kỳ. Không có tên, MSSV.
-3. **`PlannerRunner.run`** gọi `python -m planner.cli`, giới hạn 60 giây (Clingo 30 giây, CP-SAT 20 giây bên trong).
-4. **`cli.run`**: `normalize` → bộ giải → `validate_plan` (độc lập) → `diff` so với mốc → nếu UNSAT thì `_explain_unsat` thử bỏ từng lựa chọn của sinh viên, rồi nới từng luật của trường, để nói cái gì chặn.
-5. **Trang** hiện kết quả (`PlanResultView`); what-if so mốc ở trình duyệt (`whatIf.comparePlans`).
+1. **Trang** (`index.tsx`) giữ kịch bản (`scenario.ts`); mọi chỉnh sửa chỉ đổi kịch bản và tự lưu vào `PUT /plans/settings`. Bấm **Giải** thì `buildPayload` gom thành `SolvePlanPayload`, kèm `previous_plan` của bản gắn sao (mốc).
+2. **Backend** `PlannerService.solve`: tra mã môn ở ô tự chọn tự do (`free_choices`, thiếu thì 400); `loadSource` đọc database theo tài khoản; `buildPlannerInput` (hàm thuần) ghép JSON cho bộ giải: môn bắt buộc suy ra, khối và khối con chuyên ngành, quan hệ TQ/SH/KN của chính chương trình, môn tốt nghiệp và điều kiện theo nhóm (T37), đồ án không học hè, lịch sử mở lớp, kỳ hiện tại sinh viên khai, khối sinh viên chọn (`block_overrides`), luật `PLANNER_RULES`. Không đưa tên, MSSV.
+3. **`PlannerRunner.run`** gọi `python -m planner.cli`, giới hạn 60 giây.
+4. **`cli.run`**: `normalize` → CP-SAT → `validate_plan` (độc lập) → `diff` so với mốc → `_explain_targets` (số TC muốn không đạt thì nêu lý do thật) → nếu UNSAT thì `_explain_unsat` bỏ từng lựa chọn của sinh viên (trả `infeasible_fixes`), rồi nới từng luật. Trả thêm `course_facts` để trang tự kiểm nhanh.
+5. **Trang** hiện kết quả (`PlanResultView`, `SemesterBoard`); tab So sánh tính ở trình duyệt (`ComparePanel`, `whatIf.planMetrics`).
 
 **Ràng buộc cứng** (kế hoạch mục 3.1): H1 mỗi môn ≤ 1 kỳ · H2 đủ môn bắt buộc · H3 đủ TC/số môn từng khối tự chọn · H4 tiên quyết phải **đạt** kỳ trước · H5 song hành đạt trước hoặc cùng kỳ (cùng kỳ thì cảnh báo) · H7 11–25 TC/kỳ chính, sinh viên hạ được · H8 môn không mở · H9 khóa môn · H10 xong trước kỳ X · H11 cấp độ môn theo năm (năm tính theo khóa) · H12 ngưỡng 65/70/85% cho thực tập/đồ án chuyên ngành/khóa luận (the other courses of the course's own term count too, 23/11/2026; ASP and validator only) · H13 ô tự chọn tự do · H14 tối đa 12 kỳ chính; hè chỉ xếp khi sinh viên bật (≤ 12 TC, không đồ án, chỉ môn từng mở hè), thực tập luôn xếp hè được · H15 chuyên ngành. "Học trước" (HT) đã bỏ.
 
@@ -61,7 +64,7 @@ Ghi vào Supabase dùng chung: trạng thái môn của chính tài khoản, t�
 
 ---
 
-## 4. Luồng nhập file myBK (F8)
+## 4. Luồng nhập file myBK (F8, cũ: giao diện không còn dùng, giữ để tra; luồng hiện hành ở 4b)
 
 1. Sinh viên chọn file → `previewMybk` gửi multipart.
 2. Backend (`PlannerController.previewMybk`): cần đăng nhập, ≤ 5 MB, ≤ 10 lần/phút, file chỉ nằm trong bộ nhớ.
@@ -246,9 +249,14 @@ Cách nối (21/11, người duyệt): `CERTIFICATES = { CCGDTC: ['PE1003', 'PE1
 
 | File | Thành phần / hàm | Làm gì |
 |---|---|---|
-| `pages/recommendations/index.tsx` | `RecommendationsPage`, `CourseSemesterList` | Trang Gợi ý: kịch bản, gọi giải, giữ mốc (`snapshot`, `applyScenario`, `changeBaseline`) |
-| `pages/recommendations/PlanResultView.tsx` | `PlanResultView`, `WhatIfCard` | Hiện kết quả; thẻ so mốc; nhãn "dời từ …", "mới so với mốc" |
-| **`pages/recommendations/whatIf.ts`** (mới) | `planOf`, `comparePlans`, `isSameAsBaseline`, `loadBaseline`, `storeBaseline`, `baselineKey` | Logic what-if, lưu mốc trong localStorage (khóa theo tài khoản và chương trình) |
+| `pages/recommendations/index.tsx` (viết lại 23/11, giai đoạn 12) | `RecommendationsPage` | Tab Lộ trình / So sánh; khối Kịch bản thu gọn được (đang học, ưu tiên, lịch sử, yêu cầu khác); **chỉ nút Giải gọi bộ giải**; đếm "đã sửa N chỗ, chưa kiểm"; Hoàn tác (30 bước, trong trang); lưu bản / mở / gắn sao (mốc) / xóa; tự lưu `{scenario, view, dirty, plans}` vào `PUT /plans/settings` |
+| **`pages/recommendations/scenario.ts`** (23/11) | `Scenario`, `normalizeScenario`, `buildPayload`, `applyFix`, `describeScenario` | Kịch bản what-if (mục 12.2), payload gửi bộ giải, áp dụng cách gỡ (M11), mô tả giả định để so |
+| **`pages/recommendations/localHints.ts`** (23/11) | `moveHint` | Chọn một môn → kỳ được / không được + lý do, tính từ `course_facts`, không gọi bộ giải (M6) |
+| **`pages/recommendations/ComparePanel.tsx`** (23/11) | `ComparePanel` | Tab So sánh (M16): chỉ số 12.7, giả định khác nhau, môn đổi kỳ kèm tên |
+| `pages/recommendations/SemesterBoard.tsx` (viết lại 23/11) | `SemesterBoard` | Bảng kỳ theo mẫu `mau-what-if` (học kỳ xếp dọc trên đường thời gian, môn là chấm khuyết + mã, tên bên dưới; màu, font của web): chọn môn → "Chuyển vào đây" (= ghim), kéo thả, ghim, không mở, giả định rớt, đổi môn cùng khối, gõ mã ô tự do, rê chuột xem chi tiết, môn chờ xếp; ô Nghỉ / Học hè / Muốn TC; bỏ Khóa kỳ (W13) |
+| `pages/recommendations/priorities.ts`, `PriorityList.tsx` (23/11) | `priorityPayload`, `normalizePriorities` | 3 mục S1, S8, S2 (bật/tắt, lên/xuống) + 2 dòng mờ "bàn sau"; gửi `order` = mục bật + mục ẩn `S6, S4, OH, S3`, `disabled` = S2/S8 tắt |
+| `pages/recommendations/PlanResultView.tsx` | `PlanResultView` | Hiện kết quả; dải chỉ số mờ khi còn sửa chưa giải; không giải được thì nút "Cách gỡ"; bỏ thẻ mốc (23/11) |
+| **`pages/recommendations/whatIf.ts`** | `planOf`, `comparePlans`, `SavedPlan`, `addPlan`, `trimResult`, `planMetrics`, `teachingPlan`, `recommendedSemester`; `loadBaseline` (chỉ để chuyển mốc cũ) | Logic what-if; lưu bản (tối đa 10, bỏ bản cũ nhất không gắn sao); chỉ số so sánh; "Kế hoạch giảng dạy" |
 | **`pages/recommendations/MybkImport.tsx`** (mới) | `MybkImport` | Nút tải file, màn hình xác nhận, lưu |
 | **`pages/courses/components/MybkProgress.tsx`** (20/11, viết lại 21/11) | `MybkUploadButton`, `MybkReviewContent`, `MybkFileDetails`, `MybkProgressCard` | Nút tải PDF → `reviewMybk` → hộp xác nhận (chương trình, ô đặt chương trình, mâu thuẫn, tương ứng GDTC, trạng thái sẽ đổi, toàn bộ nội dung file) → `importMybk`. `MybkFileDetails` dùng chung cho hộp xác nhận và thẻ tiến độ: thông tin sinh viên, khối, cột Điểm số / Điểm chữ / Ghi chú. Thay `MybkImport` (không còn dùng) |
 | `pages/courses/index.tsx` (rút gọn 21/11) | `CoursesPage`, `CourseCatalog` | Sinh viên: đầu trang (nút Phân tích nếu đã có chương trình, nút tải PDF), thông báo "Chưa có chương trình đào tạo", `MybkProgressCard`; bỏ thống kê, tóm tắt theo kỳ, bảng môn. Quản trị: `CourseCatalog` tra cứu danh mục (phân trang, tìm ở server). `components/SemesterSummary.tsx` không còn nơi nào dùng (để nguyên, nhánh `main` đã xóa file này) |
@@ -300,8 +308,9 @@ Synthetic students for one curriculum (CS-2023-KHMT), for evaluating the ASP pla
 
 **`POST /api/plans/solve`** — body (mọi trường không bắt buộc):
 `solver`, `max_credits`, `semester_limits`, `graduate_by`, `in_progress_results`, `locked`, `not_offered`, `summer_opt_in`, `preferences {wanted_courses, balanced_load, recommendations_first}`, `student_flags {english_grad_reading, mos}`, `previous_plan {mã môn: mã kỳ}`.
-ASP engine only (`solver: "clingo"`): `skip_semesters`, and `interests` (≤ 50 tag names from `GET /api/plans/interest-tags`; planned electives with these tags are preferred at the lowest objective priority; the result's `engine_report.interests` lists the planned courses for each).
-Trả: `status` (`OPTIMAL` | `SAT_NOT_PROVEN_OPTIMAL` | `UNSAT` | `TIMEOUT` | `INPUT_ERROR`), `semesters[{semester_code, credits, courses[{code, credits, reason, locked}]}]`, `graduation_semester`, `preferences_report`, `assumptions`, `warnings`, `violations`, `diff_vs_previous`, `infeasible_reason`, `unverified_prerequisites`. Lỗi: 401 chưa đăng nhập, 400 chưa chọn chương trình hoặc trường lạ, 502 không chạy được Python.
+Sprint 11 (22/11): `skip_semesters`, `frozen_semesters`, `semester_targets`, `preferences.order`. **Giai đoạn 12 (23/11):** `assumed_fail [{course_code, semester_code}]` (W1: giả định rớt, lần học đó tính TC của kỳ, học lại sau), `offered [{course_code, semester_code}]` (W2: gỡ phạt và cảnh báo lịch sử mở lớp), `free_choices [{course_code, semester_code}]` (T62: backend tra mã trong bảng `courses`, thiếu thì 400 "Không tìm thấy môn"; môn ngoài chương trình vào `courses` + `student.free_choices`, mọi môn đều được ghim vào kỳ đó), `preferences.disabled` (tắt S2/S8; `order` nhận thêm `S2`, `S8`).
+ASP engine only (`solver: "clingo"`): `interests` (≤ 50 tag names from `GET /api/plans/interest-tags`; planned electives with these tags are preferred at the lowest objective priority; the result's `engine_report.interests` lists the planned courses for each).
+Trả: `status` (`OPTIMAL` | `SAT_NOT_PROVEN_OPTIMAL` | `UNSAT` | `TIMEOUT` | `INPUT_ERROR`), `semesters[{semester_code, credits, courses[{code, credits, reason, locked}]}]`, `graduation_semester`, `preferences_report`, `assumptions`, `warnings`, `violations`, `diff_vs_previous`, `infeasible_reason`, `unverified_prerequisites`. Giai đoạn 12 thêm: `infeasible_fixes [{kind, label, course?, semester?}]` (cách gỡ, mỗi cái bỏ đúng một lựa chọn là có lộ trình; ghim tuyệt đối thì không đề xuất bỏ ghim), `course_facts {mã: {prerequisites, corequisites, summer: internship|excluded|history|no_history, terms}}` (môn chưa đạt), `credit_rules {main_max, summer_max}`, `semesters[].courses[].assumed_fail` (lần học giả định rớt), `warning_items[].rule` (điều QĐ 285), loại cảnh báo mới `skip_consecutive`, `target_over_law`, `offering_history` (`confirm: "offered"`), dòng `requests` loại `assumed_fail`, `offered`; dòng `target` không đạt nêu lý do thật (`_explain_targets`). Lỗi: 401 chưa đăng nhập, 400 chưa chọn chương trình hoặc trường lạ, 502 không chạy được Python.
 
 **`GET /api/plans/interest-tags`** (21/11) — the tags of `pipeline/planner/data/course-tags.json` (written by `pipeline/tag_classifier`) that have courses in the student's program, taken from the list of the program's family (`families[curriculum code]` → `by_family`), else the merged `tags` list: `{tags: [{tag, courses: [code]}]}`, sorted by tag. Empty when the student has no program or the file does not exist. Reads no student data besides the profile's program. Errors: 401.
 
@@ -314,7 +323,11 @@ Trả: `status` (`OPTIMAL` | `SAT_NOT_PROVEN_OPTIMAL` | `UNSAT` | `TIMEOUT` | `I
 
 **`POST /api/plans/mybk/import`** (20/11; 21/11 thêm `apply_curriculum`) — multipart `file` (chỉ PDF, ≤ 5 MB) và trường form tùy chọn `apply_curriculum=true`. Ghi trong một transaction: `student_progress_imports` của tài khoản (ghi đè), `student_courses` đúng như file, và khi có `apply_curriculum` thì `student_profiles.curriculum_id` = chương trình có `source_code` của file (bỏ chuyên ngành mục tiêu nếu đổi chương trình). Trả `{imported_at, data, written_courses, unknown_codes, curriculum {id, code, name} | null}`. Lỗi: 400 file không phải PDF tiến độ, hoặc `apply_curriculum` mà không tìm được chương trình; 401.
 
-**`PUT /api/plans/mybk/adjustments`** (21/11, Hiệu chỉnh) — body `{current_semester?: "YYS", items: [{course_id, status}], remove_course_ids?: [uuid]}` (≤ 1000 dòng, chỉ cần môn đổi). Cần đã nhập tiến độ (không thì 400). Ghi `student_courses` và `data.web.current_semester` trong một transaction; trả như `GET mybk/progress` + `written_courses`. Lỗi: 400 kỳ sai định dạng, môn không có trong danh mục, chưa nhập tiến độ; 401.
+**`PUT /api/plans/mybk/adjustments`** (21/11, Hiệu chỉnh) — body `{current_semester?: "YYS", items: [{course_id, status}], remove_course_ids?: [uuid]}` (≤ 1000 dòng, chỉ cần môn đổi). Cần đã nhập tiến độ (không thì 400). Ghi `student_courses` và `data.web.current_semester` trong một transaction; trả như `GET mybk/progress` + `written_courses`. Lỗi: 400 kỳ sai định dạng, môn không có trong danh mục, chưa nhập tiến độ; 401. 22/11 thêm `notes?: [{code, note}]` (`data.web.notes`) và **T46** `block_choices?: [{code, group_id | "required" | null}]` (`required` = khối Bắt buộc do backend suy ra, gửi bộ giải là `Bat buoc (suy ra)`) → `data.web.block_choices` = `{mã môn: id khối}` (null = về khối mặc định). Web không chặn khối nào (người duyệt: hoàn toàn tôn trọng lựa chọn của sinh viên). `GET mybk/progress` trả thêm `notes`, `block_choices`.
+
+**Cảnh báo có cấu trúc (23/11):** `cli.run` trả thêm `warning_items: [{kind, course?, semester?, confirm?, text, message}]` (`report.warning_items`; `warnings` = các `text`, giữ cho test cũ). Trang Gợi ý gắn `message` vào thẻ môn / đầu kỳ; `confirm: "english"` → nút "Mình đạt rồi" ghi ENG_GC* Đã hoàn thành qua `PUT mybk/adjustments`. `validate.py`: kỳ hè không báo "chưa từng mở" cho ô `FREE_` và khi `rules.offering_soft`.
+
+**Khối sinh viên chọn → bộ giải (T46, 22/11):** `progressFromImport` → `PlannerProgress.block_choices` → `buildPlannerInput` đổi id khối thành tên, gửi `student.block_overrides = {mã môn: tên khối}` (bỏ khối không còn, môn không có trong `courses`, môn điều kiện). `normalize.py` bước 0: bỏ môn khỏi mọi khối; khối `listed` thì thêm vào khối đó (môn ngoài CTĐT được thêm vào `curriculum_courses` để bộ giải xét); khối `any` thì tín chỉ tính vào tự chọn tự do. `cli.run` ghi `student._assumed_pass` = môn Đang học mà kịch bản giả định đậu; `normalize` tính chúng như đã đạt khi trừ ô tự chọn tự do (trước 22/11 chỉ tính môn Đã hoàn thành nên xếp dư ô).
 
 **`GET /api/plans/mybk/progress`** (20/11; 21/11 thêm `current_semester`, `current_semester_source: "student" | "auto"`) — trả `{imported_at, data}` của chính tài khoản; `data` = null khi chưa tải. `data` là JSON của `python -m planner.mybk`, có cả họ tên, MSSV, điểm.
 
@@ -403,6 +416,18 @@ Một file JSON duy nhất, **giống nhau cho cả hai bộ giải**. Mẫu: `p
 | `rules` | object | `credits_min`, `credits_max`, `graduation_thresholds`, `max_main_semesters` (năm học lấy từ `curriculum.cohort`) |
 | `scenario` (qua `planner.cli`) hoặc `scenarios` (fixture) | kịch bản | `in_progress_results`, `locked`, `not_offered`, `max_credits`, `semester_limits`, `graduate_by`, `summer_opt_in`, `preferences` |
 | `previous_plan` | map mã môn → mã kỳ | Mốc what-if (S3) |
+| `scenario.skip_semesters` / `frozen_semesters` | danh sách mã kỳ | (22/11) Nghỉ kỳ / khóa kỳ: môn không ghim không xếp vào |
+| `scenario.semester_targets` | map mã kỳ → TC | (22/11) Số TC sinh viên muốn; mục mềm "ST" ưu tiên cao nhất, trần nới +2 |
+| `scenario.preferences.order` | danh sách trong S1, S6, S4, S5, S10, OH, S3 | (22/11) Thứ tự ưu tiên do sinh viên sắp, chỉ gồm mục đang bật |
+| `rules.pins_absolute` | bool | (22/11) Ghim tuyệt đối: luật xung đột với chỗ ghim bỏ qua cho môn đó, chỉ cảnh báo |
+| `rules.year_by_credits` | vd `[28, 56, 84]` | (22/11) Năm học theo TC tích lũy (QĐ 285 Đ24) thay cho theo khóa |
+| `rules.offering_soft` + `offering_history` | bool + map mã môn → loại kỳ (`"1"`, `"2"`, `"3"`) | (22/11) Lịch sử mở lớp là mềm (mục "OH") |
+| `graduation_courses.<loại>` | mã môn **hoặc danh sách** | (22/11) Một loại có thể nhiều môn; backend luôn gửi danh sách; môn nhóm tốt nghiệp không nhận ra loại → `specialized_project` (70%) |
+| `offering_history` | map mã môn → loại kỳ từng mở | (22/11) Backend suy từ `course_opened_semesters` |
+| Học cải thiện | ghim môn đã đạt (`locked`) khi `pins_absolute` | (22/11) Học ở kỳ ghim; tính vào tải kỳ, không cộng TC tích lũy hay yêu cầu khối |
+| Dư khối tự chọn → tự do | — | (22/11) Phần dư của khối tự chọn gốc (kể cả môn sẽ học) bù vào ô tự chọn tự do; CP-SAT và validator cùng luật |
+| Kết quả: `semesters[].courses[].block`, `.slot` | tên khối, bool | (22/11) `slot = true`: môn tự chọn bộ giải tự chọn (sinh viên chưa ghim/chọn) hoặc ô tự do → giao diện hiện "khối (x TC) ▾" |
+| Kết quả: `requests` | danh sách `{kind, item, status, detail}` | (22/11) Mỗi yêu cầu của sinh viên: `met` / `warning` / `partial` / `unmet` + lý do (`planner/student_requests.py`) |
 
 **Bước kiểm tra đầu vào (`facts.validate_input`) từ chối** (không âm thầm bỏ qua) khi gặp: mã môn trùng hoặc không tồn tại; loại quan hệ hay trạng thái lạ; khối tự chọn không có ngưỡng; một môn thuộc hai khối; thiếu giả định cho môn đang học; kỳ bị khóa nằm ngoài các kỳ còn lại; kỳ hiện tại không có trong `semesters`.
 

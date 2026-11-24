@@ -7,7 +7,8 @@ import { RequireAccess } from './guards';
 const CoursesPage = lazy(() => import('@/pages/courses'));
 const CourseDetailPage = lazy(() => import('@/pages/courses/detail'));
 const CourseAnalysisPage = lazy(() => import('@/pages/courses/analysis'));
-const RegulationsPage = lazy(() => import('@/pages/regulations'));
+// Người duyệt 22/11: tạm tắt trang Quy định tốt nghiệp (điều kiện tốt nghiệp sửa ở Hiệu chỉnh, trang Môn học).
+// const RegulationsPage = lazy(() => import('@/pages/regulations'));
 const RecommendationsPage = lazy(() => import('@/pages/recommendations'));
 const AdvisorPage = lazy(() => import('@/pages/advisor'));
 const ProfilePage = lazy(() => import('@/pages/profile'));
@@ -30,15 +31,18 @@ export const studentRoutes: RouteObject[] = [
             { path: 'plan', element: <Navigate to="/courses" replace /> },
         ],
     },
-    {
-        element: (
-            <RequireAccess
-                roles={[ROLE.STUDENT]}
-                permission={toPageViewPermission(PAGE_RESOURCES.REGULATIONS)}
-            />
-        ),
-        children: [{ path: 'regulations', Component: RegulationsPage }],
-    },
+    // Tạm tắt 22/11 (xem ghi chú ở import): link/bookmark cũ chuyển về trang Môn học. Bật lại thì bỏ comment khối dưới
+    // và xóa dòng Navigate.
+    // {
+    //     element: (
+    //         <RequireAccess
+    //             roles={[ROLE.STUDENT]}
+    //             permission={toPageViewPermission(PAGE_RESOURCES.REGULATIONS)}
+    //         />
+    //     ),
+    //     children: [{ path: 'regulations', Component: RegulationsPage }],
+    // },
+    { path: 'regulations', element: <Navigate to="/courses" replace /> },
     {
         element: (
             <RequireAccess

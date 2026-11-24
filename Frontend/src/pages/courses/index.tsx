@@ -1,35 +1,63 @@
-import { useState } from 'react';
-import { Alert, Card, Input, Space, Tag, Typography } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { LuChartColumn, LuSearch } from 'react-icons/lu';
-import { Link, useLocation, useNavigate } from 'react-router';
-import { IOutLinedBtn, ITable, PageHeader, TablePageSkeleton } from '@/components';
-import { listCourses } from '@/apis/course';
+import { Alert, Space, Tabs } from 'antd';
+import { useSearchParams } from 'react-router';
+import { PageHeader, TablePageSkeleton } from '@/components';
 import { getMyProfile } from '@/apis/student';
-import { useApiQuery, useCurrentRole, useDebounce, usePageLocation } from '@/hooks';
-import { ROLE, type CourseSummary } from '@/types';
+import { useApiQuery, useCurrentRole, useCurrentUser } from '@/hooks';
+import { ROLE } from '@/types';
+import CurriculumBoard from './board/CurriculumBoard';
+import CourseCatalog from './CourseCatalog';
 import { MybkProgressCard, MybkUploadButton } from './components/MybkProgress';
-
-const { Text } = Typography;
 
 /**
  * Trang Môn học.
- * - Sinh viên: chỉ phần tiến độ đọc từ PDF myBK (người duyệt 21/11 bỏ hàng thống kê, bảng tóm tắt theo kỳ và
- *   bảng môn bên dưới; chỗ "Hiệu chỉnh" thêm/bớt/sửa trạng thái sau khi đọc file sẽ thiết kế sau).
- * - Quản trị: tra cứu danh mục môn (phân trang, tìm kiếm ở server).
+ * - Sinh viên: hai tab (22/11, người duyệt sửa dần từng trang):
+ *   - "Tiến độ myBK": phần tiến độ đọc từ PDF myBK + Hiệu chỉnh (nhánh feature/goi-y-hoc-phan).
+ *   - "Chương trình": trang của nhánh main giữ nguyên (bảng thẻ `CurriculumBoard` có tab "Sơ đồ điều kiện";
+ *     chưa chọn chương trình thì `CourseCatalog`).
+ * - Quản trị: `CourseCatalog` của nhánh main.
+ * Tab đang mở lưu ở `?tab=` để tải lại trang không mất.
  */
 const CoursesPage = () => {
     const role = useCurrentRole();
     const isStudent = role === ROLE.STUDENT;
+    const [params, setParams] = useSearchParams();
 
-    const profileQuery = useApiQuery(['my-profile'], getMyProfile, { enabled: isStudent });
-    const hasCurriculum = isStudent && Boolean(profileQuery.data?.curriculum_id);
+    if (!isStudent) return <CourseCatalog isStudent={false} />;
 
-    if (isStudent && profileQuery.isLoading) {
-        return <TablePageSkeleton />;
+    const tab = params.get('tab') === 'board' ? 'board' : 'mybk';
+    return (
+        <Tabs
+            activeKey={tab}
+            onChange={key => setParams(key === 'mybk' ? {} : { tab: key }, { replace: true })}
+            destroyOnHidden
+            items={[
+                { key: 'mybk', label: 'Tiến độ myBK', children: <MybkTab /> },
+                { key: 'board', label: 'Chương trình', children: <MainBoardTab /> },
+            ]}
+        />
+    );
+};
+
+/** Trang Môn học của nhánh main, giữ nguyên (người duyệt 22/11). */
+const MainBoardTab = () => {
+    const user = useCurrentUser();
+    const profileQuery = useApiQuery(['my-profile'], getMyProfile);
+    const curriculumId = profileQuery.data?.curriculum_id ?? null;
+
+    if (profileQuery.isLoading) return <TablePageSkeleton />;
+    if (curriculumId && user) {
+        // key: đổi chương trình thì nạp bản nháp riêng của chương trình đó.
+        return <CurriculumBoard key={curriculumId} userId={user.id} curriculumId={curriculumId} />;
     }
+    return <CourseCatalog isStudent />;
+};
 
-    if (!isStudent) return <CourseCatalog />;
+/** Tiến độ đọc từ PDF myBK (người duyệt 21/11 bỏ hàng thống kê, bảng tóm tắt theo kỳ và bảng môn bên dưới). */
+const MybkTab = () => {
+    const profileQuery = useApiQuery(['my-profile'], getMyProfile);
+    const hasCurriculum = Boolean(profileQuery.data?.curriculum_id);
+
+    if (profileQuery.isLoading) return <TablePageSkeleton />;
 
     return (
         <section>
@@ -38,11 +66,16 @@ const CoursesPage = () => {
                 subtitle='Trạng thái học tập lấy từ trang "Tiến độ hoàn thành CTĐT" của myBK (file PDF hoặc nội dung trang dán vào). Nhập lại để cập nhật.'
                 extra={(
                     <Space wrap>
-                        {hasCurriculum && (
-                            <Link to="/courses/analysis">
-                                <IOutLinedBtn icon={<LuChartColumn />}>Phân tích</IOutLinedBtn>
-                            </Link>
-                        )}
+                        {/*
+                          Người duyệt 22/11: tạm ẩn nút Phân tích (file PDF tiến độ myBK đã là phần phân tích tốt nhất;
+                          chưa rõ vai trò cho sinh viên). Trang /courses/analysis vẫn còn; bật lại thì thêm lại import
+                          Link (react-router), IOutLinedBtn (@/components), LuChartColumn (react-icons/lu).
+                          {hasCurriculum && (
+                              <Link to="/courses/analysis">
+                                  <IOutLinedBtn icon={<LuChartColumn />}>Phân tích</IOutLinedBtn>
+                              </Link>
+                          )}
+                        */}
                         <MybkUploadButton />
                     </Space>
                 )}
@@ -61,88 +94,6 @@ const CoursesPage = () => {
 
                 <MybkProgressCard />
             </div>
-        </section>
-    );
-};
-
-const catalogColumns: ColumnsType<CourseSummary> = [
-    {
-        title: 'Mã môn',
-        dataIndex: 'code',
-        width: 110,
-        fixed: 'left',
-        render: (code: string) => <Link to={`/courses/${encodeURIComponent(code)}`}><Text strong>{code}</Text></Link>,
-    },
-    {
-        title: 'Học phần',
-        dataIndex: 'name',
-        render: (name: string, row) => (
-            <div>
-                <Link to={`/courses/${encodeURIComponent(row.code)}`}>{name}</Link>
-                {row.description && <div><Text type="secondary" style={{ fontSize: 12 }}>{row.description}</Text></div>}
-            </div>
-        ),
-    },
-    {
-        title: 'Tín chỉ',
-        dataIndex: 'credits',
-        width: 84,
-        align: 'center',
-        render: (credits: number) => <Tag>{credits} TC</Tag>,
-    },
-];
-
-/** Danh mục môn cho quản trị: phân trang và tìm kiếm ở server. */
-const CourseCatalog = () => {
-    const { page, pageSize, filters } = usePageLocation<{ search?: string }>();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [search, setSearch] = useState(filters?.search ?? '');
-    const keyword = useDebounce(search, 300).trim();
-
-    /** Đổi từ khóa thì quay về trang 1, tránh đứng ở trang không còn tồn tại. */
-    const resetPage = () => {
-        const params = new URLSearchParams(location.search);
-        if (!params.has('page') || params.get('page') === '1') return;
-        params.set('page', '1');
-        navigate(`?${params.toString()}`, { replace: true, state: location.state });
-    };
-
-    const catalogQuery = useApiQuery(
-        ['courses', page, pageSize, keyword],
-        () => listCourses({ page, take: pageSize, search: keyword || undefined }),
-        { placeholderData: previous => previous },
-    );
-    const total = catalogQuery.data?.pagination.itemCount ?? 0;
-
-    return (
-        <section>
-            <PageHeader title="Môn học" subtitle="Tra cứu danh mục môn học theo mã hoặc tên." />
-            <Card>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 16 }}>
-                    <Input
-                        allowClear
-                        size="large"
-                        prefix={<LuSearch />}
-                        placeholder="Tìm theo mã hoặc tên môn học"
-                        aria-label="Tìm môn học theo mã hoặc tên"
-                        value={search}
-                        onChange={event => { setSearch(event.target.value); resetPage(); }}
-                        style={{ maxWidth: 360 }}
-                    />
-                    <Text type="secondary">{total} môn</Text>
-                </div>
-                <ITable<CourseSummary>
-                    rowKey="id"
-                    showIndex={false}
-                    columns={catalogColumns}
-                    dataSource={catalogQuery.data?.items ?? []}
-                    loading={catalogQuery.isFetching}
-                    filters={{ search: keyword || undefined }}
-                    pagination={{ total, current: page, pageSize }}
-                    emptyText="Không có môn học nào khớp từ khóa."
-                />
-            </Card>
         </section>
     );
 };

@@ -24,7 +24,7 @@ import { certificateCourses, reviewMybk, ReviewCurriculum, ReviewFile } from './
 import { currentSemester } from '../advisor/semester';
 import { AdjustMybkDto } from './dto/adjust-mybk.dto';
 import { InterestTag, interestTagsFor } from './interest-tags';
-import { buildPlannerInput, PlannerSource, progressFromImport, savedCurrentSemester } from './planner-input';
+import { buildPlannerInput, mergeBlockChoices, mergeNotes, savedBlockChoices, PlannerSource, progressFromImport, savedCurrentSemester, savedNotes } from './planner-input';
 import { PlannerRunner } from './planner.runner';
 
 /**
@@ -250,13 +250,14 @@ export class PlannerService {
     const saved = savedCurrentSemester(row?.data);
     // Học kỳ hiện tại: sinh viên khai (nút Hiệu chỉnh) hoặc tính theo ngày.
     const semester = { current_semester: saved ?? currentSemester(), current_semester_source: saved ? 'student' : 'auto' };
-    if (!row) return { imported_at: null, data: null, ...semester };
-    return { imported_at: row.updated_at, data: row.data, ...semester };
+    if (!row) return { imported_at: null, data: null, notes: {}, block_choices: {}, ...semester };
+    return { imported_at: row.updated_at, data: row.data, notes: savedNotes(row.data),
+      block_choices: savedBlockChoices(row.data), ...semester };
   }
 
   /**
-   * Nút "Hiệu chỉnh" (21/11): ghi trạng thái các môn sinh viên sửa/thêm vào `student_courses` và học kỳ hiện tại vào
-   * `student_progress_imports.data.web`, trong một transaction. Chỉ đụng dòng của chính tài khoản; nội dung file giữ nguyên.
+   * Nút "Hiệu chỉnh" (21/11): ghi trạng thái các môn sinh viên sửa/thêm vào `student_courses`; học kỳ hiện tại và
+   * ghi chú riêng từng môn (22/11) vào `student_progress_imports.data.web`, trong một transaction. Chỉ đụng dòng của chính tài khoản; nội dung file giữ nguyên.
    */
   async adjustMybk(userId: string, dto: AdjustMybkDto) {
     const row = await this.progress.findOne({ where: { user_id: userId } });
@@ -275,13 +276,35 @@ export class PlannerService {
           { conflictPaths: ['user_id', 'course_id'] },
         );
       }
-      if (dto.current_semester) {
+      if (dto.current_semester || dto.notes?.length || dto.block_choices?.length) {
         const data = row.data as Record<string, unknown>;
-        const web = { ...((data.web as Record<string, unknown> | undefined) ?? {}), current_semester: dto.current_semester };
+        const web = { ...((data.web as Record<string, unknown> | undefined) ?? {}) };
+        if (dto.current_semester) web.current_semester = dto.current_semester;
+        if (dto.notes?.length) web.notes = mergeNotes(savedNotes(data), dto.notes);
+        if (dto.block_choices?.length) web.block_choices = mergeBlockChoices(savedBlockChoices(data), dto.block_choices);
         await manager.update(StudentProgressImport, { user_id: userId }, { data: { ...data, web } as never });
       }
     });
     return { ...(await this.getProgress(userId)), written_courses: latest.size, removed_courses: remove.length };
+  }
+
+  /** T43 (22/11): cài đặt trang Gợi ý ở `data.web.planner`; chưa nhập tiến độ thì `null`. */
+  async getSettings(userId: string) {
+    const row = await this.progress.findOne({ where: { user_id: userId } });
+    const web = (row?.data as { web?: { planner?: unknown } } | undefined)?.web;
+    const planner = web?.planner;
+    return { settings: planner && typeof planner === 'object' && !Array.isArray(planner) ? planner : null };
+  }
+
+  /** Ghi đè `data.web.planner` của chính tài khoản; nội dung file và phần `web` khác giữ nguyên. */
+  async saveSettings(userId: string, settings: Record<string, unknown>) {
+    if (JSON.stringify(settings).length > 200_000) throw new BadRequestException('Cài đặt quá lớn (tối đa 200 KB).');
+    const row = await this.progress.findOne({ where: { user_id: userId } });
+    if (!row) throw new BadRequestException('Chưa có tiến độ: nhập tiến độ từ myBK trước rồi mới lưu cài đặt lộ trình.');
+    const data = row.data as Record<string, unknown>;
+    const web = { ...((data.web as Record<string, unknown> | undefined) ?? {}), planner: settings };
+    await this.progress.update({ user_id: userId }, { data: { ...data, web } as never });
+    return { settings };
   }
 
   /** Đọc file tiến độ myBK và đối chiếu với database (chỉ đọc). File không được lưu. */
@@ -312,11 +335,13 @@ export class PlannerService {
       chosenCourses: chosenId ? byCurriculum.get(chosenId) ?? [] : [],
       catalog: catalog.map((c) => ({ id: c.id, code: c.code, name: c.name, credits: c.credits })),
       statusByCode: new Map(studentCourses.filter((s) => s.course).map((s) => [s.course.code, s.status])),
-      programMap: this.programMap(),
+      // Ưu tiên cột myBK trên database (`curricula.source_code`, 132/132 chương trình, 22/11); bảng nối cũ chỉ dự phòng.
+      programMap: { ...this.programMap(), ...Object.fromEntries(curricula
+        .filter((c) => c.source_code).map((c) => [c.source_code as string, c.code])) },
     });
   }
 
-  /** Bảng nối mã chương trình myBK -> mã chương trình của nhóm (file trong repo, không ở database). */
+  /** Bảng nối cũ (T20) mã myBK -> mã chương trình, file trong repo. Chỉ dự phòng khi database không có `source_code`. */
   private programMap(): Record<string, string> {
     try {
       const raw = JSON.parse(readFileSync(join(this.runner.dir, 'planner', 'data', 'mybk-program-map.json'), 'utf8'));
@@ -344,7 +369,18 @@ export class PlannerService {
   }
 
   async solve(userId: string, dto: SolvePlanDto): Promise<Record<string, unknown>> {
-    const input = buildPlannerInput(await this.loadSource(userId), dto);
+    const source = await this.loadSource(userId);
+    // T62 (giai đoạn 12): tra mã môn sinh viên gõ vào ô tự chọn tự do; mã không có thì báo rõ, không giải.
+    const codes = [...new Set((dto.free_choices ?? []).map((f) => String(f?.course_code ?? '').trim().toUpperCase()))]
+      .filter(Boolean);
+    if (codes.length) {
+      const found = await this.courses.find({ where: { code: In(codes) } });
+      const missing = codes.filter((c) => !found.some((f) => f.code === c));
+      if (missing.length) throw new BadRequestException(`Không tìm thấy môn: ${missing.join(', ')}`);
+      source.freeCourses = found.map((c) => ({ id: c.id, code: c.code, name: c.name, credits: c.credits }));
+      dto = { ...dto, free_choices: (dto.free_choices ?? []).map((f) => ({ ...f, course_code: f.course_code.trim().toUpperCase() })) };
+    }
+    const input = buildPlannerInput(source, dto);
     try {
       return await this.runner.run(input, dto.solver ?? 'cpsat');
     } catch (error) {

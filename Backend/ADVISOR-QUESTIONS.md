@@ -37,7 +37,7 @@ Ghi chú:
 
 ## 2. Tư vấn học vụ (Phân tích học tập + SQL) — Đã có
 
-Cột "Tài khoản": **demo** = `khmt.demo@bkuni.local` (đúng tiến độ), **chậm** = `khmt.cham@bkuni.local` (chậm khoảng
+Cột "Tài khoản": **demo** = `khmt.demo@bkuni.local` (đúng tiến độ), **chậm** = `k ` (chậm khoảng
 1 năm), **cả hai** = dùng được trên cả hai tài khoản. Trạng thái của từng tài khoản xem mục 2.1.
 
 | # | Nhóm | Tài khoản | Câu hỏi mẫu | Tool kỳ vọng | Câu trả lời phải có |

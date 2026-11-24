@@ -31,21 +31,67 @@ export class Curriculum extends BaseEntityCustom {
   @Column({ type: 'text', nullable: true })
   description!: string | null;
 
+  /** Tổng tín chỉ tốt nghiệp khai báo ở nguồn; `null` khi không rõ (tính từ các khối). */
+  @Column({ type: 'integer', nullable: true })
+  total_credits!: number | null;
+
   /**
-   * Nguồn dữ liệu (`mybk`) và mã CTĐT myBK (vd `DH_CQ_MT_KHM_2023`), cùng mã ở dòng "Ngành:" của PDF tiến độ.
-   * Cột do migration `CurriculumSourceAndGroupSemester1795600000000` (nhánh main) tạo, đã chạy trên Supabase;
-   * nhánh này chỉ khai để đọc. Bỏ khi gộp main (entity bên main đã có).
+   * `true` khi sinh viên phải đạt đúng một chuyên ngành mới đủ điều kiện tốt nghiệp (myBK: các chuyên ngành là
+   * CTĐT con cộng tín chỉ, không có chuyên ngành "chung"). `false`: chuyên ngành là tùy chọn.
    */
+  @Column({ type: 'boolean', default: false })
+  specialization_required!: boolean;
+
+  /** Hệ thống nguồn của dữ liệu (vd `mybk`); `null` với chương trình nhập tay. */
   @Column({ type: 'varchar', length: 20, nullable: true })
   source_system!: string | null;
 
+  /** Mã CTĐT ở nguồn, vd `DH_CQ_MT_NG_KHM_2023`. */
   @Column({ type: 'varchar', length: 100, nullable: true })
   source_code!: string | null;
 
+  /** Id CTĐT ở nguồn. */
+  @Column({ type: 'integer', nullable: true })
+  source_id!: number | null;
+
+  /** Phiên bản CTĐT ở nguồn, vd `DH_CQ_MT_NG_KHM_2023.v01`. */
   @Column({ type: 'varchar', length: 100, nullable: true })
   source_version!: string | null;
 
-  /** Tổng tín chỉ tốt nghiệp (myBK). Cột cũng do migration bên main tạo. */
-  @Column({ type: 'integer', nullable: true })
-  total_credits!: number | null;
+  /** Tên tiếng Anh của chương trình. */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  name_en!: string | null;
+
+  /**
+   * Giới thiệu chương trình (myBK `v2/curriculums`), văn bản thuần. Không trả trong danh sách để trang nhẹ;
+   * chỉ có ở `GET /curricula/{id}`.
+   */
+  @Column({ type: 'jsonb', nullable: true, select: false })
+  profile?: CurriculumProfile | null;
+
+  /** Mã CTĐT myBK cung cấp `profile`; khác `source_code` khi mượn từ khóa gần nhất cùng ngành. */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  profile_source_code!: string | null;
+
+  /** Thời điểm myBK đồng bộ bản ghi gốc lần cuối (`lastSyncedAt`). */
+  @Column({ type: 'timestamptz', nullable: true })
+  source_synced_at!: Date | null;
+}
+
+export const CURRICULUM_PROFILE_FIELDS = [
+  'overview',
+  'career_opportunities',
+  'admission_target',
+  'training_process',
+  'assessment_method',
+] as const;
+
+export type CurriculumProfileField = (typeof CURRICULUM_PROFILE_FIELDS)[number];
+
+/** Một ngôn ngữ của phần giới thiệu; trường không có nội dung thì vắng hoặc `null`. */
+export type CurriculumProfileText = Partial<Record<CurriculumProfileField, string | null>>;
+
+export interface CurriculumProfile {
+  vi?: CurriculumProfileText;
+  en?: CurriculumProfileText;
 }

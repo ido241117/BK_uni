@@ -31,3 +31,6 @@ Thumbs.db
 
 # Báo cáo thực nghiệm CSDL (bản nháp cá nhân)
 /database.md
+
+# Ban dump database (chua email, mat khau da bam): khong dua len git
+/backups/

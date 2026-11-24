@@ -187,6 +187,21 @@ const CurriculumEditor = ({ curriculumId }: { curriculumId: string }) => {
                     <Descriptions.Item label="Cập nhật">
                         {new Date(curriculum.updated_at).toLocaleString('vi-VN')}
                     </Descriptions.Item>
+                    <Descriptions.Item label="Tổng tín chỉ">
+                        {curriculum.total_credits !== null
+                            ? <Tag color="geekblue">{curriculum.total_credits} TC</Tag>
+                            : <Text type="secondary">Chưa khai</Text>}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Chuyên ngành">
+                        {curriculum.specialization_required
+                            ? <Tag color="orange">Bắt buộc đạt một chuyên ngành</Tag>
+                            : <Text type="secondary">Tùy chọn</Text>}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Nguồn">
+                        {curriculum.source_code
+                            ? <Text code>{curriculum.source_system}: {curriculum.source_version ?? curriculum.source_code} (id {curriculum.source_id})</Text>
+                            : <Text type="secondary">Nhập tay</Text>}
+                    </Descriptions.Item>
                     <Descriptions.Item label="Mô tả" span={3}>
                         {curriculum.description
                             ? <Paragraph style={{ margin: 0 }}>{curriculum.description}</Paragraph>

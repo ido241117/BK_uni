@@ -5,6 +5,8 @@ import { FOREIGN_KEY_VIOLATION, isPostgresError, UNIQUE_VIOLATION } from '../com
 import { Course } from '../course/entities/course.entity';
 import { CurriculumRegulation } from '../curriculum/entities/curriculum-regulation.entity';
 import { CurriculumSpecialization } from '../curriculum/entities/curriculum-specialization.entity';
+import { Curriculum } from '../curriculum/entities/curriculum.entity';
+import { BulkUpsertPlanCoursesDto } from './dto/bulk-upsert-plan-courses.dto';
 import { BulkUpsertStudentCoursesDto } from './dto/bulk-upsert-student-courses.dto';
 import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 import { UpsertPlanCourseDto } from './dto/upsert-plan-course.dto';
@@ -118,19 +120,30 @@ export class StudentService {
    */
   async bulkUpsertMyCourses(userId: string, dto: BulkUpsertStudentCoursesDto): Promise<StudentCourse[]> {
     const courseIds = dto.items.map((item) => item.course_id);
-    if (new Set(courseIds).size !== courseIds.length) {
-      throw new BadRequestException('Mỗi môn chỉ được xuất hiện một lần trong danh sách.');
-    }
-    if (courseIds.length) {
-      const found = await this.studentCourses.manager.count(Course, { where: { id: In(courseIds) } });
-      if (found !== courseIds.length) throw new BadRequestException('Có môn học không tồn tại trong danh sách.');
-    }
+    const removeIds = dto.remove_course_ids ?? [];
+    this.assertDistinct(courseIds, removeIds);
+    await this.assertCoursesExist(courseIds);
 
     await this.studentCourses.manager.transaction(async (manager) => {
+      if (removeIds.length) await manager.delete(StudentCourse, { user_id: userId, course_id: In(removeIds) });
       await this.upsertStatuses(manager, userId, dto.items);
       await this.syncPhysicalEducation(manager, userId, courseIds);
     });
     return this.listMyCourses(userId);
+  }
+
+  /** Mỗi môn chỉ xuất hiện một lần trong cả danh sách ghi lẫn danh sách xoá. */
+  private assertDistinct(courseIds: string[], removeIds: string[]): void {
+    const all = [...courseIds, ...removeIds];
+    if (new Set(all).size !== all.length) {
+      throw new BadRequestException('Mỗi môn chỉ được xuất hiện một lần trong danh sách.');
+    }
+  }
+
+  private async assertCoursesExist(courseIds: string[]): Promise<void> {
+    if (!courseIds.length) return;
+    const found = await this.studentCourses.manager.count(Course, { where: { id: In(courseIds) } });
+    if (found !== courseIds.length) throw new BadRequestException('Có môn học không tồn tại trong danh sách.');
   }
 
   /**
@@ -239,6 +252,42 @@ export class StudentService {
     const saved = rows.find((row) => row.course_id === courseId);
     if (!saved) throw new NotFoundException('Môn học chưa có trong kế hoạch.');
     return saved;
+  }
+
+  /**
+   * Lưu nhiều môn của kế hoạch trong một transaction: xoá các môn bị bỏ, rồi thêm/đổi học kỳ các môn còn lại
+   * (`INSERT ... ON CONFLICT` theo UQ_student_plan_course). Môn không gửi giữ nguyên.
+   */
+  async bulkUpsertMyPlanCourses(
+    userId: string,
+    curriculumId: string,
+    dto: BulkUpsertPlanCoursesDto,
+  ): Promise<PlanCourseView[]> {
+    const courseIds = dto.items.map((item) => item.course_id);
+    const removeIds = dto.remove_course_ids ?? [];
+    this.assertDistinct(courseIds, removeIds);
+    const curriculumExists = await this.planCourses.manager.exists(Curriculum, { where: { id: curriculumId } });
+    if (!curriculumExists) throw new BadRequestException('Chương trình đào tạo không tồn tại.');
+    await this.assertCoursesExist(courseIds);
+
+    await this.planCourses.manager.transaction(async (manager) => {
+      if (removeIds.length) {
+        await manager.delete(StudentPlanCourse, { user_id: userId, curriculum_id: curriculumId, course_id: In(removeIds) });
+      }
+      if (dto.items.length) {
+        await manager.upsert(
+          StudentPlanCourse,
+          dto.items.map((item) => ({
+            user_id: userId,
+            curriculum_id: curriculumId,
+            course_id: item.course_id,
+            semester_code: item.semester_code.trim(),
+          })),
+          { conflictPaths: ['user_id', 'curriculum_id', 'course_id'] },
+        );
+      }
+    });
+    return this.listMyPlanCourses(userId, curriculumId);
   }
 
   async removeMyPlanCourse(userId: string, curriculumId: string, courseId: string): Promise<null> {

@@ -116,6 +116,34 @@ describe('Curriculum API', () => {
     await request(server()).get(`/api/curricula/${randomUUID()}`).expect(404);
   });
 
+  it('stores the program profile and returns it only in the detail', async () => {
+    const patched = await request(server()).patch(`/api/curricula/${curriculumId}`).set('Origin', origin).send({
+      name_en: ' Computer Science ',
+      profile: { vi: { overview: '  Mô tả ngành ', career_opportunities: '' }, en: { overview: '   ' } },
+      profile_source_code: 'DH_CQ_MT_NG_7480101_2024',
+    }).expect(200);
+    expect(patched.body.data).toMatchObject({
+      name_en: 'Computer Science',
+      profile: { vi: { overview: 'Mô tả ngành' } },
+      profile_source_code: 'DH_CQ_MT_NG_7480101_2024',
+    });
+    expect(patched.body.data.profile).not.toHaveProperty('en');
+
+    const list = await request(server()).get('/api/curricula').query('search=computer').expect(200);
+    expect(list.body.data).toHaveLength(1);
+    expect(list.body.data[0]).not.toHaveProperty('profile');
+    expect(list.body.data[0].name_en).toBe('Computer Science');
+
+    const detail = await request(server()).get(`/api/curricula/${curriculumId}`).expect(200);
+    expect(detail.body.data.profile).toEqual({ vi: { overview: 'Mô tả ngành' } });
+
+    await request(server()).patch(`/api/curricula/${curriculumId}`).set('Origin', origin)
+      .send({ profile: { vi: { unknown_field: 'x' } } }).expect(400);
+    const cleared = await request(server()).patch(`/api/curricula/${curriculumId}`).set('Origin', origin)
+      .send({ profile: null }).expect(200);
+    expect(cleared.body.data.profile).toBeNull();
+  });
+
   it('adds courses to the curriculum and upserts duplicates', async () => {
     const added = await request(server()).post(url('/courses')).set('Origin', origin)
       .send({ course_id: courseA.id, recommended_year: 2, recommended_term: 1 }).expect(201);

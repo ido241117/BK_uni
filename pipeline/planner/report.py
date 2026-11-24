@@ -9,6 +9,11 @@ from __future__ import annotations
 from typing import Any
 
 from planner.facts import (
+    DEFAULT_SUMMER_MAX,
+    graduation_pairs,
+    offered_pairs,
+    offered_terms,
+    offering_soft,
     base_credit_limits,
     credit_limits,
     is_summer,
@@ -105,7 +110,8 @@ def objective(
     """Bo gia tri muc tieu theo dung thu tu uu tien, de so sanh hai bo giai."""
     m = metrics(fixture, scenario, plan, previous_plan)
     value = {k: (len(v) if isinstance(v, list) else v) for k, v in m.items()}
-    return tuple(value[name] for name in preference_order(fixture, scenario))
+    # ST, OH (sprint 11) chua co trong metrics: tinh 0 khi so sanh hai bo giai.
+    return tuple(value.get(name, 0) for name in preference_order(fixture, scenario))
 
 
 def preferences_report(
@@ -120,7 +126,8 @@ def preferences_report(
     out = [{"id": "S1", "detail": f"Học xong ở kỳ {graduation_semester}", "satisfied": True}]
     if m["S6"]:
         pairs = ", ".join(f"{r} trước {c}" for r, c in m["S6"])
-        first = order.index("S6") < order.index("S1")
+        # Sinh vien co the tat S6/S1 (sprint 11): goi y chi khi S6 dang xep sau S1.
+        first = "S6" not in order or "S1" not in order or order.index("S6") < order.index("S1")
         hint = "" if first else "; có thể chọn \"Ưu tiên giữ khuyến nghị\" (có thể lùi kỳ tốt nghiệp)"
         out.append({"id": "S6", "detail": f"Không theo khuyến nghị: {pairs}{hint}", "satisfied": False,
                     "broken": [{"before": r, "course": c} for r, c in m["S6"]]})
@@ -158,29 +165,51 @@ def preferences_report(
     return out
 
 
-def warnings(fixture: dict[str, Any], scenario: dict[str, Any], plan: dict[str, str]) -> list[str]:
+def warning_items(fixture: dict[str, Any], scenario: dict[str, Any], plan: dict[str, str]) -> list[dict[str, Any]]:
+    """Canh bao co cau truc (22/11): giao dien gan vao dung mon / dung ky, loi nhe nhang (``message``).
+
+    ``text`` la cau cu (giu nguyen de ``warnings`` va test cu khong doi). ``confirm``: canh bao chi la nhac,
+    sinh vien tu xac nhan duoc (vd da dat chuan tieng Anh) thi giao dien hien nut xac nhan.
+    """
     fixture = normalize(fixture)
-    out = []
-    thesis = (fixture.get("graduation_courses") or {}).get("thesis")
+    out: list[dict[str, Any]] = []
+    thesis = next((c for k, c in graduation_pairs(fixture) if k == "thesis"), None)
     flags = fixture["student"].get("flags") or {}
     if thesis and thesis in plan:
         if flags.get("english_grad_reading") is False:
-            out.append(f"Chưa đạt chuẩn tiếng Anh tốt nghiệp (Nghe–Đọc): phải đạt trước khi đăng ký {thesis} "
-                       f"ở kỳ {plan[thesis]} (QĐ 285 Phụ lục 7)")
+            out.append({
+                "kind": "english", "course": thesis, "semester": plan[thesis], "confirm": "english",
+                "text": f"Chưa đạt chuẩn tiếng Anh tốt nghiệp (Nghe–Đọc): phải đạt trước khi đăng ký {thesis} "
+                        f"ở kỳ {plan[thesis]} (QĐ 285 Phụ lục 7)",
+                "message": "Môn này cần chuẩn tiếng Anh tốt nghiệp (Nghe–Đọc) trước khi đăng ký. "
+                           "Nếu bạn đạt rồi thì bấm xác nhận nhé.",
+            })
         if flags.get("mos") is False and fixture["curriculum"].get("cohort", 0) >= 2021:
-            out.append(f"Chưa có chứng chỉ MOS: phải có trước khi đăng ký {thesis} ở kỳ {plan[thesis]} "
-                       "(QĐ 285 Phụ lục 9)")
+            out.append({
+                "kind": "mos", "course": thesis, "semester": plan[thesis], "confirm": "mos",
+                "text": f"Chưa có chứng chỉ MOS: phải có trước khi đăng ký {thesis} ở kỳ {plan[thesis]} "
+                        "(QĐ 285 Phụ lục 9)",
+                "message": "Môn này cần chứng chỉ MOS trước khi đăng ký. Nếu bạn có rồi thì bấm xác nhận nhé.",
+            })
     base_min, _ = base_credit_limits(fixture)
     limits = credit_limits(fixture, scenario)
     for sem, (_, hi) in limits.items():
         if hi < base_min:
-            out.append(f"Kỳ {sem}: bạn giới hạn {hi} TC, dưới mức tối thiểu {base_min}")
+            out.append({
+                "kind": "limit", "semester": sem,
+                "text": f"Kỳ {sem}: bạn giới hạn {hi} TC, dưới mức tối thiểu {base_min}",
+                "message": f"Bạn đặt tối đa {hi} TC, thấp hơn mức tối thiểu {base_min} TC của kỳ chính.",
+            })
     # Song hanh xep cung ky: dang ky duoc, nhung C chi duoc cong nhan khi R dat (QD 285 Dieu 2).
     for rel in fixture["course_relations"]:
         c, r = rel["course_code"], rel["related_course_code"]
         if rel["type"] == "corequisite" and c in plan and plan.get(r) == plan[c]:
-            out.append(f"{c} học cùng kỳ {plan[c]} với môn song hành {r}: {c} chỉ được tính tín chỉ "
-                       f"khi {r} đạt; rớt {r} thì {c} không được công nhận (QĐ 285 Điều 2)")
+            out.append({
+                "kind": "corequisite", "course": c, "semester": plan[c],
+                "text": f"{c} học cùng kỳ {plan[c]} với môn song hành {r}: {c} chỉ được tính tín chỉ "
+                        f"khi {r} đạt; rớt {r} thì {c} không được công nhận (QĐ 285 Điều 2)",
+                "message": f"Học cùng kỳ với {r}. Môn này chỉ được công nhận khi {r} đạt.",
+            })
     if plan:
         credits = {c["code"]: c["credits"] for c in fixture["courses"]}
         semesters = plan_semesters(fixture)
@@ -192,9 +221,71 @@ def warnings(fixture: dict[str, Any], scenario: dict[str, Any], plan: dict[str, 
             if is_summer(s) or load >= base_min:
                 continue
             which = f"Kỳ cuối {s}" if s == last else f"Kỳ {s}"
-            out.append(
-                f"{which} chỉ {load} TC, dưới {base_min} TC của kỳ chính (không học thừa để đủ). "
-                "QĐ 285 Điều 15.3 và 37.2 có thể buộc tạm dừng học khi đăng ký dưới mức tối thiểu: "
-                "nên trao đổi với phòng đào tạo"
-            )
+            out.append({
+                "kind": "low_credits", "semester": s,
+                "text": f"{which} chỉ {load} TC, dưới {base_min} TC của kỳ chính (không học thừa để đủ). "
+                        "QĐ 285 Điều 15.3 và 37.2 có thể buộc tạm dừng học khi đăng ký dưới mức tối thiểu: "
+                        "nên trao đổi với phòng đào tạo",
+                "message": f"Kỳ này có {load} TC, dưới mức tối thiểu {base_min} TC. "
+                           "Nếu cần, bạn hỏi phòng đào tạo nhé.",
+            })
+    out += _extra_items(fixture, scenario, plan)
+    for item in out:
+        item.setdefault("rule", RULE_OF_KIND.get(item["kind"]))
     return out
+
+
+# T56 (23/11): moi loai canh bao gan dieu cua QD 285 (docs/04-luat-qd285.md); luat nhom tu dat ghi ro.
+RULE_OF_KIND = {
+    "english": "QĐ 285 Phụ lục 7",
+    "mos": "QĐ 285 Phụ lục 9",
+    "limit": "QĐ 285 Điều 15.3",
+    "corequisite": "QĐ 285 Điều 2.1",
+    "low_credits": "QĐ 285 Điều 15.3, 37.2",
+    "skip_consecutive": "QĐ 285 Điều 32.1",
+    "target_over_law": "QĐ 285 Điều 15.3 (mức 11–25 do nhóm chọn)",
+    "offering_history": "Lịch sử mở lớp (nhóm tự đặt, không phải quy định)",
+}
+
+TERM_NAME = {"1": "kỳ 1", "2": "kỳ 2", "3": "kỳ hè"}
+
+
+def _extra_items(fixture: dict[str, Any], scenario: dict[str, Any], plan: dict[str, str]) -> list[dict[str, Any]]:
+    """Giai doan 12 (T52, T55): nghi 2 ky chinh lien tiep, o TC vuot luat, mon xep vao loai ky chua tung mo."""
+    out: list[dict[str, Any]] = []
+    semesters = plan_semesters(fixture)
+    mains = [s for s in semesters if not is_summer(s)]
+    skipped = set(scenario.get("skip_semesters") or [])
+    for a, b in zip(mains, mains[1:]):
+        if a in skipped and b in skipped:
+            out.append({
+                "kind": "skip_consecutive", "semester": a,
+                "text": f"Nghỉ liên tiếp kỳ {a} và {b}: cần làm đơn xin phép Phòng Đào tạo (nghỉ học tạm thời tối đa 4 kỳ)",
+                "message": f"Bạn nghỉ cả {a} và {b}. Nghỉ từ 2 kỳ chính liên tiếp cần làm đơn xin phép Phòng Đào tạo.",
+            })
+    _, base_max = base_credit_limits(fixture)
+    summer_max = (fixture.get("rules") or {}).get("summer_credits_max", DEFAULT_SUMMER_MAX)
+    for sem, want in (scenario.get("semester_targets") or {}).items():
+        law = summer_max if is_summer(sem) else base_max
+        if want > law:
+            out.append({
+                "kind": "target_over_law", "semester": sem,
+                "text": f"Kỳ {sem}: bạn muốn {want} TC, vượt mức {law} TC; vẫn xếp theo ý bạn",
+                "message": f"Bạn muốn {want} TC, vượt mức {law} TC. Web vẫn xếp theo ý bạn, nhớ hỏi phòng đào tạo nhé.",
+            })
+    if offering_soft(fixture):
+        ok = offered_pairs(scenario)
+        for c, sem in plan.items():
+            terms = offered_terms(fixture, c)
+            if terms is None or sem[-1] in terms or (c, sem) in ok:
+                continue
+            out.append({
+                "kind": "offering_history", "course": c, "semester": sem, "confirm": "offered",
+                "text": f"{c} chưa từng mở {TERM_NAME.get(sem[-1], 'loại kỳ này')} trong lịch sử mở lớp, xếp ở {sem}",
+                "message": f"Môn này chưa từng mở {TERM_NAME.get(sem[-1], 'loại kỳ này')}. Nếu biết kỳ {sem} có mở, bấm \"Kỳ này có mở\".",
+            })
+    return out
+
+
+def warnings(fixture: dict[str, Any], scenario: dict[str, Any], plan: dict[str, str]) -> list[str]:
+    return [item["text"] for item in warning_items(fixture, scenario, plan)]

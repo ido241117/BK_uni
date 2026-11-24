@@ -199,8 +199,10 @@ def check_phases_6_and_8() -> None:
     """GD 6 (what-if, T17) va GD 8 (file tien do myBK, T19-T24). Lam ngay 19/11."""
     rec = ROOT / "Frontend" / "src" / "pages" / "recommendations"
     page = (rec / "index.tsx").read_text(encoding="utf-8")
-    check("What-if: trang Gợi ý lưu mốc và gửi previous_plan (T17)",
-          (rec / "whatIf.ts").exists() and "previous_plan" in page and "storeBaseline" in page)
+    # 23/11 (giai doan 12): moc la ban luu gan sao trong tai khoan; payload dung o scenario.ts.
+    check("What-if: trang Gợi ý gửi previous_plan theo mốc (bản gắn sao) (T17, giai đoạn 12)",
+          (rec / "whatIf.ts").exists() and "planOf(starred" in page
+          and "previous_plan" in (rec / "scenario.ts").read_text(encoding="utf-8"))
     check("Có bộ đọc file tiến độ myBK (planner/mybk.py) (T19)", (PIPELINE / "planner" / "mybk.py").exists())
     # GD 9 (20/11): PDF la nguon duy nhat; man hinh xac nhan cu (MybkImport) khong con duoc dung.
     courses = ROOT / "Frontend" / "src" / "pages" / "courses"
@@ -283,11 +285,81 @@ def check_phase_10() -> None:
     for task in ("T33", "T36"):
         if f"- [x] {task}" not in plan:
             report("CHUA_LAM", f"Giai đoạn 10: {task} chưa làm", task)
-    # Bo ghep dau vao tim nhom "D. Hoc phan tot nghiep"; database 20/11 doi ten thanh "Tot nghiep".
+    # Sprint 11 (22/11): Gợi ý theo ý sinh viên.
+    for n in range(38, 51):
+        task = f"T{n}"
+        if f"- [x] {task}" not in plan:
+            report("CHUA_LAM", f"Giai đoạn 11: {task} chưa xong", task)
+    cpsat = (PIPELINE / "planner" / "solve_cpsat.py").read_text(encoding="utf-8")
+    check("T40: CP-SAT có ghim tuyệt đối, nghỉ/khóa kỳ, TC muốn từng kỳ, năm theo TC, mở lớp mềm",
+          all(k in cpsat for k in ("pins_absolute", "skip_semesters", "frozen_semesters", "semester_targets",
+                                    "year_thresholds", "offering_soft")))
+    pin = (backend / "planner" / "planner-input.ts").read_text(encoding="utf-8")
+    check("T42: backend bật ghim tuyệt đối, năm theo TC, mở lớp mềm; không xếp Anh văn 1–4",
+          all(k in pin for k in ("pins_absolute: true", "year_by_credits: [28, 56, 84]", "offering_soft: true", "'LA1009'")))
+    fe_rec = ROOT / "Frontend" / "src" / "pages" / "recommendations"
+    check("T43: API lưu cài đặt trang Gợi ý (GET/PUT plans/settings, data.web.planner)",
+          "@Put('settings')" in (backend / "planner" / "planner.controller.ts").read_text(encoding="utf-8"))
+    check("T45: trang Gợi ý có bảng các kỳ, danh sách ưu tiên, thẻ yêu cầu; tự lưu và giải lại",
+          (fe_rec / "SemesterBoard.tsx").exists() and (fe_rec / "PriorityList.tsx").exists()
+          and "savePlannerSettings" in (fe_rec / "index.tsx").read_text(encoding="utf-8")
+          and "RequestsCard" in (fe_rec / "PlanResultView.tsx").read_text(encoding="utf-8"))
+    check("T46: Hiệu chỉnh có danh sách môn đang học + chọn khối (data.web.block_choices → student.block_overrides)",
+          "InProgressList" in ui and "block_choices" in service and "block_overrides" in pin
+          and "block_overrides" in (PIPELINE / "planner" / "normalize.py").read_text(encoding="utf-8")
+          and "_assumed_pass" in (PIPELINE / "planner" / "cli.py").read_text(encoding="utf-8"))
+    board = (fe_rec / "SemesterBoard.tsx").read_text(encoding="utf-8")
+    check("23/11: cảnh báo có cấu trúc (warning_items), nút không mở + ô TC trên bảng, validator không chặn ô FREE_ kỳ hè",
+          "def warning_items" in (PIPELINE / "planner" / "report.py").read_text(encoding="utf-8")
+          and "markNotOffered" in board and "setTarget" in board and "mới so với mốc" not in board
+          and 'not course.startswith("FREE_")' in (PIPELINE / "planner" / "validate.py").read_text(encoding="utf-8"))
+    check("T41: kết quả có bảng requests (không im lặng bỏ yêu cầu của sinh viên)",
+          (PIPELINE / "planner" / "student_requests.py").exists()
+          and "requests_report" in (PIPELINE / "planner" / "result.py").read_text(encoding="utf-8"))
+    # T37 (22/11): database 20/11 doi ten nhom "D. Hoc phan tot nghiep" -> "Tot nghiep", "E. ..." -> "Dieu kien tot nghiep".
     pinput = (backend / "planner" / "planner-input.ts").read_text(encoding="utf-8")
     if "categoryCodes('D.')" in pinput:
         report("KHAC", "planner-input.ts tìm nhóm 'D.'/'E.' nhưng database 20/11 không còn nhóm nào tên như vậy",
                "môn tốt nghiệp (ngưỡng 65/70/85%) không được nhận; nhóm mới tên 'Tốt nghiệp', 'Điều kiện tốt nghiệp'")
+    else:
+        check("T37: planner-input.ts nhận nhóm 'Tốt nghiệp' / 'Điều kiện tốt nghiệp' (vẫn nhận tên cũ 'D.'/'E.')",
+              "'học phần tốt nghiệp', 'tốt nghiệp bậc cử nhân'" in pinput and "prefixes: ['điều kiện tốt nghiệp'" in pinput)
+
+
+def check_phase_12() -> None:
+    """Giai doan 12 (23/11): what-if theo dac ta muc 12, chuc nang M1-M18 (02 muc 12.12)."""
+    planner = PIPELINE / "planner"
+    facts = (planner / "facts.py").read_text(encoding="utf-8")
+    cpsat = (planner / "solve_cpsat.py").read_text(encoding="utf-8")
+    cli = (planner / "cli.py").read_text(encoding="utf-8")
+    report_py = (planner / "report.py").read_text(encoding="utf-8")
+    check("T51: S2, S8 sinh viên xếp được, tắt được (preferences.disabled)",
+          '"S2", "S8")' in facts and '"disabled"' in facts)
+    check("T52: cảnh báo nghỉ 2 kỳ chính liên tiếp, ô TC vượt luật, kèm điều quy định (rule)",
+          "skip_consecutive" in report_py and "target_over_law" in report_py and "RULE_OF_KIND" in report_py)
+    check("T53: lời nhắn nêu lý do thật khi không đạt số TC (_explain_targets)", "def _explain_targets" in cli)
+    check("T54: giả định rớt môn trong lộ trình (assumed_fail): tính TC kỳ rớt, học lại sau",
+          "assumed_fails" in cpsat and "failed_attempts" in (planner / "result.py").read_text(encoding="utf-8"))
+    check("T55: 'Kỳ này có mở' (offered) gỡ phạt và cảnh báo lịch sử mở lớp",
+          "offered_pairs" in cpsat and "offering_history" in report_py)
+    check("M11, M6: kết quả có infeasible_fixes và course_facts", "infeasible_fixes" in cli and "course_facts" in cli)
+    check("T62: ô tự chọn tự do gõ mã bất kỳ (student.free_choices)",
+          "free_choices" in (planner / "normalize.py").read_text(encoding="utf-8"))
+    check("Test giai đoạn 12 có (tests/test_whatif12.py)", (planner / "tests" / "test_whatif12.py").exists())
+    backend = ROOT / "Backend" / "src" / "planner"
+    dto = (backend / "dto" / "solve-plan.dto.ts").read_text(encoding="utf-8")
+    check("T57: API nhận assumed_fail, offered, free_choices; backend tra mã môn ô tự do",
+          all(k in dto for k in ("assumed_fail?", "offered?", "free_choices?"))
+          and "Không tìm thấy môn" in (backend / "planner.service.ts").read_text(encoding="utf-8"))
+    rec = ROOT / "Frontend" / "src" / "pages" / "recommendations"
+    page = (rec / "index.tsx").read_text(encoding="utf-8")
+    check("T59: trang chỉ giải khi bấm Giải (không còn tự giải trong useEffect), có Hoàn tác",
+          "solve.mutate(buildPayload(scenario));\n            firstSolve" not in page and "firstSolve" not in page
+          and "const undo" in page)
+    check("T61, T64, T65: chọn môn → kỳ được/không (localHints.ts), lịch sử 10 bản, tab So sánh",
+          (rec / "localHints.ts").exists() and (rec / "ComparePanel.tsx").exists() and "addPlan" in page)
+    check("W13: trang Gợi ý bỏ nút Khóa kỳ", "Khóa kỳ" not in (rec / "SemesterBoard.tsx").read_text(encoding="utf-8"))
+    report("CHUA_LAM", "Giai đoạn 12: chưa bấm thử trên web (05 mục G, bảng M1–M18)", "T66")
 
 
 def check_last_semester_minimum() -> None:
@@ -401,6 +473,7 @@ def main() -> None:
     check_phases_3_to_5()
     check_phases_6_and_8()
     check_phase_10()
+    check_phase_12()
     check_database()
 
     counts = {}

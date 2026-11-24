@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { Course } from '../course/entities/course.entity';
 import { CourseOpenedSemester } from '../course/entities/course-opened-semester.entity';
 import { CourseGroup } from '../curriculum/entities/course-group.entity';
@@ -24,6 +24,7 @@ import {
 } from './advisor.answer';
 import type { ChatToolDefinition } from './deepseek.client';
 import { SEMESTER_CODE, termOf } from './semester';
+import { findSeniorTip, SENIOR_ELECTIVE_TIPS, SENIOR_TIPS_SOURCE, seniorTipView } from './senior-tips';
 
 /** Các phần của ảnh chụp "Phân tích học tập" mà tool `get_analysis_section` trả được. */
 export const ANALYSIS_SECTIONS = [
@@ -206,6 +207,18 @@ export const TOOL_DEFINITIONS: ChatToolDefinition[] = [
   {
     type: 'function',
     function: {
+      name: 'get_senior_free_elective_tips',
+      description:
+        'Danh sách môn tự chọn tự do được sinh viên KHÓA TRƯỚC truyền lại (kinh nghiệm truyền miệng, không chính thức): ' +
+        'giảng viên khóa trước đã học, có video/tài liệu không, môn khóa trước khuyên tránh. Kèm số tín chỉ, mở lớp kỳ tới, ' +
+        'trạng thái của sinh viên và yêu cầu khối tự chọn tự do của chương trình. Dùng khi sinh viên hỏi nên chọn môn tự chọn ' +
+        'tự do nào, môn tự do "dễ"/phổ biến, hoặc hỏi kinh nghiệm/lời khuyên của khóa trước.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: SUBMIT_ANSWER_TOOL,
       description:
         'Gửi câu trả lời cuối cho sinh viên dưới dạng JSON có cấu trúc. Bắt buộc gọi đúng một lần để kết thúc lượt trả lời.',
@@ -316,6 +329,7 @@ export class AdvisorTools {
       case 'get_course_outline': return this.courseOutline(args, ctx);
       case 'search_outlines': return this.searchOutlines(args, ctx);
       case 'find_similar_courses': return this.similarCourses(args, ctx);
+      case 'get_senior_free_elective_tips': return this.seniorTips(ctx);
       default: return { error: `Không có tool "${name}"` };
     }
   }
@@ -346,6 +360,7 @@ export class AdvisorTools {
           ? 'Học phần thể chất: tính vào GDTC của chương trình (1 học phần = xong PE1003, 2 học phần = xong PE1005).'
           : 'Môn không thuộc chương trình đào tạo của sinh viên; chỉ có thể tính vào khối tự chọn tự do (nếu có).',
         offering_next: offering,
+        ...this.seniorTipField(catalog.code),
       };
     }
 
@@ -388,9 +403,62 @@ export class AdvisorTools {
       outline: outlineBrief(summary),
       outline_prerequisites: (summary?.prerequisites ?? [])
         .map(item => ({ code: item.related_course_code, type: item.type ? RELATION_LABEL[item.type as CourseRelationType] : null })),
+      ...this.seniorTipField(course.code),
       ...((PE_GENERIC_CODES as readonly string[]).includes(course.code.toUpperCase())
         ? { physical_education_options: await this.physicalEducationOptions(ctx) }
         : {}),
+    };
+  }
+
+  /** Lời khuyên khóa trước của một môn (nếu có), luôn kèm ghi chú nguồn. */
+  private seniorTipField(code: string) {
+    const tip = findSeniorTip(code);
+    return tip ? { senior_tip: { ...seniorTipView(tip), disclaimer: SENIOR_TIPS_SOURCE } } : {};
+  }
+
+  /**
+   * Môn tự chọn tự do khóa trước truyền lại, đối chiếu với dữ liệu thật: số tín chỉ trong danh mục, có thuộc chương trình
+   * không (môn trong chương trình không tính vào tự chọn tự do), trạng thái của sinh viên và dự đoán mở lớp kỳ tới.
+   */
+  private async seniorTips(ctx: TurnContext) {
+    const index = await this.index(ctx);
+    const allCodes = SENIOR_ELECTIVE_TIPS.flatMap(tip => tip.codes);
+    const catalog = await this.resolveCodes(allCodes, ctx);
+    const ids = [...new Set([...catalog.values()].map(course => course.id))];
+    const [statuses, offerings, anyGroups] = await Promise.all([
+      ids.length ? this.studentCourses.find({ where: { user_id: ctx.userId, course_id: In(ids) } }) : Promise.resolve([]),
+      this.offering(ids, ctx.nextSemester),
+      // Khối tự chọn tự do = khối gốc `any` (nhận môn ngoài chương trình); snapshot phân tích không liệt kê khối này.
+      this.groups.find({ where: { curriculum_id: ctx.curriculumId, pool_scope: CourseGroupScope.ANY, specialization_id: IsNull() } }),
+    ]);
+    const statusById = new Map(statuses.map(row => [row.course_id, row.status]));
+
+    const freeElectiveGroups = anyGroups.map(group => ({
+      group: group.name,
+      required_credits: group.required_credits,
+      required_count: group.required_count,
+      course_credits_must_be: group.pool_course_credits,
+    }));
+
+    return {
+      source: SENIOR_TIPS_SOURCE,
+      instruction: 'Khi dùng dữ liệu này phải nói rõ là "theo kinh nghiệm/lời khuyên của các khóa trước", không trình bày như ' +
+        'thông tin chính thức; không đánh giá hay so sánh giảng viên ngoài những gì khóa trước ghi.',
+      free_elective_requirement: freeElectiveGroups.length
+        ? freeElectiveGroups
+        : 'Chương trình của sinh viên không có khối tự chọn tự do; các môn dưới đây không tính vào tốt nghiệp.',
+      tips: SENIOR_ELECTIVE_TIPS.map(tip => {
+        const found = tip.codes.map(code => catalog.get(code)).find(Boolean);
+        const status = found ? statusById.get(found.id) : undefined;
+        return {
+          ...seniorTipView(tip),
+          code_in_catalog: found?.code ?? null,
+          credits: found?.credits ?? null,
+          in_student_curriculum: found ? index.byCode.has(found.code.toUpperCase()) : false,
+          student_status: status ? STATUS_LABEL[status] : 'chưa khai',
+          offering_next: found ? offerings.get(found.id)?.verdict ?? 'no_data' : 'not_in_catalog',
+        };
+      }),
     };
   }
 

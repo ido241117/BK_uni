@@ -23,14 +23,40 @@ export interface SolvePlanPayload {
         wanted_courses?: string[];
         balanced_load?: boolean;
         recommendations_first?: boolean;
+        /** Sprint 11: thứ tự ưu tiên do sinh viên sắp, chỉ gồm mục đang bật. */
+        order?: PlanPriorityId[];
+        /** Giai đoạn 12: S2, S8 mặc định bật; nằm ở đây là tắt. */
+        disabled?: PlanPriorityId[];
     };
     student_flags?: { english_grad_reading?: boolean; mos?: boolean };
     use_inferred_relations?: boolean;
     previous_plan?: Record<string, string>;
-    /** Chỉ bộ giải Clingo (engine ASP): kỳ sinh viên chủ động nghỉ. */
+    /** Kỳ sinh viên nghỉ (bảo lưu, đi làm…): môn không ghim không xếp vào (22/11). */
     skip_semesters?: string[];
+    /** Kỳ khóa: giữ đúng các môn đã ghim, không xếp thêm (22/11). */
+    frozen_semesters?: string[];
+    /** Số TC muốn từng kỳ; bộ giải được lệch tới 2 TC và báo lại (22/11). */
+    semester_targets?: Record<string, number>;
     /** Clingo only: interest tags the student picked (names from GET /plans/interest-tags). */
     interests?: string[];
+    /** Giai đoạn 12 (W1): giả định rớt môn ở kỳ trong lộ trình; học lại ở kỳ sau. */
+    assumed_fail?: CourseAtSemester[];
+    /** Giai đoạn 12 (W2): sinh viên báo môn có mở ở kỳ (gỡ cảnh báo lịch sử mở lớp). */
+    offered?: CourseAtSemester[];
+    /** Giai đoạn 12 (T62): môn gõ mã vào ô tự chọn tự do, ghim vào kỳ của ô. */
+    free_choices?: CourseAtSemester[];
+}
+
+/** Mục ưu tiên sinh viên sắp (sprint 11): S1 ra trường sớm, S6 kế hoạch giảng dạy, S4 môn mình chọn,
+ *  S5 đều tải, S10 hạn chế hè, OH lịch sử mở lớp, S3 giữ gần mốc. */
+export type PlanPriorityId = 'S1' | 'S6' | 'S4' | 'S5' | 'S10' | 'OH' | 'S3' | 'S2' | 'S8';
+
+/** Một yêu cầu của sinh viên và bộ giải đáp ứng tới đâu (bảng `requests`, 22/11). */
+export interface PlanRequest {
+    kind: 'pin' | 'target' | 'skip' | 'frozen' | 'wanted' | 'graduate_by' | 'not_offered' | 'assumed_fail' | 'offered';
+    item: string;
+    status: 'met' | 'warning' | 'partial' | 'unmet';
+    detail: string;
 }
 
 /** An interest tag with the courses of the student's program that carry it (GET /plans/interest-tags). */
@@ -44,6 +70,31 @@ export interface PlanCourse {
     credits: number;
     reason: PlanCourseReason;
     locked: boolean;
+    /** Khối tự chọn chứa môn (22/11). */
+    block?: string | null;
+    /** `true`: môn bộ giải tạm chọn trong khối (sinh viên chưa ghim/chọn) → hiện thành ô khối. */
+    slot?: boolean;
+    /** Giai đoạn 12 (W1): lần học sinh viên giả định rớt (tính TC của kỳ, không đạt). */
+    assumed_fail?: boolean;
+}
+
+/** Cách gỡ khi không giải được (giai đoạn 12, M11): bấm là áp dụng vào kịch bản. */
+export interface PlanFix {
+    kind: 'unpin' | 'unskip' | 'remove_not_offered' | 'remove_target' | 'remove_assumed_fail' | 'assume_pass'
+        | 'enable_summer' | 'remove_graduate_by' | 'remove_frozen' | 'remove_max_credits' | 'remove_semester_limits';
+    label: string;
+    course?: string;
+    semester?: string;
+}
+
+/** Dữ liệu để trang tự tô kỳ được / không được khi chọn môn, không gọi bộ giải (giai đoạn 12, M6). */
+export interface PlanCourseFact {
+    prerequisites: string[];
+    corequisites: string[];
+    /** internship: thực tập (hè luôn được); excluded: đồ án (không học hè); history / no_history: từng mở hè hay chưa. */
+    summer: 'internship' | 'excluded' | 'history' | 'no_history';
+    /** Loại kỳ từng mở ('1', '2', '3' = hè); null: không có dữ liệu. */
+    terms: string[] | null;
 }
 
 export interface PlanSemester {
@@ -69,12 +120,19 @@ export interface PlanResult {
     preferences_report?: PlanPreferenceReport[];
     assumptions?: string[];
     warnings?: string[];
+    /** 22/11: cảnh báo gắn với môn / kỳ, lời nhẹ nhàng; `confirm` = sinh viên tự xác nhận được. */
+    warning_items?: PlanWarningItem[];
     unverified_prerequisites?: string[];
     inferred_relations?: { course_code: string; related_course_code: string; type: string; inferred_from: string }[];
     relations_snapshot?: string | null;
     violations: string[];
     diff_vs_previous?: string[];
     infeasible_reason?: string | null;
+    infeasible_fixes?: PlanFix[];
+    course_facts?: Record<string, PlanCourseFact>;
+    credit_rules?: { main_max: number; summer_max: number };
+    /** Mỗi yêu cầu của sinh viên: đáp ứng / trái luật nhưng giữ / một phần / không, kèm lý do. */
+    requests?: PlanRequest[];
     /** Chỉ bộ giải Clingo (engine ASP), xem pipeline/planner/ASP-ADAPTER.md mục 6. */
     engine_report?: EngineReport | null;
 }
@@ -231,6 +289,19 @@ export interface MybkReview {
     can_confirm: boolean;
 }
 
+export interface PlanWarningItem {
+    kind: 'english' | 'mos' | 'limit' | 'corequisite' | 'low_credits' | string;
+    course?: string;
+    semester?: string;
+    confirm?: 'english' | 'mos' | 'offered';
+    /** Điều quy định (giai đoạn 12, T56). */
+    rule?: string | null;
+    /** Câu cũ (trùng một dòng trong `warnings`). */
+    text: string;
+    /** Lời nhắc ngắn, nhẹ nhàng để hiện trên thẻ. */
+    message: string;
+}
+
 /** `GET /api/plans/mybk/progress`: `data` = null khi chưa tải file. */
 export interface MybkProgress {
     imported_at: string | null;
@@ -238,6 +309,10 @@ export interface MybkProgress {
     /** Học kỳ hiện tại (vd "261"): sinh viên khai ở Hiệu chỉnh (`student`) hoặc tính theo ngày (`auto`). */
     current_semester: string;
     current_semester_source: 'student' | 'auto';
+    /** Ghi chú riêng của sinh viên theo mã môn (22/11), sửa ở Hiệu chỉnh; khác ghi chú trong file myBK. */
+    notes: Record<string, string>;
+    /** T46 (22/11): khối sinh viên tự chọn cho môn, {mã môn: id khối}; không có thì theo chương trình. */
+    block_choices?: Record<string, string>;
 }
 
 /** `PUT /api/plans/mybk/adjustments` (nút Hiệu chỉnh). */
@@ -246,6 +321,10 @@ export interface MybkAdjustPayload {
     items: { course_id: string; status: StudentCourseStatus }[];
     /** Xóa trạng thái các môn này (môn ngoài file thêm nhầm). */
     remove_course_ids?: string[];
+    /** Ghi chú riêng của sinh viên; `note` rỗng thì xóa (22/11). */
+    notes?: { code: string; note: string }[];
+    /** T46: khối sinh viên chọn cho môn; `group_id` null thì về khối mặc định. */
+    block_choices?: { code: string; group_id: string | null }[];
 }
 
 /** `POST /api/plans/mybk/import`: tiến độ vừa lưu + số môn đã ghi trạng thái. */

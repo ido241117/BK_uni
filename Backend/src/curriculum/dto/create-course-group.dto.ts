@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayUnique, IsArray, IsEnum, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
+import { ArrayUnique, IsArray, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 import { CourseGroupKind } from '../enum/course-group-kind';
 import { CourseGroupScope } from '../enum/course-group-scope';
 
@@ -55,6 +55,21 @@ export class CreateCourseGroupDto {
   @IsInt()
   @Min(1)
   pool_course_credits?: number | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 4, description: 'Năm gợi ý bắt đầu học khối; gửi cùng recommended_term' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  recommended_year?: number | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 1, description: 'Học kỳ gợi ý (1, 2, 3 = hè); gửi cùng recommended_year' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(3)
+  recommended_term?: number | null;
 
   @ApiPropertyOptional({
     nullable: true,

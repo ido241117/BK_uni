@@ -1,6 +1,6 @@
-# 01 · Bối cảnh đã kiểm chứng (cập nhật 21/11/2026)
+# 01 · Bối cảnh đã kiểm chứng (cập nhật 24/11/2026)
 
-> **21/11:** database đã thay toàn bộ dữ liệu chương trình ngày 20/11 (mục 6e). Số liệu database ở mục 2, 2b, 6b là **trước 20/11**, giữ để tra lịch sử.
+> **Đọc nhanh (24/11):** sự thật hiện hành nằm ở mục **6e** (database từ 20/11, luồng PDF ↔ database) và **6f** (giai đoạn 12). Mục 2, 2b, 5, 6, 6b, 6c, 6d ghi theo ngày của từng mục, giữ để tra lịch sử: database thay toàn bộ dữ liệu chương trình ngày 20/11; bộ giải Clingo cũ (`encoding.lp`, `solve.py`) được thay bằng engine ASP ngày 20/11; trang Gợi ý đã làm lại ở giai đoạn 11–12 (tổng kết ở [06](06-tong-ket.md)).
 
 Tài liệu này giữ lại những gì đã biết chắc qua các phiên làm việc 15–18/11, để phiên sau (người hoặc AI) không phải đoán. Kế hoạch việc cần làm nằm ở [02-ke-hoach.md](02-ke-hoach.md).
 
@@ -104,7 +104,7 @@ Giảng viên hướng dẫn gửi ngày 17/11. File: `Quy định về học v�
 
 Thêm từ việc đọc code backend ngày 18/11: `student_courses` **không có cột kỳ học**; `student_profiles` có `admission_year`, `curriculum_id`; có bảng `student_regulation_status` và `curriculum_regulations` nhưng chưa xem chúng chứa điều kiện gì.
 
-## 5. Web hiện tại (đọc code ngày 18/11)
+## 5. Web lúc bắt đầu (đọc code ngày 18/11; hiện hành xem [06](06-tong-ket.md))
 
 - Sinh viên **tự chọn chương trình** trong hồ sơ, **tự khai trạng thái từng môn** (`not-started`, `in-progress`, `completed`, `failed`) hoặc tải Excel/CSV theo mẫu của nhóm. Không đọc được file myBK.
 - Trang Phân tích tính **trong trình duyệt** (`Frontend/src/pages/courses/analysis/analyze.ts`), không lưu kết quả. Lộ trình là heuristic xếp lần lượt từng kỳ.
@@ -112,7 +112,7 @@ Thêm từ việc đọc code backend ngày 18/11: `student_courses` **không c�
 - Trang Gợi ý (`/recommendations`): từ 19/11 là trang thật (xem 6b, 6c).
 - Mã kỳ dạng myBK: `251` = năm học 2025–2026 kỳ 1, `253` = kỳ hè.
 
-## 6. Bộ giải (`pipeline/planner/`)
+## 6. Bộ giải (`pipeline/planner/`, ghi 18–19/11)
 
 - Hai bộ giải độc lập: Clingo (`encoding.lp`, `solve.py`) và OR-Tools CP-SAT (`solve_cpsat.py`), cùng đầu vào và đầu ra; validator độc lập (`validate.py`). Từ GĐ 2 cả ba dùng chung bước chuẩn hóa dữ liệu `normalize.py` (không chứa luật).
 - **Giai đoạn 2 (18/11):** song hành theo QĐ 285 (phải đạt); bỏ học trước; khuyến nghị là mềm S6; tín chỉ từng kỳ, `max_credits`, `semester_limits`, `graduate_by`; cấp độ môn theo khóa (`rules.course_level`); kỳ hè chỉ xếp thực tập; ngưỡng TC môn tốt nghiệp; khối chuyên ngành; ô tự chọn tự do; S4, S5, S6 kèm `preferences_report`; `warnings`; lệnh `planner.cli` (stdin → stdout, `INPUT_ERROR`, `infeasible_reason`).
@@ -187,6 +187,7 @@ Thêm từ việc đọc code backend ngày 18/11: `student_courses` **không c�
 | **Chữ dán** từ trang Tiến độ (Ctrl+A, Ctrl+C trên Edge, 2 sinh viên KHMT 2023): bảng giữ dấu **Tab** giữa các ô; dấu ✓ (icon) **mất**; ô mã môn của khối tự chọn có dấu cách đầu; đầu trang có menu myBK và chú thích "Điểm số > Điểm MT (12) > Điểm DT (21)". Suy "đạt" từ điểm (4–10 khác F, 12, 21): cả hai qua tự kiểm tra cộng tín chỉ từng khối; với người duyệt, **PDF (`trinh.pdf`, myBK 14/11) và chữ dán cho cùng mã môn, cùng đạt/chưa, cùng điểm** | `planner.mybk.parse_text` trên file tại máy (không commit) |
 | Tài khoản **tài khoản thử B** giữ dữ liệu của sinh viên B (KHMT 2023, 116/128, myBK 18/09/2026). 21/11 lưu lại bằng chữ dán của chính sinh viên B qua API: 97 trạng thái, 45 Đã hoàn thành = 116 TC, PE1003/PE1005 Đã hoàn thành, CH4079 (ngoài chương trình) tính tự chọn tự do | `GET /api/plans/mybk/progress`, `GET /api/student-courses/me` khi đăng nhập tài khoản đó |
 | Hiệu chỉnh trên tài khoản thử B qua API (21/11): khai kỳ 261 + CO3013 Đang học → bộ giải CP-SAT `OPTIMAL`, lộ trình bắt đầu 262, không xếp lại CO3013 ("giả định đậu"), không xếp PE1003/PE1005; đã trả CO3013 về Chưa học, **kỳ 261 vẫn để ở trạng thái "đã khai"** (`data.web.current_semester`) | `GET /api/plans/mybk/progress` khi đăng nhập tài khoản đó |
+| Trước 22/11, môn **ngoài CTĐT đang học** (giả định đậu) không được trừ vào tự chọn tự do: `normalize.py` chỉ đếm môn Đã hoàn thành, nên lộ trình xếp dư một ô tự chọn tự do. Trang Gợi ý cũng lọc bỏ môn ngoài CTĐT khỏi ô "Nếu đậu hoặc rớt" (`nameByCode.has`). Đã sửa (T46); test `test_cli_marks_in_progress_pass_for_normalize` | `pipeline/planner/tests/test_normalize.py` |
 | PE1003, PE1005 (0 TC) có trong **cả 132** chương trình; quy định GDTC ghi "Trên myBK ghi theo CCGDTC" ở 46 chương trình, còn khóa 2024, 2026 ghi "Trên myBK ghi theo PE1009, PE1011, PE1013, PE1015…". IM3047 (Giao tiếp trong kinh doanh, 3 TC) thuộc 5 chương trình, không thuộc KHMT 2023 | Truy vấn `curriculum_courses`, `curriculum_regulations` (21/11) |
 | **GDTC**: PE1003, PE1005 không thuộc nhóm nào; MI1003 thuộc nhóm "Chứng chỉ Giáo dục Quốc phòng". Liên kết duy nhất tới `CCGDTC` là chữ trong `curriculum_regulations.detail` của quy định "Chứng chỉ Giáo dục Thể chất" ("Trên myBK ghi theo CCGDTC", 46 chương trình) | Truy vấn `course_category_members`, `curriculum_regulations` |
 | PDF của người duyệt (myBK 06/03/2026) so với CS-2023-KHMT: 84 mã chung; chỉ PDF có `CCGDTC`; chỉ web có CO3129, CO3131, CO3133, CO3135, CO3137, CO3139, CO3151, CO3153, PE1003, PE1005 (và ENG_GC_600, SA4001 nằm ở điều kiện tốt nghiệp của PDF) | `POST /api/plans/mybk/review` với PDF (xem 03 mục 4b) |
@@ -196,6 +197,17 @@ Thêm từ việc đọc code backend ngày 18/11: `student_courses` **không c�
 | Công cụ cộng đồng `danhnth/mybk-planner` (MIT, 08/2026, đọc code 21/11, không chạy): CLI dùng mật khẩu CAS của chính sinh viên; gợi ý **một kỳ**, tham lam, **không** tiên quyết. Ghi nhận: API CTĐT của myBK **không có trường tiên quyết**; `diemdat` của CTĐT nghĩa là "có điểm" (môn rớt vẫn = 1); có API bảng điểm theo kỳ (`danh-sach-diem-hoc-ky-mon-hoc/v2`) và môn tương đương; API tải Excel CTĐT bị tắt (500); học phí 2026–2027 CQ: 15,75 triệu/kỳ, định mức 18 TC, 940 nghìn/TC vượt | `github.com/danhnth/mybk-planner`, `mybk_planner/planner.py`, `transcript.py`, `fees.py` |
 | **Tài khoản thử của người duyệt là tài khoản thử A** (đang giữ tiến độ từ `Bảng điểm.pdf`, nạp 20/11: 31 Đã hoàn thành, 54 Chưa học). `khmt.demo@bkuni.local` **không được giữ dữ liệu thật**: ngày 20/11 nó bị ghi nhầm 1 dòng `student_progress_imports` chứa PDF của người duyệt; đã xóa ngày 21/11 theo yêu cầu người duyệt (trạng thái môn của demo, 40 đạt + 4 đang học, không phải dữ liệu từ PDF nên giữ nguyên). Sau khi xóa, bảng chỉ còn 1 dòng (tài khoản thử A) | `select u.email from bk_uni.student_progress_imports p join bk_uni.users u on u.id = p.user_id` |
 | Quan hệ môn của myBK nằm trong **đề cương** (`v1/subject-outlines/{id}/full`, mở cho khách); backend đọc trường `prerequisites` có loại khi nhập đề cương. 1 127/1 626 môn thuộc CTĐT có đề cương. Chưa kiểm 37 quan hệ của KHMT 2023 lấy từ đề cương hay từ CTĐT | `Backend/src/outline/outline-format.ts` dòng 14–34, 124–141; `DU-LIEU-CTDT.md` |
+
+## 6f. Giai đoạn 12: what-if theo đặc tả mục 12 (23/11, code + test tự động, chưa bấm thử web)
+
+| Sự thật | Cách kiểm tra lại |
+|---|---|
+| Trang Gợi ý **không tự giải** nữa (cả khi mở trang); chỉ nút Giải và nút "Cách gỡ" gọi `POST /plans/solve` | `Frontend/src/pages/recommendations/index.tsx` (`runSolve`); `check_baseline.py` mục T59 |
+| Trạng thái trang lưu ở `data.web.planner` = `{scenario, view, dirty, plans}` (view = lộ trình đang xem, plans ≤ 10 bản); mốc = bản gắn sao. Cài đặt cũ có `baseline` thì thành bản "Mốc cũ" | `index.tsx` (`SavedSettings`, `stateJson`) |
+| Bộ giải nhận `assumed_fail`, `offered`, `preferences.disabled`; backend nhận thêm `free_choices` và tra mã trong bảng `courses` (thiếu thì 400) | `pytest planner/tests/test_whatif12.py` (16 ca), `npx jest test/planner.spec.ts` (28 ca) |
+| Trên fixture KHMT 2023 (sinh viên bịa), một lần Giải kể cả giải thích (`_explain_targets`, `_explain_unsat`) mất 0,2–1,5 giây | Script tạm, đo 23/11 (4 kịch bản) |
+| Thứ tự ưu tiên gửi bộ giải: 3 mục sinh viên (mặc định S1 > S8 > S2) rồi S6, S4, OH, S3; **W12 chưa chốt** | `priorities.ts` (`HIDDEN_ORDER`) |
+| Frontend **không có bộ chạy test**; logic tính tại trang kiểm bằng script tạm qua esbuild (28/28, không nằm trong repo) | `Frontend/package.json` không có `test` |
 
 ## 7. Trao đổi với trường
 

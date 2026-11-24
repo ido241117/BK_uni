@@ -14,6 +14,7 @@ import math
 import re
 from typing import Any
 
+from planner.facts import graduation_pairs
 from planner.normalize import normalize
 
 
@@ -135,16 +136,17 @@ def validate_plan(
             errors.append(f"{course}: do an khong xep vao ky he {sem_code}")
         elif sem_code not in opted:
             errors.append(f"{course}: ky he {sem_code} sinh vien chua bat, chi duoc xep thuc tap")
-        elif history is not None and course not in history:
+        # 22/11: o tu chon tu do (FREE_) dien mon nao cung duoc nen khong xet lich su; Q9 (offering_soft) thi
+        # lich su mo lop la uu tien mem cua bo giai, khong phai loi (truoc day validator coi la luat cung).
+        elif (history is not None and course not in history and not course.startswith("FREE_")
+              and not (rules.get("offering_soft"))):
             errors.append(f"{course}: chua tung mo ky he, khong xep vao {sem_code}")
 
     # Mon tot nghiep (QD 285 Dieu 15.5): du TC tich luy den het ky hoc.
     thresholds = rules.get("graduation_thresholds", {})
     total_program = fixture.get("_total_credits")
     in_curr = {cc["course_code"] for cc in fixture["curriculum_courses"]}
-    # Counting (23/11/2026): credits before the course's term plus the other courses of that
-    # term (the course itself excluded), for every graduation course.
-    for kind, course in (fixture.get("graduation_courses") or {}).items():
+    for kind, course in graduation_pairs(fixture):
         if course not in when or kind not in thresholds or not total_program:
             continue
         need = math.ceil(thresholds[kind] * total_program - 1e-9)
@@ -171,8 +173,22 @@ def validate_plan(
 
     # Yeu cau tot nghiep.
     done = passed | set(when)
+    # Du khoi tu chon goc (ke ca mon se hoc) bu vao o tu chon tu do (giong solve_cpsat, 22/11).
+    excess = sum(
+        max(0, sum(credits[c] for c in g["members"] if c in done) - g["required_credits"])
+        for g in fixture["course_groups"]
+        if g["kind"] == "elective" and g.get("pool_scope", "listed") == "listed" and g["required_credits"]
+        and not g.get("parent") and not g.get("specialization")
+    )
+    free_groups = [g for g in fixture["course_groups"] if g.get("_free_slots")]
     for group in fixture["course_groups"]:
         members = group["members"]
+        if group.get("_free_slots") and members:
+            per = credits[members[0]]
+            have = sum(per for c in members if c in done) + (excess if len(free_groups) == 1 else 0)
+            if have < per * len(members):
+                errors.append(f"khoi '{group['name']}': {have}/{per * len(members)} TC tu chon tu do")
+            continue
         if group["kind"] == "required":
             for course in members:
                 if course not in done:

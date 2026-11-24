@@ -1,6 +1,8 @@
 # 05 · Kiểm thử: lệnh test và kịch bản đầu cuối
 
-Ngày lập: 19/11/2026. Đi kèm [kế hoạch](02-ke-hoach.md) và [thiết kế](03-thiet-ke.md).
+Ngày lập: 19/11/2026, cập nhật 24/11. Đi kèm [kế hoạch](02-ke-hoach.md), [thiết kế](03-thiet-ke.md) và [tổng kết](06-tong-ket.md).
+
+> **Đọc nhanh (24/11):** kịch bản đang dùng là **F** (trang Môn học) và **G** (trang Gợi ý, giai đoạn 12). Mục A, B, D viết cho giao diện trang Gợi ý **trước** giai đoạn 11–12 (nút "Giải lộ trình", chọn bộ giải, nút tải myBK ở trang Gợi ý, thẻ mốc): giữ để tra; phần còn giá trị đã chuyển vào G.
 
 ## Lệnh test tự động
 
@@ -11,6 +13,9 @@ Ngày lập: 19/11/2026. Đi kèm [kế hoạch](02-ke-hoach.md) và [thiết k�
 | `cd Backend` → `npx jest test/mybk-review.spec.ts` | (21/11) Xem trước PDF: chương trình theo `source_code`, mâu thuẫn, `CCGDTC` ↔ PE1003/PE1005, khóa không có CCGDTC, trạng thái sẽ đổi (dữ liệu bịa) | 9 qua (21/11) |
 | `cd pipeline` → `.venv/Scripts/python -m pytest planner/tests/test_mybk.py -q` | (21/11) Đọc PDF, chữ dán (suy đạt từ điểm 12/21), chữ mất Tab, PDF không có chữ (dữ liệu bịa) | 15 qua (21/11); cả `planner`: 122 qua + 7 xfail + 1 xpass |
 | `cd Frontend` → `npx tsc -b` và `npx eslint src/pages/recommendations` | Kiểu và lint trang Gợi ý | Qua |
+| `cd pipeline` → `.venv/Scripts/python -m pytest planner/tests -q` | (23/11, giai đoạn 12) Thêm `test_whatif12.py`: ưu tiên S2/S8, giả định rớt, "kỳ này có mở", cảnh báo nghỉ 2 kỳ / ô TC vượt luật, cách gỡ, lý do không đạt TC, `course_facts`, ô tự chọn tự do | 165 qua + 7 xfail + 1 xpass (23/11) |
+| `cd Backend` → `npx jest` | (23/11) Cả backend; `planner.spec.ts` thêm 2 ca: trường what-if mới tới bộ giải, tra mã môn ô tự do (mã sai → 400) | 104 qua, 9 bỏ qua (23/11) |
+| Logic trang Gợi ý (không có bộ chạy test frontend) | (23/11) Kỳ được / không được khi chọn môn, payload ưu tiên, cách gỡ, chỉ số so sánh, giữ 10 bản: script tạm chạy qua esbuild, không nằm trong repo | 28/28 đúng (23/11) |
 | `cd pipeline` → `.venv/Scripts/python check_baseline.py` | Mọi sự thật trong [01-boi-canh.md](01-boi-canh.md); phần database cần backend đang chạy | DUNG 38, CHUA_LAM 2, KHAC 0 |
 
 ## Kịch bản đầu cuối (bấm tay trên web)
@@ -30,14 +35,14 @@ Cột "Trạng thái" ghi tình trạng lúc lập file:
 
 1. Backend: `npm --prefix Backend run dev` (cổng 3210). Frontend: `npm --prefix Frontend run dev` (cổng 5173).
 2. `cd pipeline` rồi `.venv/Scripts/python check_baseline.py`: không có mục KHAC.
-3. Đăng nhập `khmt.demo@bkuni.local` (KHMT 2023, 40 môn đạt, 5 môn đang học, theo bối cảnh ngày 19/11).
+3. Đăng nhập tài khoản thử (mục G: tài khoản thử A; mục A–D cũ: `khmt.demo@bkuni.local`, dữ liệu mẫu ngày 19/11).
 4. Vào trang Gợi ý (`/recommendations`). Mở DevTools, tab Network, để xem request và response.
 
 Quy ước: mỗi kịch bản bắt đầu từ **trang vừa tải lại** (F5), trừ khi ghi khác.
 
 ---
 
-## A. Đường chính (giai đoạn 4–5: làm được ngay)
+## A. Đường chính (giai đoạn 4–5; giao diện cũ, xem G)
 
 | # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
 |---|---|---|---|---|
@@ -70,6 +75,8 @@ Quy ước: mỗi kịch bản bắt đầu từ **trang vừa tải lại** (F5
 
 ## B. What-if (giai đoạn 6, T17: đã có code 19/11)
 
+> **23/11: thay bằng mục G (giai đoạn 12).** Mốc không còn nằm trong trình duyệt: mốc là bản lưu gắn sao trong tài khoản; thẻ "So với lộ trình mốc" đã bỏ, so sánh ở tab So sánh. Các dòng dưới chỉ để tra lịch sử.
+
 Mốc lưu trong localStorage của trình duyệt. Thẻ "So với lộ trình mốc" nằm ngay dưới dòng trạng thái.
 
 | # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
@@ -96,7 +103,7 @@ Cần bạn cùng nhóm gửi `build-vertical.cjs` (19/11 đã tìm trên máy, 
 
 ---
 
-## D. File tiến độ myBK (giai đoạn 8: đã có code 19/11 cho **PDF và Excel**)
+## D. File tiến độ myBK (giai đoạn 8; giao diện cũ, luồng hiện hành ở F)
 
 Nút "Tải file tiến độ myBK" ở đầu cột trái trang Gợi ý. Test chỉ dùng **file bịa cùng định dạng**. File thật chỉ chạy trên máy, không commit.
 
@@ -161,3 +168,107 @@ Nút "Tải PDF tiến độ myBK" ở đầu trang Môn học (`/courses`). Lu�
 ## E. Ca bộ giải chưa được xác nhận đáp án
 
 Đã qua cả hai bộ giải nhưng người duyệt **chưa xác nhận đáp án** (mục 7 kế hoạch): **K6** (ngưỡng 85% khóa luận), **K8, K8b, K8c, K8d** (kỳ hè). Chạy: `cd pipeline` rồi `.venv/Scripts/python -m pytest planner/tests/test_cases_k.py -q`.
+
+---
+
+## G. What-if theo đặc tả mục 12 (giai đoạn 12, code 23/11)
+
+Đặc tả: [02 mục 12](02-ke-hoach.md); chức năng M1–M18 ở 02 mục 12.12. Giao diện là Ant Design hiện tại (chưa áp thiết kế mới). Chuẩn bị như mục 0; dùng tài khoản thử (tài khoản thử A: dữ liệu thật của người duyệt; hoặc khmt.demo: dữ liệu mẫu). Trước mỗi nhóm, bấm **Làm lại** nếu cần: mở bản "Mốc cũ" hoặc xóa lịch sử.
+
+Cột "Trạng thái" lúc lập (23/11): **Test** = có test tự động; **Chưa** = chưa bấm trên web.
+
+### G1. Giải bằng nút, chưa kiểm, hoàn tác (M1, M2, M17)
+
+| # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
+|---|---|---|---|---|
+| G1.1 | Mở trang lần đầu (chưa lưu gì) | **Không tự giải.** Thẻ "Chưa có lộ trình"; Network không có `POST /plans/solve` | Chưa | |
+| G1.2 | Bấm **Giải** | Có `POST /plans/solve`; hiện dải chỉ số, bảng kỳ | Chưa | |
+| G1.3 | Tick "Nghỉ" một kỳ chính, đổi ô "Muốn" một kỳ | Không gọi bộ giải; dòng "Đã sửa 2 chỗ, chưa kiểm…"; dải chỉ số mờ | Chưa | |
+| G1.4 | Bấm **Hoàn tác** 2 lần | Kịch bản về như trước; dòng "đã sửa" biến mất | Chưa | |
+| G1.5 | Sửa 1 chỗ, F5 (hoặc đăng xuất rồi vào lại) | Kịch bản, lộ trình đang xem, "đã sửa 1 chỗ" vẫn còn; không tự giải | Chưa | |
+
+### G2. Ưu tiên (M4)
+
+| # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
+|---|---|---|---|---|
+| G2.1 | Xem thẻ Ưu tiên | Đúng 3 mục: Ra trường sớm nhất, Mỗi kỳ chính 15–18 TC, Không học dư môn tự chọn; 2 dòng mờ "bàn sau" | Chưa | |
+| G2.2 | Đưa "15–18 TC" lên đầu, Giải | Payload `preferences.order` bắt đầu bằng `S8, S1`; các kỳ chính (trừ kỳ cuối) gần 15–18 hơn; có thể ra trường muộn hơn | Test (`test_user_can_put_s8_before_s1`) | |
+| G2.3 | Tắt "Không học dư", Giải | Payload `preferences.disabled = ["S2"]` | Test | |
+
+### G3. Từng kỳ (M5) và cảnh báo quy định (M12)
+
+| # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
+|---|---|---|---|---|
+| G3.1 | Tick "Nghỉ" 2 kỳ chính liền nhau, Giải | Cảnh báo "Lưu ý" ở kỳ đầu: cần đơn xin phép Phòng Đào tạo, ghi QĐ 285 Điều 32.1 | Test | |
+| G3.2 | Ô "Muốn" một kỳ chính = 27, Giải | Cảnh báo vượt 25 TC, vẫn xếp theo ô | Test | |
+| G3.3 | Ô "Muốn" cao hơn số môn đủ điều kiện, Giải | Thẻ "Yêu cầu của bạn": dòng Số TC muốn nêu lý do thật (lựa chọn nào chặn, hoặc luật nào), không còn câu đoán "không còn môn đủ điều kiện để thêm" | Test (`test_target_reason_names_the_blocking_choice`) | |
+| G3.4 | Bỏ tick "Học hè" ở kỳ hè | Cột kỳ đó thu hẹp, ghi "Không học hè" | Chưa | |
+
+### G4. Chọn môn, chuyển môn (M6, M9, M13)
+
+| # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
+|---|---|---|---|---|
+| G4.1 | Rê chuột vào một môn | Hiện TC, loại môn (và khối), ghim / đã chuyển / giả định rớt / không mở nếu có | Chưa | |
+| G4.2 | Bấm một môn có tiên quyết | Kỳ chuyển vào được viền màu + nút "Chuyển vào đây"; kỳ không được mờ, có lý do ("Cần xong X trước", "Phải học trước Y", "Bạn nghỉ kỳ này", "Đồ án không học hè"…). Không gọi bộ giải | Chưa (logic: 28 kiểm) | |
+| G4.3 | Bấm "Chuyển vào đây" | Môn sang kỳ mới, nhãn "đã chuyển, chưa giải"; dòng "đã sửa" tăng 1 | Chưa | |
+| G4.4 | Bấm Giải | Môn nằm đúng kỳ mới (ghim tuyệt đối); phần còn lại xếp lại | Chưa | |
+| G4.5 | Chuyển một môn sang kỳ trước môn tiên quyết của nó bằng kéo thả, Giải | Vẫn giữ chỗ ghim; thẻ Yêu cầu ghi "Giữ, nhưng trái luật" kèm luật | Test (sprint 11) | |
+
+### G5. Thao tác trên môn (M7, M8)
+
+| # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
+|---|---|---|---|---|
+| G5.1 | Chọn môn → "Ghim vào kỳ này" → Giải | Môn giữ kỳ; viền trái màu | Chưa | |
+| G5.2 | Chọn môn → "Kỳ này không mở" → xác nhận → Giải | Chip "X không mở" ở kỳ; môn sang kỳ khác | Chưa | |
+| G5.3 | Chọn môn bắt buộc đầu chuỗi tiên quyết → "Giả định rớt kỳ này" → Giải | Ở kỳ đó: dòng gạch ngang "Rớt (giả định)" vẫn tính TC; môn học lại ở kỳ sau; môn cần nó lùi theo; dải chỉ số báo ra trường trễ (nếu có) | Test (`test_assumed_fail_counts_credits_and_retakes_later`) | |
+| G5.4 | Bấm nút hoàn tác nhỏ trên dòng "Rớt (giả định)" → Giải | Về như trước G5.3 | Chưa | |
+| G5.5 | Chọn môn tự chọn bộ giải đã điền tên → "Đổi môn khác cùng khối" → chọn môn khác → Giải | Môn mới ở đúng kỳ đó; môn cũ không còn | Chưa | |
+| G5.6 | Đổi sang môn có tiên quyết chưa học | Ô xổ xuống làm mờ môn đó, ghi "(cần … trước)" | Chưa | |
+| G5.7 | Ô tự chọn tự do: gõ mã một môn ngoài chương trình (vd môn khoa khác) → Chọn → Giải | Môn đó vào đúng kỳ, ô tự do không còn trống; thẻ ghi "Ô tự do: bạn chọn" | Test (`test_free_choice_outside_curriculum_fills_the_free_slot`, jest T62) | |
+| G5.8 | Gõ mã không tồn tại → Giải | Báo lỗi "Không tìm thấy môn: …" (400), lộ trình cũ giữ nguyên | Test (jest) | |
+| G5.9 | Chọn môn ở ô tự do → "Bỏ môn này khỏi ô tự do" → Giải | Ô tự do trống lại | Chưa | |
+
+### G6. Không giải được, cách gỡ (M10, M11) và "Kỳ này có mở" (M12)
+
+| # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
+|---|---|---|---|---|
+| G6.1 | Nghỉ gần hết các kỳ chính, đặt "Học xong trước" kỳ cuối, Giải | "Không có lộ trình…" kèm lý do; nếu bỏ một lựa chọn là đủ thì có nút "Cách gỡ" | Test (`test_unsat_returns_fixes_that_can_be_applied`) | |
+| G6.2 | Bấm một nút cách gỡ (vd "Không nghỉ kỳ X") | Kịch bản đổi đúng chỗ đó và tự giải lại; có lộ trình | Chưa | |
+| G6.3 | Có cảnh báo "chưa từng mở kỳ hè/kỳ 1/kỳ 2" ở một môn → bấm "Lưu ý" → "Kỳ này có mở" → Giải | Cảnh báo đó biến mất | Test (`test_offering_history_warning_and_offered_removes_it`) | |
+
+### G7. Lưu, lịch sử, so sánh (M14–M16, M18)
+
+| # | Thao tác | Kết quả mong đợi | Trạng thái | Kết quả thật |
+|---|---|---|---|---|
+| G7.1 | Giải, đặt tên "A", bấm **Lưu bản này** | Lịch sử (1/10) có "A", giờ lưu, kỳ ra trường | Chưa | |
+| G7.2 | Sửa 1 chỗ (chưa giải), lưu "B" | "B" có nhãn "chưa kiểm" | Chưa | |
+| G7.3 | Gắn sao "A" | Nhãn "Mốc"; lần Giải sau payload có `previous_plan` | Chưa | |
+| G7.4 | Lưu thêm tới 11 bản | Còn 10; bản cũ nhất **không gắn sao** bị bỏ | Chưa (logic: kiểm) | |
+| G7.5 | Bấm "Mở" ở "A" | Kịch bản và lộ trình của A hiện lại, không gọi bộ giải | Chưa | |
+| G7.6 | Tab **So sánh**: "A" so với "Kế hoạch giảng dạy" | Bảng chỉ số (ra trường, kỳ ngoài 15–18, kỳ nặng nhất, học hè, môn bắt buộc trễ, cảnh báo; chữ xanh ở bản tốt hơn); bảng giả định khác nhau (dòng khác tô màu); môn đổi kỳ kèm tên. Ghi rõ số môn có kỳ khuyến nghị | Chưa | |
+| G7.7 | "So với đang xem" ở một bản | Tab So sánh mở sẵn bản đó với "Đang xem" | Chưa | |
+| G7.8 | Bấm "Thu gọn" khối Kịch bản, rồi "Mở Kịch bản" | Lộ trình giãn ra toàn bề ngang; mở lại như cũ | Chưa | |
+| G7.9 | Tài khoản có mốc cũ (trước 23/11) mở trang | Lịch sử có "Mốc cũ" gắn sao | Chưa | |
+
+### G8. Bảng đối chiếu M1–M18 (điền khi bấm xong)
+
+| M | Chức năng | Kịch bản | Đạt? |
+|---|---|---|---|
+| M1 | Giải bằng nút, "đã sửa N chỗ" | G1.1–G1.3 | |
+| M2 | Hoàn tác | G1.4 | |
+| M3 | Đậu/Rớt môn đang học | A (cũ) | |
+| M4 | Ưu tiên 3 mục | G2 | |
+| M5 | Nghỉ, học hè, ô muốn TC; kỳ tắt thu hẹp | G3.4, G1.3 | |
+| M6 | Chọn môn → kỳ được / không + lý do | G4.2, G4.3 | |
+| M7 | Ghim, không mở, giả định rớt | G5.1–G5.4 | |
+| M8 | Đổi môn cùng khối; ô tự do gõ mã | G5.5–G5.9 | |
+| M9 | Rê chuột xem chi tiết | G4.1 | |
+| M10 | Trạng thái chung | G1, G6.1 | |
+| M11 | Cách gỡ bấm là áp dụng | G6.2 | |
+| M12 | Cảnh báo theo kỳ; "Kỳ này có mở" | G3.1, G3.2, G6.3 | |
+| M13 | Môn chờ xếp | G5.3 trước khi Giải, G5.5 | |
+| M14 | Dải chỉ số + nhãn thay đổi | G4.4, G5.3 | |
+| M15 | Lưu, lịch sử, mốc, mở, xóa | G7.1–G7.5 | |
+| M16 | So sánh | G7.6, G7.7 | |
+| M17 | Giữ trạng thái khi đăng xuất | G1.5 | |
+| M18 | Thu gọn khối Kịch bản | G7.8 | |

@@ -6,7 +6,8 @@ import { LuCircleCheck, LuClipboardPaste, LuFileText, LuPencil, LuUpload } from 
 import { EmptyState, IOutLinedBtn, ISolidBtn } from '@/components';
 import { listCourses } from '@/apis/course';
 import { adjustMybk, getMybkProgress, importMybk, reviewMybk } from '@/apis/planner';
-import { listMyCourses } from '@/apis/student';
+import { listCourseGroups } from '@/apis/curriculum';
+import { getMyProfile, listMyCourses } from '@/apis/student';
 import { useApiMutation, useApiQuery, useDebounce } from '@/hooks';
 import { semesterLabel } from '@/pages/courses/analysis/semester';
 import {
@@ -51,6 +52,50 @@ export type WebStatusView = {
     draft: Map<string, StudentCourseStatus>; // course_id -> trạng thái mới
     setStatus: (courseIds: string[], status: StudentCourseStatus) => void;
     remove: (courseId: string) => void;
+    /** Ghi chú riêng của sinh viên theo mã môn (đã lưu + đang sửa). */
+    notes: Map<string, string>;
+    setNote: (code: string, note: string) => void;
+    /** T46: khối của chương trình để chọn, khối sinh viên đã chọn theo mã môn, và hàm chọn (null = mặc định). */
+    blocks: BlockPicker;
+};
+
+type BlockPicker = {
+    groups: { id: string; name: string }[];
+    choices: Map<string, string>;
+    choose: (code: string, groupId: string | null) => void;
+};
+
+const DEFAULT_BLOCK = '__default__';
+/** Khối Bắt buộc do backend suy ra (không có dòng trong course_groups), id cố định như backend `REQUIRED_BLOCK`. */
+const REQUIRED_BLOCK = { id: 'required', name: 'Bắt buộc' };
+
+/**
+ * Ô "Tính vào khối" (T46, 22/11). Người duyệt: thông tin là của sinh viên nên sinh viên sửa được khối của mọi môn
+ * (đã học, đang học, chưa học, trong hay ngoài CTĐT); web chỉ nhắc là có thể khác cách tính của myBK.
+ */
+const BlockCell = ({ code, defaultLabel, editing, picker }: {
+    code: string; defaultLabel: string; editing: boolean; picker: BlockPicker;
+}) => {
+    const groups = [REQUIRED_BLOCK, ...picker.groups];
+    const nameOf = (id: string) => groups.find(g => g.id === id)?.name ?? 'Khối không còn trong chương trình';
+    const chosen = picker.choices.get(code);
+    // Tên khối myBK (vd "Toán") khác tên khối database, nên mọi lựa chọn riêng đều nhắc (thay nhãn "Bạn chọn" cũ).
+    const note = chosen !== undefined ? <Tag color="warning">Có thể khác cách tính của myBK</Tag> : null;
+    if (!editing) return <Space size={4} wrap><Text>{chosen ? nameOf(chosen) : defaultLabel}</Text>{note}</Space>;
+    return (
+        <Space orientation="vertical" size={2} style={{ width: '100%' }}>
+            <Select
+                size="small" style={{ width: '100%' }} value={chosen ?? DEFAULT_BLOCK} showSearch optionFilterProp="label"
+                aria-label={`Khối của ${code}`}
+                options={[{ value: DEFAULT_BLOCK, label: `Theo myBK: ${defaultLabel}` }, ...groups.map(g => ({ value: g.id, label: g.name }))]}
+                onChange={(value: string) => confirmThen(
+                    value === DEFAULT_BLOCK ? `Tính ${code} theo khối của myBK (${defaultLabel})?` : `Tính ${code} vào khối "${nameOf(value)}"?`,
+                    () => picker.choose(code, value === DEFAULT_BLOCK ? null : value),
+                )}
+            />
+            {note}
+        </Space>
+    );
 };
 
 const STATUS_OPTIONS = Object.values(STUDENT_COURSE_STATUS).map(value => ({ value, label: STUDENT_COURSE_STATUS_LABEL[value] }));
@@ -67,10 +112,34 @@ const confirmThen = (title: string, action: () => void) => {
 const rowLabel = (row: MybkProgressCourse) => (row.code === GDTC_FILE_CODE ? 'Giáo dục thể chất' : row.code);
 
 /**
+ * Ô ghi chú ở chế độ Hiệu chỉnh: gõ xong (rời ô hoặc Enter) thì hỏi xác nhận; Hủy thì trả lại chữ cũ.
+ * Ghi chú là của riêng sinh viên, chỉ ghi vào database khi bấm "Lưu hiệu chỉnh".
+ */
+const NoteInput = ({ label, value, onCommit }: { label: string; value: string; onCommit: (note: string) => void }) => {
+    const [text, setText] = useState(value);
+    const commit = () => {
+        if (text.trim() === value.trim()) return;
+        Modal.confirm({
+            title: text.trim() ? `Lưu ghi chú cho ${label}?` : `Xóa ghi chú của ${label}?`,
+            okText: 'OK', cancelText: 'Hủy',
+            onOk: () => onCommit(text.trim()),
+            onCancel: () => setText(value),
+        });
+    };
+    return (
+        <Input.TextArea
+            size="small" autoSize={{ minRows: 1, maxRows: 4 }} maxLength={500} placeholder="Ghi chú của bạn"
+            aria-label={`Ghi chú ${label}`} value={text} onChange={e => setText(e.target.value)}
+            onBlur={commit} onPressEnter={e => { e.preventDefault(); commit(); }}
+        />
+    );
+};
+
+/**
  * Cột bảng môn. Người duyệt 21/11: frontend **không hiện điểm** (điểm số, điểm chữ vẫn lưu trong JSON).
  * Có `web` thì thêm cột "Trên web": trạng thái đang lưu, nhãn "Khác file" khi khác ✓/-- của file; chế độ sửa là ô chọn.
  */
-const courseColumns = (web?: WebStatusView, withCredits = true): ColumnsType<MybkProgressCourse> => [
+const courseColumns = (web?: WebStatusView, withCredits = true, blockLabel?: string): ColumnsType<MybkProgressCourse> => [
     { title: 'Stt', key: 'index', width: 56, render: (_v, _row, index) => index + 1 },
     {
         title: 'Mã môn học', dataIndex: 'code', key: 'code', width: 120,
@@ -128,7 +197,30 @@ const courseColumns = (web?: WebStatusView, withCredits = true): ColumnsType<Myb
             );
         },
     }] : []),
-    { title: 'Ghi chú', dataIndex: 'note', key: 'note', render: (v?: string | null) => v ?? '' },
+    // T46: khối môn được tính; GDTC không tính tín chỉ nên không có ô.
+    ...(web && blockLabel ? [{
+        title: 'Tính vào khối',
+        key: 'block',
+        width: 260,
+        render: (_v: unknown, row: MybkProgressCourse) => (row.code === GDTC_FILE_CODE
+            ? <Text type="secondary">—</Text>
+            : <BlockCell code={row.code} defaultLabel={blockLabel} editing={web.editing} picker={web.blocks} />),
+    }] : []),
+    {
+        // Ghi chú riêng của sinh viên (22/11); ghi chú trong file myBK (nếu có) hiện chữ xám bên dưới.
+        title: 'Ghi chú', key: 'note', width: web ? 240 : undefined,
+        render: (_v: unknown, row: MybkProgressCourse) => {
+            const own = web?.notes.get(row.code) ?? '';
+            return (
+                <Space orientation="vertical" size={2} style={{ width: '100%' }}>
+                    {web?.editing
+                        ? <NoteInput key={own} label={rowLabel(row)} value={own} onCommit={note => web.setNote(row.code, note)} />
+                        : own && <Text style={{ whiteSpace: 'pre-wrap' }}>{own}</Text>}
+                    {row.note && <Text type="secondary" style={{ fontSize: 12 }}>myBK: {row.note}</Text>}
+                </Space>
+            );
+        },
+    },
 ];
 
 const blockLabel = (block: MybkProgressBlock) => {
@@ -181,7 +273,7 @@ const MybkFileDetails = ({ data, importedAt, web, extra = [], onlyUnpassed = fal
                         children: (
                             <Table<MybkProgressCourse>
                                 size="small" rowKey="code" pagination={false} scroll={{ x: 720 }}
-                                columns={courseColumns(web)} dataSource={block.courses}
+                                columns={courseColumns(web, true, block.name)} dataSource={block.courses}
                             />
                         ),
                     })),
@@ -201,7 +293,7 @@ const MybkFileDetails = ({ data, importedAt, web, extra = [], onlyUnpassed = fal
                         children: (
                             <Table<MybkProgressCourse>
                                 size="small" rowKey="code" pagination={false} scroll={{ x: 720 }}
-                                columns={courseColumns(web)} dataSource={extra}
+                                columns={courseColumns(web, true, OUTSIDE_DEFAULT)} dataSource={extra}
                             />
                         ),
                     }] : []),
@@ -431,10 +523,10 @@ const semesterOptions = (fromYear: number) => Array.from({ length: 8 }, (_, i) =
     .map(code => ({ value: code, label: semesterLabel(code) }));
 
 /**
- * Ô tìm môn trong danh mục để đánh dấu Đang học. Môn đã có trong bảng (`existing`) vẫn hiện, ghi chú "đã có trong bảng";
+ * Ô tìm môn trong danh mục để đánh dấu Đang học. Môn đã có trong bảng vẫn hiện (không ghi chú, người duyệt 24/11);
  * chọn thì chuyển môn đó sang Đang học, không thêm dòng trùng (người duyệt 21/11 gõ CO3021 bị "Không có môn khớp").
  */
-const AddCourseSelect = ({ onPick, existing }: { onPick: (course: CourseSummary) => void; existing: Set<string> }) => {
+const AddCourseSelect = ({ onPick }: { onPick: (course: CourseSummary) => void }) => {
     const [search, setSearch] = useState('');
     const keyword = useDebounce(search, 300).trim();
     const query = useApiQuery(['courses-pick', keyword], () => listCourses({ page: 1, take: 20, search: keyword }), {
@@ -442,7 +534,7 @@ const AddCourseSelect = ({ onPick, existing }: { onPick: (course: CourseSummary)
     });
     const options = (query.data?.items ?? []).map(c => ({
         value: c.id,
-        label: `${c.code} - ${c.name} (${c.credits} TC)${existing.has(c.code) ? ' · đã có trong bảng' : ''}`,
+        label: `${c.code} - ${c.name} (${c.credits} TC)`,
         course: c,
     }));
     return (
@@ -462,6 +554,43 @@ const AddCourseSelect = ({ onPick, existing }: { onPick: (course: CourseSummary)
     );
 };
 
+/** Khối mặc định của môn ngoài CTĐT: tự chọn tự do (như myBK và `normalize.py`). */
+const OUTSIDE_DEFAULT = 'Tự chọn tự do (ngoài CTĐT)';
+
+type InProgressRow = { id: string; code: string; name: string; credits: number; outside: boolean };
+
+/**
+ * T46 (22/11): danh sách môn Đang học của kỳ này, kèm khối môn được tính vào (cùng ô chọn khối với bảng các khối).
+ */
+const InProgressList = ({ rows, fileBlockOf, editing, picker }: {
+    rows: InProgressRow[];
+    fileBlockOf: Map<string, string>;
+    editing: boolean;
+    picker: BlockPicker;
+}) => (
+    <Table<InProgressRow>
+        size="small" rowKey="id" pagination={false} scroll={{ x: 640 }} dataSource={rows}
+        locale={{ emptyText: 'Chưa có môn đang học. Bấm Hiệu chỉnh rồi gõ mã môn ở ô "+ Môn đang học".' }}
+        columns={[
+            { title: 'Mã môn', dataIndex: 'code', width: 100 },
+            {
+                title: 'Tên môn', dataIndex: 'name',
+                render: (name: string, row) => <Space size={4} wrap>{name}{row.outside && <Tag>Ngoài CTĐT</Tag>}</Space>,
+            },
+            { title: 'TC', dataIndex: 'credits', width: 56, align: 'center' },
+            {
+                title: 'Tính vào khối', key: 'block', width: 300,
+                render: (_v, row) => (
+                    <BlockCell
+                        code={row.code} editing={editing} picker={picker}
+                        defaultLabel={row.outside ? OUTSIDE_DEFAULT : fileBlockOf.get(row.code) ?? 'Theo chương trình'}
+                    />
+                ),
+            },
+        ]}
+    />
+);
+
 /**
  * Hiện lại trang "Tiến độ hoàn thành CTĐT" (T29) cạnh trạng thái đang lưu trên web, và nút **Hiệu chỉnh** (21/11):
  * sửa trạng thái mọi môn, thêm môn, khai học kỳ hiện tại (môn Đang học là môn của kỳ đó). Lưu thì ghi database
@@ -471,6 +600,11 @@ export const MybkProgressCard = () => {
     const queryClient = useQueryClient();
     const query = useApiQuery(MYBK_PROGRESS_KEY, getMybkProgress);
     const statusesQuery = useApiQuery(['student-courses'], listMyCourses);
+    const profileQuery = useApiQuery(['my-profile'], getMyProfile);
+    const curriculumId = profileQuery.data?.curriculum_id ?? undefined;
+    const groupsQuery = useApiQuery(['curriculum-groups', curriculumId], () => listCourseGroups(curriculumId!), {
+        enabled: Boolean(curriculumId),
+    });
     const data = query.data?.data;
 
     const [editing, setEditing] = useState(false);
@@ -480,6 +614,18 @@ export const MybkProgressCard = () => {
     const [onlyUnpassed, setOnlyUnpassed] = useState(false);
 
     const [removed, setRemoved] = useState<Set<string>>(new Set()); // course_id sẽ xóa khi Lưu
+    const [noteDraft, setNoteDraft] = useState<Map<string, string>>(new Map()); // mã môn -> ghi chú mới ('' = xóa)
+    const [blockDraft, setBlockDraft] = useState<Map<string, string | null>>(new Map()); // mã môn -> id khối (null = mặc định)
+    const blockChoices = useMemo(() => {
+        const map = new Map(Object.entries(query.data?.block_choices ?? {}));
+        blockDraft.forEach((id, code) => (id ? map.set(code, id) : map.delete(code)));
+        return map;
+    }, [query.data?.block_choices, blockDraft]);
+    const notes = useMemo(() => {
+        const map = new Map(Object.entries(query.data?.notes ?? {}));
+        noteDraft.forEach((note, code) => (note ? map.set(code, note) : map.delete(code)));
+        return map;
+    }, [query.data?.notes, noteDraft]);
 
     const saved = useMemo(() => (statusesQuery.data ?? []).filter(sc => !removed.has(sc.course_id)), [statusesQuery.data, removed]);
     const byCode = useMemo(() => {
@@ -513,6 +659,17 @@ export const MybkProgressCard = () => {
     added.forEach(c => { if (!statusById.has(c.id)) statusById.set(c.id, 'in-progress'); });
     const inProgress = [...courseIds].filter(id => (draft.get(id) ?? statusById.get(id)) === 'in-progress');
     const inProgressCredits = inProgress.reduce((sum, id) => sum + (credits.get(id) ?? 0), 0);
+    // T46: danh sách môn Đang học (mã, tên, TC, khối) để sinh viên nhìn lại kỳ này đã chọn những môn nào.
+    const courseById = new Map<string, CourseSummary>(saved.map(sc => [sc.course_id, sc.course]));
+    added.forEach(c => courseById.set(c.id, c));
+    const fileBlockOf = new Map((data?.blocks ?? []).flatMap(b => b.courses.map(c => [c.code, b.name] as const)));
+    const inProgressRows: InProgressRow[] = inProgress
+        .map(id => courseById.get(id))
+        .filter((c): c is CourseSummary => !!c)
+        .map(c => ({ id: c.id, code: c.code, name: c.name, credits: c.credits, outside: !fileCodes.has(c.code) && !GDTC_WEB_CODES.includes(c.code) }))
+        .sort((a, b) => a.code.localeCompare(b.code));
+    // Chỉ khối gốc (khối chuyên ngành thu hẹp khối gốc, không cộng tín chỉ riêng).
+    const blockGroups = (groupsQuery.data ?? []).filter(g => !g.parent_group_id).map(g => ({ id: g.id, name: g.name }));
     const currentSemester = semester ?? query.data?.current_semester ?? '';
     const isSummer = currentSemester.endsWith('3');
     const loadWarning = inProgressCredits > (isSummer ? 12 : 25)
@@ -521,6 +678,7 @@ export const MybkProgressCard = () => {
 
     const reset = () => {
         setEditing(false); setDraft(new Map()); setAdded([]); setRemoved(new Set()); setSemester(undefined); setOnlyUnpassed(false);
+        setNoteDraft(new Map()); setBlockDraft(new Map());
     };
     const save = useApiMutation<MybkProgress & { written_courses: number; removed_courses: number }, MybkAdjustPayload>({
         mutationFn: adjustMybk,
@@ -546,6 +704,8 @@ export const MybkProgressCard = () => {
             items,
             ...(semester ? { current_semester: semester } : {}),
             ...(removed.size ? { remove_course_ids: [...removed].filter(id => savedIds.has(id)) } : {}),
+            ...(noteDraft.size ? { notes: [...noteDraft].map(([code, note]) => ({ code, note })) } : {}),
+            ...(blockDraft.size ? { block_choices: [...blockDraft].map(([code, group_id]) => ({ code, group_id })) } : {}),
         });
     };
 
@@ -559,6 +719,13 @@ export const MybkProgressCard = () => {
         remove: (courseId) => {
             setRemoved(prev => new Set(prev).add(courseId));
             setAdded(prev => prev.filter(c => c.id !== courseId));
+        },
+        notes,
+        setNote: (code, note) => setNoteDraft(prev => new Map(prev).set(code, note)),
+        blocks: {
+            groups: blockGroups,
+            choices: blockChoices,
+            choose: (code, groupId) => setBlockDraft(prev => new Map(prev).set(code, groupId)),
         },
     };
     const fromYear = Number(data?.student?.applied_from_year) || new Date().getFullYear() - 4;
@@ -585,7 +752,8 @@ export const MybkProgressCard = () => {
                             ? (
                                 <Select
                                     size="small" style={{ width: 220 }} value={currentSemester}
-                                    options={semesterOptions(fromYear)} onChange={setSemester} aria-label="Học kỳ hiện tại"
+                                    options={semesterOptions(fromYear)} aria-label="Học kỳ hiện tại"
+                                    onChange={value => confirmThen(`Đổi học kỳ hiện tại sang ${semesterLabel(value)}?`, () => setSemester(value))}
                                 />
                             )
                             : <Text strong>{currentSemester ? semesterLabel(currentSemester) : '—'}</Text>}
@@ -602,15 +770,22 @@ export const MybkProgressCard = () => {
                         <Space wrap>
                             <Space size={6}><Switch size="small" checked={onlyUnpassed} onChange={setOnlyUnpassed} />Chỉ môn chưa đạt</Space>
                             <AddCourseSelect
-                                existing={new Set(byCode.keys())}
                                 onPick={(course) => {
+                                    // Người duyệt 22/11: thêm môn Đang học cũng phải hỏi như mọi thay đổi khác.
                                     const entry = byCode.get(course.code);
-                                    if (entry) {
-                                        web.setStatus(entry.ids, 'in-progress');
-                                        toastMessage.success(`${course.code} đã có trong bảng: chuyển sang Đang học (bấm Lưu để ghi).`);
-                                    } else {
-                                        setAdded(prev => [...prev, course]);
-                                    }
+                                    confirmThen(
+                                        entry
+                                            ? `Chuyển ${course.code} sang "Đang học"?`
+                                            : `Thêm ${course.code} (${course.name}) vào danh sách Đang học?`,
+                                        () => {
+                                            if (entry) {
+                                                web.setStatus(entry.ids, 'in-progress');
+                                                toastMessage.success(`${course.code}: chuyển sang Đang học (bấm Lưu để ghi).`);
+                                            } else {
+                                                setAdded(prev => [...prev, course]);
+                                            }
+                                        },
+                                    );
                                 }}
                             />
                             <IOutLinedBtn onClick={reset}>Hủy</IOutLinedBtn>
@@ -619,6 +794,24 @@ export const MybkProgressCard = () => {
                     )
                     : <IOutLinedBtn icon={<LuPencil />} onClick={() => setEditing(true)}>Hiệu chỉnh</IOutLinedBtn>}
             </Space>
+            {editing && (
+                <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
+                    Bạn sửa được trạng thái và khối của mọi môn (cột "Tính vào khối" trong từng khối). Khối bạn chọn riêng
+                    được ghi vào tài khoản và bộ giải xếp lộ trình theo đúng lựa chọn đó; chỉ lưu ý là có thể khác cách tính của myBK.
+                </Text>
+            )}
+            <Collapse
+                size="small" ghost style={{ marginTop: 8 }}
+                items={[{
+                    key: 'in-progress',
+                    label: <Text strong>Môn đang học kỳ này ({inProgressRows.length} môn, {inProgressCredits} TC) và khối được tính</Text>,
+                    children: (
+                        <InProgressList
+                            rows={inProgressRows} fileBlockOf={fileBlockOf} editing={editing} picker={web.blocks}
+                        />
+                    ),
+                }]}
+            />
         </Card>
     );
 

@@ -44,7 +44,7 @@ def test_cli_base_matches_contract(solver):
         assert out["engine_report"]["objective"]
     first = out["semesters"][0]
     assert set(first) == {"semester_code", "credits", "courses"}
-    assert set(first["courses"][0]) == {"code", "credits", "reason", "locked"}
+    assert set(first["courses"][0]) == {"code", "credits", "reason", "locked", "block", "slot"}
     for key in ("solve_ms", "preferences_report", "assumptions", "warnings",
                 "unverified_prerequisites", "diff_vs_previous", "infeasible_reason"):
         assert key in out

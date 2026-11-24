@@ -72,7 +72,7 @@
 }
 
 /*
- * Biểu đồ trang "Phân tích học tập". Màu series đã kiểm tra tách biệt cho người mù màu
+ * Token màu biểu đồ (khớp hex trong pages/courses/components/charts.tsx, chart canvas không đọc được biến CSS). Màu series đã kiểm tra tách biệt cho người mù màu
  * (xanh dương / xanh ngọc / vàng) ở cả hai chế độ; chữ luôn dùng màu chữ, không dùng màu series.
  */
 @layer components {
@@ -82,8 +82,6 @@
         --viz-planned: #eda100;
         --viz-suggested: #6250d6;
         --viz-track: #e8e8ea;
-        --viz-grid: #e1e0d9;
-        --viz-axis: #c3c2b7;
     }
 
     [data-theme='dark'] {
@@ -92,132 +90,7 @@
         --viz-planned: #c98500;
         --viz-suggested: #9085e9;
         --viz-track: #2a2f37;
-        --viz-grid: #2c2c2a;
-        --viz-axis: #383835;
     }
-
-    .viz-fill-done { background: var(--viz-done); }
-    .viz-fill-progress { background: var(--viz-progress); }
-    .viz-fill-planned { background: var(--viz-planned); }
-    .viz-fill-suggested { background: var(--viz-suggested); }
-    .viz-fill-track { background: var(--viz-track); }
-
-    .viz-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px 16px;
-        color: var(--text-secondary);
-        font-size: 12px;
-    }
-    .viz-legend-item { display: inline-flex; align-items: center; gap: 6px; }
-    .viz-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-
-    .viz-hbar {
-        display: flex;
-        gap: 2px;
-        width: 100%;
-        border-radius: 4px;
-        overflow: hidden;
-        background: var(--viz-track);
-    }
-    .viz-hbar-seg { height: 100%; min-width: 3px; transition: opacity 0.15s; }
-    .viz-hbar-seg:hover { opacity: 0.8; }
-
-    .viz-rows { display: grid; gap: 14px; }
-    .viz-row {
-        display: grid;
-        grid-template-columns: minmax(120px, 220px) 1fr auto;
-        align-items: center;
-        gap: 12px;
-    }
-    .viz-row-name { font-weight: 500; color: var(--text-primary); }
-    .viz-row-value { color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 13px; }
-    @media (max-width: 640px) {
-        .viz-row { grid-template-columns: 1fr auto; }
-        .viz-row .viz-hbar { grid-column: 1 / -1; grid-row: 2; }
-    }
-
-    .viz-columns-wrap { overflow-x: auto; }
-    .viz-columns { display: flex; min-width: 360px; }
-    .viz-axis {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 28px;
-        flex: none;
-        color: var(--text-muted);
-        font-size: 11px;
-        text-align: right;
-        padding-right: 6px;
-        margin: -6px 0;
-    }
-    .viz-plot {
-        position: relative;
-        flex: 1;
-        display: flex;
-        align-items: flex-end;
-        gap: 6px;
-        border-bottom: 1px solid var(--viz-axis);
-    }
-    .viz-grid { position: absolute; left: 0; right: 0; border-top: 1px solid var(--viz-grid); }
-    .viz-ref {
-        position: absolute;
-        left: 0;
-        right: 0;
-        border-top: 1px dashed var(--text-muted);
-        z-index: 1;
-        pointer-events: none;
-    }
-    .viz-ref span {
-        position: absolute;
-        right: 0;
-        top: -16px;
-        font-size: 11px;
-        color: var(--text-secondary);
-        background: var(--bg-surface);
-        padding: 0 4px;
-    }
-    .viz-col {
-        position: relative;
-        flex: 1;
-        height: 100%;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        border-radius: 6px 6px 0 0;
-        outline: none;
-        cursor: default;
-    }
-    .viz-col:hover, .viz-col:focus-visible { background: var(--brand-soft); }
-    .viz-col.is-highlight { background: var(--bg-subtle); }
-    .viz-col-stack {
-        width: min(36px, 70%);
-        display: flex;
-        flex-direction: column-reverse;
-        gap: 2px;
-        overflow: hidden;
-        border-radius: 4px 4px 0 0;
-    }
-    .viz-col-seg { min-height: 2px; }
-    .viz-xlabels {
-        display: flex;
-        gap: 6px;
-        min-width: 360px;
-        margin-top: 6px;
-        font-size: 11px;
-        color: var(--text-secondary);
-        text-align: center;
-    }
-    .viz-xlabels > span { flex: 1; line-height: 1.3; }
-    .viz-xlabels > span small { display: block; color: var(--text-muted); font-size: 10px; }
-    .viz-xlabels > span.is-highlight { color: var(--text-primary); font-weight: 600; }
-    .viz-axis-spacer { flex: none !important; width: 28px; }
-
-    .viz-ring { display: flex; align-items: center; gap: 16px; }
-    .viz-ring-track { fill: none; stroke: var(--viz-track); stroke-width: 10; }
-    .viz-ring-value { fill: none; stroke: var(--viz-done); stroke-width: 10; stroke-linecap: round; }
-    .viz-ring-text { fill: var(--text-primary); font-size: 20px; font-weight: 700; }
-    .viz-ring-label { font-size: 18px; font-weight: 600; color: var(--text-primary); }
 
     .analysis-grid {
         display: grid;
@@ -285,7 +158,6 @@
 
     .opened-foot { margin-top: 4px; }
     .opened-freq { display: grid; gap: 4px; justify-items: center; }
-    .opened-freq .viz-hbar { width: 100%; }
     .opened-freq-text { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
     .opened-legend {
@@ -447,19 +319,6 @@
     .outline-block-title.ant-typography { margin: 0; font-size: 15px; }
     .outline-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
 
-    .outline-bars { display: grid; gap: 8px; }
-    .outline-bar-row {
-        display: grid;
-        grid-template-columns: minmax(110px, 180px) 1fr auto;
-        gap: 10px;
-        align-items: center;
-        font-size: 13px;
-    }
-    .outline-bar-label { color: var(--text-secondary); }
-    .outline-bar-track { height: 10px; border-radius: 4px; background: var(--viz-track); overflow: hidden; }
-    .outline-bar-fill { display: block; height: 100%; background: var(--brand); border-radius: 4px; }
-    .outline-bar-value { font-variant-numeric: tabular-nums; min-width: 56px; text-align: right; }
-
     .outline-sessions { display: grid; gap: 12px; }
     .outline-session {
         display: grid;
@@ -493,8 +352,469 @@
 
     @media (max-width: 640px) {
         .outline-session { grid-template-columns: 1fr; gap: 4px; }
-        .outline-bar-row { grid-template-columns: 1fr auto; }
-        .outline-bar-track { grid-column: 1 / -1; grid-row: 2; }
         .outline-outcome { grid-template-columns: 64px 1fr; }
     }
+}
+
+/* Trang môn học của sinh viên: thẻ môn bấm để đổi trạng thái (pages/courses/board). */
+@layer components {
+    :root {
+        --status-completed: #1f9d55;
+        --status-completed-soft: rgba(31, 157, 85, 0.12);
+        --status-progress: #0066cc;
+        --status-progress-soft: rgba(0, 102, 204, 0.1);
+        --status-failed: #d93a3a;
+        --status-failed-soft: rgba(217, 58, 58, 0.1);
+        --status-not-started: #86868b;
+        --status-not-started-soft: rgba(134, 134, 139, 0.12);
+        --status-dirty: #eda100;
+        --status-planned: #6250d6;
+        --status-planned-soft: rgba(98, 80, 214, 0.1);
+    }
+    [data-theme='dark'] {
+        --status-completed: #3fc27a;
+        --status-completed-soft: rgba(63, 194, 122, 0.16);
+        --status-progress: #4a9eff;
+        --status-progress-soft: rgba(74, 158, 255, 0.16);
+        --status-failed: #ff6b6b;
+        --status-failed-soft: rgba(255, 107, 107, 0.15);
+        --status-not-started: rgba(245, 245, 247, 0.54);
+        --status-not-started-soft: rgba(245, 245, 247, 0.08);
+        --status-dirty: #f2b630;
+        --status-planned: #9085e9;
+        --status-planned-soft: rgba(144, 133, 233, 0.16);
+    }
+
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+        gap: 10px;
+    }
+
+    .course-card {
+        --accent: var(--border-strong);
+        --tint: var(--bg-surface);
+        position: relative;
+        display: grid;
+        /* Cột 1: thân thẻ (bấm đổi trạng thái) + dải kế hoạch; cột 2: link chi tiết, cao hết thẻ. */
+        grid-template-columns: minmax(0, 1fr) 34px;
+        grid-template-rows: 1fr auto;
+        border: 1px solid var(--border-soft);
+        border-left: 4px solid var(--accent);
+        border-radius: var(--radius-sm);
+        background: var(--tint);
+        transition: background 0.12s, border-color 0.12s, transform 0.08s;
+    }
+    .course-card[data-status='completed'] { --accent: var(--status-completed); --tint: var(--status-completed-soft); }
+    .course-card[data-status='in-progress'] { --accent: var(--status-progress); --tint: var(--status-progress-soft); }
+    .course-card[data-status='failed'] { --accent: var(--status-failed); --tint: var(--status-failed-soft); }
+    .course-card[data-status='not-started'] { --accent: var(--status-not-started); --tint: var(--status-not-started-soft); }
+    .course-card[data-status='planned'] { --accent: var(--status-planned); --tint: var(--status-planned-soft); }
+    .course-card:hover { border-color: var(--accent); }
+    .course-card:active { transform: scale(0.99); }
+
+    .course-card-main {
+        grid-column: 1;
+        grid-row: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 4px 8px 10px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        user-select: none;
+    }
+    .course-card-top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+    .course-card-code { font-weight: 700; color: var(--text-primary); }
+    .course-card-credits { color: var(--text-muted); white-space: nowrap; }
+    .course-card-name {
+        font-size: 13px;
+        line-height: 1.35;
+        color: var(--text-primary);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .course-card-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .course-card-status { font-weight: 600; color: var(--accent); }
+    .course-card:not([data-status]) .course-card-status,
+    .course-card[data-status='none'] .course-card-status { color: var(--text-muted); font-weight: 400; }
+    .course-card-plan {
+        padding: 0 6px;
+        border-radius: var(--radius-pill);
+        background: var(--brand-soft);
+        color: var(--brand);
+    }
+    .course-card-dirty { margin-left: auto; color: var(--status-dirty); font-size: 10px; }
+
+    /* Dải link sang trang chi tiết: tách khỏi vùng bấm đổi trạng thái bằng đường kẻ + nền riêng. */
+    .course-card-link {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        display: grid;
+        place-items: center;
+        border-left: 1px solid var(--border-soft);
+        border-radius: 0 calc(var(--radius-sm) - 1px) calc(var(--radius-sm) - 1px) 0;
+        background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+        color: var(--text-secondary);
+        font-size: 16px;
+        transition: background 0.12s, color 0.12s;
+    }
+    .course-card-link:hover,
+    .course-card-link:focus-visible {
+        background: var(--brand-soft-strong);
+        color: var(--brand);
+    }
+
+    /* Dải kế hoạch của môn chưa học: nút riêng, không nằm trong nút đổi trạng thái. */
+    .course-card-planbar {
+        grid-column: 1;
+        grid-row: 2;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 6px 6px 8px;
+        font-size: 12px;
+    }
+    .course-card-planadd,
+    .course-card-planbtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-pill);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        font: inherit;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .course-card-planadd { padding: 4px 10px 4px 8px; }
+    .course-card-planbtn { width: 24px; height: 24px; padding: 0; border-style: solid; }
+    .course-card-planadd:hover,
+    .course-card-planbtn:not(:disabled):hover {
+        border-color: var(--status-planned);
+        background: var(--status-planned-soft);
+        color: var(--status-planned);
+    }
+    .course-card-planbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .course-card-plansem {
+        min-width: 52px;
+        text-align: center;
+        font-weight: 600;
+        color: var(--status-planned);
+        font-variant-numeric: tabular-nums;
+    }
+    .course-card-planremove { margin-left: auto; border-color: transparent; background: transparent; }
+    .course-card-planremove:not(:disabled):hover { border-color: var(--status-failed); background: var(--status-failed-soft); color: var(--status-failed); }
+
+    .status-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+    .status-toggle:hover .ant-tag { filter: brightness(0.95); }
+
+    .board-section-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 4px 12px;
+        margin-bottom: 10px;
+    }
+    .board-section-title { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+    .board-section-sub { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+    .board-group {
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-md);
+        padding: 10px 12px;
+    }
+
+    /* Nổi cố định ở đáy màn hình, nằm ngoài luồng bố cục: hiện/ẩn không làm các thẻ bên dưới nhảy chỗ. */
+    .board-savebar {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        z-index: 30;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100vw - 32px);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        padding: 10px 14px;
+        border: 1px solid var(--status-dirty);
+        border-radius: var(--radius-md);
+        background: var(--bg-elevated);
+        box-shadow: var(--shadow-raised);
+        animation: board-savebar-in 0.16s ease-out;
+    }
+    @keyframes board-savebar-in {
+        from { opacity: 0; transform: translate(-50%, 8px); }
+        to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    @media (max-width: 1024px) {
+        .board-savebar { bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 12px); }
+    }
+    .board-savebar-text { flex: 1; min-width: 180px; font-size: 13px; color: var(--text-primary); }
+
+    .board-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-secondary); }
+    .board-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .board-legend-swatch { width: 12px; height: 12px; border-radius: 3px; border-left: 3px solid; }
+}
+
+/* Trang Hồ sơ: chọn CTĐT qua bảng chương trình của trường (pages/profile/CurriculumPicker). */
+@layer components {
+    .curriculum-picker-field {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        background: var(--bg-surface);
+    }
+
+    .program-chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .program-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        border: 1px solid transparent;
+        border-radius: var(--radius-pill);
+        font: inherit;
+        font-size: 12px;
+        line-height: 20px;
+        white-space: nowrap;
+    }
+    .program-chip[data-state='available'] {
+        border-color: var(--brand);
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .program-chip[data-state='available']:hover,
+    .program-chip[data-state='available']:focus-visible { background: var(--brand-soft-strong); }
+    .program-chip[data-state='selected'] {
+        border-color: var(--brand);
+        background: var(--brand);
+        color: var(--brand-contrast);
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .program-chip[data-state='unavailable'] {
+        border-color: var(--border-soft);
+        background: var(--bg-subtle);
+        color: var(--text-muted);
+        cursor: not-allowed;
+    }
+
+    .program-chip-legend {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    .program-chip-legend .program-chip { cursor: default; }
+    .program-chip-legend .program-chip + .program-chip,
+    .program-chip-legend .program-chip:nth-of-type(2) { margin-left: 10px; }
+}
+
+/* Khối số liệu tiến độ (pages/courses/components/ProgressSummary). */
+@layer components {
+    .progress-overview {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+    @media (min-width: 900px) {
+        .progress-overview { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); align-items: start; }
+    }
+    .progress-overview-groups { display: grid; gap: 16px; min-width: 0; }
+
+    .progress-hero {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        border-radius: var(--radius-md);
+        background: var(--bg-subtle);
+    }
+    .progress-hero-body { min-width: 0; display: grid; gap: 4px; }
+    .progress-hero-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+    .progress-hero-number {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.1;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+    }
+    .progress-hero-total { font-size: 15px; color: var(--text-secondary); white-space: nowrap; }
+
+    .metric-group { min-width: 0; }
+    .metric-group-title {
+        margin: 0 0 8px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+        gap: 10px;
+    }
+
+    .metric-tile {
+        --tone: var(--border-strong);
+        display: grid;
+        align-content: start;
+        gap: 2px;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--border-soft);
+        border-left: 3px solid var(--tone);
+        border-radius: var(--radius-sm);
+        background: var(--bg-surface);
+    }
+    .metric-tile[data-tone='done'] { --tone: var(--viz-done); }
+    .metric-tile[data-tone='progress'] { --tone: var(--viz-progress); }
+    .metric-tile[data-tone='planned'] { --tone: var(--viz-planned); }
+    .metric-tile[data-tone='plan-status'] { --tone: var(--status-planned); }
+    .metric-tile[data-tone='remaining'] { --tone: var(--viz-track); }
+    .metric-tile[data-tone='danger'] { --tone: var(--status-failed); }
+
+    .metric-label { font-size: 12px; line-height: 1.35; color: var(--text-secondary); }
+    .metric-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; }
+    .metric-number {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+    }
+    .metric-unit { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+    .metric-note { font-size: 12px; line-height: 1.35; color: var(--text-muted); }
+    .metric-note[data-tone='danger'] { color: var(--status-failed); font-weight: 600; }
+
+    .board-curriculum-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px 16px;
+        margin-bottom: 16px;
+    }
+    .board-curriculum-title { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.35; color: var(--text-primary); }
+    .board-curriculum-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+}
+
+/* Đồ thị điều kiện môn học (pages/courses/board/graph). */
+@layer components {
+    .graph-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 20px;
+        font-size: 13px;
+    }
+    .graph-legend-item { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+
+    .graph-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .graph-layout[data-panel='open'] { grid-template-columns: minmax(0, 1fr) 320px; }
+    .graph-canvas {
+        height: min(72vh, 760px);
+        min-height: 420px;
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background: var(--bg-surface);
+    }
+    .graph-panel {
+        display: grid;
+        align-content: start;
+        gap: 16px;
+        max-height: min(72vh, 760px);
+        overflow-y: auto;
+        padding: 14px;
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        background: var(--bg-surface);
+    }
+    .graph-panel-head { display: flex; justify-content: space-between; gap: 8px; }
+    .graph-panel-link { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+    .graph-condition { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+    .graph-condition[data-unmet] { padding: 6px; border-radius: var(--radius-sm); background: var(--status-failed-soft); }
+
+    .graph-column-header {
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-strong);
+        padding-bottom: 4px;
+    }
+
+    .graph-node {
+        --accent: var(--border-strong);
+        --tint: var(--bg-surface);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 1px;
+        padding: 6px 10px;
+        border: 1px solid var(--border-soft);
+        border-left: 4px solid var(--accent);
+        border-radius: var(--radius-sm);
+        background: color-mix(in srgb, var(--tint) 100%, var(--bg-surface));
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        cursor: pointer;
+        transition: opacity 0.15s, box-shadow 0.15s;
+    }
+    .graph-node[data-status='completed'] { --accent: var(--status-completed); --tint: var(--status-completed-soft); }
+    .graph-node[data-status='in-progress'] { --accent: var(--status-progress); --tint: var(--status-progress-soft); }
+    .graph-node[data-status='failed'] { --accent: var(--status-failed); --tint: var(--status-failed-soft); }
+    .graph-node[data-status='not-started'] { --accent: var(--status-not-started); --tint: var(--status-not-started-soft); }
+    .graph-node[data-status='planned'] { --accent: var(--status-planned); --tint: var(--status-planned-soft); }
+    .graph-node[data-unmet] { border-color: var(--status-failed); box-shadow: 0 0 0 2px var(--status-failed-soft); }
+    .graph-node[data-focus='self'] { box-shadow: 0 0 0 3px var(--brand); }
+    .graph-node[data-focus='before'] { box-shadow: 0 0 0 2px var(--brand-soft-strong); }
+    .graph-node[data-focus='after'] { box-shadow: 0 0 0 2px var(--status-planned-soft); }
+    .graph-node[data-focus='dim'] { opacity: 0.25; }
+    .graph-node-top { display: flex; justify-content: space-between; font-size: 11px; }
+    .graph-node-code { font-weight: 700; color: var(--text-primary); }
+    .graph-node-credits { color: var(--text-muted); }
+    .graph-node-name {
+        font-size: 12px;
+        line-height: 1.3;
+        color: var(--text-primary);
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .graph-node-status { font-size: 10px; font-weight: 600; color: var(--accent); }
+    .graph-node[data-status='none'] .graph-node-status { color: var(--text-muted); font-weight: 400; }
+    .graph-node[data-unmet] .graph-node-status { color: var(--status-failed); }
+    .graph-handle { opacity: 0; pointer-events: none; }
 }
