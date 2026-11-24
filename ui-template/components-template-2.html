@@ -1,0 +1,872 @@
+additional_ui_html = """<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BK Uni – Additional UI Components Standard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+:root {
+  --bg-canvas: #FFFFFF;
+  --bg-blush: #FDF4F7;
+  --bg-elevated: #FFF8F4;
+  --bg-tint-hover: #FBEDF2;
+  --bg-disabled: #F9F2F5;
+
+  --ink-primary: #3B2230;
+  --ink-muted: #8E6B78;
+  --ink-soft: #BE9EAA;
+  --ink-disabled: #CBB3BD;
+  --ink-inverse: #FFFFFF;
+
+  --accent-rose: #B83E6C;
+  --accent-rose-hover: #A03460;
+  --accent-sparkle: #E58FB0;
+  --accent-glow: rgba(229, 143, 176, 0.25);
+  --line-hairline: #F3E3EA;
+
+  --sem-good: #5E7F5D;
+  --sem-warn: #A0702A;
+  --sem-warn-bg: #FDF7EC;
+  --sem-err: #AE4B33;
+  --sem-err-bg: #FDF3F1;
+
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, textarea { font-family: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent-sparkle);
+  outline-offset: 2px;
+}
+
+.page-wrap {
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 44px 36px 80px;
+}
+
+.doc-head h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 34px;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.doc-head h1 i { color: var(--accent-rose); font-size: 22px; }
+.doc-head p {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+}
+
+.spec-block {
+  margin-top: 34px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line-hairline);
+}
+.spec-title {
+  margin: 0 0 4px;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 21px;
+}
+.spec-desc {
+  margin: 0 0 18px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+/* Shared Stamp & Line Buttons */
+.btn-primary {
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-rose);
+  background: var(--accent-rose);
+  color: var(--ink-inverse);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  outline: 1px solid rgba(255, 255, 255, 0.36);
+  outline-offset: -4px;
+  transition: all 0.15s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-rose-hover);
+  border-color: var(--accent-rose-hover);
+}
+.btn-primary:disabled {
+  background: var(--bg-disabled);
+  border-color: var(--line-hairline);
+  color: var(--ink-disabled);
+  outline-color: transparent;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-sparkle);
+  background: var(--bg-blush);
+  color: var(--ink-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  outline: 1px solid var(--line-hairline);
+  outline-offset: -4px;
+  transition: all 0.15s ease;
+}
+.btn-secondary:hover {
+  border-color: var(--accent-rose);
+  color: var(--accent-rose);
+  background: var(--bg-tint-hover);
+}
+
+.btn-tertiary {
+  padding: 4px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--ink-soft);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 0;
+}
+.btn-tertiary:hover {
+  color: var(--accent-rose);
+  border-bottom-color: var(--accent-rose);
+}
+
+/* 1. COURSE TABLE, FILE COLUMN & "DIFFERS FROM FILE" MARKER + INLINE NOTE */
+.line-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.line-table th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-hairline);
+}
+.line-table > tbody > tr.main-row > td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line-hairline);
+  vertical-align: middle;
+}
+.line-table > tbody > tr.main-row:hover > td {
+  background: var(--bg-tint-hover);
+}
+.line-table > tbody > tr.main-row.diff-row > td:first-child {
+  box-shadow: inset 2px 0 0 var(--sem-warn);
+}
+
+.c-code { font-weight: 600; font-size: 13px; }
+.c-tc { color: var(--ink-muted); font-size: 12.5px; }
+
+.file-mark-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--sem-good);
+  font-weight: 600;
+  font-size: 13px;
+}
+.file-mark-none {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.diff-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sem-warn);
+  padding-left: 8px;
+  border-left: 1.5px solid var(--sem-warn);
+}
+.diff-flag i { font-size: 14px; }
+
+.note-trigger {
+  border: 0;
+  background: transparent;
+  padding: 2px 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  border-bottom: 1px dashed var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-align: left;
+}
+.note-trigger:hover {
+  color: var(--accent-rose);
+  border-bottom-color: var(--accent-rose);
+}
+
+/* Inline multi-line note box inside a row */
+.note-drawer-row > td {
+  padding: 0 10px 14px 24px;
+  border-bottom: 1px solid var(--line-hairline);
+  background: var(--bg-blush);
+}
+.note-drawer-row.hidden { display: none; }
+.note-box {
+  padding-top: 10px;
+}
+.note-box-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.note-box-lbl i { color: var(--accent-rose); font-size: 13px; }
+.note-textarea {
+  width: 100%;
+  min-height: 64px;
+  padding: 8px 10px;
+  border: 0;
+  border-top: 1px solid var(--line-hairline);
+  border-bottom: 1px solid var(--accent-sparkle);
+  background: var(--bg-canvas);
+  font-size: 12.5px;
+  resize: vertical;
+}
+.note-textarea:focus {
+  outline: none;
+  border-bottom-color: var(--accent-rose);
+}
+.note-actions {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+/* 2. COURSE-LOAD WARNING & SMALL "SOURCE" BADGE */
+.meta-strip-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line-hairline);
+  border-bottom: 1px solid var(--line-hairline);
+}
+.load-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.load-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--sem-err);
+  color: var(--sem-err);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.load-warn i { font-size: 14px; }
+
+.source-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-primary);
+}
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--accent-sparkle);
+  background: var(--bg-blush);
+  color: var(--accent-rose);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* 3. CONFIRM POPOVER BEFORE EACH CHANGE */
+.confirm-inline-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+}
+.confirm-popover {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent-sparkle);
+  outline: 1px solid var(--line-hairline);
+  outline-offset: -4px;
+  box-shadow: 0 14px 30px -16px rgba(59, 34, 48, 0.28);
+  font-size: 13px;
+}
+.confirm-popover strong { color: var(--accent-rose); }
+.confirm-btns {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 4. REVIEW MODAL AFTER READING THE FILE */
+.review-sheet {
+  max-width: 680px;
+  border: 1px solid var(--accent-sparkle);
+  border-radius: 6px;
+  background: var(--bg-canvas);
+  padding: 24px 28px;
+  box-shadow: 0 22px 48px -24px rgba(59, 34, 48, 0.25);
+}
+.review-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-hairline);
+}
+.review-hd h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.review-hd h3 i { color: var(--accent-rose); font-size: 18px; }
+
+.meta-kv-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-hairline);
+  font-size: 13px;
+}
+.meta-kv-row .k { color: var(--ink-muted); }
+.meta-kv-row .v {
+  font-family: var(--sans);
+  font-weight: 600;
+  color: var(--ink-primary);
+  background: var(--bg-blush);
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--accent-sparkle);
+}
+
+.problem-notice {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-left: 2.5px solid var(--sem-warn);
+  background: var(--sem-warn-bg);
+  color: var(--sem-warn);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.diff-preview-title {
+  margin: 18px 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.diff-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.diff-mini-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line-hairline);
+}
+.arrow-change {
+  color: var(--accent-rose);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 5. ADD-COURSE AUTOCOMPLETE RESULTS LIST */
+.add-course-wrap {
+  max-width: 440px;
+  position: relative;
+}
+.add-input-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--accent-rose);
+  box-shadow: 0 3px 0 -1px var(--accent-glow);
+}
+.add-input-line i { color: var(--accent-rose); font-size: 16px; }
+.add-input-line input {
+  border: 0;
+  background: transparent;
+  width: 100%;
+  font-size: 13.5px;
+}
+.add-input-line input:focus { outline: none; }
+
+.results-list {
+  margin-top: 4px;
+  border: 1px solid var(--accent-sparkle);
+  border-radius: 4px;
+  background: var(--bg-canvas);
+  outline: 1px solid var(--line-hairline);
+  outline-offset: -4px;
+  padding: 4px;
+  box-shadow: 0 16px 32px -16px rgba(59, 34, 48, 0.24);
+}
+.result-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line-hairline);
+  font-size: 13px;
+}
+.result-item:last-child { border-bottom: 0; }
+.result-item:hover { background: var(--bg-blush); }
+.result-main { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.result-code { font-weight: 600; color: var(--accent-rose); }
+.result-name { color: var(--ink-primary); }
+.result-tc { font-size: 12px; color: var(--ink-muted); white-space: nowrap; }
+
+/* 6. EMPTY TABLE MESSAGE */
+.empty-table-line {
+  padding: 28px 16px;
+  border-top: 1px solid var(--line-hairline);
+  border-bottom: 1px solid var(--line-hairline);
+  background: var(--bg-blush);
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.empty-table-line i { color: var(--accent-sparkle); font-size: 16px; }
+.empty-table-line strong { color: var(--ink-primary); font-weight: 600; }
+
+/* 7. TOAST AFTER SAVING */
+.toast-demo-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.toast-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 18px;
+  border-radius: 4px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--accent-sparkle);
+  border-left: 3px solid var(--sem-good);
+  box-shadow: 0 14px 30px -16px rgba(59, 34, 48, 0.25);
+  font-size: 13px;
+  color: var(--ink-primary);
+}
+.toast-line i.spark { color: var(--accent-rose); font-size: 15px; }
+
+/* 8. PAGE LOADING SKELETON (~1s WHILE DATA LOADS) */
+@keyframes shimmerPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.95; }
+}
+.loading-shell {
+  padding: 20px 0;
+  border-top: 1px solid var(--line-hairline);
+  border-bottom: 1px solid var(--line-hairline);
+}
+.loading-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--accent-rose);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.loading-top i {
+  font-size: 14px;
+  animation: shimmerPulse 1.1s ease-in-out infinite;
+}
+.skel-line {
+  height: 11px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bg-blush), var(--line-hairline), var(--bg-blush));
+  animation: shimmerPulse 1.2s ease-in-out infinite;
+  margin-bottom: 12px;
+}
+.skel-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 70px 90px;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--line-hairline);
+}
+.skel-bead {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-sparkle);
+  animation: shimmerPulse 1.2s ease-in-out infinite;
+  display: inline-block;
+  margin-right: 8px;
+}
+</style>
+</head>
+<body>
+
+  <div class="page-wrap">
+    <header class="doc-head">
+      <h1>Additional UI Components Standard <i class="ph-fill ph-sparkle"></i></h1>
+      <p>Line-driven patterns for transcript comparison, inline row notes, credit warnings, confirmations, review modals, empty states, toasts, and loading states.</p>
+    </header>
+
+    <!-- 1. COURSE TABLE, FILE COLUMN, DIFFERS MARKER & INLINE NOTE -->
+    <section class="spec-block">
+      <h2 class="spec-title">1. Course Table, File Column, "Differs from File" & Inline Row Note</h2>
+      <p class="spec-desc">Shows file verification (<code>✓</code> / <code>--</code>), mismatch warning (<code>⚠ Khác file tiến độ</code>), and an expandable multi-line note box right inside the row.</p>
+
+      <table class="line-table">
+        <thead>
+          <tr>
+            <th style="width: 110px;">Mã môn</th>
+            <th>Tên học phần</th>
+            <th style="width: 75px;">Tín chỉ</th>
+            <th style="width: 90px;">File</th>
+            <th style="width: 125px;">Trên web</th>
+            <th style="width: 175px;">Đối chiếu / Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="main-row">
+            <td><span class="c-code">CO1007</span></td>
+            <td>Cấu trúc rời rạc</td>
+            <td><span class="c-tc">4 TC</span></td>
+            <td><span class="file-mark-ok"><i class="ph ph-check"></i> ✓</span></td>
+            <td><span style="color: var(--sem-good); font-weight: 600;">Đã đạt</span></td>
+            <td>
+              <button type="button" class="note-trigger" onclick="toggleNote('note-1')">
+                <i class="ph ph-note-pencil"></i> Thêm ghi chú
+              </button>
+            </td>
+          </tr>
+          <tr class="note-drawer-row hidden" id="note-1">
+            <td colspan="6">
+              <div class="note-box">
+                <div class="note-box-lbl"><i class="ph-fill ph-sparkle"></i> Ghi chú cho CO1007</div>
+                <textarea class="note-textarea" placeholder="Nhập ghi chú học phần..."></textarea>
+                <div class="note-actions">
+                  <button type="button" class="btn-tertiary" onclick="toggleNote('note-1')">Đóng</button>
+                  <button type="button" class="btn-primary" onclick="toggleNote('note-1')">Lưu ghi chú</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="main-row">
+            <td><span class="c-code">CO1027</span></td>
+            <td>Kỹ thuật lập trình</td>
+            <td><span class="c-tc">3 TC</span></td>
+            <td><span class="file-mark-none">--</span></td>
+            <td><span style="color: var(--ink-muted);">Chưa học</span></td>
+            <td>
+              <button type="button" class="note-trigger" onclick="toggleNote('note-2')">
+                <i class="ph ph-note-pencil"></i> Thêm ghi chú
+              </button>
+            </td>
+          </tr>
+          <tr class="note-drawer-row hidden" id="note-2">
+            <td colspan="6">
+              <div class="note-box">
+                <div class="note-box-lbl"><i class="ph-fill ph-sparkle"></i> Ghi chú cho CO1027</div>
+                <textarea class="note-textarea" placeholder="Nhập ghi chú học phần..."></textarea>
+                <div class="note-actions">
+                  <button type="button" class="btn-tertiary" onclick="toggleNote('note-2')">Đóng</button>
+                  <button type="button" class="btn-primary" onclick="toggleNote('note-2')">Lưu ghi chú</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="main-row diff-row">
+            <td><span class="c-code">CO2003</span></td>
+            <td>Cấu trúc dữ liệu và giải thuật</td>
+            <td><span class="c-tc">4 TC</span></td>
+            <td><span class="file-mark-ok"><i class="ph ph-check"></i> ✓</span></td>
+            <td><span style="color: var(--accent-rose); font-weight: 600;">Đang học</span></td>
+            <td>
+              <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+                <span class="diff-flag"><i class="ph-fill ph-warning"></i> Khác file tiến độ</span>
+                <button type="button" class="note-trigger" onclick="toggleNote('note-3')">
+                  <i class="ph ph-note-pencil"></i> Ghi chú: "Học lại kỳ hè 263"
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr class="note-drawer-row" id="note-3">
+            <td colspan="6">
+              <div class="note-box">
+                <div class="note-box-lbl"><i class="ph-fill ph-sparkle"></i> Ghi chú cho CO2003</div>
+                <textarea class="note-textarea">Học lại kỳ hè 263</textarea>
+                <div class="note-actions">
+                  <button type="button" class="btn-tertiary" onclick="toggleNote('note-3')">Hủy</button>
+                  <button type="button" class="btn-primary" onclick="toggleNote('note-3')">Lưu ghi chú</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 2. COURSE-LOAD WARNING & SMALL SOURCE BADGE -->
+    <section class="spec-block">
+      <h2 class="spec-title">2. Course-Load Warning & Small "Source" Badge</h2>
+      <p class="spec-desc">Inline credit limit alert beside a summary count, paired with a compact source indicator for auto-calculated semester metadata.</p>
+
+      <div class="meta-strip-demo">
+        <div class="load-summary">
+          <span>Đang học: <strong>8 môn, 27 TC</strong></span>
+          <span class="load-warn"><i class="ph-fill ph-warning-circle"></i> nhiều hơn mức tối đa 25 TC</span>
+        </div>
+
+        <div class="source-line">
+          <span>Học kỳ hiện tại: <strong>HK 261</strong> (kỳ 1 2026-2027)</span>
+          <span class="source-badge"><i class="ph-fill ph-sparkle"></i> tự tính theo ngày</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. CONFIRM BEFORE EACH CHANGE -->
+    <section class="spec-block">
+      <h2 class="spec-title">3. Confirm Popover Before Each Change</h2>
+      <p class="spec-desc">Compact inline confirmation prompt anchored to the action before mutating course status.</p>
+
+      <div class="confirm-inline-demo">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('confirmBox').style.display='inline-flex'">
+          <i class="ph ph-arrows-clockwise"></i> Đổi trạng thái CO3049
+        </button>
+
+        <div class="confirm-popover" id="confirmBox" role="alertdialog">
+          <span>Đổi <strong>CO3049</strong> sang “Đậu”?</span>
+          <div class="confirm-btns">
+            <button type="button" class="btn-tertiary" onclick="document.getElementById('confirmBox').style.display='none'">Hủy</button>
+            <button type="button" class="btn-primary" onclick="document.getElementById('confirmBox').style.display='none'">Đồng ý</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. REVIEW MODAL AFTER READING THE FILE -->
+    <section class="spec-block">
+      <h2 class="spec-title">4. Review Sheet / Modal After Reading the File</h2>
+      <p class="spec-desc">Displays curriculum code from myBK, unmatched course warnings, and pending status transitions before applying.</p>
+
+      <div class="review-sheet">
+        <div class="review-hd">
+          <h3><i class="ph-fill ph-sparkle"></i> Xác nhận tiến độ</h3>
+          <button type="button" class="btn-tertiary">Đóng</button>
+        </div>
+
+        <div class="meta-kv-row">
+          <span class="k">Mã CTĐT (myBK)</span>
+          <span class="v">DH_CQ_MT_KHM_2023</span>
+        </div>
+
+        <div class="problem-notice">
+          <i class="ph-fill ph-warning"></i> 3 môn trong file không có trên web
+        </div>
+
+        <div class="diff-preview-title">Trạng thái môn sẽ đổi (12)</div>
+        <table class="diff-mini-table">
+          <tr>
+            <td><strong>CO2003</strong> · Cấu trúc dữ liệu và giải thuật</td>
+            <td>
+              <span class="arrow-change">
+                <span style="color: var(--ink-muted); font-weight: 500;">Chưa học</span>
+                <i class="ph ph-arrow-right"></i>
+                <span style="color: var(--sem-good);">Đậu</span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>CO3001</strong> · Công nghệ phần mềm</td>
+            <td>
+              <span class="arrow-change">
+                <span style="color: var(--ink-muted); font-weight: 500;">Chưa học</span>
+                <i class="ph ph-arrow-right"></i>
+                <span style="color: var(--sem-good);">Đậu</span>
+              </span>
+            </td>
+          </tr>
+        </table>
+
+        <div style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 16px; align-items: center;">
+          <button type="button" class="btn-tertiary">Hủy</button>
+          <button type="button" class="btn-primary"><i class="ph-fill ph-sparkle"></i> Áp dụng 12 thay đổi</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. ADD-COURSE RESULTS LIST -->
+    <section class="spec-block">
+      <h2 class="spec-title">5. Add-Course Search Results List</h2>
+      <p class="spec-desc">Dropdown result rows when typing a course prefix such as <code>CO30</code>.</p>
+
+      <div class="add-course-wrap">
+        <label class="add-input-line">
+          <i class="ph ph-magnifying-glass"></i>
+          <input type="text" value="CO30" aria-label="Tìm mã môn học">
+        </label>
+        <div class="results-list" role="listbox">
+          <button type="button" class="result-item">
+            <span class="result-main">
+              <span class="result-code">CO3001</span>
+              <span class="result-name">Công nghệ phần mềm</span>
+            </span>
+            <span class="result-tc">3 TC</span>
+          </button>
+          <button type="button" class="result-item">
+            <span class="result-main">
+              <span class="result-code">CO3005</span>
+              <span class="result-name">Nguyên lý ngôn ngữ lập trình</span>
+            </span>
+            <span class="result-tc">4 TC</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. EMPTY TABLE MESSAGE -->
+    <section class="spec-block">
+      <h2 class="spec-title">6. Empty Table Message</h2>
+      <p class="spec-desc">Centered blush hairline notice guiding the user to edit and type a course code.</p>
+
+      <div class="empty-table-line">
+        <i class="ph-fill ph-sparkle"></i>
+        <span>Chưa có môn đang học. Bấm <strong>Hiệu chỉnh</strong> rồi gõ mã môn ở ô <strong>“+ Môn đang học”</strong>.</span>
+      </div>
+    </section>
+
+    <!-- 7. TOAST AFTER SAVING -->
+    <section class="spec-block">
+      <h2 class="spec-title">7. Toast After Saving</h2>
+      <p class="spec-desc">Non-blocking status confirmation with a rose sparkle accent and sage completion border.</p>
+
+      <div class="toast-demo-bar">
+        <div class="toast-line" role="status">
+          <i class="ph-fill ph-sparkle spark"></i>
+          <span>Đã lưu hiệu chỉnh: <strong>5 môn</strong>; học kỳ hiện tại <strong>HK 261</strong>.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. PAGE LOADING (~1s WHILE DATA LOADS) -->
+    <section class="spec-block">
+      <h2 class="spec-title">8. Page Loading State (~1s While Data Loads)</h2>
+      <p class="spec-desc">Instead of a blank screen during initial data fetch, render soft blush hairlines and pulsing rose beads matching the page layout.</p>
+
+      <div class="loading-shell" aria-busy="true">
+        <div class="loading-top">
+          <i class="ph-fill ph-sparkle"></i>
+          <span>Đang tải dữ liệu tiến độ học tập...</span>
+        </div>
+        <div class="skel-line" style="width: 42%; height: 18px; margin-bottom: 18px;"></div>
+        <div class="skel-row">
+          <div><span class="skel-bead"></span><span class="skel-line" style="display:inline-block; width: 58px; margin:0;"></span></div>
+          <div class="skel-line" style="width: 78%; margin:0;"></div>
+          <div class="skel-line" style="width: 40px; margin:0;"></div>
+          <div class="skel-line" style="width: 64px; margin:0;"></div>
+        </div>
+        <div class="skel-row">
+          <div><span class="skel-bead"></span><span class="skel-line" style="display:inline-block; width: 58px; margin:0;"></span></div>
+          <div class="skel-line" style="width: 65%; margin:0;"></div>
+          <div class="skel-line" style="width: 40px; margin:0;"></div>
+          <div class="skel-line" style="width: 64px; margin:0;"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+function toggleNote(id) {
+  const row = document.getElementById(id);
+  if (row) row.classList.toggle('hidden');
+}
+</script>
+</body>
+</html>
+"""
+
+with open("additional-ui-components.html", "w", encoding="utf-8") as f:
+    f.write(additional_ui_html)
+
+print("Saved additional-ui-components.html")

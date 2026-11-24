@@ -12,6 +12,7 @@ const CourseAnalysisPage = lazy(() => import('@/pages/courses/analysis'));
 const RecommendationsPage = lazy(() => import('@/pages/recommendations'));
 const AdvisorPage = lazy(() => import('@/pages/advisor'));
 const ProfilePage = lazy(() => import('@/pages/profile'));
+const ProgramPage = lazy(() => import('@/pages/program'));
 
 /** Route cho sinh viên (đã bọc `RequireAuth` + `PrivateLayout` ở `routes/index`). */
 export const studentRoutes: RouteObject[] = [
@@ -26,6 +27,8 @@ export const studentRoutes: RouteObject[] = [
             { path: 'courses', Component: CoursesPage },
             { path: 'courses/analysis', Component: CourseAnalysisPage },
             { path: 'courses/:code', Component: CourseDetailPage },
+            // Former "Chương trình" tab of /courses, now its own page (/courses?tab=board redirects here).
+            { path: 'program', Component: ProgramPage },
             // Hai trang cũ đã gộp vào /courses; giữ đường dẫn để link/bookmark cũ không gãy.
             { path: 'student-courses', element: <Navigate to="/courses" replace /> },
             { path: 'plan', element: <Navigate to="/courses" replace /> },

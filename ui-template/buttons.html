@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BK Uni – Complete Button System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+:root {
+  --bg-canvas: #FFFFFF;
+  --bg-blush: #FDF4F7;
+  --bg-tint-hover: #FBEDF2;
+  --bg-disabled: #F9F2F5;
+
+  --ink-primary: #3B2230;
+  --ink-muted: #8E6B78;
+  --ink-soft: #BE9EAA;
+  --ink-disabled: #CBB3BD;
+  --ink-inverse: #FFFFFF;
+
+  --accent-rose: #B83E6C;
+  --accent-rose-hover: #A03460;
+  --accent-sparkle: #E58FB0;
+  --accent-glow: rgba(229, 143, 176, 0.25);
+  --line-hairline: #F3E3EA;
+
+  --sem-err: #AE4B33;
+  --sem-err-bg: #FDF3F1;
+
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 48px;
+  background: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-family: var(--sans);
+  font-size: 14px;
+  max-width: 980px;
+  margin-inline: auto;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 32px;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+h1 i { color: var(--accent-rose); font-size: 20px; }
+.subtitle {
+  color: var(--ink-muted);
+  margin: 0 0 36px;
+}
+
+.section {
+  padding: 28px 0;
+  border-top: 1px solid var(--line-hairline);
+}
+.section h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+.section p {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 0 0 20px;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Base reset */
+button {
+  font-family: var(--sans);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.16s ease;
+}
+button:focus-visible {
+  outline: 2px solid var(--accent-sparkle);
+  outline-offset: 2px;
+}
+
+/* 1. PRIMARY STAMP BUTTON (Rose Fill + White Inset Hairline) */
+.btn-primary {
+  height: 42px;
+  padding: 0 24px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-rose);
+  background: var(--accent-rose);
+  color: var(--ink-inverse);
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: 1px solid rgba(255, 255, 255, 0.36);
+  outline-offset: -4px;
+  box-shadow: 0 10px 22px -12px rgba(184, 62, 108, 0.72);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-rose-hover);
+  border-color: var(--accent-rose-hover);
+  outline-color: rgba(255, 255, 255, 0.58);
+}
+.btn-primary:disabled {
+  background: var(--bg-disabled);
+  border-color: var(--line-hairline);
+  color: var(--ink-disabled);
+  outline-color: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* 2. SECONDARY STAMP BUTTON (Blush Fill + Rose/Sparkle Hairlines) */
+.btn-secondary {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-sparkle);
+  background: var(--bg-blush);
+  color: var(--ink-primary);
+  font-size: 13px;
+  font-weight: 600;
+  outline: 1px solid var(--line-hairline);
+  outline-offset: -4px;
+}
+.btn-secondary i {
+  color: var(--accent-rose);
+  font-size: 15px;
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent-rose);
+  color: var(--accent-rose);
+  background: var(--bg-tint-hover);
+}
+.btn-secondary:disabled {
+  background: var(--bg-disabled);
+  border-color: var(--line-hairline);
+  color: var(--ink-disabled);
+  outline-color: transparent;
+  cursor: not-allowed;
+}
+.btn-secondary:disabled i { color: var(--ink-disabled); }
+
+/* 3. TERTIARY / GHOST UNDERLINE BUTTON (Greyish Pink + Underline) */
+.btn-tertiary {
+  padding: 5px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--ink-soft);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 0;
+  text-underline-offset: 3px;
+}
+.btn-tertiary:hover:not(:disabled) {
+  color: var(--accent-rose);
+  border-bottom-color: var(--accent-rose);
+}
+.btn-tertiary:disabled {
+  color: var(--ink-disabled);
+  border-bottom-color: var(--line-hairline);
+  cursor: not-allowed;
+}
+
+/* 4. SPARKLE LINE TRIGGER (Accent Rose + Sparkle Underline) */
+.btn-sparkle-link {
+  padding: 5px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--accent-sparkle);
+  background: transparent;
+  color: var(--accent-rose);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 0;
+}
+.btn-sparkle-link i { font-size: 14px; transition: transform 0.16s ease; }
+.btn-sparkle-link:hover:not(:disabled) {
+  color: var(--accent-rose-hover);
+  border-bottom-color: var(--accent-rose);
+}
+.btn-sparkle-link:hover:not(:disabled) i.ph-arrow-right {
+  transform: translateX(3px);
+}
+
+/* 5. ICON / CLOSE HAIRLINE BUTTON */
+.btn-icon-hairline {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid var(--line-hairline);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 16px;
+}
+.btn-icon-hairline:hover:not(:disabled) {
+  border-color: var(--accent-sparkle);
+  background: var(--bg-blush);
+  color: var(--accent-rose);
+}
+
+/* 6. DANGER / DESTRUCTIVE STAMP BUTTON */
+.btn-danger-stamp {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(174, 75, 51, 0.45);
+  background: var(--sem-err-bg);
+  color: var(--sem-err);
+  font-size: 13px;
+  font-weight: 600;
+  outline: 1px solid rgba(174, 75, 51, 0.16);
+  outline-offset: -4px;
+}
+.btn-danger-stamp:hover:not(:disabled) {
+  background: var(--sem-err);
+  border-color: var(--sem-err);
+  color: var(--ink-inverse);
+  outline-color: rgba(255, 255, 255, 0.35);
+}
+
+/* 7. COMPACT / INLINE QUICK-FIX STAMP */
+.btn-compact {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-rose);
+  background: transparent;
+  color: var(--accent-rose);
+  font-size: 12px;
+  font-weight: 600;
+}
+.btn-compact:hover:not(:disabled) {
+  background: var(--accent-rose);
+  color: var(--ink-inverse);
+}
+</style>
+</head>
+<body>
+
+  <h1>Complete Button System <i class="ph-fill ph-sparkle"></i></h1>
+  <p class="subtitle">Primary, secondary, tertiary underline, locked, icon, danger, and compact buttons in one reference.</p>
+
+  <section class="section">
+    <h2>1. Primary & Secondary Stamp Buttons</h2>
+    <p>Double-hairline stamp framing (<code>4px</code> radius, <code>-4px</code> inset outline) with locked/disabled states.</p>
+    <div class="btn-row">
+      <button type="button" class="btn-primary">
+        <i class="ph-fill ph-sparkle"></i> Đọc nội dung
+      </button>
+      <button type="button" class="btn-primary" disabled>
+        <i class="ph-fill ph-sparkle"></i> Đọc nội dung (Khóa)
+      </button>
+      <button type="button" class="btn-secondary">
+        <i class="ph ph-file-pdf"></i> Chọn file PDF
+      </button>
+      <button type="button" class="btn-secondary" disabled>
+        <i class="ph ph-file-pdf"></i> Chọn file PDF (Khóa)
+      </button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>2. Tertiary / Ghost Underline & Sparkle Links</h2>
+    <p>Low-weight actions using greyish-pink or rose hairlines without box borders—ideal for cancel, undo, and inline actions.</p>
+    <div class="btn-row">
+      <button type="button" class="btn-tertiary">Hủy</button>
+      <button type="button" class="btn-tertiary">
+        <i class="ph ph-arrow-counter-clockwise"></i> Hoàn tác
+      </button>
+      <button type="button" class="btn-tertiary" disabled>
+        <i class="ph ph-arrow-counter-clockwise"></i> Hoàn tác
+      </button>
+      <button type="button" class="btn-sparkle-link">
+        <i class="ph-fill ph-sparkle"></i> Xem hướng dẫn <i class="ph ph-arrow-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>3. Icon, Danger & Compact Action Buttons</h2>
+    <p>Supporting controls for modal close buttons, destructive actions, and dense inline rows.</p>
+    <div class="btn-row">
+      <button type="button" class="btn-icon-hairline" title="Đóng">
+        <i class="ph ph-x"></i>
+      </button>
+      <button type="button" class="btn-danger-stamp">
+        <i class="ph ph-trash"></i> Xóa kịch bản
+      </button>
+      <button type="button" class="btn-compact">
+        <i class="ph-fill ph-sparkle"></i> Áp dụng gợi ý
+      </button>
+    </div>
+  </section>
+
+</body>
+</html>

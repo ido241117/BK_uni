@@ -1,11 +1,12 @@
 @layer components {
+    /* Template `.page-head`: title block left, main action bottom-right. */
     .page-header {
         display: flex;
         flex-wrap: wrap;
-        align-items: flex-start;
+        align-items: flex-end;
         justify-content: space-between;
-        gap: 12px 16px;
-        margin-bottom: 18px;
+        gap: var(--space-3) var(--space-6);
+        margin-bottom: var(--space-6);
     }
 
     .page-header-title {
@@ -358,18 +359,19 @@
 
 /* Trang môn học của sinh viên: thẻ môn bấm để đổi trạng thái (pages/courses/board). */
 @layer components {
+    /* Light: mapped onto the pink palette and semantic colors (tokens.css). Dark block below not yet redone. */
     :root {
-        --status-completed: #1f9d55;
-        --status-completed-soft: rgba(31, 157, 85, 0.12);
-        --status-progress: #0066cc;
-        --status-progress-soft: rgba(0, 102, 204, 0.1);
-        --status-failed: #d93a3a;
-        --status-failed-soft: rgba(217, 58, 58, 0.1);
-        --status-not-started: #86868b;
-        --status-not-started-soft: rgba(134, 134, 139, 0.12);
-        --status-dirty: #eda100;
-        --status-planned: #6250d6;
-        --status-planned-soft: rgba(98, 80, 214, 0.1);
+        --status-completed: var(--sem-good);
+        --status-completed-soft: rgba(94, 127, 93, 0.12);
+        --status-progress: var(--accent-rose);
+        --status-progress-soft: rgba(184, 62, 108, 0.10);
+        --status-failed: var(--sem-err);
+        --status-failed-soft: rgba(174, 75, 51, 0.10);
+        --status-not-started: var(--ink-soft);
+        --status-not-started-soft: rgba(190, 158, 170, 0.14);
+        --status-dirty: var(--sem-warn);
+        --status-planned: var(--ink-muted);
+        --status-planned-soft: rgba(142, 107, 120, 0.12);
     }
     [data-theme='dark'] {
         --status-completed: #3fc27a;

@@ -30,10 +30,16 @@
     --line-hairline-on-blush: rgba(59, 34, 48, 0.13);
     --line-chrome: #E4B7CB;
 
-    /* Semantic status */
+    /* Semantic status (+ tinted backgrounds for notices, ui-template/components-template-2.html) */
     --sem-good: #5E7F5D;
     --sem-warn: #A0702A;
+    --sem-warn-bg: #FDF7EC;
     --sem-err: #AE4B33;
+    --sem-err-bg: #FDF3F1;
+
+    /* Disabled controls (ui-template/buttons.html) */
+    --bg-disabled: #F9F2F5;
+    --ink-disabled: #CBB3BD;
 
     /* Illustration-only fill (folded page corner in empty states) */
     --illus-fold: #F5C2D4;
@@ -118,7 +124,12 @@
 
     --sem-good: #8DB38B;
     --sem-warn: #D2A157;
+    --sem-warn-bg: #2E2418;
     --sem-err: #E07A62;
+    --sem-err-bg: #2E1C18;
+
+    --bg-disabled: #2A1D24;
+    --ink-disabled: #6E5662;
 
     --illus-fold: #6B3A50;
 

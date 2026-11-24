@@ -1,0 +1,249 @@
+/*
+ * Button system, from ui-template/buttons.html (sizes, states, all variants); dense sizes from
+ * components-template-2.html; large size from dang-nhap.html.
+ * Keyed on antd's own classes, so every antd Button follows it: our wrappers in ./index.tsx, raw <Button>,
+ * and buttons antd renders itself (Popconfirm, Modal).
+ *   primary   = color-primary + variant-solid   (ISolidBtn, type="primary")       42px | small 36 | large 46
+ *   secondary = variant-outlined / dashed       (IOutLinedBtn, default type)      40px | small 34 | large 42
+ *   tertiary  = variant-text with a label        (ITextBtn, type="text")           underline, e.g. "Hủy"
+ *   icon      = icon-only                        (IconBtn)                         34px hairline box
+ *   link      = variant-link                     (type="link")                     rose + sparkle underline
+ *   danger    = color-dangerous                  (color="danger" / danger)         blush-red stamp, fills on hover
+ */
+@layer components {
+    .ant-btn {
+        gap: var(--space-2);
+        border-radius: var(--radius-xs);
+        font-family: var(--sans);
+        font-weight: 600;
+        box-shadow: none;
+        transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, outline-color 0.16s ease;
+    }
+
+    .ant-btn:focus-visible {
+        outline: 2px solid var(--accent-sparkle);
+        outline-offset: 2px;
+    }
+
+    /* ===== Primary: rose stamp with an inset hairline ===== */
+    .ant-btn.ant-btn-variant-solid {
+        height: 42px;
+        padding: 0 24px;
+        border: 1px solid var(--accent-rose);
+        background: var(--accent-rose);
+        color: var(--ink-inverse);
+        font-size: 13.5px;
+        outline: 1px solid rgba(255, 255, 255, 0.36);
+        outline-offset: -4px;
+        box-shadow: 0 10px 22px -12px rgba(184, 62, 108, 0.72);
+    }
+
+    .ant-btn.ant-btn-variant-solid:not(:disabled):hover {
+        border-color: var(--accent-rose-hover);
+        background: var(--accent-rose-hover);
+        color: var(--ink-inverse);
+        outline-color: rgba(255, 255, 255, 0.58);
+    }
+
+    /* ===== Secondary: blush stamp with a double hairline ===== */
+    .ant-btn.ant-btn-variant-outlined,
+    .ant-btn.ant-btn-variant-dashed {
+        height: 40px;
+        padding: 0 20px;
+        border: 1px solid var(--accent-sparkle);
+        background: var(--bg-blush);
+        color: var(--ink-primary);
+        font-size: 13px;
+        outline: 1px solid var(--line-hairline);
+        outline-offset: -4px;
+    }
+
+    .ant-btn.ant-btn-variant-dashed {
+        border-style: dashed;
+    }
+
+    .ant-btn.ant-btn-variant-outlined .ant-btn-icon,
+    .ant-btn.ant-btn-variant-dashed .ant-btn-icon {
+        color: var(--accent-rose);
+        font-size: 15px;
+    }
+
+    .ant-btn.ant-btn-variant-outlined:not(:disabled):hover,
+    .ant-btn.ant-btn-variant-dashed:not(:disabled):hover {
+        border-color: var(--accent-rose);
+        background: var(--bg-tint-hover);
+        color: var(--accent-rose);
+    }
+
+    /* ===== Disabled stamps: locked look, not just faded ===== */
+    .ant-btn.ant-btn-variant-solid:disabled,
+    .ant-btn.ant-btn-variant-outlined:disabled,
+    .ant-btn.ant-btn-variant-dashed:disabled {
+        border-color: var(--line-hairline);
+        background: var(--bg-disabled);
+        color: var(--ink-disabled);
+        outline-color: transparent;
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+
+    .ant-btn:disabled .ant-btn-icon {
+        color: var(--ink-disabled);
+    }
+
+    /* ===== Tertiary: greyish-pink label on a hairline underline ===== */
+    .ant-btn.ant-btn-variant-text:not(.ant-btn-icon-only) {
+        height: auto;
+        padding: 5px 2px;
+        border: 0;
+        border-bottom: 1px solid var(--ink-soft);
+        border-radius: 0;
+        background: none;
+        color: var(--ink-muted);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .ant-btn.ant-btn-variant-text:not(.ant-btn-icon-only):not(:disabled):hover {
+        border-bottom-color: var(--accent-rose);
+        background: none;
+        color: var(--accent-rose);
+    }
+
+    .ant-btn.ant-btn-variant-text:not(.ant-btn-icon-only):disabled {
+        border-bottom-color: var(--line-hairline);
+        background: none;
+        color: var(--ink-disabled);
+        cursor: not-allowed;
+    }
+
+    /* "Hủy" that antd draws itself (modal footer, confirm dialog, popconfirm) is tertiary in the templates. */
+    .ant-modal-footer .ant-btn.ant-btn-color-default.ant-btn-variant-outlined,
+    .ant-modal-confirm-btns .ant-btn.ant-btn-color-default.ant-btn-variant-outlined,
+    .ant-popconfirm-buttons .ant-btn.ant-btn-color-default.ant-btn-variant-outlined {
+        height: auto;
+        padding: 5px 2px;
+        border: 0;
+        border-bottom: 1px solid var(--ink-soft);
+        border-radius: 0;
+        background: none;
+        color: var(--ink-muted);
+        font-size: 13px;
+        font-weight: 500;
+        outline: 0;
+    }
+
+    .ant-modal-footer .ant-btn.ant-btn-color-default.ant-btn-variant-outlined:not(:disabled):hover,
+    .ant-modal-confirm-btns .ant-btn.ant-btn-color-default.ant-btn-variant-outlined:not(:disabled):hover,
+    .ant-popconfirm-buttons .ant-btn.ant-btn-color-default.ant-btn-variant-outlined:not(:disabled):hover {
+        border-bottom-color: var(--accent-rose);
+        background: none;
+        color: var(--accent-rose);
+    }
+
+    /* ===== Link: rose label on a sparkle underline; a trailing arrow nudges on hover ===== */
+    .ant-btn.ant-btn-variant-link {
+        height: auto;
+        padding: 5px 2px;
+        border: 0;
+        border-bottom: 1px solid var(--accent-sparkle);
+        border-radius: 0;
+        color: var(--accent-rose);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .ant-btn.ant-btn-variant-link:not(:disabled):hover {
+        border-bottom-color: var(--accent-rose);
+        color: var(--accent-rose-hover);
+    }
+
+    /* ===== Icon only: 34px box with a hairline (also the modal close button) ===== */
+    .ant-btn.ant-btn-icon-only.ant-btn-variant-text {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border: 1px solid var(--line-hairline);
+        border-radius: var(--radius-xs);
+        background: transparent;
+        color: var(--ink-muted);
+        font-size: 16px;
+    }
+
+    .ant-btn.ant-btn-icon-only.ant-btn-variant-text:not(:disabled):hover {
+        border-color: var(--accent-sparkle);
+        background: var(--bg-blush);
+        color: var(--accent-rose);
+    }
+
+    /* ===== Danger: blush-red stamp that fills terracotta on hover ===== */
+    .ant-btn.ant-btn-color-dangerous.ant-btn-variant-solid,
+    .ant-btn.ant-btn-color-dangerous.ant-btn-variant-outlined {
+        height: 38px;
+        padding: 0 18px;
+        border: 1px solid rgba(174, 75, 51, 0.45);
+        background: var(--sem-err-bg);
+        color: var(--sem-err);
+        font-size: 13px;
+        outline: 1px solid rgba(174, 75, 51, 0.16);
+        outline-offset: -4px;
+        box-shadow: none;
+    }
+
+    .ant-btn.ant-btn-color-dangerous.ant-btn-variant-solid .ant-btn-icon,
+    .ant-btn.ant-btn-color-dangerous.ant-btn-variant-outlined .ant-btn-icon {
+        color: inherit;
+    }
+
+    .ant-btn.ant-btn-color-dangerous.ant-btn-variant-solid:not(:disabled):hover,
+    .ant-btn.ant-btn-color-dangerous.ant-btn-variant-outlined:not(:disabled):hover {
+        border-color: var(--sem-err);
+        background: var(--sem-err);
+        color: var(--ink-inverse);
+        outline-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .ant-btn.ant-btn-color-dangerous.ant-btn-variant-text:not(.ant-btn-icon-only) {
+        border-bottom-color: rgba(174, 75, 51, 0.45);
+        color: var(--sem-err);
+    }
+
+    /* ===== Small: dense rows, note boxes, confirm popovers (template 2: 36 / 34) ===== */
+    .ant-btn.ant-btn-sm.ant-btn-variant-solid {
+        height: 36px;
+        padding: 0 18px;
+        font-size: 12.5px;
+        box-shadow: none;
+    }
+
+    .ant-btn.ant-btn-sm.ant-btn-variant-outlined,
+    .ant-btn.ant-btn-sm.ant-btn-variant-dashed,
+    .ant-btn.ant-btn-sm.ant-btn-color-dangerous {
+        height: 34px;
+        padding: 0 14px;
+        font-size: 12.5px;
+    }
+
+    .ant-btn.ant-btn-sm.ant-btn-variant-text:not(.ant-btn-icon-only),
+    .ant-btn.ant-btn-sm.ant-btn-variant-link {
+        padding: 4px 2px;
+        font-size: 12.5px;
+    }
+
+    .ant-btn.ant-btn-sm.ant-btn-icon-only.ant-btn-variant-text {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+
+    /* ===== Large: login page (dang-nhap.html: 46 / 42) ===== */
+    .ant-btn.ant-btn-lg.ant-btn-variant-solid {
+        height: 46px;
+        font-size: 14px;
+        box-shadow: 0 10px 24px -12px rgba(184, 62, 108, 0.75);
+    }
+
+    .ant-btn.ant-btn-lg.ant-btn-variant-outlined {
+        height: 42px;
+    }
+}

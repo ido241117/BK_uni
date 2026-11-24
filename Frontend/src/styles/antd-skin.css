@@ -1,0 +1,481 @@
+/*
+ * Skin for antd components, keyed on antd's own classes so every page follows it (old and rebuilt).
+ * Sources: ui-template/tien-do-hoc-tap-page.html (table), components-template.html (inputs, dropdown, search,
+ * thread switch), components-template-2.html (notices, confirm popover, row notes, toast),
+ * modal.html (modal). Anything marked DEFAULT is a placeholder until a design exists.
+ * Inputs are underlined app-wide via <ConfigProvider variant="underlined"> (App.tsx); sizes in config/theme.
+ * Buttons live in components/Button/button.css.
+ */
+@layer components {
+    /* ===== Table (template `.data-table` / `.line-table`) ===== */
+    .ant-table {
+        background: transparent;
+        font-size: 13.5px;
+    }
+
+    .ant-table-thead > tr > th.ant-table-cell {
+        padding: var(--space-2) 10px;
+        border-bottom: 1px solid var(--line-hairline);
+        background: transparent;
+        color: var(--ink-soft);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .ant-table-thead > tr > th.ant-table-cell::before {
+        display: none;
+    }
+
+    .ant-table-tbody > tr > td.ant-table-cell {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
+    .ant-table-tbody > tr:last-child > td.ant-table-cell {
+        border-bottom: 0;
+    }
+
+    /* Row that differs from the myBK file: terracotta stripe on the left (rowClassName="is-diff"). */
+    .ant-table-tbody > tr.is-diff > td.ant-table-cell:first-child {
+        box-shadow: inset 2px 0 0 var(--sem-err);
+    }
+
+    /* Expanded row = inline note box under a course (template `.note-drawer-row`). */
+    .ant-table-tbody > tr.ant-table-expanded-row > td.ant-table-cell {
+        padding: 0 10px 14px 24px;
+        background: var(--bg-blush);
+    }
+
+    /* Controls inside a cell stay slim, like the template's inline select. */
+    .ant-table-cell .ant-select,
+    .ant-table-cell .ant-input-affix-wrapper,
+    .ant-table-cell input.ant-input,
+    .ant-table-cell .ant-input-number {
+        height: 28px;
+        font-size: 13px;
+    }
+
+    /* ===== Inputs: editorial underline, blush glow on focus, terracotta on error ===== */
+    .ant-input-underlined,
+    .ant-input-number-underlined,
+    .ant-picker-underlined,
+    .ant-select-underlined {
+        transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .ant-input-underlined:focus,
+    .ant-input-underlined:focus-within,
+    .ant-input-affix-wrapper.ant-input-underlined.ant-input-affix-wrapper-focused,
+    .ant-input-number-underlined.ant-input-number-focused,
+    .ant-picker-underlined.ant-picker-focused,
+    .ant-select-underlined.ant-select-focused,
+    .ant-select-underlined.ant-select-open,
+    .ant-select-underlined:not(.ant-select-disabled):hover {
+        box-shadow: 0 3px 0 -1px var(--accent-glow);
+    }
+
+    .ant-input-status-error.ant-input-underlined,
+    .ant-input-affix-wrapper-status-error.ant-input-underlined,
+    .ant-select-status-error.ant-select-underlined,
+    .ant-input-number-status-error.ant-input-number-underlined {
+        border-bottom-color: var(--sem-err);
+        box-shadow: 0 3px 0 -1px rgba(174, 75, 51, 0.18);
+    }
+
+    /* Field label (template `.field-lbl`) and hint / error lines (`.field-hint`) */
+    .ant-form-vertical .ant-form-item-label > label,
+    .ant-form-item-label > label {
+        color: var(--ink-muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    .ant-form-item-extra {
+        margin-top: 6px;
+        color: var(--ink-muted);
+        font-size: 11.5px;
+    }
+
+    .ant-form-item-explain-error {
+        margin-top: 6px;
+        color: var(--sem-err);
+        font-size: 11.5px;
+    }
+
+    /* Multi-line text: blush paste area (modal.html `.paste-area`), not an underline floating under 4 rows */
+    textarea.ant-input {
+        min-height: 64px;
+        padding: 12px 14px;
+        border: 0;
+        border-top: 1px solid var(--line-hairline);
+        border-bottom: 1px solid var(--ink-soft);
+        border-radius: 0;
+        background: var(--bg-blush);
+        font-size: 13px;
+    }
+
+    textarea.ant-input:focus {
+        border-bottom-color: var(--accent-rose);
+        background: var(--bg-tint-hover);
+        box-shadow: 0 3px 0 -1px var(--accent-glow);
+    }
+
+    /* ===== Dropdown menu: double hairline, hairline rows, check on the selected option ===== */
+    .ant-select-dropdown {
+        padding: 6px;
+        border: 1px solid var(--accent-sparkle);
+        border-radius: var(--radius-xs);
+        outline: 1px solid var(--line-hairline);
+        outline-offset: -4px;
+        box-shadow: 0 18px 36px -16px rgba(59, 34, 48, 0.25);
+    }
+
+    .ant-select-dropdown .ant-select-item-option {
+        padding: 9px 10px;
+        border-bottom: 1px solid var(--line-hairline);
+        border-radius: 0;
+    }
+
+    .ant-select-dropdown .ant-select-item-option:last-child {
+        border-bottom: 0;
+    }
+
+    .ant-select-dropdown .ant-select-item-option-selected:not(:has(.ant-select-item-option-state))::after {
+        flex: none;
+        width: 12px;
+        height: 12px;
+        margin-inline-start: var(--space-2);
+        background: var(--accent-rose);
+        content: '';
+        -webkit-mask: var(--icon-check) center / contain no-repeat;
+        mask: var(--icon-check) center / contain no-repeat;
+    }
+
+    .ant-select-arrow {
+        color: var(--ink-muted);
+        transition: transform 0.18s ease, color 0.16s ease;
+    }
+
+    .ant-select-open .ant-select-arrow {
+        color: var(--accent-rose);
+        transform: rotate(180deg);
+    }
+
+    /* ===== Switch: bead on a thread (components-template.html `.thread-switch`) ===== */
+    .ant-switch,
+    .ant-switch:hover:not(.ant-switch-disabled),
+    .ant-switch.ant-switch-checked,
+    .ant-switch.ant-switch-checked:hover:not(.ant-switch-disabled) {
+        background: transparent;
+    }
+
+    .ant-switch::before {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        left: 0;
+        height: 1.5px;
+        border-radius: 2px;
+        background: var(--ink-soft);
+        content: '';
+        transform: translateY(-50%);
+        transition: background 0.18s ease;
+    }
+
+    .ant-switch.ant-switch-checked::before {
+        background: var(--accent-rose);
+    }
+
+    .ant-switch .ant-switch-inner {
+        display: none;
+    }
+
+    .ant-switch .ant-switch-handle::before {
+        border: 1.8px solid var(--accent-sparkle);
+        border-radius: 50%;
+        background: var(--bg-canvas);
+        box-shadow: none;
+        transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .ant-switch.ant-switch-checked .ant-switch-handle::before {
+        border-color: var(--accent-rose);
+        background: var(--accent-rose);
+        box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .ant-switch:focus-visible {
+        outline: 2px solid var(--accent-sparkle);
+        outline-offset: 3px;
+    }
+
+    /* ===== Notices / Alert (template 2 `.problem-notice`: left rule + tinted wash + bold text) ===== */
+    .ant-alert {
+        --alert-tone: var(--accent-rose);
+        --alert-wash: var(--bg-blush);
+        gap: var(--space-2);
+        align-items: flex-start;
+        padding: 10px 14px;
+        border: 0;
+        border-left: 2.5px solid var(--alert-tone);
+        border-radius: 0;
+        background: var(--alert-wash);
+    }
+
+    .ant-alert-success { --alert-tone: var(--sem-good); --alert-wash: rgba(94, 127, 93, 0.08); }
+    .ant-alert-warning { --alert-tone: var(--sem-warn); --alert-wash: var(--sem-warn-bg); }
+    .ant-alert-error { --alert-tone: var(--sem-err); --alert-wash: var(--sem-err-bg); }
+
+    .ant-alert .ant-alert-icon {
+        margin-top: 2px;
+        color: var(--alert-tone);
+        font-size: 14px;
+    }
+
+    .ant-alert .ant-alert-title {
+        color: var(--alert-tone);
+        font-size: 12.5px;
+        font-weight: 600;
+    }
+
+    .ant-alert-info .ant-alert-title {
+        color: var(--ink-primary);
+    }
+
+    .ant-alert .ant-alert-description {
+        color: var(--ink-primary);
+        font-size: 12.5px;
+    }
+
+    /* ===== Status chips / Tag (DEFAULT: colored dot + plum text). Course status uses <CourseStatus>. ===== */
+    .ant-tag {
+        --tag-dot: var(--ink-soft);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-inline-end: var(--space-3);
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--ink-primary);
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .ant-tag::before {
+        flex: none;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--tag-dot);
+        content: '';
+    }
+
+    .ant-tag-green, .ant-tag-success, .ant-tag-lime { --tag-dot: var(--sem-good); }
+    .ant-tag-red, .ant-tag-error, .ant-tag-volcano { --tag-dot: var(--sem-err); }
+    .ant-tag-orange, .ant-tag-gold, .ant-tag-yellow, .ant-tag-warning { --tag-dot: var(--sem-warn); }
+    .ant-tag-blue, .ant-tag-processing { --tag-dot: var(--accent-rose); }
+    .ant-tag-purple, .ant-tag-geekblue, .ant-tag-magenta, .ant-tag-cyan, .ant-tag-pink { --tag-dot: var(--accent-sparkle); }
+
+    .ant-tag .ant-tag-close-icon {
+        margin-inline-start: 2px;
+        color: var(--ink-soft);
+    }
+
+    /* ===== Cards (DEFAULT: no box; a hairline on top separates sections) ===== */
+    .ant-card {
+        border: 0;
+        border-top: 1px solid var(--line-hairline);
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .ant-card .ant-card-head {
+        min-height: 0;
+        padding: var(--space-4) 0 0;
+        border-bottom: 0;
+    }
+
+    .ant-card .ant-card-body {
+        padding: var(--space-4) 0;
+    }
+
+    /* ===== Modal (modal.html): sparkle edge, hairline header and footer, hairline close box ===== */
+    .ant-modal .ant-modal-container {
+        padding: 28px 32px 24px;
+        border: 1px solid var(--accent-sparkle);
+        border-radius: 6px;
+        box-shadow: 0 28px 64px -20px rgba(59, 34, 48, 0.35);
+    }
+
+    .ant-modal .ant-modal-header {
+        margin-bottom: 0;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
+    .ant-modal .ant-modal-title {
+        padding-inline-end: 44px;
+        font-family: var(--serif);
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+    }
+
+    .ant-modal .ant-modal-body {
+        padding-top: 22px;
+    }
+
+    .ant-modal .ant-modal-close {
+        top: 28px;
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--line-hairline);
+        border-radius: var(--radius-xs);
+        color: var(--ink-muted);
+        inset-inline-end: 32px;
+    }
+
+    .ant-modal .ant-modal-close:hover {
+        border-color: var(--accent-sparkle);
+        background: var(--bg-blush);
+        color: var(--accent-rose);
+    }
+
+    .ant-modal .ant-modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 20px;
+        margin-top: 22px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line-hairline);
+    }
+
+    .ant-modal .ant-modal-footer > .ant-btn + .ant-btn {
+        margin-inline-start: 0;
+    }
+
+    .ant-modal-mask {
+        backdrop-filter: blur(3px);
+    }
+
+    /* Confirm dialogs (Modal.confirm): compact, no header rule */
+    .ant-modal-confirm .ant-modal-container {
+        padding: 22px 24px 18px;
+    }
+
+    .ant-modal-confirm .ant-modal-confirm-title {
+        font-family: var(--sans);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* ===== Confirm popover (template 2 `.confirm-popover`): warm paper, double hairline ===== */
+    .ant-popover .ant-popover-container {
+        border: 1px solid var(--accent-sparkle);
+        border-radius: var(--radius-xs);
+        background: var(--bg-elevated);
+        outline: 1px solid var(--line-hairline);
+        outline-offset: -4px;
+        box-shadow: 0 14px 30px -16px rgba(59, 34, 48, 0.28);
+    }
+
+    .ant-popover .ant-popover-arrow::before {
+        background: var(--bg-elevated);
+    }
+
+    /* Message and buttons on one line, no icon (template 2 `.confirm-popover`). */
+    .ant-popconfirm .ant-popconfirm-inner-content {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .ant-popconfirm .ant-popconfirm-message {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .ant-popconfirm .ant-popconfirm-message-icon {
+        display: none;
+    }
+
+    .ant-popconfirm .ant-popconfirm-message strong {
+        color: var(--accent-rose);
+    }
+
+    .ant-popconfirm .ant-popconfirm-buttons {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin: 0;
+    }
+
+    .ant-popconfirm .ant-popconfirm-buttons > .ant-btn {
+        margin-inline-start: 0;
+    }
+
+    /* ===== Other floating panels (DEFAULT: hairline edge, soft shadow) ===== */
+    .ant-dropdown .ant-dropdown-menu,
+    .ant-drawer .ant-drawer-content {
+        border: 1px solid var(--line-hairline);
+        box-shadow: 0 18px 40px -16px rgba(120, 40, 70, 0.4);
+    }
+
+    /* ===== Segmented toggle (DEFAULT: ui-demo `.seg` pill) ===== */
+    .ant-segmented {
+        padding: 2px;
+        border: 1px solid var(--line-hairline-on-blush);
+        border-radius: var(--radius-pill);
+        background: transparent;
+    }
+
+    .ant-segmented .ant-segmented-item,
+    .ant-segmented .ant-segmented-thumb {
+        border-radius: var(--radius-pill);
+    }
+
+    .ant-segmented .ant-segmented-item-selected {
+        font-weight: 600;
+    }
+}
+
+/* Check mark for the selected dropdown option (Phosphor "check", used as a mask). */
+:root {
+    --icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232.49 80.49l-128 128a12 12 0 0 1-17 0l-56-56a12 12 0 1 1 17-17L96 183 215.51 63.51a12 12 0 0 1 17 17z'/%3E%3C/svg%3E");
+}
+
+/* Toast (template 2 `.toast-line`): white sheet, sparkle edge, colored left rule.
+   Doubled :root beats react-toastify's own :root rule. */
+:root:root {
+    --toastify-font-family: var(--sans);
+    --toastify-color-light: var(--bg-canvas);
+    --toastify-text-color-light: var(--ink-primary);
+    --toastify-color-success: var(--sem-good);
+    --toastify-color-warning: var(--sem-warn);
+    --toastify-color-error: var(--sem-err);
+    --toastify-color-info: var(--accent-rose);
+    --toastify-color-progress-light: linear-gradient(90deg, var(--accent-sparkle), var(--accent-rose));
+}
+
+.Toastify__toast {
+    min-height: 0;
+    padding: 10px 18px;
+    border: 1px solid var(--accent-sparkle);
+    border-left: 3px solid var(--toast-tone, var(--accent-rose));
+    border-radius: var(--radius-xs);
+    box-shadow: 0 14px 30px -16px rgba(59, 34, 48, 0.25);
+    font-size: 13px;
+}
+
+.Toastify__toast--success { --toast-tone: var(--sem-good); }
+.Toastify__toast--warning { --toast-tone: var(--sem-warn); }
+.Toastify__toast--error { --toast-tone: var(--sem-err); }

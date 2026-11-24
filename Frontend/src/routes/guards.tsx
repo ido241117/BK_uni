@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { Button, Result, Spin } from 'antd';
+import { Button, Result } from 'antd';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router';
+import { RouteLoading } from '@/components';
 import { useAuthzStore, useAuthStore } from '@/stores';
 import type { PermissionRequirement, UserRole } from '@/types';
 import { homeForRole } from '@/utils/auth';
@@ -18,7 +19,7 @@ export const SessionBoundary = () => {
     if (status === 'loading') {
         return (
             <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
-                <Spin size="large" description="Đang kiểm tra phiên đăng nhập" />
+                <RouteLoading label="Đang kiểm tra phiên đăng nhập..." />
             </div>
         );
     }

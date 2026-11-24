@@ -1,0 +1,269 @@
+/* Page-structure components, ported from ui-template/tien-do-hoc-tap-page.html. */
+@layer components {
+    /* ===== Section label (small uppercase) ===== */
+    .section-label {
+        margin: 0 0 6px;
+        color: var(--ink-soft);
+        font-family: var(--sans);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    /* ===== Label / value rows ===== */
+    .row-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .row-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: 11px var(--space-1);
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
+    .row-item:last-child {
+        border-bottom: 0;
+    }
+
+    .row-item:hover {
+        background: var(--bg-tint-hover);
+    }
+
+    .row-label {
+        color: var(--ink-muted);
+        font-size: 12.5px;
+    }
+
+    .row-value {
+        color: var(--ink-primary);
+        font-size: 13.5px;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .row-value[data-chip='true'] {
+        padding: 2px var(--space-2);
+        border-bottom: 1px solid var(--accent-sparkle);
+        background: var(--bg-blush);
+        font-size: 13px;
+    }
+
+    /* ===== KPI number + progress thread ===== */
+    .kpi-count {
+        color: var(--ink-primary);
+        font-family: var(--serif);
+        font-size: 32px;
+        font-weight: 500;
+        line-height: 1.1;
+    }
+
+    .kpi-count small {
+        color: var(--ink-muted);
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 400;
+    }
+
+    .progress-thread {
+        margin-top: 10px;
+    }
+
+    .thread-track {
+        position: relative;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--line-hairline);
+    }
+
+    .thread-fill {
+        position: relative;
+        height: 100%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--accent-sparkle), var(--accent-rose));
+    }
+
+    .thread-sparkle {
+        position: absolute;
+        top: 50%;
+        right: -7px;
+        background: var(--bg-canvas);
+        color: var(--accent-rose);
+        font-size: 14px;
+        transform: translateY(-50%);
+    }
+
+    /* ===== Collapsible group (chevron left of the title) ===== */
+    .course-group {
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
+    .course-group:last-child {
+        border-bottom: 0;
+    }
+
+    .group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        width: 100%;
+        padding: var(--space-5) var(--space-1);
+        border: 0;
+        background: none;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .group-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .chev {
+        flex: none;
+        color: var(--ink-soft);
+        font-size: 14px;
+        transition: transform 0.2s;
+    }
+
+    .course-group[data-open='true'] .chev {
+        transform: rotate(90deg);
+    }
+
+    .group-dot {
+        flex: none;
+        width: 9px;
+        height: 9px;
+        border: 1.6px solid var(--ink-soft);
+        border-radius: 50%;
+        background: var(--bg-canvas);
+    }
+
+    .group-dot[data-met='true'] {
+        border-color: var(--sem-good);
+        background: var(--sem-good);
+    }
+
+    .group-left h2 {
+        margin: 0;
+        overflow: hidden;
+        color: var(--ink-primary);
+        font-family: var(--serif);
+        font-size: 19px;
+        font-weight: 500;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .group-meta {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: 12.5px;
+    }
+
+    .group-body {
+        padding: 0 var(--space-1) var(--space-5) var(--space-6);
+    }
+
+    .credit-label {
+        color: var(--ink-muted);
+        font-weight: 600;
+    }
+
+    .credit-label[data-met='true'] {
+        color: var(--sem-good);
+    }
+
+    .text-tag {
+        color: var(--ink-muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+    }
+
+    .text-tag[data-tone='rose'] {
+        color: var(--accent-rose);
+    }
+
+    .meta-sep {
+        color: var(--ink-soft);
+    }
+
+    /* ===== Disclosure trigger + panel ===== */
+    .disclosure-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        width: 100%;
+        margin-top: var(--space-6);
+        padding: var(--space-4) 18px;
+        border: 1px solid var(--accent-sparkle);
+        border-radius: 6px;
+        background: var(--bg-blush);
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+    }
+
+    .disclosure-trigger:hover {
+        border-color: var(--accent-rose);
+        background: var(--bg-elevated);
+    }
+
+    .disclosure-text {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    .disclosure-icon {
+        display: grid;
+        flex: none;
+        color: var(--accent-rose);
+        font-size: 20px;
+    }
+
+    .disclosure-title {
+        display: block;
+        color: var(--ink-primary);
+        font-size: 13.5px;
+        font-weight: 600;
+    }
+
+    .disclosure-sub {
+        display: block;
+        margin-top: 2px;
+        color: var(--ink-muted);
+        font-size: 12px;
+    }
+
+    .disclosure-chev {
+        flex: none;
+        color: var(--ink-soft);
+        font-size: 16px;
+        transition: transform 0.2s;
+    }
+
+    .disclosure-trigger[aria-expanded='true'] .disclosure-chev {
+        transform: rotate(180deg);
+    }
+
+    .disclosure-panel {
+        margin-top: 14px;
+        padding: var(--space-5) 0;
+        border-top: 1px solid var(--line-hairline);
+        border-bottom: 1px solid var(--line-hairline);
+    }
+}

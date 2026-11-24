@@ -26,6 +26,12 @@
         min-height: 100vh;
     }
 
+    /* Tailwind's reset makes svg a block, which drops icons next to text onto their own line. */
+    svg {
+        display: inline-block;
+        vertical-align: -0.125em;
+    }
+
     a {
         color: var(--accent-rose);
         text-decoration: none;

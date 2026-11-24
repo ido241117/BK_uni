@@ -1,30 +1,6 @@
-\*Note:
-
-- CTA: Call to action, là nút bấm, liên kết hoặc đoạn văn bản ngắn thúc đẩy người dùng thực hiện hành động ngay lập tức
-
-[**1\. Color System & Surface Hierarchy	1**](#color-system-&-surface-hierarchy)
-
-[Current Color Palette:	1](#color-palette)
-
-[Backgrounds & Surfaces	2](#backgrounds-&-surfaces)
-
-[Ink & Typography Colors	2](#ink-&-typography-colors)
-
-[Accents, Sparkles & Dividers	2](#accents,-sparkles-&-dividers)
-
-[Semantic Status Colors (Harmonized to Warm/Pastel Palette)	2](#semantic-status-colors-\(harmonized-to-warm/pastel-palette\))
-
-[**2\. Responsive Design Strategy	3**](#responsive-design-strategy)
-
-[**3\. Components	3**](#3.-components)
-
-[Side bar	3](#side-bar-\(collasapsible\))
-
-[Top bar	4](#top-bar)
-
 (Light mode first)
 
-1. ##  **Color System & Surface Hierarchy** {#color-system-&-surface-hierarchy}
+##  **Color System & Surface Hierarchy** {#color-system-&-surface-hierarchy}
 
 The objective is a **light-pink, minimal, line-driven** aesthetic (avoiding heavy "boxed" layouts), color must do the work of separation through subtle tonal washes and hairline dividers rather than drop shadows or thick borders.
 
@@ -37,8 +13,6 @@ Where to look for the color theme:
 ### **Color Palette** {#color-palette}
 
 Monochromatic pink
-
-![][image1]
 
 \#3B2230, \#B83E6C, \#E58FB0, \#FBEDF2, \#FDF4F7
 
@@ -83,9 +57,11 @@ hairline \= "this is a boundary within content," chrome divider \= "this is the 
 * **Error / Conflict (\--sem-err):** \#AE4B33 (Terracotta Red)
 
 
-2. ##  **Typography & Scale Hierarchy**
+##  **Typography**
 
 The design pairs an expressive, high-contrast serif (**Fraunces**) for editorial focal points with a clean geometric Vietnamese-optimized sans-serif (**Be Vietnam Pro**) for UI controls and dense course data.
+
+The whole point of having two families is the contrast: Fraunces signals "this is a moment" (the one big serif per page), Be Vietnam Pro signals "this is information, read it normally." If the subtitle also goes serif, the H1 stops feeling special — it's just more serif text, slightly bigger. There's also a practical reason: Be Vietnam Pro is built for dense Vietnamese text with full diacritic support at small sizes; Fraunces is an editorial display face, gorgeous at 36–44px but not really made for a wrapped paragraph of body copy with tone marks.
 
 Where to look for the typography rules:  (paths from Frontend/):
 - index.html: loads the two fonts (Google Fonts link)
@@ -101,28 +77,17 @@ Where to look for the typography rules:  (paths from Frontend/):
 * **Display & Editorial Serif:** 'Fraunces', Georgia, serif (Weights: 400, 500)  
 * **UI, Body & Data Sans:** 'Be Vietnam Pro', system-ui, sans-serif (Weights: 400, 500, 600, 700)
 
-### **Type Scale & Hierarchy** 
-
-| Element Role | Font Family | Size | Weight | Line Height | Tracking / Case | Color |
-| :---- | :---- | :---- | :---- | :---- | :---- | :---- |
-| **Brand Logo Wordmark** | Fraunces | 22px | 500 | 1.1 | \-0.01em | \--accent-teal |
-| **Page Title (H1)** | Fraunces | 36px–40px | 500 | 1.15 | \-0.01em | \--ink-primary |
-| **Hero KPI Value** | Fraunces | 44px | 500 | 1.05 | normal | \--accent-rose |
-| **Standard KPI & Semester Code** | Fraunces | 28px–36px | 500 | 1.1 | normal | \--ink-primary |
-| **Section / Panel Header (H2)** | Fraunces | 20px–22px | 500 | 1.2 | normal | \--ink-primary |
-| **Page Tab Header** | Be Vietnam Pro | 15px | 400 / 600 (active) | 1.4 | normal | \--ink-muted / \--ink-primary |
-| **Global Sidebar Nav Item** | Be Vietnam Pro | 14px | 500 / 600 (active) | 1.4 | normal | \--ink-muted / \--accent-rose |
-| **Sidebar Group Label** | Be Vietnam Pro | 11px | 600 | 1.2 | 0.10em, UPPERCASE | \--ink-muted |
-| **Panel Sub-header (H3)** | Be Vietnam Pro | 11px | 600 | 1.2 | 0.10em, UPPERCASE | \--ink-muted |
-| **Body & Table Text** | Be Vietnam Pro | 13.5px–14px | 400 | 1.45 | normal | \--ink-primary |
-| **Course Code (CO2013)** | Be Vietnam Pro | 12.5px | 600 | 1.3 | 0.02em | \--ink-primary |
-| **Micro-labels, Captions & Badges** | Be Vietnam Pro | 11px–12px | 400 / 600 | 1.3 | normal | \--ink-muted |
-
 3. ## **Button**
 
-- Primary Button: “Nhập tiến độ học tập”, “Lưu hiệu chỉnh”, “Giải”, “Lưu kế hoạch”  
+- Primary Button: “Nhập tiến độ học tập”, “Lưu hiệu chỉnh”, “Giải”, “Lưu kế hoạch”
+  - Main hue:
+  - Danger hue: e.g. delete button.   
 - Secondary Button:  
 - Tertiary / ghost text button: “Hủy” (trong bản hiệu chỉnh môn đang học) 
+
+Where to look up button: 
+- ...
+- One button still looks old? Inspect it in the browser and check its classes. If it isn't an antd .ant-btn (a hand-made <button> with its own class in components.css), button.css doesn't reach it, and it gets fixed when that page is rebuilt.
 
 4. ## **Responsive Design Strategy** {#responsive-design-strategy}
 
@@ -155,15 +120,11 @@ applyState();
 
 * **In React, make Sidebar/Topbar controlled, not self-managing.** Both should take `collapsed`/`onToggle` as props from one shared layout state (context or a parent `AppShell` component), not keep independent `useState`. That's what lets the main content area react to sidebar width (e.g. `margin-left: var(--nav-width)`) without prop-drilling or duplicated breakpoint logic in two places.
 
-## **3\. Components** {#3.-components}
+## **Components**
 
 ### **Logo**
 
-\[...\]  
-![][image2]  
-![][image3]
-
-### **Side bar (collasapsible)** {#side-bar-(collasapsible)}
+### **Side bar (collaspsible)** 
 
 - **Logo**  
 - **Collapse button**:  next to the logo. This is a persistent, frequently-reused control, so it belongs somewhere that doesn't move; a footer position drifts if you ever add more footer content (help card, account block, etc.), and users expect the toggle near the brand mark in most sidebar patterns.  
@@ -195,6 +156,21 @@ applyState();
 6. **Current semester badge**: e.g. “Học kỳ hiện tại: HK261”, worth keeping as a persistent topbar element rather than re-stating it per-page.
 
 So topbar left-to-right: breadcrumb → (flex space) → semester badge → theme toggle → language → help → account menu (avatar, opens name/email/profile-link/logout). (?)
+
+### Workspace header + Description
+
+### Disclosure
+ Why Disclosure is controlled but CollapsibleGroup isn't: the disclosure panel holds a form whose "Lưu"/"Hủy" buttons must close it, so the page has to own that state. A group only opens and closes itself, so it keeps its own state.
+
+### Collapsible Group
+ What CollapsibleGroup gives a page: one tested block for open/close state, chevron rotation, the status dot and accessibility (aria-expanded). Every group on every page looks and behaves the same, and a design change is one edit in ui.css.
+
+ Chevron doesn't rotate: check that the <section> gets data-open="true" (Inspect), then the .course-group[data-open='true'] .chev rule in ui.css.
+
+### Table
+small uppercase soft headers, hairline rows, pink hover.
+
+
 
 ## **Empty/Unavailable Pages**
 

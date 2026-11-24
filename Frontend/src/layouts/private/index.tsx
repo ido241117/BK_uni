@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
-import { Spin, Tooltip } from 'antd';
+import { Tooltip } from 'antd';
 import { PiCaretDown, PiGlobe, PiMoon, PiQuestion, PiSun } from 'react-icons/pi';
 import { Outlet } from 'react-router';
 import {
     AppShell, Breadcrumb, SemesterBadge, Sidebar, SidebarFooterLink, SidebarNavItem, SidebarNavSection, Topbar,
 } from '@/components/shell';
+import { RouteLoading } from '@/components';
 import { useAppTheme } from '@/contexts';
 import { currentSemester } from '@/utils/semester';
 import { AccountMenu } from './AccountMenu';
@@ -56,13 +57,7 @@ const AppTopbar = () => {
 /** Signed-in app frame: shared shell + a Suspense boundary for lazy pages. */
 const PrivateLayout = () => (
     <AppShell sidebar={<AppSidebar />} topbar={<AppTopbar />}>
-        <Suspense
-            fallback={(
-                <div style={{ display: 'grid', placeItems: 'center', minHeight: '40vh' }}>
-                    <Spin size="large" />
-                </div>
-            )}
-        >
+        <Suspense fallback={<RouteLoading />}>
             <Outlet />
         </Suspense>
     </AppShell>

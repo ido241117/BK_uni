@@ -2,6 +2,7 @@ import {
     PiChartLineUp,
     PiGraduationCap,
     PiPath,
+    PiTreeStructure,
     PiRobot,
     PiSquaresFour,
     PiUser,
@@ -42,6 +43,15 @@ export const sidebarMenu: NavItem[] = [
         group: 'Học tập',
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.RECOMMENDATIONS),
+    },
+    {
+        key: 'student.program',
+        label: 'Chương trình',
+        path: '/program',
+        icon: <PiTreeStructure />,
+        group: 'Học tập',
+        roles: [ROLE.STUDENT],
+        permission: toPageViewPermission(PAGE_RESOURCES.COURSES),
     },
     {
         key: 'student.advisor',

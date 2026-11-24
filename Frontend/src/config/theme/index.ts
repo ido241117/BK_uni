@@ -98,6 +98,7 @@ export const buildAntdTheme = (isDark: boolean): ThemeConfig => {
             controlItemBgHover: p.tintHover,
             controlItemBgActive: p.roseSoft,
             controlOutline: p.glow,
+            colorBgMask: 'rgba(59, 34, 48, 0.25)',
             boxShadowSecondary: isDark
                 ? '0 16px 40px rgba(0, 0, 0, 0.45)'
                 : '0 14px 34px -14px rgba(120, 40, 70, 0.45)',
@@ -118,15 +119,55 @@ export const buildAntdTheme = (isDark: boolean): ThemeConfig => {
                 defaultHoverBorderColor: p.rose,
                 defaultHoverColor: p.rose,
             },
+            // Inputs are underlined app-wide (ConfigProvider variant="underlined" in App.tsx): template `.search-line`.
             Input: {
-                activeBorderColor: p.rose,
+                colorBorder: p.inkSoft,
                 hoverBorderColor: p.rose,
-                activeShadow: `0 0 0 3px ${p.glow}`,
-                paddingBlock: 8,
+                activeBorderColor: p.rose,
+                activeShadow: 'none',
+                paddingBlock: 7,
+            },
+            InputNumber: {
+                colorBorder: p.inkSoft,
+                hoverBorderColor: p.rose,
+                activeBorderColor: p.rose,
+                activeShadow: 'none',
+            },
+            DatePicker: {
+                colorBorder: p.inkSoft,
+                hoverBorderColor: p.rose,
+                activeBorderColor: p.rose,
+                activeShadow: 'none',
             },
             Select: {
-                optionSelectedBg: p.roseSoft,
-                optionActiveBg: p.tintHover,
+                colorBorder: p.inkSoft,
+                hoverBorderColor: p.rose,
+                activeBorderColor: p.rose,
+                activeOutlineColor: 'transparent',
+                // components-template.html option list: blush on hover, tint when selected, no bold.
+                optionSelectedBg: p.tintHover,
+                optionActiveBg: p.blush,
+                optionSelectedFontWeight: 500,
+            },
+            // Bead on a thread (components-template.html): 34 x 22 box, 13px bead; the thread is drawn in
+            // styles/antd-skin.css.
+            Switch: {
+                trackHeight: 22,
+                trackMinWidth: 34,
+                handleSize: 13,
+                trackPadding: 4.5,
+            },
+            Segmented: {
+                trackBg: 'transparent',
+                itemColor: p.inkMuted,
+                itemHoverColor: p.ink,
+                itemHoverBg: p.tintHover,
+                itemSelectedBg: p.rose,
+                itemSelectedColor: '#FFFFFF',
+            },
+            Skeleton: {
+                gradientFromColor: p.blush,
+                gradientToColor: p.tintHover,
             },
             Card: {
                 colorBgContainer: p.canvas,
@@ -145,6 +186,10 @@ export const buildAntdTheme = (isDark: boolean): ThemeConfig => {
                 itemHoverColor: p.ink,
                 itemSelectedColor: p.ink,
                 inkBarColor: p.rose,
+                // Template `.tabbar`: 28px between tabs, 10px under the label, 28px below the bar.
+                horizontalItemGutter: 28,
+                horizontalItemPadding: '0 0 10px',
+                horizontalMargin: '0 0 28px',
             },
             Menu: {
                 itemBorderRadius: RADIUS.sm,

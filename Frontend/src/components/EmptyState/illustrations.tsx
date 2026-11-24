@@ -74,3 +74,19 @@ export const SurprisedSearch = (props: Svg) => (
         <line x1="26" y1="58.5" x2="26" y2="73" stroke="var(--accent-rose)" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
 );
+
+/** Loading: page with a minimal dash and two sparkles (icon.html "floating sparkle page"). Sparkles twinkle via CSS. */
+export const SparklePage = (props: Svg) => (
+    <svg {...base} {...props}>
+        <circle cx="48" cy="50" r="31" fill="var(--bg-blush)" />
+        <path d="M29 20h24l12 12v40a6 6 0 0 1-6 6H29a6 6 0 0 1-6-6V26a6 6 0 0 1 6-6z" fill="var(--bg-elevated)" {...stroke} />
+        <path d="M53 20v12h12" {...stroke} />
+        <line x1="36" y1="51" x2="52" y2="51" stroke="var(--accent-sparkle)" strokeWidth="1.8" strokeLinecap="round" />
+        <path className="spark spark-main"
+            d="M72 19c.4 3.4 2.4 5.4 5.8 5.8-3.4.4-5.4 2.4-5.8 5.8-.4-3.4-2.4-5.4-5.8-5.8 3.4-.4 5.4-2.4 5.8-5.8z"
+            fill="var(--illus-fold)" stroke="var(--accent-sparkle)" strokeWidth="1.2" strokeLinejoin="round" />
+        <path className="spark spark-small"
+            d="M77 35c.2 1.7 1.2 2.7 2.9 2.9-1.7.2-2.7 1.2-2.9 2.9-.2-1.7-1.2-2.7-2.9-2.9 1.7-.2 2.7-1.2 2.9-2.9z"
+            fill="var(--illus-fold)" />
+    </svg>
+);
