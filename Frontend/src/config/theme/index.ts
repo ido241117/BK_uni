@@ -1,140 +1,173 @@
 import { theme as antdTheme, type ThemeConfig } from 'antd';
 
-/** Nguồn màu duy nhất cho cả antd token và CSS variable (`styles/tokens.css`). */
-export const BRAND = {
-    primary: '#0066cc',
-    primaryDark: '#4a9eff',
-    hover: '#0057ad',
-    hoverDark: '#6fb1ff',
-    active: '#004a94',
-    activeDark: '#2f86e0',
-    soft: 'rgba(0, 102, 204, 0.10)',
-    softStrong: 'rgba(0, 102, 204, 0.20)',
-    contrast: '#ffffff',
-} as const;
-
-export const SURFACE = {
+/**
+ * Color values for the antd theme. They mirror the CSS variables in `styles/tokens.css`
+ * (antd needs literal colors to derive hover/active shades, so it cannot read CSS variables).
+ * Change a color in both places.
+ */
+export const PALETTE = {
     light: {
-        page: '#f5f5f7',
-        surface: '#ffffff',
-        elevated: '#ffffff',
-        subtle: '#f0f0f2',
-        text: '#1d1d1f',
-        textSecondary: '#6e6e73',
-        textMuted: '#86868b',
-        border: '#e6e6e8',
-        borderStrong: '#d2d2d7',
-        inverse: '#1d1d1f',
-        inverseText: '#ffffff',
+        canvas: '#FFFFFF',
+        blush: '#FDF4F7',
+        elevated: '#FFF8F4',
+        tintHover: '#FBEDF2',
+        ink: '#3B2230',
+        inkMuted: '#8E6B78',
+        inkSoft: '#BE9EAA',
+        rose: '#B83E6C',
+        roseHover: '#A03460',
+        roseActive: '#8A2C52',
+        roseSoft: 'rgba(184, 62, 108, 0.10)',
+        sparkle: '#E58FB0',
+        glow: 'rgba(229, 143, 176, 0.22)',
+        hairline: '#F3E3EA',
+        chrome: '#E4B7CB',
+        good: '#5E7F5D',
+        warn: '#A0702A',
+        err: '#AE4B33',
     },
     dark: {
-        page: '#0e1116',
-        surface: '#161a20',
-        elevated: '#1b2028',
-        subtle: '#1f242c',
-        text: '#f5f5f7',
-        textSecondary: 'rgba(245, 245, 247, 0.72)',
-        textMuted: 'rgba(245, 245, 247, 0.54)',
-        border: 'rgba(255, 255, 255, 0.14)',
-        borderStrong: 'rgba(255, 255, 255, 0.22)',
-        inverse: '#f5f5f7',
-        inverseText: '#0e1116',
+        canvas: '#1C1218',
+        blush: '#24171E',
+        elevated: '#2B1C24',
+        tintHover: '#33212B',
+        ink: '#F6E9EE',
+        inkMuted: '#C7A5B2',
+        inkSoft: '#8C6E7A',
+        rose: '#C2507E',
+        roseHover: '#A8436C',
+        roseActive: '#8F3A5D',
+        roseSoft: 'rgba(194, 80, 126, 0.16)',
+        sparkle: '#B86A8A',
+        glow: 'rgba(229, 143, 176, 0.16)',
+        hairline: '#3A2731',
+        chrome: '#5A3546',
+        good: '#8DB38B',
+        warn: '#D2A157',
+        err: '#E07A62',
     },
 } as const;
 
-export const RADIUS = { sm: 8, md: 12, lg: 16 } as const;
+export const FONT = {
+    sans: "'Be Vietnam Pro', system-ui, sans-serif",
+    serif: "'Fraunces', Georgia, serif",
+} as const;
+
+export const RADIUS = { xs: 4, sm: 8, md: 12, lg: 16 } as const;
 
 /**
- * Dựng theme antd từ token. Mọi trạng thái (default / hover / active / disabled)
- * đều do antd sinh ra từ các token này — không viết CSS tay cho từng trạng thái.
+ * Build the antd theme from the palette. antd derives every state (hover / active / disabled)
+ * from these tokens, so no per-state CSS is written by hand.
  */
 export const buildAntdTheme = (isDark: boolean): ThemeConfig => {
-    const palette = isDark ? SURFACE.dark : SURFACE.light;
-    const primary = isDark ? BRAND.primaryDark : BRAND.primary;
-    const primaryHover = isDark ? BRAND.hoverDark : BRAND.hover;
-    const primaryActive = isDark ? BRAND.activeDark : BRAND.active;
+    const p = isDark ? PALETTE.dark : PALETTE.light;
 
     return {
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-            colorPrimary: primary,
-            colorInfo: primary,
-            colorLink: primary,
-            colorLinkHover: primaryHover,
-            colorLinkActive: primaryActive,
-            colorSuccess: '#1a9e5c',
-            colorWarning: '#d98300',
-            colorError: '#d92d20',
+            colorPrimary: p.rose,
+            colorPrimaryHover: p.roseHover,
+            colorPrimaryActive: p.roseActive,
+            colorInfo: p.rose,
+            colorLink: p.rose,
+            colorLinkHover: p.roseHover,
+            colorLinkActive: p.roseActive,
+            colorSuccess: p.good,
+            colorWarning: p.warn,
+            colorError: p.err,
             borderRadius: RADIUS.sm,
             borderRadiusLG: RADIUS.md,
-            borderRadiusSM: 6,
+            borderRadiusSM: RADIUS.xs,
             controlHeight: 40,
-            controlHeightLG: 46,
-            fontFamily: '"Inter", "Segoe UI Variable", "Segoe UI", sans-serif',
-            colorBgBase: palette.page,
-            colorBgLayout: palette.page,
-            colorBgContainer: palette.surface,
-            colorBgElevated: palette.elevated,
-            colorText: palette.text,
-            colorTextSecondary: palette.textSecondary,
-            colorTextTertiary: palette.textMuted,
-            colorBorder: palette.borderStrong,
-            colorBorderSecondary: palette.border,
+            controlHeightLG: 44,
+            fontFamily: FONT.sans,
+            fontSize: 14,
+            colorBgBase: p.canvas,
+            colorBgLayout: p.canvas,
+            colorBgContainer: p.canvas,
+            colorBgElevated: isDark ? p.elevated : p.canvas,
+            colorText: p.ink,
+            colorTextHeading: p.ink,
+            colorTextSecondary: p.inkMuted,
+            colorTextTertiary: p.inkMuted,
+            colorTextQuaternary: p.inkSoft,
+            colorTextPlaceholder: p.inkSoft,
+            colorBorder: p.chrome,
+            colorBorderSecondary: p.hairline,
+            colorSplit: p.hairline,
+            controlItemBgHover: p.tintHover,
+            controlItemBgActive: p.roseSoft,
+            controlOutline: p.glow,
             boxShadowSecondary: isDark
                 ? '0 16px 40px rgba(0, 0, 0, 0.45)'
-                : '0 16px 40px rgba(20, 20, 22, 0.12)',
+                : '0 14px 34px -14px rgba(120, 40, 70, 0.45)',
         },
         components: {
             Button: {
                 fontWeight: 600,
+                borderRadius: RADIUS.xs,
+                borderRadiusLG: RADIUS.xs,
+                borderRadiusSM: RADIUS.xs,
                 primaryShadow: 'none',
                 defaultShadow: 'none',
                 dangerShadow: 'none',
-                defaultBg: palette.surface,
-                defaultBorderColor: palette.borderStrong,
-                defaultColor: palette.text,
+                defaultBg: p.canvas,
+                defaultBorderColor: p.sparkle,
+                defaultColor: p.ink,
+                defaultHoverBg: p.blush,
+                defaultHoverBorderColor: p.rose,
+                defaultHoverColor: p.rose,
             },
             Input: {
-                activeBorderColor: primary,
-                hoverBorderColor: primary,
-                activeShadow: `0 0 0 3px ${isDark ? 'rgba(74, 158, 255, 0.24)' : BRAND.softStrong}`,
+                activeBorderColor: p.rose,
+                hoverBorderColor: p.rose,
+                activeShadow: `0 0 0 3px ${p.glow}`,
                 paddingBlock: 8,
             },
             Select: {
-                optionSelectedBg: isDark ? 'rgba(74, 158, 255, 0.20)' : BRAND.soft,
-                optionActiveBg: isDark ? 'rgba(74, 158, 255, 0.14)' : BRAND.softStrong,
+                optionSelectedBg: p.roseSoft,
+                optionActiveBg: p.tintHover,
             },
             Card: {
-                colorBgContainer: palette.surface,
+                colorBgContainer: p.canvas,
                 paddingLG: 24,
             },
             Table: {
-                headerBg: palette.subtle,
-                headerColor: palette.text,
-                headerSplitColor: palette.border,
-                // Màu đặc (đã trộn sẵn brand lên nền surface: 12% tối / 10% sáng), không dùng rgba:
-                // cột `fixed` cần nền đục, nếu không chữ của cột cuộn bên dưới sẽ lộ qua khi hover.
-                rowHoverBg: isDark ? '#1c2a3b' : '#e6f0fa',
-                borderColor: palette.border,
+                headerBg: p.canvas,
+                headerColor: p.inkSoft,
+                headerSplitColor: 'transparent',
+                // Solid color, not rgba: `fixed` columns need an opaque background or scrolled text shows through.
+                rowHoverBg: p.tintHover,
+                borderColor: p.hairline,
+            },
+            Tabs: {
+                itemColor: p.inkMuted,
+                itemHoverColor: p.ink,
+                itemSelectedColor: p.ink,
+                inkBarColor: p.rose,
             },
             Menu: {
                 itemBorderRadius: RADIUS.sm,
-                itemSelectedBg: isDark ? 'rgba(74, 158, 255, 0.18)' : BRAND.soft,
-                itemSelectedColor: primary,
-                itemHoverBg: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 15, 15, 0.04)',
+                itemSelectedBg: p.roseSoft,
+                itemSelectedColor: p.rose,
+                itemHoverBg: p.tintHover,
                 subMenuItemBg: 'transparent',
             },
             Layout: {
-                bodyBg: palette.page,
-                headerBg: palette.surface,
-                siderBg: palette.surface,
+                bodyBg: p.canvas,
+                headerBg: p.canvas,
+                siderBg: p.blush,
             },
             Modal: {
-                contentBg: palette.elevated,
-                headerBg: palette.elevated,
+                contentBg: isDark ? p.elevated : p.canvas,
+                headerBg: isDark ? p.elevated : p.canvas,
+            },
+            Tooltip: {
+                colorBgSpotlight: p.ink,
+                colorTextLightSolid: p.canvas,
             },
             Form: {
-                labelColor: palette.text,
+                labelColor: p.ink,
                 verticalLabelPadding: '0 0 6px',
             },
         },

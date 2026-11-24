@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Tooltip, Typography } from 'antd';
 import { LuCheck, LuMinus } from 'react-icons/lu';
-import { currentSemester, parseSemester, toSemesterCode } from '../analysis/semester';
+import { currentSemester, parseSemester, toSemesterCode } from '@/utils/semester';
 import { RatioBar } from './charts';
 
 const { Text } = Typography;

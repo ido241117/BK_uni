@@ -1,5 +1,6 @@
 import { Suspense, useMemo } from 'react';
 import { ConfigProvider, Spin } from 'antd';
+import { StyleProvider } from '@ant-design/cssinjs';
 import viVN from 'antd/locale/vi_VN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/vi';
@@ -39,10 +40,14 @@ const AppContent = () => {
     );
 };
 
+// `layer`: antd's generated styles go into `@layer antd` (order declared in styles/index.css), so our component
+// styles can override antd instead of always losing to its unlayered rules.
 const App = () => (
-    <ThemeProvider>
-        <AppContent />
-    </ThemeProvider>
+    <StyleProvider layer>
+        <ThemeProvider>
+            <AppContent />
+        </ThemeProvider>
+    </StyleProvider>
 );
 
 export default App;

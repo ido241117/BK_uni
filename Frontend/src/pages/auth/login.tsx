@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores';
 import type { Credentials } from '@/types';
 import { homeForRole } from '@/utils/auth';
 import { emailRules } from '@/utils/auth-validation';
+import { BRAND } from '@/config/brand';
 
 const LoginPage = () => {
     const signIn = useAuthStore(state => state.signIn);
@@ -25,7 +26,7 @@ const LoginPage = () => {
         <>
             <span className="auth-eyebrow">Tài khoản sinh viên</span>
             <h2>Đăng nhập</h2>
-            <p>Nhập email và mật khẩu để tiếp tục sử dụng BK Uni.</p>
+            <p>Nhập email và mật khẩu để tiếp tục sử dụng {BRAND.name}.</p>
 
             {state?.registered && (
                 <Alert
@@ -47,7 +48,7 @@ const LoginPage = () => {
                     label="Email"
                     placeholder="you@example.com"
                     rules={emailRules}
-                    hint="Dùng email đã đăng ký tài khoản BK Uni."
+                    hint={`Dùng email đã đăng ký tài khoản ${BRAND.name}.`}
                     inputProps={{ type: 'email', autoComplete: 'email' }}
                 />
 

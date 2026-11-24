@@ -8,7 +8,12 @@ const findActiveItem = (items: NavItem[], pathname: string): NavItem | undefined
     .filter(item => item.path && (pathname === item.path || pathname.startsWith(`${item.path}/`)))
     .sort((a, b) => (b.path?.length ?? 0) - (a.path?.length ?? 0))[0];
 
-/** Mục menu người dùng hiện tại được thấy + mục đang active, dùng chung cho sidebar (desktop) và bottom nav (mobile). */
+export interface NavSection {
+    title: string;
+    items: NavItem[];
+}
+
+/** Menu items the current user may see, grouped into sidebar sections, plus the active item and breadcrumb. */
 export const useNavItems = () => {
     const { pathname } = useLocation();
     const can = useAuthzStore(state => state.can);
@@ -19,5 +24,14 @@ export const useNavItems = () => {
         [can, is],
     );
 
-    return { items, activePath: findActiveItem(items, pathname)?.path };
+    const sections = useMemo<NavSection[]>(() => {
+        const groups = new Map<string, NavItem[]>();
+        items.forEach(item => groups.set(item.group ?? '', [...(groups.get(item.group ?? '') ?? []), item]));
+        return Array.from(groups, ([title, groupItems]) => ({ title, items: groupItems }));
+    }, [items]);
+
+    const active = findActiveItem(items, pathname);
+    const breadcrumb = active ? [active.group, active.label].filter((part): part is string => Boolean(part)) : [];
+
+    return { items, sections, activePath: active?.path, breadcrumb };
 };

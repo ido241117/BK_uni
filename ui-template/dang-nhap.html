@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BK Uni – Đăng nhập</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+:root {
+  --bg-canvas: #FFFFFF;
+  --bg-blush: #FDF4F7;
+  --bg-tint-hover: #FBEDF2;
+
+  --ink-primary: #3B2230;
+  --ink-muted: #8E6B78;
+  --ink-soft: #BE9EAA;
+  --ink-inverse: #FFFFFF;
+
+  --accent-rose: #B83E6C;
+  --accent-rose-hover: #A03460;
+  --accent-sparkle: #E58FB0;
+  --accent-glow: rgba(229, 143, 176, 0.24);
+  --line-hairline: #F3E3EA;
+
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input { font-family: inherit; }
+button { cursor: pointer; }
+
+/* ===== SPLIT EDITORIAL LAYOUT ===== */
+.login-shell {
+  display: grid;
+  grid-template-columns: 44% 56%;
+  min-height: 100vh;
+}
+
+/* LEFT BLUSH PANEL */
+.brand-pane {
+  background: var(--bg-blush);
+  border-right: 1px solid var(--line-hairline);
+  padding: 44px 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle decorative vertical thread line */
+.brand-pane::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 36px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--line-hairline) 20%, var(--line-hairline) 80%, transparent);
+  pointer-events: none;
+}
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  color: var(--ink-primary);
+}
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-sparkle);
+  background: var(--bg-canvas);
+  display: grid;
+  place-items: center;
+  color: var(--accent-rose);
+  font-size: 18px;
+  box-shadow: 0 0 0 5px var(--accent-glow);
+}
+.brand-name {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.editorial-pitch {
+  max-width: 380px;
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-rose);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.editorial-pitch h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 34px;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+}
+.editorial-pitch p {
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  margin: 0 0 28px;
+}
+
+/* Hairline Feature List */
+.feature-thread {
+  border-top: 1px solid var(--line-hairline);
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.feat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-primary);
+}
+.feat-item i {
+  color: var(--accent-rose);
+  font-size: 13px;
+  transform: translateY(1px);
+}
+
+.pane-foot {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* RIGHT FORM CANVAS */
+.form-pane {
+  background: var(--bg-canvas);
+  padding: 44px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.top-utility {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+.help-link {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+  transition: all 0.15s;
+}
+.help-link:hover {
+  color: var(--accent-rose);
+  border-bottom-color: var(--accent-sparkle);
+}
+
+.form-box {
+  width: 100%;
+  max-width: 380px;
+}
+.form-box h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 36px;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.form-box h1 i {
+  color: var(--accent-rose);
+  font-size: 22px;
+}
+.form-sub {
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  margin: 0 0 36px;
+}
+
+/* UNDERLINE-ONLY INPUT FIELDS */
+.field {
+  margin-bottom: 26px;
+}
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+.input-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--ink-soft);
+  padding: 8px 0;
+  transition: border-color 0.16s ease;
+}
+.input-line:focus-within {
+  border-bottom-color: var(--accent-rose);
+}
+.input-line i.lead {
+  color: var(--ink-soft);
+  font-size: 17px;
+  transition: color 0.16s ease;
+}
+.input-line:focus-within i.lead {
+  color: var(--accent-rose);
+}
+.input-line input {
+  border: 0;
+  background: transparent;
+  width: 100%;
+  font-size: 14px;
+  color: var(--ink-primary);
+}
+.input-line input:focus { outline: none; }
+.input-line input::placeholder { color: var(--ink-soft); }
+
+.eye-btn {
+  border: 0;
+  background: none;
+  padding: 2px;
+  color: var(--ink-muted);
+  font-size: 17px;
+  display: grid;
+  place-items: center;
+}
+.eye-btn:hover { color: var(--accent-rose); }
+
+.form-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -6px 0 30px;
+  font-size: 12.5px;
+}
+.remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.remember input[type="checkbox"] {
+  accent-color: var(--accent-rose);
+  width: 14px;
+  height: 14px;
+}
+.forgot-link {
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-hairline);
+  padding-bottom: 1px;
+  transition: all 0.15s;
+}
+.forgot-link:hover {
+  color: var(--accent-rose);
+  border-bottom-color: var(--accent-rose);
+}
+
+/* UPDATED OPTION 3: PRIMARY ROSE STAMP BUTTON */
+.btn-stamp-primary {
+  width: 100%;
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-rose);
+  background: var(--accent-rose);
+  color: var(--ink-inverse);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  outline: 1px solid rgba(255, 255, 255, 0.36);
+  outline-offset: -4px;
+  box-shadow: 0 10px 24px -12px rgba(184, 62, 108, 0.75);
+  transition: background 0.16s ease, border-color 0.16s ease, outline-color 0.16s ease;
+}
+.btn-stamp-primary:hover {
+  background: var(--accent-rose-hover);
+  border-color: var(--accent-rose-hover);
+  outline-color: rgba(255, 255, 255, 0.58);
+}
+
+/* Hairline Divider */
+.divider-line {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0;
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.divider-line::before,
+.divider-line::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line-hairline);
+}
+
+/* Secondary Double-Hairline Stamp Button */
+.btn-stamp-secondary {
+  width: 100%;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-sparkle);
+  background: var(--bg-blush);
+  color: var(--ink-primary);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  outline: 1px solid var(--line-hairline);
+  outline-offset: -4px;
+  transition: all 0.16s ease;
+}
+.btn-stamp-secondary i {
+  color: var(--accent-rose);
+  font-size: 16px;
+}
+.btn-stamp-secondary:hover {
+  border-color: var(--accent-rose);
+  color: var(--accent-rose);
+  background: var(--bg-tint-hover);
+}
+
+.form-foot {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+.form-foot a {
+  color: var(--accent-rose);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-sparkle);
+  padding-bottom: 1px;
+}
+
+@media (max-width: 900px) {
+  .login-shell { grid-template-columns: 1fr; }
+  .brand-pane { display: none; }
+  .form-pane { padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="login-shell">
+  <!-- LEFT EDITORIAL BLUSH PANE -->
+  <aside class="brand-pane">
+    <a href="#" class="brand-lockup">
+      <span class="brand-mark"><i class="ph-fill ph-sparkle"></i></span>
+      <span class="brand-name">BK Uni</span>
+    </a>
+
+    <div class="editorial-pitch">
+      <div class="eyebrow"><i class="ph-fill ph-sparkle"></i> Cổng hoạch định học tập</div>
+      <h2>Thiết kế lộ trình tốt nghiệp theo nhịp độ của riêng bạn.</h2>
+      <p>Theo dõi tín chỉ tích lũy, kiểm tra điều kiện tiên quyết và mô phỏng các kịch bản đăng ký môn học chỉ trong vài giây.</p>
+
+      <div class="feature-thread">
+        <div class="feat-item">
+          <i class="ph-fill ph-sparkle"></i>
+          <span>Tự động gợi ý lộ trình tối ưu số kỳ học và tải tín chỉ</span>
+        </div>
+        <div class="feat-item">
+          <i class="ph-fill ph-sparkle"></i>
+          <span>Mô phỏng giả định What-If trước mỗi đợt đăng ký môn</span>
+        </div>
+        <div class="feat-item">
+          <i class="ph-fill ph-sparkle"></i>
+          <span>Đối chiếu trực quan tiến độ từng khối kiến thức</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pane-foot">
+      Hệ thống hỗ trợ sinh viên · Năm học 2026–2027
+    </div>
+  </aside>
+
+  <!-- RIGHT CLEAN FORM CANVAS -->
+  <main class="form-pane">
+    <!-- <div class="top-utility">
+      <a href="#" class="help-link">
+        <i class="ph ph-question"></i> Hướng dẫn đăng nhập
+      </a>
+    </div> -->
+
+    <div class="form-box">
+      <h1>Đăng nhập <i class="ph-fill ph-sparkle"></i></h1>
+      <p class="form-sub">Sử dụng email sinh viên để tiếp tục lộ trình học tập.</p>
+
+      <form onsubmit="event.preventDefault();">
+        <div class="field">
+          <label for="email">Email sinh viên</label>
+          <div class="input-line">
+            <i class="ph ph-envelope-simple lead"></i>
+            <input type="email" id="email" placeholder="anh.nguyen2210148@hcmut.edu.vn" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password">Mật khẩu</label>
+          <div class="input-line">
+            <i class="ph ph-lock-simple lead"></i>
+            <input type="password" id="password" placeholder="Nhập mật khẩu của bạn" required>
+            <button type="button" class="eye-btn" id="togglePwd" title="Hiện/ẩn mật khẩu">
+              <i class="ph ph-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-meta">
+          <label class="remember">
+            <input type="checkbox" checked>
+            <span>Ghi nhớ phiên đăng nhập</span>
+          </label>
+          <a href="#" class="forgot-link">Quên mật khẩu?</a>
+        </div>
+
+        <button type="submit" class="btn-stamp-primary">
+          <i class="ph-fill ph-sparkle"></i> Đăng nhập vào cổng học tập
+        </button>
+
+        <div class="divider-line">hoặc</div>
+
+        <button type="button" class="btn-stamp-secondary">
+          <i class="ph ph-student"></i> Tạo tài khoản
+        </button>
+      </form>
+    </div>
+
+    
+  </main>
+</div>
+
+<script>
+const togglePwd = document.getElementById('togglePwd');
+const pwdInput = document.getElementById('password');
+const eyeIcon = document.getElementById('eyeIcon');
+
+togglePwd.addEventListener('click', () => {
+  const isHidden = pwdInput.type === 'password';
+  pwdInput.type = isHidden ? 'text' : 'password';
+  eyeIcon.className = isHidden ? 'ph ph-eye-slash' : 'ph ph-eye';
+});
+</script>
+</body>
+</html>

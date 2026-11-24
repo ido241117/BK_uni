@@ -1,6 +1,6 @@
 import { Card, Empty, Select, Space, Table, Typography } from 'antd';
 import type { PlanResult } from '@/types';
-import { semesterLabel } from '@/pages/courses/analysis/semester';
+import { semesterLabel } from '@/utils/semester';
 import { PRIORITY_LABEL } from './priorities';
 import { describeScenario, type Scenario } from './scenario';
 import { order, planMetrics, planOf, type PlanMetrics } from './whatIf';

@@ -1,45 +1,45 @@
 import {
-    LuBookOpen,
-    LuBot,
-    LuGraduationCap,
-    LuLayoutGrid,
-    LuSparkles,
-    LuUserRound,
-} from 'react-icons/lu';
+    PiChartLineUp,
+    PiGraduationCap,
+    PiPath,
+    PiRobot,
+    PiSquaresFour,
+    PiUser,
+} from 'react-icons/pi';
 import { ROLE, type NavItem } from '@/types';
 import { PAGE_RESOURCES, toPageViewPermission } from '@/config/access-control/page-resources';
 
 /**
- * Menu khai báo (không hard-code trong layout). Sider chỉ việc lọc theo quyền
- * rồi đổ ra antd Menu.
+ * Declared menu (not hard-coded in the layout). The shell filters it by permission and renders one
+ * sidebar section per `group` (display case; CSS uppercases it). Group + label also form the breadcrumb.
  */
 export const sidebarMenu: NavItem[] = [
     {
         key: 'student.courses',
-        label: 'Môn học & kế hoạch',
+        label: 'Tiến độ học tập',
         path: '/courses',
-        icon: <LuBookOpen />,
-        group: 'HỌC TẬP',
+        icon: <PiChartLineUp />,
+        group: 'Học tập',
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.COURSES),
     },
     // Người duyệt 22/11: tạm ẩn mục "Quy định tốt nghiệp" (điều kiện tốt nghiệp đã sửa được ở Hiệu chỉnh trang Môn học).
-    // Trang /regulations vẫn còn; bật lại thì bỏ comment và thêm lại import LuFileCheck.
+    // Trang /regulations vẫn còn; bật lại thì bỏ comment và thêm lại icon (react-icons/pi).
     // {
     //     key: 'student.regulations',
     //     label: 'Quy định tốt nghiệp',
     //     path: '/regulations',
     //     icon: <LuFileCheck />,
-    //     group: 'HỌC TẬP',
+    //     group: 'Học tập',
     //     roles: [ROLE.STUDENT],
     //     permission: toPageViewPermission(PAGE_RESOURCES.REGULATIONS),
     // },
     {
         key: 'student.recommendations',
-        label: 'Gợi ý học phần',
+        label: 'Gợi ý lộ trình',
         path: '/recommendations',
-        icon: <LuSparkles />,
-        group: 'HỌC TẬP',
+        icon: <PiPath />,
+        group: 'Học tập',
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.RECOMMENDATIONS),
     },
@@ -47,8 +47,8 @@ export const sidebarMenu: NavItem[] = [
         key: 'student.advisor',
         label: 'Tư vấn với AI',
         path: '/advisor',
-        icon: <LuBot />,
-        group: 'HỌC TẬP',
+        icon: <PiRobot />,
+        group: 'Học tập',
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.ADVISOR),
     },
@@ -56,8 +56,8 @@ export const sidebarMenu: NavItem[] = [
         key: 'account.profile',
         label: 'Hồ sơ cá nhân',
         path: '/profile',
-        icon: <LuUserRound />,
-        group: 'TÀI KHOẢN',
+        icon: <PiUser />,
+        group: 'Tài khoản',
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.PROFILE),
     },
@@ -65,8 +65,8 @@ export const sidebarMenu: NavItem[] = [
         key: 'admin.curricula',
         label: 'Chương trình đào tạo',
         path: '/admin/curricula',
-        icon: <LuLayoutGrid />,
-        group: 'QUẢN TRỊ',
+        icon: <PiSquaresFour />,
+        group: 'Quản trị',
         roles: [ROLE.ADMIN],
         permission: toPageViewPermission(PAGE_RESOURCES.ADMIN_CURRICULA),
     },
@@ -74,8 +74,8 @@ export const sidebarMenu: NavItem[] = [
         key: 'admin.courses',
         label: 'Quản lý môn học',
         path: '/admin/courses',
-        icon: <LuGraduationCap />,
-        group: 'QUẢN TRỊ',
+        icon: <PiGraduationCap />,
+        group: 'Quản trị',
         roles: [ROLE.ADMIN],
         permission: toPageViewPermission(PAGE_RESOURCES.ADMIN_COURSES),
     },

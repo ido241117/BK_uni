@@ -1,0 +1,74 @@
+@layer components {
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-7) var(--space-4);
+        color: var(--ink-muted);
+        text-align: center;
+    }
+
+    .empty-state-art {
+        width: 72px;
+        height: 72px;
+        margin-bottom: var(--space-1);
+    }
+
+    .empty-state-title {
+        color: var(--ink-primary);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .empty-state-desc {
+        max-width: 420px;
+        font-size: 13px;
+    }
+
+    .empty-state-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--space-3);
+        margin-top: var(--space-2);
+    }
+
+    /* Whole page: larger art and an editorial title. */
+    .empty-state[data-size='page'] {
+        min-height: 60vh;
+        justify-content: center;
+        padding: 60px var(--space-4);
+    }
+
+    .empty-state[data-size='page'] .empty-state-art {
+        width: 96px;
+        height: 96px;
+    }
+
+    .empty-state[data-size='page'] .empty-state-title {
+        font-family: var(--serif);
+        font-size: 22px;
+        font-weight: 500;
+    }
+
+    /* Tight tabs and panes: small art, little padding (spec: 48-64px icon, no 60px padding). */
+    .empty-state[data-size='compact'] {
+        gap: var(--space-1);
+        padding: var(--space-3) var(--space-2);
+    }
+
+    .empty-state[data-size='compact'] .empty-state-art {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 0;
+    }
+
+    .empty-state[data-size='compact'] .empty-state-title {
+        font-size: 13px;
+    }
+
+    .empty-state[data-size='compact'] .empty-state-desc {
+        font-size: 12px;
+    }
+}

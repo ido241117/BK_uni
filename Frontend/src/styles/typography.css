@@ -1,0 +1,68 @@
+/*
+ * Type scale (UI-SPECIFICATION.md "Typography & Scale Hierarchy").
+ * Serif (Fraunces): page title, section / panel headers, KPI numbers, semester codes.
+ * Sans (Be Vietnam Pro): everything else - labels, tables, buttons, body text.
+ * Imported after components.css so it wins inside the same cascade layer.
+ */
+@layer components {
+    /* Page title (H1): 36px serif */
+    .page-header-title {
+        font-family: var(--serif);
+        font-size: 36px;
+        font-weight: 500;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+    }
+
+    .page-header-subtitle {
+        max-width: 640px;
+        margin-top: var(--space-2);
+        color: var(--ink-muted);
+        font-size: 13px;
+    }
+
+    /* Section / panel header (H2): 20px serif */
+    .ant-card-head-title,
+    .ant-modal-title,
+    .ant-drawer-title,
+    .ant-collapse-title,
+    h4.ant-typography,
+    .board-curriculum-title {
+        font-family: var(--serif);
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    /* Panel sub-header (H3): 11px uppercase sans */
+    h5.ant-typography {
+        color: var(--ink-muted);
+        font-family: var(--sans);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    /* KPI numbers: serif, weight 500 */
+    .ant-statistic-content,
+    .progress-hero-number,
+    .metric-number {
+        font-family: var(--serif);
+        font-weight: 500;
+    }
+
+    .progress-hero-number {
+        color: var(--accent-rose);
+    }
+
+    /* Page tab header: 15px sans, 600 when active */
+    .ant-tabs-tab {
+        font-size: 15px;
+    }
+
+    .ant-tabs-tab-active .ant-tabs-tab-btn {
+        font-weight: 600;
+    }
+}

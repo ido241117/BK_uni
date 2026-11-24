@@ -12,7 +12,7 @@ import { listOutlineSummaries } from '@/apis/outline';
 import { getMyProfile, listMyCourses, listMyPlanCourses, listMyRegulationStatuses } from '@/apis/student';
 import { useApiQuery } from '@/hooks';
 import { analyzeStudent } from './analyze';
-import { currentSemester, nextMainSemester } from './semester';
+import { currentSemester, nextMainSemester } from '@/utils/semester';
 
 /**
  * Tải mọi dữ liệu cần cho "Phân tích học tập" rồi tính `analyzeStudent`.

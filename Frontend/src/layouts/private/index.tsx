@@ -1,63 +1,71 @@
-import { Suspense, useState } from 'react';
-import { Spin } from 'antd';
+import { Suspense } from 'react';
+import { Spin, Tooltip } from 'antd';
+import { PiCaretDown, PiGlobe, PiMoon, PiQuestion, PiSun } from 'react-icons/pi';
 import { Outlet } from 'react-router';
-import { useMediaQuery } from '@/hooks';
-import AppBottomNav from './BottomNav';
-import AppHeader from './Header';
-import AppSider from './Sider';
+import {
+    AppShell, Breadcrumb, SemesterBadge, Sidebar, SidebarFooterLink, SidebarNavItem, SidebarNavSection, Topbar,
+} from '@/components/shell';
+import { useAppTheme } from '@/contexts';
+import { currentSemester } from '@/utils/semester';
+import { AccountMenu } from './AccountMenu';
+import { useNavItems } from './nav';
 
-/** Lựa chọn thu gọn sidebar, chỉ lưu trong trình duyệt này; đọc/ghi lỗi (chế độ riêng tư) thì coi như mở rộng. */
-const SIDER_KEY = 'bkuni.sider.collapsed';
-const readCollapsed = () => {
-    try {
-        return window.localStorage.getItem(SIDER_KEY) === '1';
-    } catch {
-        return false;
-    }
-};
-
-/**
- * Khung ứng dụng sau đăng nhập: sidebar (desktop, thu gọn được còn icon) / bottom nav chỉ icon (mobile),
- * topbar và vùng nội dung có Suspense riêng cho lazy page.
- */
-const PrivateLayout = () => {
-    const isMobile = useMediaQuery('(max-width: 1024px)');
-    const [collapsed, setCollapsed] = useState(readCollapsed);
-    const toggle = () => setCollapsed((prev) => {
-        try {
-            window.localStorage.setItem(SIDER_KEY, prev ? '0' : '1');
-        } catch {
-            // Không lưu được thì chỉ đổi trong phiên này.
-        }
-        return !prev;
-    });
+const AppSidebar = () => {
+    const { sections, activePath } = useNavItems();
 
     return (
-        <div className="app-shell" data-sider-collapsed={!isMobile && collapsed}>
-            {!isMobile && (
-                <aside className="app-sidebar">
-                    <AppSider collapsed={collapsed} onToggle={toggle} />
-                </aside>
-            )}
-
-            <div className="app-main">
-                <AppHeader showBrand={isMobile} />
-                <main className="app-content">
-                    <Suspense
-                        fallback={(
-                            <div style={{ display: 'grid', placeItems: 'center', minHeight: '40vh' }}>
-                                <Spin size="large" />
-                            </div>
-                        )}
-                    >
-                        <Outlet />
-                    </Suspense>
-                </main>
-            </div>
-
-            {isMobile && <AppBottomNav />}
-        </div>
+        <Sidebar footer={<SidebarFooterLink icon={<PiQuestion />} label="Trợ giúp" hint="Trang trợ giúp: sắp có" />}>
+            {sections.map(section => (
+                <SidebarNavSection key={section.title} title={section.title}>
+                    {section.items.map(item => item.path && (
+                        <SidebarNavItem key={item.key} icon={item.icon} label={item.label} to={item.path}
+                            active={item.path === activePath} />
+                    ))}
+                </SidebarNavSection>
+            ))}
+        </Sidebar>
     );
 };
+
+const AppTopbar = () => {
+    const { breadcrumb } = useNavItems();
+    const { isDark, toggleMode } = useAppTheme();
+    const themeLabel = isDark ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối';
+
+    return (
+        <Topbar start={<Breadcrumb items={breadcrumb} />}>
+            <SemesterBadge code={currentSemester()} />
+            <Tooltip title={themeLabel}>
+                <button type="button" className="icon-btn" onClick={toggleMode} aria-label={themeLabel}>
+                    {isDark ? <PiSun /> : <PiMoon />}
+                </button>
+            </Tooltip>
+            {/* No i18n yet: shown so the layout is final, disabled so it does not pretend to work. */}
+            <Tooltip title="Tiếng Anh: sắp có">
+                <span>
+                    <button type="button" className="lang-select" disabled aria-label="Ngôn ngữ: Tiếng Việt">
+                        <PiGlobe /> VN <PiCaretDown className="caret" />
+                    </button>
+                </span>
+            </Tooltip>
+            <AccountMenu />
+        </Topbar>
+    );
+};
+
+/** Signed-in app frame: shared shell + a Suspense boundary for lazy pages. */
+const PrivateLayout = () => (
+    <AppShell sidebar={<AppSidebar />} topbar={<AppTopbar />}>
+        <Suspense
+            fallback={(
+                <div style={{ display: 'grid', placeItems: 'center', minHeight: '40vh' }}>
+                    <Spin size="large" />
+                </div>
+            )}
+        >
+            <Outlet />
+        </Suspense>
+    </AppShell>
+);
 
 export default PrivateLayout;

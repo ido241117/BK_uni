@@ -10,7 +10,8 @@ const getInitialMode = (): ThemeMode => {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
 
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    // Light mode first (UI-SPECIFICATION.md); dark only when the user picks it.
+    return 'light';
 };
 
 export const ThemeProvider = ({ children }: PropsWithChildren) => {

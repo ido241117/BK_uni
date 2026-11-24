@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { LuArrowUpRight, LuMinus, LuPlus, LuX } from 'react-icons/lu';
 import { Link } from 'react-router';
 import { STUDENT_COURSE_STATUS_LABEL, type CourseSummary, type StudentCourseStatus } from '@/types';
-import { nextSemester, previousSemester } from '../analysis/semester';
+import { nextSemester, previousSemester } from '@/utils/semester';
 import { canPlan } from './structure';
 
 interface CourseCardProps {

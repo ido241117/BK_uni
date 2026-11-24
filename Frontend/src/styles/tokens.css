@@ -1,79 +1,137 @@
 /*
- * Design token của BK Uni — nguồn duy nhất cho màu/khoảng cách/bo góc.
- * Giá trị phải khớp `config/theme` để antd và CSS không lệch nhau.
- * Đổi brand: chỉ sửa `--brand*` (+ BRAND trong config/theme).
+ * Design tokens: the single source for color, type, spacing and layout sizes.
+ * Values follow UI-SPECIFICATION.md (light-pink, line-driven theme) and ui-template/sidebar-topbar.html.
+ * The antd theme in `config/theme` mirrors the color values; change both together.
  */
 :root {
     color-scheme: light;
 
-    /* Brand */
-    --brand: #0066cc;
-    --brand-hover: #0057ad;
-    --brand-active: #004a94;
-    --brand-soft: rgba(0, 102, 204, 0.1);
-    --brand-soft-strong: rgba(0, 102, 204, 0.2);
-    --brand-contrast: #ffffff;
+    /* Backgrounds & surfaces */
+    --bg-canvas: #FFFFFF;
+    --bg-blush: #FDF4F7;
+    --bg-elevated: #FFF8F4;
+    --bg-tint-hover: #FBEDF2;
 
-    /* Surface */
-    --bg-page: #f5f5f7;
-    --bg-surface: #ffffff;
-    --bg-elevated: #ffffff;
-    --bg-subtle: #f0f0f2;
-    --bg-inverse: #1d1d1f;
-    --text-inverse: #ffffff;
+    /* Ink */
+    --ink-primary: #3B2230;
+    --ink-muted: #8E6B78;
+    --ink-soft: #BE9EAA;
+    --ink-inverse: #FFFFFF;
 
-    /* Text */
-    --text-primary: #1d1d1f;
-    --text-secondary: #6e6e73;
-    --text-muted: #86868b;
+    /* Accents */
+    --accent-rose: #B83E6C;
+    --accent-rose-hover: #A03460;
+    --accent-sparkle: #E58FB0;
+    --accent-glow: rgba(229, 143, 176, 0.22);
+    --accent-teal: #0F766E;
 
-    /* Border & shadow */
-    --border-soft: #e6e6e8;
-    --border-strong: #d2d2d7;
-    --shadow-soft: 0 8px 24px rgba(20, 20, 22, 0.06);
-    --shadow-raised: 0 16px 40px rgba(20, 20, 22, 0.12);
-    --focus-ring: 0 0 0 3px var(--brand-soft-strong);
-    --scrollbar-thumb: rgba(29, 29, 31, 0.2);
+    /* Dividers: hairline = boundary inside content, chrome = edge of an app region */
+    --line-hairline: #F3E3EA;
+    --line-hairline-on-blush: rgba(59, 34, 48, 0.13);
+    --line-chrome: #E4B7CB;
+
+    /* Semantic status */
+    --sem-good: #5E7F5D;
+    --sem-warn: #A0702A;
+    --sem-err: #AE4B33;
+
+    /* Illustration-only fill (folded page corner in empty states) */
+    --illus-fold: #F5C2D4;
+
+    /* Type */
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Be Vietnam Pro', system-ui, sans-serif;
+
+    /* Spacing scale: redefine inside a media query instead of editing rules */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 28px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-11: 44px;
+
+    /* Layout */
+    --nav-width: 230px;
+    --nav-width-collapsed: 68px;
+    --topbar-height: 58px;
+    --topbar-pad-x: var(--space-11);
+    --content-max-width: 1440px;
+    --space-page: clamp(16px, 3vw, 32px);
 
     /* Radius */
+    --radius-xs: 4px;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-pill: 999px;
 
-    /* Layout */
-    --sidebar-width: 248px;
-    --sidebar-collapsed-width: 72px;
-    --bottom-nav-height: 60px;
-    --topbar-height: 64px;
-    --content-max-width: 1440px;
-    --space-page: clamp(16px, 3vw, 32px);
+    /* Legacy aliases used by pages not yet restyled (stages 2-4). Remove once nothing reads them. */
+    --brand: var(--accent-rose);
+    --brand-hover: var(--accent-rose-hover);
+    --brand-active: #8A2C52;
+    --brand-soft: rgba(184, 62, 108, 0.10);
+    --brand-soft-strong: rgba(184, 62, 108, 0.20);
+    --brand-contrast: var(--ink-inverse);
+    --bg-page: var(--bg-canvas);
+    --bg-surface: var(--bg-canvas);
+    --bg-subtle: var(--bg-blush);
+    --bg-inverse: var(--ink-primary);
+    --text-inverse: var(--ink-inverse);
+    --text-primary: var(--ink-primary);
+    --text-secondary: var(--ink-muted);
+    --text-muted: var(--ink-muted);
+    --border-soft: var(--line-hairline);
+    --border-strong: var(--line-chrome);
+    --shadow-soft: 0 8px 24px rgba(120, 40, 70, 0.06);
+    --shadow-raised: 0 16px 40px -16px rgba(120, 40, 70, 0.35);
+    --focus-ring: 0 0 0 3px var(--accent-glow);
+    --scrollbar-thumb: rgba(59, 34, 48, 0.18);
 }
 
+/* Dark palette: derived from the light one, not yet reviewed against the spec. */
 [data-theme='dark'] {
     color-scheme: dark;
 
-    --brand: #4a9eff;
-    --brand-hover: #6fb1ff;
-    --brand-active: #2f86e0;
-    --brand-soft: rgba(74, 158, 255, 0.14);
-    --brand-soft-strong: rgba(74, 158, 255, 0.26);
-    --brand-contrast: #06121f;
+    --bg-canvas: #1C1218;
+    --bg-blush: #24171E;
+    --bg-elevated: #2B1C24;
+    --bg-tint-hover: #33212B;
 
-    --bg-page: #0e1116;
-    --bg-surface: #161a20;
-    --bg-elevated: #1b2028;
-    --bg-subtle: #1f242c;
-    --bg-inverse: #f5f5f7;
-    --text-inverse: #0e1116;
+    --ink-primary: #F6E9EE;
+    --ink-muted: #C7A5B2;
+    --ink-soft: #8C6E7A;
+    --ink-inverse: #FFFFFF;
 
-    --text-primary: #f5f5f7;
-    --text-secondary: rgba(245, 245, 247, 0.72);
-    --text-muted: rgba(245, 245, 247, 0.54);
+    --accent-rose: #C2507E;
+    --accent-rose-hover: #A8436C;
+    --accent-sparkle: #B86A8A;
+    --accent-glow: rgba(229, 143, 176, 0.16);
+    --accent-teal: #2BA59A;
 
-    --border-soft: rgba(255, 255, 255, 0.14);
-    --border-strong: rgba(255, 255, 255, 0.22);
+    --line-hairline: #3A2731;
+    --line-hairline-on-blush: rgba(246, 233, 238, 0.12);
+    --line-chrome: #5A3546;
+
+    --sem-good: #8DB38B;
+    --sem-warn: #D2A157;
+    --sem-err: #E07A62;
+
+    --illus-fold: #6B3A50;
+
+    --brand-active: #8F3A5D;
+    --brand-soft: rgba(194, 80, 126, 0.16);
+    --brand-soft-strong: rgba(194, 80, 126, 0.28);
     --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
     --shadow-raised: 0 16px 40px rgba(0, 0, 0, 0.45);
-    --scrollbar-thumb: rgba(245, 245, 247, 0.24);
+    --scrollbar-thumb: rgba(246, 233, 238, 0.22);
+}
+
+@media (max-width: 1024px) {
+    :root {
+        --topbar-pad-x: var(--space-6);
+    }
 }

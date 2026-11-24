@@ -4,6 +4,7 @@ import { ConfirmPasswordField, FormField, ISolidBtn, PasswordField } from '@/com
 import { register } from '@/apis/auth';
 import { useAsyncAction } from '@/hooks';
 import { emailRules } from '@/utils/auth-validation';
+import { BRAND } from '@/config/brand';
 
 interface RegisterForm {
     email: string;
@@ -26,7 +27,7 @@ const RegisterPage = () => {
         <>
             <span className="auth-eyebrow">Tài khoản sinh viên</span>
             <h2>Tạo tài khoản</h2>
-            <p>Đăng ký bằng email và mật khẩu để bắt đầu sử dụng BK Uni.</p>
+            <p>Đăng ký bằng email và mật khẩu để bắt đầu sử dụng {BRAND.name}.</p>
 
             <Form<RegisterForm>
                 layout="vertical"

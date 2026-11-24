@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
+import { BRAND } from '@/config/brand';
 
-export const APP_NAME = 'BK Uni';
+export const APP_NAME = BRAND.name;
 
 /** Cập nhật tiêu đề tab; `PageHeader` gọi hook này tự động. */
 export function useDocumentTitle(title?: string) {

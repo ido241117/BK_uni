@@ -32,7 +32,7 @@ import {
     parseSemester,
     recommendedSemester,
     toSemesterCode,
-} from './semester';
+} from '@/utils/semester';
 
 export interface AnalysisInput {
     today?: Date;

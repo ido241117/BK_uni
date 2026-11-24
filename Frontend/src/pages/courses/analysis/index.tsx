@@ -8,7 +8,7 @@ import { COURSE_RELATION_TYPE_LABEL, STUDENT_COURSE_STATUS_COLOR, STUDENT_COURSE
 import { type Analysis, type CourseCheck, type Warning } from './analyze';
 import { BlockBars, ColumnChart, StackedBar } from '../components/charts';
 import { MetricGroup, MetricTile, ProgressHero } from '../components/ProgressSummary';
-import { semesterLabel } from './semester';
+import { semesterLabel } from '@/utils/semester';
 import { useStudentAnalysis } from './useStudentAnalysis';
 
 const { Text, Paragraph } = Typography;

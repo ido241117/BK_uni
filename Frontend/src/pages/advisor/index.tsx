@@ -7,7 +7,7 @@ import { IOutLinedBtn, ISolidBtn, PageHeader, TablePageSkeleton } from '@/compon
 import { deleteAdvisorSession, getAdvisorSession, listAdvisorSessions, streamAdvisorMessage } from '@/apis/advisor';
 import { useApiMutation, useApiQuery } from '@/hooks';
 import type { AdvisorAnswer, AdvisorChoiceAnswer, AdvisorSession, AdvisorSessionDetail, AdvisorStep, SendAdvisorMessagePayload } from '@/types';
-import { semesterLabel } from '@/pages/courses/analysis/semester';
+import { semesterLabel } from '@/utils/semester';
 import { useStudentAnalysis } from '@/pages/courses/analysis/useStudentAnalysis';
 import { AnswerView } from './components/AnswerView';
 import { RichText } from './components/RichText';

@@ -8,7 +8,7 @@ import { adjustMybk, getPlannerSettings, savePlannerSettings, solvePlan } from '
 import { getMyProfile, listMyCourses } from '@/apis/student';
 import { useApiMutation, useApiQuery } from '@/hooks';
 import { STUDENT_COURSE_STATUS, type PlanFix, type PlanResult, type PlanWarningItem, type SolvePlanPayload } from '@/types';
-import { currentSemester, semesterLabel, toSemesterCode, parseSemester } from '@/pages/courses/analysis/semester';
+import { currentSemester, semesterLabel, toSemesterCode, parseSemester } from '@/utils/semester';
 import ComparePanel, { type CompareItem } from './ComparePanel';
 import PlanResultView from './PlanResultView';
 import PriorityList from './PriorityList';

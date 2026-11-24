@@ -4,7 +4,7 @@ import { LuExternalLink } from 'react-icons/lu';
 import { Link } from 'react-router';
 import { IOutLinedBtn } from '@/components';
 import { STUDENT_COURSE_STATUS, STUDENT_COURSE_STATUS_LABEL, type CourseSummary, type StudentCourseStatus } from '@/types';
-import { currentSemester } from '../analysis/semester';
+import { currentSemester } from '@/utils/semester';
 import type { CourseDraft } from './useCourseDraft';
 
 const { Text } = Typography;

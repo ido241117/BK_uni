@@ -9,7 +9,7 @@ import { adjustMybk, getMybkProgress, importMybk, reviewMybk } from '@/apis/plan
 import { listCourseGroups } from '@/apis/curriculum';
 import { getMyProfile, listMyCourses } from '@/apis/student';
 import { useApiMutation, useApiQuery, useDebounce } from '@/hooks';
-import { semesterLabel } from '@/pages/courses/analysis/semester';
+import { semesterLabel } from '@/utils/semester';
 import {
     STUDENT_COURSE_STATUS,
     STUDENT_COURSE_STATUS_COLOR,

@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router';
+import { BRAND } from '@/config/brand';
 
 const COPY = {
     login: {
@@ -20,11 +21,11 @@ const AuthLayout = () => {
 
     return (
         <main className="auth-page">
-            <aside className="auth-intro" aria-label="Giới thiệu BK Uni">
+            <aside className="auth-intro" aria-label={`Giới thiệu ${BRAND.name}`}>
                 <Link to="/" className="app-brand">
                     <span className="app-brand-mark">bk</span>
                     <span className="app-brand-text">
-                        <strong>BK Uni</strong>
+                        <strong>{BRAND.name}</strong>
                         <small>Hành trình học tập</small>
                     </span>
                 </Link>
@@ -35,7 +36,7 @@ const AuthLayout = () => {
                     <p>{copy.description}</p>
                 </div>
 
-                <p>BK Uni hỗ trợ lập kế hoạch học tập; kết quả không thay thế xác nhận chính thức của nhà trường.</p>
+                <p>{BRAND.name} hỗ trợ lập kế hoạch học tập; kết quả không thay thế xác nhận chính thức của nhà trường.</p>
             </aside>
 
             <section className="auth-form-side">

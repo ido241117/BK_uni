@@ -1,6 +1,6 @@
 import { Card, Collapse, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import type { EngineReport } from '@/types';
-import { semesterLabel } from '@/pages/courses/analysis/semester';
+import { semesterLabel } from '@/utils/semester';
 
 const { Text } = Typography;
 

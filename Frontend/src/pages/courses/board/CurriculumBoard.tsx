@@ -25,7 +25,7 @@ import type { StatusChange } from '@/utils/student-course-file';
 import CourseStatusFileActions from '../components/CourseStatusFileActions';
 import { StackedBar } from '../components/charts';
 import { MetricGroup, MetricTile, ProgressHero } from '../components/ProgressSummary';
-import { currentSemester, nextMainSemester, recommendedSemester } from '../analysis/semester';
+import { currentSemester, nextMainSemester, recommendedSemester } from '@/utils/semester';
 import CourseCard from './CourseCard';
 import CourseDrawer, { type CourseContext } from './CourseDrawer';
 import CatalogView from './CatalogView';
