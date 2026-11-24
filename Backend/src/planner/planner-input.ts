@@ -43,6 +43,8 @@ export type PlannerProgress = {
   current_semester?: string | null;
   /** T46 (22/11): khối sinh viên tự chọn cho môn, {mã môn: id khối}. */
   block_choices?: Record<string, string>;
+  /** 24/11: mã môn file myBK ghi đã đạt. Môn này mà đang "Đang học" là học cải thiện (đã đạt, rớt vẫn giữ điểm cũ). */
+  passed_codes?: string[];
 };
 
 const SEMESTER_RE = /^\d{2}[123]$/;
@@ -123,8 +125,12 @@ export function progressFromImport(data: Record<string, unknown> | null | undefi
     ? (data.graduation_conditions as Record<string, unknown>[])
       .map((c) => ({ code: String(c.code ?? ''), passed: c.passed === true })).filter((c) => c.code)
     : [];
+  const passed = blocks
+    .flatMap((b) => (Array.isArray(b.courses) ? (b.courses as Record<string, unknown>[]) : []))
+    .filter((c) => c.passed === true && typeof c.code === 'string' && c.code)
+    .map((c) => c.code as string);
   return { scores, graduation_conditions: conditions, current_semester: savedCurrentSemester(data),
-    block_choices: savedBlockChoices(data) };
+    block_choices: savedBlockChoices(data), passed_codes: [...new Set(passed)].sort() };
 }
 
 /**
@@ -272,9 +278,13 @@ export function buildPlannerInput(src: PlannerSource, dto: SolvePlanDto, today =
   // Môn ngoài chương trình sinh viên đã khai: cần có trong `courses` (tính vào tự chọn tự do).
   const allCourses = new Map(src.items.map((it) => [it.course.code, it.course]));
   for (const sc of src.studentCourses) if (!allCourses.has(sc.course.code)) allCourses.set(sc.course.code, sc.course);
+  // Học cải thiện (người duyệt 24/11): môn Đang học mà file myBK ghi đã đạt thì gửi bộ giải là đã đạt,
+  // dù kịch bản chọn đậu hay rớt (rớt lần học lại vẫn giữ điểm cũ), nên không bị xếp lại.
+  const passedBefore = new Set(src.progress?.passed_codes ?? []);
   const studentCourses = src.studentCourses
     .filter((sc) => sc.status !== 'not-started')
-    .map((sc) => ({ course_code: sc.course.code, status: sc.status }));
+    .map((sc) => ({ course_code: sc.course.code,
+      status: sc.status === 'in-progress' && passedBefore.has(sc.course.code) ? 'completed' : sc.status }));
   // Môn điều kiện (ENG_GC, ...) bị bộ giải bỏ khỏi chương trình nên không cần giả định đậu/rớt.
   const inProgress = studentCourses
     .filter((sc) => sc.status === 'in-progress' && !conditions.includes(sc.course_code))

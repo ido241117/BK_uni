@@ -1,4 +1,4 @@
-import type { CourseAtSemester, PlanCourseFact } from '@/types';
+import type { CourseAtSemester, PlanCourse, PlanCourseFact } from '@/types';
 import { order } from './whatIf';
 
 /**
@@ -61,3 +61,7 @@ export const moveHint = (code: string, target: string, ctx: HintContext): MoveHi
     if (load > cap) soft.push(`sẽ thành ${load} TC, quá mức ${cap}`);
     return { ok: true, soft: soft.length ? soft.join(' · ') : null };
 };
+
+/** Môn tự chọn bộ giải tạm xếp (sinh viên chưa chọn): giao diện chỉ hiện tên khối, không hiện môn (người duyệt 24/11). */
+export const isBlockSlot = (c: Pick<PlanCourse, 'slot' | 'block' | 'reason'>): boolean =>
+    Boolean(c.slot && c.block) && c.reason !== 'free_elective';

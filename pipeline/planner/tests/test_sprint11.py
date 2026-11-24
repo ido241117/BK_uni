@@ -142,3 +142,16 @@ def test_cli_marks_unchosen_electives_as_block_slots(toy):
     assert rows["EL304"]["slot"] is False and rows["EL304"]["block"] == "Tu chon"
     assert any(c["slot"] for c in rows.values() if c["code"].startswith("EL") and c["code"] != "EL304")
     assert all(not c["slot"] for c in rows.values() if c["code"].startswith(("CS", "MA")))
+
+
+def test_cli_labels_excess_elective_by_the_requirement_it_fills(toy):
+    # 24/11 (cach A): khoi tu chon can 6 TC; ghim 3 mon (9 TC) thi 1 mon du lap khoi tu do, nhan phai la "Tu do"
+    # chu khong phai khoi goc "Tu chon" (truoc day tai khoan thu B thay 2 o "Quan ly" ma that ra lap tu do).
+    toy["course_groups"].append({"name": "Tu do", "kind": "elective", "required_count": None,
+                                 "required_credits": 3, "pool_scope": "any", "pool_course_credits": 3, "members": []})
+    pins = [lock("EL302", "272"), lock("EL303", "272"), lock("EL304", "262")]
+    out = run({**toy, "scenario": scen(toy, locked=pins)}, "cpsat", 10)
+    rows = {c["code"]: c for sem in out["semesters"] for c in sem["courses"]}
+    labels = sorted(rows[c]["block"] for c in ("EL302", "EL303", "EL304"))
+    assert labels == ["Tu chon", "Tu chon", "Tu do"]
+    assert not any(code.startswith("FREE_") for code in rows)

@@ -2,7 +2,7 @@ import { type DragEvent, type ReactNode, useState } from 'react';
 import { Button, Checkbox, Input, InputNumber, Modal, Popover, Select, Space, Tag, Tooltip, Typography } from 'antd';
 import { LuCalendarX, LuCircleX, LuPin, LuPinOff, LuUndo2, LuX } from 'react-icons/lu';
 import type { CourseAtSemester, PlanCourse, PlanResult, PlanWarningItem } from '@/types';
-import { moveHint, type MoveHint } from './localHints';
+import { isBlockSlot, moveHint, type MoveHint } from './localHints';
 import type { Scenario } from './scenario';
 
 const { Text } = Typography;
@@ -170,11 +170,14 @@ const SemesterBoard = ({
     /** M9: rê chuột xem chi tiết. */
     const details = (c: PlanCourse, semester: string, moved: boolean, failed?: boolean) => {
         const free = c.reason === 'free_elective';
+        // Ô khối (24/11, người duyệt): môn tự chọn sinh viên chưa chọn chỉ hiện tên khối, không hiện môn bộ giải tạm xếp.
+        if (isBlockSlot(c)) {
+            return <div style={{ maxWidth: 260 }}><div>{c.block}</div><div>{c.credits} TC · chưa chọn môn; bấm để chọn môn trong khối</div></div>;
+        }
         const lines = [
             free ? 'Ô tự chọn tự do: bấm để gõ mã môn bất kỳ' : courseName(c.code),
             `${c.credits} TC · ${REASON_LABEL[c.reason] ?? c.reason}${c.block && !free ? ` (${c.block})` : ''}`,
         ];
-        if (c.slot) lines.push('Bộ giải tạm chọn; bấm để chọn môn khác trong khối');
         if (pinnedAt.get(c.code) === semester) lines.push('Đã ghim vào kỳ này');
         if (moved) lines.push('Đã chuyển, chưa giải');
         if (failed) lines.push('Lần học này giả định rớt, học lại ở kỳ sau');
@@ -195,7 +198,7 @@ const SemesterBoard = ({
         const choices = c.block && !free ? blockChoices.get(c.block) : undefined;
         const options = choices?.map(g => ({
             label: g.group,
-            options: g.options.filter(o => o.value !== c.code).map(o => {
+            options: g.options.filter(o => isBlockSlot(c) || o.value !== c.code).map(o => {
                 const missing = missingPrereqs(o.value, semester);
                 return { value: o.value, label: missing.length ? `${o.label} (cần ${missing.join(', ')} trước)` : o.label, disabled: missing.length > 0 };
             }),
@@ -210,6 +213,18 @@ const SemesterBoard = ({
                             onPressEnter={() => addFree(key, semester)} aria-label={`Mã môn cho ô tự chọn tự do ở ${semester}`} />
                         <Button type="primary" onClick={() => addFree(key, semester)}>Chọn</Button>
                     </Space.Compact>
+                </Space>
+            );
+        }
+        if (isBlockSlot(c)) {
+            return (
+                <Space orientation="vertical" size={6} style={{ width: 260 }}>
+                    <Text strong>{c.block} · {c.credits} TC</Text>
+                    <Select<string>
+                        autoFocus size="small" showSearch style={{ width: '100%' }} placeholder="Chọn môn trong khối"
+                        value={undefined} optionFilterProp="label" options={options}
+                        onChange={code => { swap(c.code, code, semester); setSelected(null); }}
+                    />
                 </Space>
             );
         }
@@ -254,9 +269,10 @@ const SemesterBoard = ({
         const isSelected = selected === key;
         const failedNow = scenario.assumedFail.some(a => a.course_code === c.code && a.semester_code === semester);
         const warn = warningsOf(c.code, semester).length > 0;
+        const slot = isBlockSlot(c);
         const body = (
             <div
-                draggable={!free}
+                draggable={!free && !slot}
                 onDragStart={e => { e.dataTransfer.setData('text/plain', c.code); setDragging(c.code); }}
                 onDragEnd={() => setDragging(null)}
                 onClick={() => setSelected(isSelected ? null : key)}
@@ -266,14 +282,14 @@ const SemesterBoard = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                     <Dot filled={isSelected} dashed={free} color={failedNow ? ERROR : warn ? WARNING : 'var(--brand)'} />
                     <Text strong style={{ fontSize: 13, color: isSelected ? 'var(--brand)' : undefined }}>
-                        {free ? 'Tự chọn tự do' : c.code}
+                        {free ? 'Tự chọn tự do' : slot ? 'Tự chọn' : c.code}
                     </Text>
                     {moved && <span style={{ color: 'var(--brand)' }} title="Đã chuyển, chưa giải">•</span>}
                     {pinnedAt.get(c.code) === semester && !moved && <LuPin size={11} color="var(--text-muted)" />}
                 </div>
                 <Text type="secondary" style={{ fontSize: 12, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {free ? `${c.credits} TC · gõ mã môn bất kỳ` : courseName(c.code)}
+                    {free ? `${c.credits} TC · gõ mã môn bất kỳ` : slot ? `${c.block} · ${c.credits} TC` : courseName(c.code)}
                 </Text>
             </div>
         );

@@ -523,10 +523,10 @@ const semesterOptions = (fromYear: number) => Array.from({ length: 8 }, (_, i) =
     .map(code => ({ value: code, label: semesterLabel(code) }));
 
 /**
- * Ô tìm môn trong danh mục để đánh dấu Đang học. Môn đã có trong bảng (`existing`) vẫn hiện, ghi chú "đã có trong bảng";
+ * Ô tìm môn trong danh mục để đánh dấu Đang học. Môn đã có trong bảng vẫn hiện (không ghi chú, người duyệt 24/11);
  * chọn thì chuyển môn đó sang Đang học, không thêm dòng trùng (người duyệt 21/11 gõ CO3021 bị "Không có môn khớp").
  */
-const AddCourseSelect = ({ onPick, existing }: { onPick: (course: CourseSummary) => void; existing: Set<string> }) => {
+const AddCourseSelect = ({ onPick }: { onPick: (course: CourseSummary) => void }) => {
     const [search, setSearch] = useState('');
     const keyword = useDebounce(search, 300).trim();
     const query = useApiQuery(['courses-pick', keyword], () => listCourses({ page: 1, take: 20, search: keyword }), {
@@ -534,7 +534,7 @@ const AddCourseSelect = ({ onPick, existing }: { onPick: (course: CourseSummary)
     });
     const options = (query.data?.items ?? []).map(c => ({
         value: c.id,
-        label: `${c.code} - ${c.name} (${c.credits} TC)${existing.has(c.code) ? ' · đã có trong bảng' : ''}`,
+        label: `${c.code} - ${c.name} (${c.credits} TC)`,
         course: c,
     }));
     return (
@@ -770,13 +770,12 @@ export const MybkProgressCard = () => {
                         <Space wrap>
                             <Space size={6}><Switch size="small" checked={onlyUnpassed} onChange={setOnlyUnpassed} />Chỉ môn chưa đạt</Space>
                             <AddCourseSelect
-                                existing={new Set(byCode.keys())}
                                 onPick={(course) => {
                                     // Người duyệt 22/11: thêm môn Đang học cũng phải hỏi như mọi thay đổi khác.
                                     const entry = byCode.get(course.code);
                                     confirmThen(
                                         entry
-                                            ? `${course.code} đã có trong bảng. Chuyển sang "Đang học"?`
+                                            ? `Chuyển ${course.code} sang "Đang học"?`
                                             : `Thêm ${course.code} (${course.name}) vào danh sách Đang học?`,
                                         () => {
                                             if (entry) {

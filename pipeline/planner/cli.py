@@ -49,6 +49,46 @@ SOLVERS = {"cpsat": solve_cpsat, "clingo": solve_asp}
 DEFAULT_SNAPSHOT = Path(__file__).with_name("data") / "relations-snapshot.json"
 
 
+def _allocate_blocks(fixture: dict[str, Any], planned: list[str], chosen: set[str]) -> dict[str, str]:
+    """Moi mon tu chon trong lo trinh lap yeu cau nao (24/11, nguoi duyet chon cach A).
+
+    Cung luat dem voi ``normalize.py`` buoc 3: moi khoi tu chon (``listed``, khong phai khoi con chuyen
+    nganh) lap phan con thieu truoc (da dat + dang hoc gia dinh dau tinh truoc); phan du cua khoi tinh vao
+    tu chon tu do. Trong mot khoi, mon sinh vien ghim/chon nhan khoi truoc mon bo giai tam chon.
+    Tra ve {ma mon: ten khoi}; o ``FREE_`` luon thuoc khoi tu chon tu do.
+    """
+    credits = {c["code"]: c["credits"] for c in fixture["courses"]}
+    student = fixture["student"]
+    done = {sc["course_code"] for sc in student["student_courses"] if sc["status"] == "completed"}
+    done |= set(student.get("_assumed_pass") or [])
+    free_name = next((g["name"].replace(" (o trong)", "") for g in fixture["course_groups"] if g.get("_free_slots")), None)
+    out: dict[str, str] = {}
+    for g in fixture["course_groups"]:
+        if g.get("_free_slots"):
+            for c in g["members"]:
+                out[c] = free_name or g["name"]
+            continue
+        if g["kind"] != "elective" or g.get("parent") or g.get("specialization"):
+            continue
+        members = set(g["members"])
+        here = sorted((c for c in planned if c in members), key=lambda c: (c not in chosen, c))
+        if g.get("required_credits"):
+            need = max(0, g["required_credits"] - sum(credits[c] for c in done if c in members))
+            for c in here:
+                if need > 0:
+                    out[c], need = g["name"], need - credits[c]
+                else:
+                    out[c] = free_name or g["name"]
+        elif g.get("required_count") is not None:
+            need = max(0, g["required_count"] - sum(1 for c in done if c in members))
+            for i, c in enumerate(here):
+                out[c] = g["name"] if i < need else (free_name or g["name"])
+        else:
+            for c in here:
+                out[c] = g["name"]
+    return out
+
+
 def _reason(fixture: dict[str, Any], scenario: dict[str, Any], code: str) -> str:
     statuses = {sc["course_code"]: sc["status"] for sc in fixture["student"]["student_courses"]}
     if statuses.get(code) == "failed" or (
@@ -261,12 +301,10 @@ def run(payload: dict[str, Any], solver: str, time_limit: float,
     credits = {c["code"]: c["credits"] for c in fixture["courses"]}
     # O khoi (Q7, 22/11): mon tu chon bo giai tu chon (sinh vien chua ghim, chua chon) va o tu chon
     # tu do hien thanh "khoi (x TC) ▾" tren giao dien; mon sinh vien ghim/chon thi hien ten mon.
-    block_of: dict[str, str] = {}
-    for g in fixture["course_groups"]:
-        if g.get("_free_slots") or (g["kind"] == "elective" and not g.get("parent") and not g.get("specialization")):
-            for c in g["members"]:
-                block_of.setdefault(c, g["name"].replace(" (o trong)", ""))
+    # 24/11: nhan khoi = yeu cau mon do LAP (_allocate_blocks), khong phai khoi goc cua mon.
     chosen = {c for c, _ in locked} | set((scenario.get("preferences") or {}).get("wanted_courses", []))
+    planned = [c for s in result["semesters"] for c in s["courses"]]
+    block_of = _allocate_blocks(fixture, planned, chosen)
     semesters = [
         {
             "semester_code": s["semester_code"],

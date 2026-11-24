@@ -372,6 +372,27 @@ describe('Planner API (POST /api/plans/solve)', () => {
       .student.current_semester).toBe('253');
   });
 
+  it('treats an in-progress course the myBK file marks as passed as an improvement: passed even if it fails (24/11)', () => {
+    const c = (code: string, credits: number) => ({ id: code, code, name: code, credits });
+    const progress = progressFromImport({ blocks: [{ courses: [
+      { code: 'XX101', passed: true, score: '6.5', letter: 'C+' },
+      { code: 'XX102', passed: false, score: null, letter: null },
+    ] }] });
+    expect(progress?.passed_codes).toEqual(['XX101']);
+    const input = buildPlannerInput({
+      curriculum: { code: 'X', name: 'X', cohort: 2023, duration_years: 4, min_semester_credits: 14, max_semester_credits: 21 },
+      items: [c('XX101', 4), c('XX102', 3)].map((course) => ({ course, recommended_year: 1, recommended_term: 1 })),
+      groups: [], relations: [], categories: [], specializations: [], openedSemesters: [],
+      profile: { admission_year: 2023, target_specialization_id: null },
+      studentCourses: [{ course: c('XX101', 4), status: 'in-progress' }, { course: c('XX102', 3), status: 'in-progress' }],
+      progress,
+    }, { in_progress_results: { XX101: 'fail', XX102: 'fail' } }, new Date('2026-11-20T00:00:00Z'));
+    // XX101 đã đạt theo file: học cải thiện, gửi là đã đạt, không cần giả định đậu/rớt. XX102 chưa đạt: rớt thì học lại.
+    expect(input.student.student_courses).toEqual([
+      { course_code: 'XX101', status: 'completed' }, { course_code: 'XX102', status: 'in-progress' }]);
+    expect(input.scenario.in_progress_results).toEqual({ XX102: 'fail' });
+  });
+
   it('does not schedule physical education (PE1003, PE1005 become conditions, 21/11)', () => {
     const c = (code: string, credits: number) => ({ id: code, code, name: code, credits });
     const input = buildPlannerInput({
