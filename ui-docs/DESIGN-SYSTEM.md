@@ -7,7 +7,7 @@ This document specifies how BKPath looks and behaves: the theme, the brand, ever
 | Companion | What it gives you |
 |---|---|
 | [`ui-template/`](ui-template/) | The designer's HTML templates (open in a browser). Each one is listed in §0 |
-| `Frontend/src/styles/tokens.css` | Every color, space, radius, shadow and layout size, light and dark |
+| `Frontend/src/styles/tokens.css` | Every color, space, radius, shadow and layout size, light and dark (the templates use a copy, `ui-template/tokens.css`) |
 | `npm run contrast:check` (in `Frontend/`) | Measures the palette against the contrast rules of §1.3; exits 1 if a rule fails |
 | `npm run i18n:check` (in `Frontend/`) | Lists UI text missing from or unused in `en.json` |
 
@@ -44,7 +44,7 @@ The templates are plain HTML/CSS files. To change how something looks, change it
 | `dang-nhap.html` | Login / register: split editorial layout |
 | `tien-do-hoc-tap-page.html` | Tiến độ học tập › Tiến độ: info panel, Hiệu chỉnh, course groups |
 
-All templates share `template.css` (plain class names, values mirror the app's CSS) and `template.js` (light / dark toggle, open / close behavior), and link the app's `Frontend/src/styles/tokens.css` for every color, so a palette change shows in the templates and the app at once. Open any template with `?theme=dark` for dark.
+All templates share `template.css` (plain class names, values mirror the app's CSS) and `template.js` (light / dark toggle, open / close behavior), and link `tokens.css` in the same folder for every color. The folder is self-contained (nothing is loaded from `Frontend/`); `ui-template/tokens.css` is a copy of `Frontend/src/styles/tokens.css` and the two MUST stay identical, so a token change is made in the template copy first and then copied to the app (§5.2). Open any template with `?theme=dark` for dark.
 
 ---
 
@@ -138,7 +138,7 @@ Follow these steps for a new theme, a re-brand, or a single color change. The ch
 7. **Contrast targets.** Text ≥ 4.5:1 on all four surfaces, including the hover tint (text sits on hovered rows). Non-text cues ≥ 3:1. Disabled is exempt. Ink steps stay distinguishable: muted is at least 1.2× the contrast of soft.
 8. **Color vision.** Never tell two states apart by red vs green (or any hue pair) alone: add a shape (bead family) and a word. Check the palette in a color-blindness simulator before shipping.
 9. **Derive dark, don't invert (§1.4).** Keep the hue; move surfaces to 7–20% lightness; lift accents until they pass (aim for 6:1+); give filled accents dark text; soften semantic colors one step.
-10. **Verify.** Edit `tokens.css` (both themes) → mirror `PALETTE` in `config/theme/index.ts` → `npm run contrast:check` → look at the pages in light and dark → update the tables in §1.2.
+10. **Verify.** Edit `tokens.css` (both themes; template copy and app copy, §5.2) → mirror `PALETTE` in `config/theme/index.ts` → `npm run contrast:check` → look at the pages in light and dark → update the tables in §1.2.
 
 ### 1.4 Dark mode mapping and rationale
 
@@ -481,7 +481,7 @@ Write the Vietnamese text through `t()` (hook) or `i18n.t()` (anywhere), interpo
 ### 5.0 Workflow
 
 1. Change the template in `ui-template/` (or add one) and agree on it.
-2. Port it: tokens in `tokens.css`, components in `components/`, page CSS next to the page.
+2. Port it: tokens from `ui-template/tokens.css` to `Frontend/src/styles/tokens.css`, components in `components/`, page CSS next to the page.
 3. Check: `npx tsc -p tsconfig.app.json --noEmit`, `npx eslint src`, `npm run i18n:check`, `npm run contrast:check`, and look at the page in light / dark and VN / EN.
 4. Update this document.
 
@@ -490,7 +490,7 @@ Write the Vietnamese text through `t()` (hook) or `i18n.t()` (anywhere), interpo
 | Decision | File(s) |
 |---|---|
 | Visual source of truth | `ui-docs/ui-template/*.html` |
-| Colors, spacing, radius, shadows, layout sizes (light + dark) | `Frontend/src/styles/tokens.css` |
+| Colors, spacing, radius, shadows, layout sizes (light + dark) | `Frontend/src/styles/tokens.css`; identical copy for the templates in `ui-docs/ui-template/tokens.css` |
 | The same colors for antd components | `Frontend/src/config/theme/index.ts` (`PALETTE`, `buildAntdTheme`) |
 | Contrast rules | `Frontend/scripts/contrast-check.cjs` |
 | Fonts | `Frontend/src/main.tsx` (`@fontsource` imports), `--serif` / `--sans` in tokens, `FONT` in `config/theme`, `--font-*` in `styles/index.css` |
@@ -511,7 +511,7 @@ Write the Vietnamese text through `t()` (hook) or `i18n.t()` (anywhere), interpo
 
 ### 5.2 Change a color
 
-1. Edit the token in `tokens.css` (both the `:root` and the `[data-theme='dark']` value).
+1. Edit the token in `ui-template/tokens.css` (both the `:root` and the `[data-theme='dark']` value), then copy the file over `Frontend/src/styles/tokens.css`; the two stay identical.
 2. Mirror it in `config/theme/index.ts` `PALETTE` if antd uses it; mirror it in `charts.tsx` if charts use it.
 3. Run `npm run contrast:check`; follow §1.3 for anything it flags.
 4. Look at the pages in both themes; update §1.2.

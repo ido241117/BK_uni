@@ -1,7 +1,7 @@
 /*
  * Shared styles for every template in ui-docs/ui-template/.
- * Colors come from the app's tokens (linked before this file: ../../Frontend/src/styles/tokens.css), so templates and
- * app can never drift apart, and every template follows the light / dark toggle (template.js).
+ * Colors come from tokens.css in this folder (linked before this file), a copy of the app's
+ * Frontend/src/styles/tokens.css; port token changes to the app. Every template follows the light / dark toggle (template.js).
  * Class names are plain (no antd); values mirror the app's CSS. When a template changes, port it to the app.
  */
 
