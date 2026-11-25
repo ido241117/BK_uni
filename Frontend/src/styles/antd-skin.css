@@ -1,8 +1,8 @@
 /*
  * Skin for antd components, keyed on antd's own classes so every page follows it (old and rebuilt).
- * Sources: ui-template/tien-do-hoc-tap-page.html (table), components-template.html (inputs, dropdown, search,
- * thread switch), components-template-2.html (notices, confirm popover, row notes, toast),
- * modal.html (modal). Anything marked DEFAULT is a placeholder until a design exists.
+ * Sources: ui-template/tien-do-hoc-tap-page.html (table), controls.html (inputs, dropdown, search,
+ * thread switch, chips), data-display.html (rows, tags, row notes), feedback.html (notices, confirm popover, toast,
+ * modal). Anything marked DEFAULT is a placeholder until a design exists.
  * Inputs are underlined app-wide via <ConfigProvider variant="underlined"> (App.tsx); sizes in config/theme.
  * Buttons live in components/Button/button.css.
  */
@@ -11,6 +11,9 @@
     .ant-table {
         background: transparent;
         font-size: 13.5px;
+        /* antd sets its own grey scrollbar-color here, which also makes Chrome draw the wide
+           native bar with arrow buttons; reuse the app-wide thin rose scrollbar instead. */
+        scrollbar-color: var(--accent-sparkle) transparent;
     }
 
     .ant-table-thead > tr > th.ant-table-cell {
@@ -37,9 +40,24 @@
         border-bottom: 0;
     }
 
-    /* Row that differs from the myBK file: terracotta stripe on the left (rowClassName="is-diff"). */
+    /*
+     * Marked row (rowClassName="is-diff": differs from the myBK file): a terracotta dot before the first cell,
+     * like a bead on the row. No vertical stripe: rules run across, never down, in a line-driven layout.
+     */
     .ant-table-tbody > tr.is-diff > td.ant-table-cell:first-child {
-        box-shadow: inset 2px 0 0 var(--sem-err);
+        position: relative;
+    }
+
+    .ant-table-tbody > tr.is-diff > td.ant-table-cell:first-child::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -6px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--sem-err);
+        transform: translateY(-50%);
     }
 
     /* Expanded row = inline note box under a course (template `.note-drawer-row`). */
@@ -81,7 +99,7 @@
     .ant-select-status-error.ant-select-underlined,
     .ant-input-number-status-error.ant-input-number-underlined {
         border-bottom-color: var(--sem-err);
-        box-shadow: 0 3px 0 -1px rgba(174, 75, 51, 0.18);
+        box-shadow: 0 3px 0 -1px var(--sem-err-glow);
     }
 
     /* Field label (template `.field-lbl`) and hint / error lines (`.field-hint`) */
@@ -106,7 +124,7 @@
         font-size: 11.5px;
     }
 
-    /* Multi-line text: blush paste area (modal.html `.paste-area`), not an underline floating under 4 rows */
+    /* Multi-line text: blush paste area (controls.html `.paste-area`), not an underline floating under 4 rows */
     textarea.ant-input {
         min-height: 64px;
         padding: 12px 14px;
@@ -131,7 +149,7 @@
         border-radius: var(--radius-xs);
         outline: 1px solid var(--line-hairline);
         outline-offset: -4px;
-        box-shadow: 0 18px 36px -16px rgba(59, 34, 48, 0.25);
+        box-shadow: var(--shadow-pop);
     }
 
     .ant-select-dropdown .ant-select-item-option {
@@ -165,7 +183,7 @@
         transform: rotate(180deg);
     }
 
-    /* ===== Switch: bead on a thread (components-template.html `.thread-switch`) ===== */
+    /* ===== Switch: bead on a thread (controls.html `.thread-switch`) ===== */
     .ant-switch,
     .ant-switch:hover:not(.ant-switch-disabled),
     .ant-switch.ant-switch-checked,
@@ -195,7 +213,7 @@
     }
 
     .ant-switch .ant-switch-handle::before {
-        border: 1.8px solid var(--accent-sparkle);
+        border: 1.8px solid var(--ink-soft);
         border-radius: 50%;
         background: var(--bg-canvas);
         box-shadow: none;
@@ -209,7 +227,7 @@
     }
 
     .ant-switch:focus-visible {
-        outline: 2px solid var(--accent-sparkle);
+        outline: 2px solid var(--focus-ring);
         outline-offset: 3px;
     }
 
@@ -226,7 +244,7 @@
         background: var(--alert-wash);
     }
 
-    .ant-alert-success { --alert-tone: var(--sem-good); --alert-wash: rgba(94, 127, 93, 0.08); }
+    .ant-alert-success { --alert-tone: var(--sem-good); --alert-wash: var(--sem-good-bg); }
     .ant-alert-warning { --alert-tone: var(--sem-warn); --alert-wash: var(--sem-warn-bg); }
     .ant-alert-error { --alert-tone: var(--sem-err); --alert-wash: var(--sem-err-bg); }
 
@@ -251,7 +269,7 @@
         font-size: 12.5px;
     }
 
-    /* ===== Status chips / Tag (DEFAULT: colored dot + plum text). Course status uses <CourseStatus>. ===== */
+    /* ===== Status chips / Tag (DEFAULT: colored ring + plum text). Course status uses <CourseStatus>. ===== */
     .ant-tag {
         --tag-dot: var(--ink-soft);
         display: inline-flex;
@@ -266,12 +284,14 @@
         font-weight: 500;
     }
 
+    /* Bead family: the tag's marker is a ring in the tone color, not a solid dot (solid = flag). */
     .ant-tag::before {
         flex: none;
-        width: 7px;
-        height: 7px;
+        width: 8px;
+        height: 8px;
+        border: 1.5px solid var(--tag-dot);
         border-radius: 50%;
-        background: var(--tag-dot);
+        background: var(--bg-canvas);
         content: '';
     }
 
@@ -286,7 +306,101 @@
         color: var(--ink-soft);
     }
 
+    /* ===== Descriptions = template `.row-list` (tien-do-hoc-tap-page.html): each item is a hairline row,
+       muted label on the left, bold value on the right, no colon, blush tint on hover ===== */
+    .ant-descriptions:not(.ant-descriptions-bordered) .ant-descriptions-row > td.ant-descriptions-item {
+        padding: 0 var(--space-6) 0 0;
+    }
+
+    .ant-descriptions:not(.ant-descriptions-bordered) .ant-descriptions-row > td.ant-descriptions-item:last-child {
+        padding-inline-end: 0;
+    }
+
+    .ant-descriptions:not(.ant-descriptions-bordered) .ant-descriptions-item-container {
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: 11px 4px;
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
+    .ant-descriptions:not(.ant-descriptions-bordered) .ant-descriptions-item-container:hover {
+        background: var(--bg-tint-hover);
+    }
+
+    .ant-descriptions .ant-descriptions-item-label {
+        flex: none;
+        color: var(--ink-muted);
+        font-size: 12.5px;
+    }
+
+    .ant-descriptions .ant-descriptions-item-label::after {
+        content: none;
+    }
+
+    .ant-descriptions .ant-descriptions-item-content {
+        color: var(--ink-primary);
+        font-size: 13.5px;
+        font-weight: 600;
+    }
+
+    .ant-descriptions:not(.ant-descriptions-bordered) .ant-descriptions-item-content {
+        flex: 0 1 auto;
+        justify-content: flex-end;
+        min-width: 0;
+        text-align: right;
+    }
+
+    .ant-descriptions.ant-descriptions-bordered > .ant-descriptions-view {
+        border: 0;
+        border-radius: 0;
+    }
+
+    .ant-descriptions.ant-descriptions-bordered .ant-descriptions-row {
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
+    .ant-descriptions.ant-descriptions-bordered .ant-descriptions-item-content {
+        border-inline-end: 0;
+    }
+
+    .ant-descriptions.ant-descriptions-bordered .ant-descriptions-item-label {
+        border-inline-end: 0;
+        background: transparent;
+    }
+
     /* ===== Cards (DEFAULT: no box; a hairline on top separates sections) ===== */
+    /* ===== Collapse (antd): no box; items separated by hairlines like CollapsibleGroup ===== */
+    .ant-collapse,
+    .ant-collapse > .ant-collapse-item:last-child,
+    .ant-collapse > .ant-collapse-item:last-child > .ant-collapse-header {
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .ant-collapse > .ant-collapse-item {
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
+    .ant-collapse > .ant-collapse-item:first-child {
+        border-top: 1px solid var(--line-hairline);
+    }
+
+    .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+        padding: var(--space-3) 0;
+        color: var(--ink-primary);
+    }
+
+    .ant-collapse .ant-collapse-content {
+        border-top: 0;
+        background: transparent;
+    }
+
+    .ant-collapse .ant-collapse-content > .ant-collapse-content-box {
+        padding: 0 0 var(--space-4) var(--space-6);
+    }
+
     .ant-card {
         border: 0;
         border-top: 1px solid var(--line-hairline);
@@ -305,12 +419,12 @@
         padding: var(--space-4) 0;
     }
 
-    /* ===== Modal (modal.html): sparkle edge, hairline header and footer, hairline close box ===== */
+    /* ===== Modal (feedback.html): sparkle edge, hairline header and footer, hairline close box ===== */
     .ant-modal .ant-modal-container {
         padding: 28px 32px 24px;
         border: 1px solid var(--accent-sparkle);
         border-radius: 6px;
-        box-shadow: 0 28px 64px -20px rgba(59, 34, 48, 0.35);
+        box-shadow: var(--shadow-modal);
     }
 
     .ant-modal .ant-modal-header {
@@ -384,7 +498,7 @@
         background: var(--bg-elevated);
         outline: 1px solid var(--line-hairline);
         outline-offset: -4px;
-        box-shadow: 0 14px 30px -16px rgba(59, 34, 48, 0.28);
+        box-shadow: var(--shadow-pop);
     }
 
     .ant-popover .ant-popover-arrow::before {
@@ -427,24 +541,49 @@
     .ant-dropdown .ant-dropdown-menu,
     .ant-drawer .ant-drawer-content {
         border: 1px solid var(--line-hairline);
-        box-shadow: 0 18px 40px -16px rgba(120, 40, 70, 0.4);
+        box-shadow: var(--shadow-pop);
     }
 
-    /* ===== Segmented toggle (DEFAULT: ui-demo `.seg` pill) ===== */
+    /* ===== Segmented = template switcher `.chip` (controls.html): separate 4px chips with a
+       hairline edge; hover turns the edge sparkle; the selected chip is blush with a sparkle edge and rose text ===== */
     .ant-segmented {
-        padding: 2px;
-        border: 1px solid var(--line-hairline-on-blush);
-        border-radius: var(--radius-pill);
+        padding: 0;
+        border: 0;
+        border-radius: 0;
         background: transparent;
+    }
+
+    .ant-segmented .ant-segmented-group {
+        flex-wrap: wrap;
+        gap: var(--space-2);
     }
 
     .ant-segmented .ant-segmented-item,
     .ant-segmented .ant-segmented-thumb {
-        border-radius: var(--radius-pill);
+        border: 1px solid var(--line-hairline);
+        border-radius: var(--radius-xs);
+        background: var(--bg-canvas);
+        box-shadow: none;
+        color: var(--ink-muted);
+        font-weight: 600;
+        transition: border-color 0.15s, color 0.15s, background 0.15s;
     }
 
-    .ant-segmented .ant-segmented-item-selected {
-        font-weight: 600;
+    .ant-segmented .ant-segmented-item:hover:not(.ant-segmented-item-selected):not(.ant-segmented-item-disabled) {
+        border-color: var(--accent-sparkle);
+        background: var(--bg-canvas);
+        color: var(--ink-primary);
+    }
+
+    .ant-segmented .ant-segmented-item:hover:not(.ant-segmented-item-selected)::after {
+        background: transparent;
+    }
+
+    .ant-segmented .ant-segmented-item-selected,
+    .ant-segmented .ant-segmented-thumb {
+        border-color: var(--accent-sparkle);
+        background: var(--bg-blush);
+        color: var(--accent-rose);
     }
 }
 
@@ -472,7 +611,7 @@
     border: 1px solid var(--accent-sparkle);
     border-left: 3px solid var(--toast-tone, var(--accent-rose));
     border-radius: var(--radius-xs);
-    box-shadow: 0 14px 30px -16px rgba(59, 34, 48, 0.25);
+    box-shadow: var(--shadow-pop);
     font-size: 13px;
 }
 

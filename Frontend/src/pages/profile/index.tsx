@@ -12,6 +12,7 @@ import { useApiMutation, useApiQuery, useCurrentUser } from '@/hooks';
 import { ROLE_LABEL, type StudentProfile, type StudentProfilePayload } from '@/types';
 import CurriculumOverview from './CurriculumOverview';
 import CurriculumPicker from './CurriculumPicker';
+import i18n from '@/i18n';
 
 const { Paragraph, Text } = Typography;
 
@@ -74,7 +75,7 @@ const ProfilePage = () => {
 
     const saveProfile = useApiMutation<StudentProfile, StudentProfilePayload>({
         mutationFn: payload => saveMyProfile(payload),
-        successMessage: 'Đã lưu hồ sơ sinh viên.',
+        successMessage: i18n.t('Đã lưu hồ sơ sinh viên.'),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-profile'] }),
     });
 
@@ -85,27 +86,27 @@ const ProfilePage = () => {
     return (
         <section>
             <PageHeader
-                title="Hồ sơ cá nhân"
-                subtitle="Cập nhật thông tin sinh viên và chương trình đào tạo đang theo học."
+                title={i18n.t('Hồ sơ cá nhân')}
+                subtitle={i18n.t('Cập nhật thông tin sinh viên và chương trình đào tạo đang theo học.')}
                 extra={(
                     <Link to="/courses">
-                        <IOutLinedBtn icon={<LuCalendarRange />}>Môn học & kế hoạch</IOutLinedBtn>
+                        <IOutLinedBtn icon={<LuCalendarRange />}>{i18n.t('Môn học & kế hoạch')}</IOutLinedBtn>
                     </Link>
                 )}
             />
 
             <div className="stack">
-                <Card title="Tài khoản đăng nhập">
+                <Card title={i18n.t('Tài khoản đăng nhập')}>
                     <Descriptions column={{ xs: 1, sm: 2 }} size="middle">
                         <Descriptions.Item label="Email">
                             <Text strong>{user?.email ?? '—'}</Text>
                         </Descriptions.Item>
-                        <Descriptions.Item label="Vai trò">
+                        <Descriptions.Item label={i18n.t('Vai trò')}>
                             {user ? ROLE_LABEL[user.role] : '—'}
                         </Descriptions.Item>
                     </Descriptions>
                     <Paragraph type="secondary" style={{ margin: '12px 0 0' }}>
-                        Email dùng để đăng nhập và chưa đổi được ở phiên bản này.
+                        {i18n.t('Email dùng để đăng nhập và chưa đổi được ở phiên bản này.')}
                     </Paragraph>
                 </Card>
 
@@ -113,8 +114,8 @@ const ProfilePage = () => {
                     <Alert
                         type="error"
                         showIcon
-                        title="Không tải được hồ sơ"
-                        description="Vui lòng tải lại trang để thử lại."
+                        title={i18n.t('Không tải được hồ sơ')}
+                        description={i18n.t('Vui lòng tải lại trang để thử lại.')}
                     />
                 )}
 
@@ -122,12 +123,12 @@ const ProfilePage = () => {
                     <Alert
                         type="info"
                         showIcon
-                        title="Bạn chưa tạo hồ sơ, điền và lưu để tạo mới"
-                        description="Hồ sơ giúp hệ thống biết chương trình đào tạo của bạn để lập kế hoạch học tập."
+                        title={i18n.t('Bạn chưa tạo hồ sơ, điền và lưu để tạo mới')}
+                        description={i18n.t('Hồ sơ giúp hệ thống biết chương trình đào tạo của bạn để lập kế hoạch học tập.')}
                     />
                 )}
 
-                <Card title={profile ? 'Thông tin sinh viên' : 'Tạo hồ sơ sinh viên'}>
+                <Card title={profile ? i18n.t('Thông tin sinh viên') : i18n.t('Tạo hồ sơ sinh viên')}>
                     <Form<ProfileFormValues>
                         form={form}
                         layout="vertical"
@@ -144,36 +145,36 @@ const ProfilePage = () => {
                             >
                                 <FormField
                                     name="full_name"
-                                    label="Họ và tên"
-                                    placeholder="Nguyễn Minh Anh"
-                                    hint="Ghi đúng như trên giấy tờ."
+                                    label={i18n.t('Họ và tên')}
+                                    placeholder={i18n.t('Nguyễn Minh Anh')}
+                                    hint={i18n.t('Ghi đúng như trên giấy tờ.')}
                                 />
 
                                 <FormField
                                     name="student_number"
-                                    label="Mã số sinh viên"
+                                    label={i18n.t('Mã số sinh viên')}
                                     placeholder="2312345"
-                                    hint="Mã số không được trùng với sinh viên khác."
+                                    hint={i18n.t('Mã số không được trùng với sinh viên khác.')}
                                 />
 
                                 <FormField
                                     name="phone"
-                                    label="Số điện thoại"
+                                    label={i18n.t('Số điện thoại')}
                                     placeholder="0901234567"
                                     inputProps={{ inputMode: 'tel', maxLength: 20 }}
                                 />
 
-                                <Form.Item name="birth_date" label="Ngày sinh">
+                                <Form.Item name="birth_date" label={i18n.t('Ngày sinh')}>
                                     <DatePicker
                                         size="large"
                                         format="DD/MM/YYYY"
-                                        placeholder="Chọn ngày sinh"
+                                        placeholder={i18n.t('Chọn ngày sinh')}
                                         style={{ width: '100%' }}
                                         disabledDate={date => date.isAfter(dayjs(), 'day')}
                                     />
                                 </Form.Item>
 
-                                <Form.Item name="admission_year" label="Năm nhập học">
+                                <Form.Item name="admission_year" label={i18n.t('Năm nhập học')}>
                                     <InputNumber
                                         size="large"
                                         min={1950}
@@ -184,7 +185,7 @@ const ProfilePage = () => {
                                     />
                                 </Form.Item>
 
-                                <Form.Item name="credit_target" label="Mục tiêu tín chỉ">
+                                <Form.Item name="credit_target" label={i18n.t('Mục tiêu tín chỉ')}>
                                     <InputNumber
                                         size="large"
                                         min={0}
@@ -197,29 +198,29 @@ const ProfilePage = () => {
 
                                 <Form.Item
                                     name="curriculum_id"
-                                    label="Chương trình đào tạo"
-                                    extra="Chọn ngành và khóa theo bảng chương trình đào tạo của trường; bấm “Lưu thay đổi” để áp dụng. Dùng làm chương trình ở trang Môn học & kế hoạch."
+                                    label={i18n.t('Chương trình đào tạo')}
+                                    extra={i18n.t('Chọn ngành và khóa theo bảng chương trình đào tạo của trường; bấm “Lưu thay đổi” để áp dụng. Dùng làm chương trình ở trang Môn học & kế hoạch.')}
                                     style={{ gridColumn: '1 / -1' }}
                                 >
                                     <CurriculumPicker curricula={curriculaQuery.data ?? []} loading={curriculaQuery.isLoading} />
                                 </Form.Item>
                             </div>
 
-                            <Form.Item name="address" label="Địa chỉ liên hệ">
+                            <Form.Item name="address" label={i18n.t('Địa chỉ liên hệ')}>
                                 <Input.TextArea
                                     autoSize={{ minRows: 2, maxRows: 4 }}
-                                    placeholder="Phường 14, Quận 10, TP. Hồ Chí Minh"
+                                    placeholder={i18n.t('Phường 14, Quận 10, TP. Hồ Chí Minh')}
                                 />
                             </Form.Item>
 
                             <div>
                                 <ISolidBtn htmlType="submit" loading={saveProfile.isPending}>
-                                    {profile ? 'Lưu thay đổi' : 'Tạo hồ sơ'}
+                                    {profile ? i18n.t('Lưu thay đổi') : i18n.t('Tạo hồ sơ')}
                                 </ISolidBtn>
 
                                 {profile && (
                                     <p className="hint" style={{ margin: '8px 0 0' }}>
-                                        Cập nhật lần cuối: {new Date(profile.updated_at).toLocaleString('vi-VN')}
+                                        {i18n.t('Cập nhật lần cuối:')}{' '}{new Date(profile.updated_at).toLocaleString('vi-VN')}
                                     </p>
                                 )}
                             </div>
@@ -228,10 +229,10 @@ const ProfilePage = () => {
                 </Card>
 
                 <Card
-                    title="Chương trình đang theo học"
+                    title={i18n.t('Chương trình đang theo học')}
                     extra={(
                         <Link to="/courses">
-                            <IOutLinedBtn size="small">Lập kế hoạch học tập</IOutLinedBtn>
+                            <IOutLinedBtn size="small">{i18n.t('Lập kế hoạch học tập')}</IOutLinedBtn>
                         </Link>
                     )}
                 >
@@ -239,7 +240,7 @@ const ProfilePage = () => {
                         <CurriculumOverview curriculumId={profile.curriculum_id} />
                     ) : (
                         <Paragraph type="secondary" style={{ margin: 0 }}>
-                            Bạn chưa chọn chương trình đào tạo. Chọn ở mục Thông tin sinh viên để lập kế hoạch học tập.
+                            {i18n.t('Bạn chưa chọn chương trình đào tạo. Chọn ở mục Thông tin sinh viên để lập kế hoạch học tập.')}
                         </Paragraph>
                     )}
                 </Card>

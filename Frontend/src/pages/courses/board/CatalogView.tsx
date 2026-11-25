@@ -3,17 +3,17 @@ import { Card, Input, Segmented, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { LuEllipsisVertical, LuSearch } from 'react-icons/lu';
 import { Link } from 'react-router';
-import { IconBtn, ITable } from '@/components';
+import { Bead, IconBtn, ITable, Pip } from '@/components';
 import { listCourses } from '@/apis/course';
 import { useApiQuery, useDebounce } from '@/hooks';
 import {
-    STUDENT_COURSE_STATUS_COLOR,
     STUDENT_COURSE_STATUS_LABEL,
     type CourseSummary,
     type StudentCourseStatus,
 } from '@/types';
 import { courseSearchRank } from '@/utils/course-search';
 import { canPlan } from './structure';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -71,7 +71,7 @@ const CatalogView = ({
 
     const columns: ColumnsType<CourseSummary> = [
         {
-            title: 'Mã môn',
+            title: i18n.t('Mã môn'),
             dataIndex: 'code',
             width: 110,
             fixed: 'left',
@@ -80,7 +80,7 @@ const CatalogView = ({
             ),
         },
         {
-            title: 'Học phần',
+            title: i18n.t('Học phần'),
             dataIndex: 'name',
             render: (name: string, course) => (
                 <div>
@@ -90,54 +90,52 @@ const CatalogView = ({
             ),
         },
         {
-            title: 'Tín chỉ',
+            title: i18n.t('Tín chỉ'),
             dataIndex: 'credits',
             width: 84,
             align: 'center',
-            render: (credits: number) => <Tag>{credits} TC</Tag>,
+            render: (credits: number) => <Tag>{credits}{' '}{i18n.t('TC')}</Tag>,
         },
         {
-            title: 'Trong chương trình',
+            title: i18n.t('Trong chương trình'),
             key: 'placement',
             width: 170,
             render: (_value, course) => {
                 const placement = placementById.get(course.id);
-                return placement ? <Text>{placement}</Text> : <Tag>Ngoài chương trình</Tag>;
+                return placement ? <Text>{placement}</Text> : <Tag>{i18n.t('Ngoài chương trình')}</Tag>;
             },
         },
         {
-            title: 'Trạng thái',
+            title: i18n.t('Trạng thái'),
             key: 'status',
             width: 150,
             render: (_value, course) => {
                 const status = statusMap.get(course.id) ?? null;
                 const planned = canPlan(status) && planMap.has(course.id);
-                const label = planned ? 'Đã lên kế hoạch' : status ? STUDENT_COURSE_STATUS_LABEL[status] : 'Chưa khai';
+                const label = planned ? i18n.t('Đã lên kế hoạch') : status ? STUDENT_COURSE_STATUS_LABEL[status] : i18n.t('Chưa khai');
                 return (
                     <button
                         type="button"
                         className="status-toggle"
                         onClick={() => onToggle(course)}
-                        title="Bấm để đổi trạng thái"
-                        aria-label={`${course.code}: ${label}. Bấm để đổi trạng thái.`}
+                        title={i18n.t('Bấm để đổi trạng thái')}
+                        aria-label={i18n.t('{{code}}: {{label}}. Bấm để đổi trạng thái.', { code: course.code, label: label })}
                     >
-                        {planned
-                            ? <Tag color="purple" style={{ marginInlineEnd: 0 }}>{label}</Tag>
-                            : status
-                            ? <Tag color={STUDENT_COURSE_STATUS_COLOR[status]} style={{ marginInlineEnd: 0 }}>{label}</Tag>
-                            : <Tag variant="outlined" style={{ marginInlineEnd: 0, borderStyle: 'dashed' }}>{label}</Tag>}
-                        {changedIds.has(course.id) && <span className="course-card-dirty" aria-hidden>●</span>}
+                        <span className="course-status" data-status={planned ? 'planned' : status ?? 'none'}>
+                            <Bead state={planned ? 'planned' : status ?? 'none'} />{label}
+                        </span>
+                        {changedIds.has(course.id) && <Pip />}
                     </button>
                 );
             },
         },
         {
-            title: 'Học kỳ dự kiến',
+            title: i18n.t('Học kỳ dự kiến'),
             key: 'planned',
             width: 120,
             render: (_value, course) => {
                 const semester = planMap.get(course.id);
-                return semester ? <Tag color="purple">HK {semester}</Tag> : <Text type="secondary">—</Text>;
+                return semester ? <Tag color="purple">{i18n.t('HK')}{' '}{semester}</Tag> : <Text type="secondary">—</Text>;
             },
         },
         {
@@ -146,7 +144,7 @@ const CatalogView = ({
             width: 56,
             align: 'center',
             render: (_value, course) => (
-                <IconBtn size="small" icon={<LuEllipsisVertical />} label={`Sửa môn ${course.code}`} onClick={() => onOpen(course)} />
+                <IconBtn size="small" icon={<LuEllipsisVertical />} label={i18n.t('Sửa môn {{code}}', { code: course.code })} onClick={() => onOpen(course)} />
             ),
         },
     ];
@@ -157,8 +155,8 @@ const CatalogView = ({
                 <Input
                     allowClear
                     prefix={<LuSearch />}
-                    placeholder="Tìm theo mã hoặc tên môn học"
-                    aria-label="Tìm môn học trong danh mục"
+                    placeholder={i18n.t('Tìm theo mã hoặc tên môn học')}
+                    aria-label={i18n.t('Tìm môn học trong danh mục')}
                     value={search}
                     onChange={event => { setSearch(event.target.value); setPage(1); }}
                     style={{ maxWidth: 360 }}
@@ -167,11 +165,11 @@ const CatalogView = ({
                     value={scope}
                     onChange={value => { setScope(value); setPage(1); }}
                     options={[
-                        { value: 'all', label: 'Toàn bộ danh mục' },
-                        { value: 'outside', label: `Đã khai ngoài chương trình (${outsideCourses.length})` },
+                        { value: 'all', label: i18n.t('Toàn bộ danh mục') },
+                        { value: 'outside', label: i18n.t('Đã khai ngoài chương trình ({{length}})', { length: outsideCourses.length }) },
                     ]}
                 />
-                <Text type="secondary">{total} môn</Text>
+                <Text type="secondary">{total}{' '}{i18n.t('môn')}</Text>
             </div>
 
             <ITable<CourseSummary>
@@ -188,7 +186,7 @@ const CatalogView = ({
                     showSizeChanger: true,
                     onChange: (nextPage, nextSize) => { setPage(nextPage); setPageSize(nextSize); },
                 }}
-                emptyText={scope === 'all' ? 'Không có môn học nào khớp từ khoá.' : 'Chưa có môn ngoài chương trình nào khớp bộ lọc.'}
+                emptyText={scope === 'all' ? i18n.t('Không có môn học nào khớp từ khoá.') : i18n.t('Chưa có môn ngoài chương trình nào khớp bộ lọc.')}
             />
         </Card>
     );

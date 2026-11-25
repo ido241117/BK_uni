@@ -1,0 +1,91 @@
+/* Phân tích tab layout (overview reuses .info-panel from mybk-progress.css). */
+@layer components {
+    .analysis-tab {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-6);
+    }
+
+    .analysis-section {
+        padding-top: var(--space-6);
+        border-top: 1px solid var(--line-hairline);
+    }
+
+    /* Section header (H2): serif 21px, like the template's group titles */
+    .analysis-section-title {
+        margin: 0 0 var(--space-1);
+        font-family: var(--serif);
+        font-size: 21px;
+        font-weight: 500;
+    }
+
+    .analysis-section > .hint {
+        max-width: 720px;
+        margin: 0 0 var(--space-5);
+    }
+
+    .analysis-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+        gap: var(--space-6) var(--space-10);
+    }
+
+    /* Suggested roadmap: one hairline column per semester, no boxes */
+    .roadmap {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+        gap: var(--space-5) var(--space-6);
+    }
+
+    .roadmap-semester {
+        padding-top: 10px;
+        border-top: 2px solid var(--accent-sparkle);
+    }
+
+    .roadmap-semester-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    /* Semester code: serif, per the type scale */
+    .roadmap-code {
+        font-family: var(--serif);
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .roadmap-item {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-2);
+        padding: 6px 0;
+        border-top: 1px solid var(--line-hairline);
+        font-size: 13px;
+    }
+
+    /* Regulations (graduation conditions) */
+    .regulation-list {
+        max-width: 760px;
+    }
+
+    .regulation-summary {
+        margin-bottom: var(--space-4);
+    }
+
+    .regulation-hint {
+        margin: var(--space-2) 0 0;
+        color: var(--ink-muted);
+        font-size: 12px;
+    }
+
+    .regulations-in-group {
+        margin-top: var(--space-5);
+    }
+
+    .text-good {
+        color: var(--sem-good);
+        font-weight: 600;
+    }
+}

@@ -1,5 +1,6 @@
 import type { BaseRecord, PageParams } from './common';
 import type { CourseSummary } from './course';
+import { trLive } from '@/i18n/live';
 
 export const COURSE_GROUP_KIND = {
     REQUIRED: 'required',
@@ -8,10 +9,10 @@ export const COURSE_GROUP_KIND = {
 
 export type CourseGroupKind = (typeof COURSE_GROUP_KIND)[keyof typeof COURSE_GROUP_KIND];
 
-export const COURSE_GROUP_KIND_LABEL: Record<CourseGroupKind, string> = {
+export const COURSE_GROUP_KIND_LABEL: Record<CourseGroupKind, string> = trLive({
     required: 'Bắt buộc',
     elective: 'Tự chọn',
-};
+});
 
 export const COURSE_GROUP_SCOPE = {
     LISTED: 'listed',
@@ -20,10 +21,10 @@ export const COURSE_GROUP_SCOPE = {
 
 export type CourseGroupScope = (typeof COURSE_GROUP_SCOPE)[keyof typeof COURSE_GROUP_SCOPE];
 
-export const COURSE_GROUP_SCOPE_LABEL: Record<CourseGroupScope, string> = {
+export const COURSE_GROUP_SCOPE_LABEL: Record<CourseGroupScope, string> = trLive({
     listed: 'Danh sách môn',
     any: 'Chọn tự do',
-};
+});
 
 /** Theo ghi chú kế hoạch giảng dạy: TQ, HT, SHT, KN. */
 export const COURSE_RELATION_TYPE = {
@@ -35,12 +36,12 @@ export const COURSE_RELATION_TYPE = {
 
 export type CourseRelationType = (typeof COURSE_RELATION_TYPE)[keyof typeof COURSE_RELATION_TYPE];
 
-export const COURSE_RELATION_TYPE_LABEL: Record<CourseRelationType, string> = {
+export const COURSE_RELATION_TYPE_LABEL: Record<CourseRelationType, string> = trLive({
     prerequisite: 'Tiên quyết',
     prior: 'Học trước',
     corequisite: 'Song hành',
     recommended: 'Khuyến nghị',
-};
+});
 
 export interface Curriculum extends BaseRecord {
     code: string;
@@ -81,13 +82,13 @@ export const CURRICULUM_PROFILE_FIELDS = [
 
 export type CurriculumProfileField = (typeof CURRICULUM_PROFILE_FIELDS)[number];
 
-export const CURRICULUM_PROFILE_FIELD_LABEL: Record<CurriculumProfileField, { vi: string; en: string }> = {
+export const CURRICULUM_PROFILE_FIELD_LABEL: Record<CurriculumProfileField, { vi: string; en: string }> = trLive({
     overview: { vi: 'Giới thiệu chương trình', en: 'Program overview' },
     career_opportunities: { vi: 'Cơ hội việc làm', en: 'Career opportunities' },
     admission_target: { vi: 'Đối tượng tuyển sinh', en: 'Admission' },
     training_process: { vi: 'Quá trình đào tạo', en: 'Training process' },
     assessment_method: { vi: 'Cách thức đánh giá', en: 'Assessment' },
-};
+});
 
 /** Văn bản thuần, đoạn cách bằng dòng trống, mục danh sách bắt đầu bằng "- ". */
 export type CurriculumProfileText = Partial<Record<CurriculumProfileField, string | null>>;

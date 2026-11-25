@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
 import { PiCalendar, PiCaretRight } from 'react-icons/pi';
+import { useTranslation } from 'react-i18next';
 import { semesterLabel } from '@/utils/semester';
 
 interface TopbarProps {
@@ -33,10 +34,13 @@ export const Breadcrumb = ({ items }: { items: string[] }) => (
 );
 
 /** System semester from the calendar (not the student's own setting in "Hiệu chỉnh"). */
-export const SemesterBadge = ({ code }: { code: string }) => (
-    <div className="sem-badge" title={semesterLabel(code)}>
-        <PiCalendar aria-hidden="true" />
-        <span className="sem-badge-label">Học kỳ hiện tại:</span>
-        <strong>HK {code}</strong>
-    </div>
-);
+export const SemesterBadge = ({ code }: { code: string }) => {
+    const { t } = useTranslation();
+    return (
+        <div className="sem-badge" title={semesterLabel(code)}>
+            <PiCalendar aria-hidden="true" />
+            <span className="sem-badge-label">{t('Học kỳ hiện tại:')}</span>
+            <strong>{t('HK {{code}}', { code })}</strong>
+        </div>
+    );
+};

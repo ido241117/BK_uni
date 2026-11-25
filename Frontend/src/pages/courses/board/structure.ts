@@ -6,6 +6,7 @@ import {
     type CurriculumCourse,
     type StudentCourseStatus,
 } from '@/types';
+import i18n from '@/i18n';
 
 /**
  * Chưa học (chưa khai hoặc khai "Chưa học"): mới lên kế hoạch được.
@@ -13,7 +14,7 @@ import {
  */
 export const canPlan = (status: StudentCourseStatus | null) => status === null || status === STUDENT_COURSE_STATUS.NOT_STARTED;
 
-export const termLabel = (term: number) => (term === 3 ? 'Học kỳ hè' : `Học kỳ ${term}`);
+export const termLabel = (term: number) => (term === 3 ? i18n.t('Học kỳ hè') : i18n.t('Học kỳ {{term}}', { term: term }));
 
 export interface SemesterBlock {
     key: string;
@@ -67,12 +68,12 @@ export const buildStructure = (courses: CurriculumCourse[], groups: CourseGroup[
     for (const item of courses) {
         if (item.recommended_year !== null && item.recommended_term !== null) {
             block(item.recommended_year, item.recommended_term).courses.push(item.course);
-            placementById.set(item.course_id, `Năm ${item.recommended_year} · ${termLabel(item.recommended_term)}`);
+            placementById.set(item.course_id, i18n.t('Năm {{recommended_year}} · {{v1}}', { recommended_year: item.recommended_year, v1: termLabel(item.recommended_term) }));
         } else if (!pooled.has(item.course_id)) {
             unscheduled.push(item.course);
-            placementById.set(item.course_id, 'Chưa xếp kỳ');
+            placementById.set(item.course_id, i18n.t('Chưa xếp kỳ'));
         } else {
-            placementById.set(item.course_id, 'Môn tự chọn trong khối');
+            placementById.set(item.course_id, i18n.t('Môn tự chọn trong khối'));
         }
     }
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Descriptions, Empty, Segmented, Skeleton, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Empty, Segmented, Skeleton, Table, Tabs, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
     getCurriculum,
@@ -8,6 +8,7 @@ import {
     listRegulations,
     listSpecializations,
 } from '@/apis/curriculum';
+import { RowItem, RowList, StatusLine, TextTag } from '@/components';
 import { useApiQuery } from '@/hooks';
 import {
     COURSE_GROUP_KIND,
@@ -24,20 +25,22 @@ import {
     type CurriculumSpecialization,
 } from '@/types';
 import { describeGroupRequirement, groupRequiredCredits, summarizeCurriculumCredits } from '@/utils/curriculum-credits';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 const { Paragraph, Text, Title } = Typography;
 
 type Lang = 'vi' | 'en';
 
-const termLabel = (term: number) => (term === 3 ? 'Học kỳ hè' : `Học kỳ ${term}`);
+const termLabel = (term: number) => (term === 3 ? i18n.t('Học kỳ hè') : i18n.t('Học kỳ {{term}}', { term: term }));
 
 const groupRequirement = describeGroupRequirement;
 
-const courseColumns: ColumnsType<CourseSummary> = [
+const courseColumns: ColumnsType<CourseSummary> = trLive([
     { title: 'Mã môn', dataIndex: 'code', width: 110, render: (code: string) => <Text strong>{code}</Text> },
     { title: 'Tên môn', dataIndex: 'name' },
     { title: 'TC', dataIndex: 'credits', width: 60, align: 'right' },
-];
+]);
 
 const CourseTable = ({ courses }: { courses: CourseSummary[] }) => (
     <Table<CourseSummary>
@@ -80,7 +83,7 @@ const ProfileTab = ({ curriculum }: { curriculum: Curriculum }) => {
     const lang = languages.includes(chosen) ? chosen : languages[0];
 
     if (!lang) {
-        return <Empty description="Chương trình này chưa có phần giới thiệu trên myBK." />;
+        return <Empty description={i18n.t('Chương trình này chưa có phần giới thiệu trên myBK.')} />;
     }
     const text = profile?.[lang] ?? {};
     const borrowed = curriculum.profile_source_code && curriculum.profile_source_code !== curriculum.source_code;
@@ -91,16 +94,14 @@ const ProfileTab = ({ curriculum }: { curriculum: Curriculum }) => {
                 <Segmented<Lang>
                     value={lang}
                     onChange={setChosen}
-                    options={[{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'English' }]}
+                    options={[{ value: 'vi', label: i18n.t('Tiếng Việt') }, { value: 'en', label: 'English' }]}
                     style={{ alignSelf: 'flex-start' }}
                 />
             )}
             {borrowed && (
-                <Alert
-                    type="info"
-                    showIcon
-                    title={`myBK chưa có giới thiệu riêng cho khóa ${curriculum.cohort}; nội dung lấy từ chương trình ${curriculum.profile_source_code} cùng ngành.`}
-                />
+                <StatusLine tone="info">
+                    {i18n.t('myBK chưa có giới thiệu riêng cho khóa {{cohort}}; nội dung lấy từ chương trình {{profile_source_code}} cùng ngành.', { cohort: curriculum.cohort, profile_source_code: curriculum.profile_source_code })}
+                </StatusLine>
             )}
             {CURRICULUM_PROFILE_FIELDS.filter(field => text[field]).map(field => (
                 <div key={field}>
@@ -145,13 +146,13 @@ const PlanTab = ({ courses, groups }: { courses: CurriculumCourse[]; groups: Cou
         };
     }, [courses, groups]);
 
-    if (!semesters.length) return <Empty description="Chương trình chưa có kế hoạch giảng dạy theo học kỳ." />;
+    if (!semesters.length) return <Empty description={i18n.t('Chương trình chưa có kế hoạch giảng dạy theo học kỳ.')} />;
 
     return (
         <div className="stack">
             <Paragraph type="secondary" style={{ margin: 0 }}>
-                Môn bắt buộc xếp theo kỳ gợi ý của kế hoạch giảng dạy; khối tự chọn hiện ở kỳ nên bắt đầu học.
-                {unscheduled > 0 && ` ${unscheduled} môn tự chọn không gắn kỳ cố định (xem tab Khối kiến thức).`}
+                {i18n.t('Môn bắt buộc xếp theo kỳ gợi ý của kế hoạch giảng dạy; khối tự chọn hiện ở kỳ nên bắt đầu học.')}
+                {unscheduled > 0 && i18n.t(' {{unscheduled}} môn tự chọn không gắn kỳ cố định (xem tab Khối kiến thức).', { unscheduled: unscheduled })}
             </Paragraph>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 380px), 1fr))', gap: 16 }}>
                 {semesters.map(semester => {
@@ -159,13 +160,13 @@ const PlanTab = ({ courses, groups }: { courses: CurriculumCourse[]; groups: Cou
                         + semester.groups.reduce((total, group) => total + groupRequiredCredits(group), 0);
                     return (
                         <div key={`${semester.year}-${semester.term}`}>
-                            <Text strong>{`Năm ${semester.year} · ${termLabel(semester.term)}`}</Text>
-                            <Text type="secondary">{` — ${credits} TC`}</Text>
+                            <Text strong>{i18n.t('Năm {{year}} · {{v1}}', { year: semester.year, v1: termLabel(semester.term) })}</Text>
+                            <Text type="secondary">{i18n.t(' — {{credits}} TC', { credits: credits })}</Text>
                             <div style={{ marginTop: 8 }}>
                                 <CourseTable courses={semester.courses} />
                                 {semester.groups.map(group => (
                                     <div key={group.id} style={{ padding: '6px 8px', fontSize: 13 }}>
-                                        <Tag color="blue">Tự chọn</Tag>
+                                        <TextTag tone="rose">{i18n.t('Tự chọn')}</TextTag>{' '}
                                         {group.name} <Text type="secondary">({groupRequirement(group)})</Text>
                                     </div>
                                 ))}
@@ -178,14 +179,14 @@ const PlanTab = ({ courses, groups }: { courses: CurriculumCourse[]; groups: Cou
     );
 };
 
-const groupColumns: ColumnsType<CourseGroup> = [
+const groupColumns: ColumnsType<CourseGroup> = trLive([
     { title: 'Khối', dataIndex: 'name' },
     {
         title: 'Loại',
         dataIndex: 'kind',
         width: 100,
         render: (kind: CourseGroup['kind']) => (
-            <Tag color={kind === COURSE_GROUP_KIND.REQUIRED ? 'green' : 'blue'}>{COURSE_GROUP_KIND_LABEL[kind]}</Tag>
+            <TextTag tone={kind === COURSE_GROUP_KIND.REQUIRED ? 'muted' : 'rose'}>{COURSE_GROUP_KIND_LABEL[kind]}</TextTag>
         ),
     },
     { title: 'Yêu cầu', key: 'requirement', width: 180, render: (_, group) => groupRequirement(group) },
@@ -204,11 +205,11 @@ const groupColumns: ColumnsType<CourseGroup> = [
             ? `Năm ${group.recommended_year} · ${termLabel(group.recommended_term)}`
             : '—'),
     },
-];
+]);
 
 const GroupsTab = ({ groups }: { groups: CourseGroup[] }) => {
     const roots = groups.filter(group => group.specialization_id === null);
-    if (!roots.length) return <Empty description="Chương trình không có khối tự chọn." />;
+    if (!roots.length) return <Empty description={i18n.t('Chương trình không có khối tự chọn.')} />;
     return (
         <Table<CourseGroup>
             rowKey="id"
@@ -235,17 +236,17 @@ const SpecializationsTab = ({
     specializations: CurriculumSpecialization[];
     required: boolean;
 }) => {
-    if (!specializations.length) return <Empty description="Chương trình không chia chuyên ngành." />;
+    if (!specializations.length) return <Empty description={i18n.t('Chương trình không chia chuyên ngành.')} />;
     return (
         <div className="stack">
             <Paragraph type="secondary" style={{ margin: 0 }}>
                 {required
-                    ? 'Sinh viên phải đạt đúng một chuyên ngành mới đủ điều kiện tốt nghiệp.'
-                    : 'Chuyên ngành không bắt buộc; không đạt chuyên ngành nào thì tốt nghiệp theo ngành.'}
+                    ? i18n.t('Sinh viên phải đạt đúng một chuyên ngành mới đủ điều kiện tốt nghiệp.')
+                    : i18n.t('Chuyên ngành không bắt buộc; không đạt chuyên ngành nào thì tốt nghiệp theo ngành.')}
             </Paragraph>
             {specializations.map(specialization => (
                 <div key={specialization.id}>
-                    <Text strong>{specialization.name}</Text> <Tag>{specialization.code}</Tag>
+                    <Text strong>{specialization.name}</Text> <TextTag>{specialization.code}</TextTag>
                     {specialization.description && (
                         <Paragraph type="secondary" style={{ margin: '4px 0 0' }}>{specialization.description}</Paragraph>
                     )}
@@ -255,7 +256,7 @@ const SpecializationsTab = ({
                             {group.members.length > 0 && (
                                 <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                     {group.members.map(member => (
-                                        <Tag key={member.id} title={`${member.course.name} · ${member.course.credits} TC`}>
+                                        <Tag key={member.id} title={i18n.t('{{name}} · {{credits}} TC', { name: member.course.name, credits: member.course.credits })}>
                                             {member.course.code} {member.course.name}
                                         </Tag>
                                     ))}
@@ -270,7 +271,7 @@ const SpecializationsTab = ({
 };
 
 const RegulationsTab = ({ regulations }: { regulations: CurriculumRegulation[] }) => {
-    if (!regulations.length) return <Empty description="Chương trình chưa có quy định riêng." />;
+    if (!regulations.length) return <Empty description={i18n.t('Chương trình chưa có quy định riêng.')} />;
     return (
         <div className="stack">
             {regulations.map(regulation => (
@@ -306,7 +307,7 @@ const CurriculumOverview = ({ curriculumId }: { curriculumId: string }) => {
 
     if (curriculumQuery.isLoading) return <Skeleton active paragraph={{ rows: 6 }} />;
     if (curriculumQuery.isError || !curriculum) {
-        return <Alert type="error" showIcon title="Không tải được chương trình đào tạo" description="Vui lòng tải lại trang để thử lại." />;
+        return <Alert type="error" showIcon title={i18n.t('Không tải được chương trình đào tạo')} description={i18n.t('Vui lòng tải lại trang để thử lại.')} />;
     }
 
     const loadingContent = coursesQuery.isLoading || groupsQuery.isLoading;
@@ -320,66 +321,54 @@ const CurriculumOverview = ({ curriculumId }: { curriculumId: string }) => {
                 {curriculum.name_en && <Text type="secondary">{curriculum.name_en}</Text>}
             </div>
 
-            <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" bordered>
-                <Descriptions.Item label="Mã chương trình"><Text strong>{curriculum.code}</Text></Descriptions.Item>
-                <Descriptions.Item label="Ngành">{curriculum.major}</Descriptions.Item>
-                <Descriptions.Item label="Khoa">{curriculum.faculty}</Descriptions.Item>
-                <Descriptions.Item label="Khóa">{curriculum.cohort}</Descriptions.Item>
-                <Descriptions.Item label="Thời gian đào tạo">{`${curriculum.duration_years} năm`}</Descriptions.Item>
-                <Descriptions.Item label="Tổng tín chỉ tốt nghiệp">
-                    {curriculum.total_credits !== null
-                        ? `${curriculum.total_credits} TC`
-                        : loadingContent ? '…' : `${credits.totalCredits} TC (tính từ các khối)`}
-                </Descriptions.Item>
-                <Descriptions.Item label="Tín chỉ mỗi học kỳ">
-                    {`${curriculum.min_semester_credits} – ${curriculum.max_semester_credits} TC`}
-                </Descriptions.Item>
-                <Descriptions.Item label="Chuyên ngành">
-                    {specializations.length
-                        ? `${specializations.length} chuyên ngành${curriculum.specialization_required ? ' · bắt buộc chọn 1' : ' · không bắt buộc'}`
-                        : 'Không chia chuyên ngành'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Cấu trúc">
-                    {loadingContent
+            <RowList wrap>
+                <RowItem label={i18n.t('Mã chương trình')} chip value={curriculum.code} />
+                <RowItem label={i18n.t('Ngành')} value={curriculum.major} />
+                <RowItem label={i18n.t('Khoa')} value={curriculum.faculty} />
+                <RowItem label={i18n.t('Khóa')} value={curriculum.cohort} />
+                <RowItem label={i18n.t('Thời gian đào tạo')} value={i18n.t('{{duration_years}} năm', { duration_years: curriculum.duration_years })} />
+                <RowItem label={i18n.t('Tổng tín chỉ tốt nghiệp')} value={curriculum.total_credits !== null
+                        ? i18n.t('{{total_credits}} TC', { total_credits: curriculum.total_credits })
+                        : loadingContent ? '…' : i18n.t('{{totalCredits}} TC (tính từ các khối)', { totalCredits: credits.totalCredits })} />
+                <RowItem label={i18n.t('Tín chỉ mỗi học kỳ')} value={i18n.t('{{min_semester_credits}} – {{max_semester_credits}} TC', { min_semester_credits: curriculum.min_semester_credits, max_semester_credits: curriculum.max_semester_credits })} />
+                <RowItem label={i18n.t('Chuyên ngành')} value={specializations.length
+                        ? i18n.t('{{length}} chuyên ngành{{v1}}', { length: specializations.length, v1: curriculum.specialization_required ? ' · bắt buộc chọn 1' : ' · không bắt buộc' })
+                        : i18n.t('Không chia chuyên ngành')} />
+                <RowItem label={i18n.t('Cấu trúc')} value={loadingContent
                         ? '…'
-                        : `${courses.length} môn · ${scheduled} môn xếp kỳ · ${electiveGroups} khối tự chọn · ${regulations.length} quy định`}
-                </Descriptions.Item>
+                        : i18n.t('{{length}} môn · {{scheduled}} môn xếp kỳ · {{electiveGroups}} khối tự chọn · {{length2}} quy định', { length: courses.length, scheduled: scheduled, electiveGroups: electiveGroups, length2: regulations.length })} />
                 {curriculum.source_code && (
-                    <Descriptions.Item label="Nguồn">
-                        {`${curriculum.source_system === 'mybk' ? 'myBK' : curriculum.source_system ?? ''} · ${curriculum.source_version ?? curriculum.source_code}`}
-                    </Descriptions.Item>
+                    <RowItem label={i18n.t('Nguồn')} value={`${curriculum.source_system === 'mybk' ? 'myBK' : curriculum.source_system ?? ''} · ${curriculum.source_version ?? curriculum.source_code}`} />
                 )}
                 {curriculum.source_synced_at && (
-                    <Descriptions.Item label="myBK cập nhật">
-                        {new Date(curriculum.source_synced_at).toLocaleDateString('vi-VN')}
-                    </Descriptions.Item>
+                    <RowItem label={i18n.t('myBK cập nhật')} value={new Date(curriculum.source_synced_at).toLocaleDateString('vi-VN')} />
                 )}
-            </Descriptions>
+            </RowList>
 
             <Tabs
                 defaultActiveKey="profile"
                 items={[
-                    { key: 'profile', label: 'Giới thiệu', children: <ProfileTab curriculum={curriculum} /> },
+                    { key: 'profile', label: i18n.t('Giới thiệu'), children: <ProfileTab curriculum={curriculum} /> },
                     {
                         key: 'plan',
-                        label: 'Kế hoạch giảng dạy',
+                        label: i18n.t('Kế hoạch giảng dạy'),
                         children: loadingContent ? <Skeleton active /> : <PlanTab courses={courses} groups={groups} />,
                     },
                     {
                         key: 'groups',
-                        label: `Khối kiến thức (${groups.filter(group => group.specialization_id === null).length})`,
+                        label: i18n.t('Khối kiến thức ({{length}})', { length: groups.filter(group => group.specialization_id === null).length }),
                         children: groupsQuery.isLoading ? <Skeleton active /> : <GroupsTab groups={groups} />,
                     },
                     {
                         key: 'specializations',
-                        label: `Chuyên ngành (${specializations.length})`,
+                        label: i18n.t('Chuyên ngành ({{length}})', { length: specializations.length }),
                         children: specializationsQuery.isLoading
                             ? <Skeleton active />
                             : <SpecializationsTab specializations={specializations} required={curriculum.specialization_required} />,
                     },
                     {
                         key: 'regulations',
-                        label: `Quy định (${regulations.length})`,
+                        label: i18n.t('Quy định ({{length}})', { length: regulations.length }),
                         children: regulationsQuery.isLoading ? <Skeleton active /> : <RegulationsTab regulations={regulations} />,
                     },
                 ]}

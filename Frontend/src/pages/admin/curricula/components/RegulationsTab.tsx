@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Alert, Card, Form, Input, Modal, Popconfirm, Space, Spin, Typography } from 'antd';
+import { Alert, Card, Form, Input, Modal, Popconfirm, Space, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
 import { LuPencil, LuPlus, LuTrash2 } from 'react-icons/lu';
-import { FormField, ISolidBtn, ITable, ITextBtn } from '@/components';
+import { FormField, ISolidBtn, ITable, ITextBtn, PageLoading } from '@/components';
 import { createRegulation, listRegulations, removeRegulation, updateRegulation } from '@/apis/curriculum';
 import { useApiMutation, useApiQuery } from '@/hooks';
 import type { CurriculumRegulation, CurriculumRegulationPayload } from '@/types';
 import type { CurriculumTabProps } from '../types';
+import i18n from '@/i18n';
 
 const { Paragraph, Text } = Typography;
 
@@ -48,7 +49,7 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const create = useApiMutation<CurriculumRegulation, CurriculumRegulationPayload>({
         mutationFn: payload => createRegulation(curriculumId, payload),
-        successMessage: 'Đã thêm quy định.',
+        successMessage: i18n.t('Đã thêm quy định.'),
         onSuccess: async () => {
             closeModal();
             await invalidate();
@@ -57,7 +58,7 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const update = useApiMutation<CurriculumRegulation, UpdateRegulationVariables>({
         mutationFn: variables => updateRegulation(curriculumId, variables.regulationId, variables.payload),
-        successMessage: 'Đã cập nhật quy định.',
+        successMessage: i18n.t('Đã cập nhật quy định.'),
         onSuccess: async () => {
             closeModal();
             await invalidate();
@@ -66,7 +67,7 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const remove = useApiMutation<null, string>({
         mutationFn: regulationId => removeRegulation(curriculumId, regulationId),
-        successMessage: 'Đã xoá quy định.',
+        successMessage: i18n.t('Đã xoá quy định.'),
         onSuccess: () => invalidate(),
     });
 
@@ -94,37 +95,37 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const columns: ColumnsType<CurriculumRegulation> = [
         {
-            title: 'Tên quy định',
+            title: i18n.t('Tên quy định'),
             dataIndex: 'name',
             width: 260,
             render: (name: string) => <Text strong>{name}</Text>,
         },
         {
-            title: 'Mô tả',
+            title: i18n.t('Mô tả'),
             dataIndex: 'detail',
             render: (detail: string | null) => (detail
                 ? <Paragraph style={{ margin: 0 }} ellipsis={{ rows: 2, tooltip: detail }}>{detail}</Paragraph>
-                : <Text type="secondary">Chưa có mô tả</Text>),
+                : <Text type="secondary">{i18n.t('Chưa có mô tả')}</Text>),
         },
         {
-            title: 'Cập nhật lúc',
+            title: i18n.t('Cập nhật lúc'),
             dataIndex: 'updated_at',
             width: 180,
             render: (updatedAt: string) => new Date(updatedAt).toLocaleString('vi-VN'),
         },
         {
-            title: 'Hành động',
+            title: i18n.t('Hành động'),
             key: 'actions',
             width: 180,
             align: 'right',
             render: (_value, record) => (
                 <Space size={4}>
-                    <ITextBtn icon={<LuPencil />} onClick={() => openEdit(record)}>Sửa</ITextBtn>
+                    <ITextBtn icon={<LuPencil />} onClick={() => openEdit(record)}>{i18n.t('Sửa')}</ITextBtn>
                     <Popconfirm
-                        title="Xoá quy định này?"
-                        description="Xoá quy định cũng xoá trạng thái tự khai của sinh viên với quy định này. Hành động không hoàn tác được."
-                        okText="Xoá"
-                        cancelText="Huỷ"
+                        title={i18n.t('Xoá quy định này?')}
+                        description={i18n.t('Xoá quy định cũng xoá trạng thái tự khai của sinh viên với quy định này. Hành động không hoàn tác được.')}
+                        okText={i18n.t('Xoá')}
+                        cancelText={i18n.t('Huỷ')}
                         okButtonProps={{ color: 'danger', variant: 'solid' }}
                         onConfirm={() => remove.mutate(record.id)}
                     >
@@ -133,7 +134,7 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
                             icon={<LuTrash2 />}
                             loading={remove.isPending && remove.variables === record.id}
                         >
-                            Xoá
+                            {i18n.t('Xoá')}
                         </ITextBtn>
                     </Popconfirm>
                 </Space>
@@ -142,7 +143,7 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
     ];
 
     if (regulationsQuery.isLoading) {
-        return <div style={{ display: 'grid', placeItems: 'center', minHeight: '30vh' }}><Spin size="large" /></div>;
+        return <PageLoading />;
     }
 
     const regulations = regulationsQuery.data ?? [];
@@ -153,15 +154,15 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
                 <Alert
                     type="error"
                     showIcon
-                    title="Không tải được danh sách quy định"
+                    title={i18n.t('Không tải được danh sách quy định')}
                     description={regulationsQuery.error?.message}
                 />
             )}
 
             <Card
                 size="small"
-                title="Quy định của chương trình"
-                extra={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>Thêm quy định</ISolidBtn>}
+                title={i18n.t('Quy định của chương trình')}
+                extra={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>{i18n.t('Thêm quy định')}</ISolidBtn>}
             >
                 <ITable<CurriculumRegulation>
                     showIndex={false}
@@ -171,15 +172,15 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
                     loading={regulationsQuery.isFetching}
                     pagination={false}
                     syncLocation={false}
-                    emptyText="Chương trình chưa có quy định nào"
+                    emptyText={i18n.t('Chương trình chưa có quy định nào')}
                 />
             </Card>
 
             <Modal
                 open={open}
-                title={editing ? 'Sửa quy định' : 'Thêm quy định'}
-                okText="Lưu"
-                cancelText="Huỷ"
+                title={editing ? i18n.t('Sửa quy định') : i18n.t('Thêm quy định')}
+                okText={i18n.t('Lưu')}
+                cancelText={i18n.t('Huỷ')}
                 confirmLoading={create.isPending || update.isPending}
                 onOk={() => form.submit()}
                 onCancel={closeModal}
@@ -188,15 +189,15 @@ const RegulationsTab = ({ curriculumId }: CurriculumTabProps) => {
                 <Form<RegulationFormValues> form={form} layout="vertical" onFinish={submit}>
                     <FormField
                         name="name"
-                        label="Tên quy định"
-                        placeholder="Chuẩn ngoại ngữ đầu ra"
+                        label={i18n.t('Tên quy định')}
+                        placeholder={i18n.t('Chuẩn ngoại ngữ đầu ra')}
                         rules={[
-                            { required: true, whitespace: true, message: 'Nhập tên quy định.' },
-                            { max: 255, message: 'Tên quy định tối đa 255 ký tự.' },
+                            { required: true, whitespace: true, message: i18n.t('Nhập tên quy định.') },
+                            { max: 255, message: i18n.t('Tên quy định tối đa 255 ký tự.') },
                         ]}
                     />
-                    <Form.Item name="detail" label="Mô tả">
-                        <Input.TextArea rows={4} placeholder="Mô tả chi tiết quy định (không bắt buộc)" />
+                    <Form.Item name="detail" label={i18n.t('Mô tả')}>
+                        <Input.TextArea rows={4} placeholder={i18n.t('Mô tả chi tiết quy định (không bắt buộc)')} />
                     </Form.Item>
                 </Form>
             </Modal>

@@ -30,16 +30,32 @@
         border-bottom: 0;
     }
 
+    /* Wrapped list: columns of template rows (label left, value right); every row keeps its hairline so the columns line up. */
+    .row-list[data-wrap] {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+        column-gap: var(--space-10);
+        border-top: 1px solid var(--line-hairline);
+    }
+
+    .row-list[data-wrap] .row-item:last-child {
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
     .row-item:hover {
         background: var(--bg-tint-hover);
     }
 
     .row-label {
+        flex: none;
         color: var(--ink-muted);
         font-size: 12.5px;
     }
 
+    /* Long unbroken values (e.g. "DH_CQ_MT_NG_KHM_2023.v01") wrap instead of running into the next column. */
     .row-value {
+        min-width: 0;
+        overflow-wrap: anywhere;
         color: var(--ink-primary);
         font-size: 13.5px;
         font-weight: 600;
@@ -136,20 +152,6 @@
 
     .course-group[data-open='true'] .chev {
         transform: rotate(90deg);
-    }
-
-    .group-dot {
-        flex: none;
-        width: 9px;
-        height: 9px;
-        border: 1.6px solid var(--ink-soft);
-        border-radius: 50%;
-        background: var(--bg-canvas);
-    }
-
-    .group-dot[data-met='true'] {
-        border-color: var(--sem-good);
-        background: var(--sem-good);
     }
 
     .group-left h2 {
@@ -266,4 +268,86 @@
         border-top: 1px solid var(--line-hairline);
         border-bottom: 1px solid var(--line-hairline);
     }
+
+    /* ===== Bead family (ui-template/semester-timeline.html, section B; Bead.tsx) =====
+     * Ring = a course. State is in the ring's shape, color second. `.pip` = a solid flag dot on a row. */
+    .bd {
+        --c: var(--ink-soft);
+        position: relative;
+        display: inline-block;
+        flex: none;
+        width: 10px;
+        height: 10px;
+        border: 1.6px solid var(--c);
+        border-radius: 50%;
+        background: var(--bg-canvas);
+    }
+
+    .bd[data-s='none'] { --c: var(--ink-soft); border-style: dotted; }
+    .bd[data-s='not-started'] { --c: var(--ink-muted); }
+    .bd[data-s='planned'] { --c: var(--accent-rose); border-style: dashed; }
+    .bd[data-s='in-progress'] { --c: var(--accent-rose); background: linear-gradient(90deg, var(--c) 50%, var(--bg-canvas) 50%); }
+    .bd[data-s='completed'] { --c: var(--sem-good); background: radial-gradient(circle, var(--bg-canvas) 0 1.4px, var(--c) 1.8px); }
+    .bd[data-s='failed'] { --c: var(--sem-err); }
+    .bd[data-s='suggest'] { --c: var(--accent-sparkle); }
+
+    .bd[data-s='failed']::after {
+        position: absolute;
+        top: -2.5px;
+        bottom: -2.5px;
+        left: calc(50% - 0.8px);
+        width: 1.6px;
+        background: var(--c);
+        transform: rotate(45deg);
+        content: '';
+    }
+
+    .bd[data-tone='rose'] { --c: var(--accent-rose); }
+    .bd[data-tone='warn'] { --c: var(--sem-warn); }
+    .bd[data-tone='err'] { --c: var(--sem-err); }
+    .bd[data-tone='brand'] { --c: var(--accent-brand); }
+    .bd[data-tone='sparkle'] { --c: var(--accent-sparkle); }
+    .bd[data-dashed] { border-style: dashed; }
+
+    .pip {
+        --c: var(--sem-warn);
+        display: inline-block;
+        flex: none;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--c);
+    }
+
+    .pip[data-tone='err'] { --c: var(--sem-err); }
+    .pip[data-tone='rose'] { --c: var(--accent-rose); }
+
+    /* Timeline checkpoint sparkles (SparkleMark). The canvas stroke knocks the solid ones out of the thread. */
+    .spark-mark {
+        display: block;
+        flex: none;
+        overflow: visible;
+    }
+
+    .spark-mark path {
+        paint-order: stroke fill;
+        stroke-linejoin: round;
+    }
+
+    .spark-mark[data-variant='future'] path {
+        fill: var(--bg-blush);
+        stroke: var(--accent-rose);
+        stroke-width: 2.1;
+    }
+
+    .spark-mark[data-variant='next'] path,
+    .spark-mark[data-variant='grad'] path {
+        stroke: var(--bg-canvas);
+        stroke-width: 2.5;
+    }
+
+    .spark-mark[data-variant='next'] { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent-brand) 35%, transparent)); }
+    .spark-mark[data-variant='next'] path { fill: var(--accent-brand); }
+    .spark-mark[data-variant='grad'] { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent-rose) 40%, transparent)); }
+    .spark-mark[data-variant='grad'] path { fill: var(--accent-rose); }
 }

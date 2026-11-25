@@ -3,25 +3,27 @@ import { Tooltip, Typography } from 'antd';
 import { LuCheck, LuMinus } from 'react-icons/lu';
 import { currentSemester, parseSemester, toSemesterCode } from '@/utils/semester';
 import { RatioBar } from './charts';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 const { Text } = Typography;
 
-const TERMS = [
+const TERMS = trLive([
     { term: 1, label: 'Kỳ 1', months: 'Th 8 – 12' },
     { term: 2, label: 'Kỳ 2', months: 'Th 1 – 5' },
     { term: 3, label: 'Kỳ hè', months: 'Th 6 – 7' },
-] as const;
+] as const);
 
 /** Số năm học tối đa hiển thị (lấy các năm gần nhất). */
 const MAX_YEARS = 8;
 
 type CellState = 'opened' | 'closed' | 'future';
 
-const CELL_TEXT: Record<CellState, string> = {
+const CELL_TEXT: Record<CellState, string> = trLive({
     opened: 'Có mở lớp',
     closed: 'Không mở',
     future: 'Chưa diễn ra',
-};
+});
 
 interface OpenedSemesterChartProps {
     semesterCodes: string[];
@@ -53,10 +55,10 @@ const OpenedSemesterChart = ({ semesterCodes }: OpenedSemesterChartProps) => {
         const never = termStats.filter(stat => stat.total > 0 && stat.count === 0);
         const name = (term: number) => TERMS.find(item => item.term === term)!.label.toLowerCase();
         const parts: string[] = [];
-        if (always.length) parts.push(`Năm nào cũng mở ở ${always.map(stat => name(stat.term)).join(', ')}`);
+        if (always.length) parts.push(i18n.t('Năm nào cũng mở ở {{v0}}', { v0: always.map(stat => name(stat.term)).join(', ') }));
         const sometimes = termStats.filter(stat => stat.count > 0 && stat.count < stat.total);
-        if (sometimes.length) parts.push(`thỉnh thoảng mở ở ${sometimes.map(stat => `${name(stat.term)} (${stat.count}/${stat.total} năm)`).join(', ')}`);
-        if (never.length) parts.push(`chưa từng mở ở ${never.map(stat => name(stat.term)).join(', ')}`);
+        if (sometimes.length) parts.push(i18n.t('thỉnh thoảng mở ở {{v0}}', { v0: sometimes.map(stat => i18n.t('{{term}} ({{count}}/{{total}} năm)', { term: name(stat.term), count: stat.count, total: stat.total })).join(', ') }));
+        if (never.length) parts.push(i18n.t('chưa từng mở ở {{v0}}', { v0: never.map(stat => name(stat.term)).join(', ') }));
 
         const text = parts.join('; ');
         return {
@@ -74,9 +76,9 @@ const OpenedSemesterChart = ({ semesterCodes }: OpenedSemesterChartProps) => {
 
     return (
         <div className="opened-chart">
-            <div className="opened-grid" role="table" aria-label="Học kỳ đã mở theo năm học">
+            <div className="opened-grid" role="table" aria-label={i18n.t('Học kỳ đã mở theo năm học')}>
                 <div className="opened-row opened-head" role="row">
-                    <span role="columnheader" className="opened-year">Năm học</span>
+                    <span role="columnheader" className="opened-year">{i18n.t('Năm học')}</span>
                     {TERMS.map(item => (
                         <span key={item.term} role="columnheader" className="opened-term-head">
                             <span className="opened-term-name">{item.label}</span>
@@ -97,13 +99,13 @@ const OpenedSemesterChart = ({ semesterCodes }: OpenedSemesterChartProps) => {
                             return (
                                 <Tooltip
                                     key={code}
-                                    title={`HK ${code} · ${item.label} ${year}–${year + 1}: ${CELL_TEXT[state]}${isCurrent ? ' (học kỳ hiện tại)' : ''}`}
+                                    title={i18n.t('HK {{code}} · {{label}} {{year}}–{{v3}}: {{v4}}{{v5}}', { code: code, label: item.label, year: year, v3: year + 1, v4: CELL_TEXT[state], v5: isCurrent ? i18n.t(' (học kỳ hiện tại)') : '' })}
                                 >
                                     <div
                                         role="cell"
                                         tabIndex={0}
                                         className={`opened-cell is-${state}${isCurrent ? ' is-current' : ''}`}
-                                        aria-label={`HK ${code}: ${CELL_TEXT[state]}`}
+                                        aria-label={i18n.t('HK {{code}}: {{v1}}', { code: code, v1: CELL_TEXT[state] })}
                                     >
                                         {state === 'opened' && <LuCheck aria-hidden />}
                                         {state === 'closed' && <LuMinus aria-hidden />}
@@ -117,24 +119,24 @@ const OpenedSemesterChart = ({ semesterCodes }: OpenedSemesterChartProps) => {
                 ))}
 
                 <div className="opened-row opened-foot" role="row">
-                    <span role="rowheader" className="opened-year">Tần suất</span>
+                    <span role="rowheader" className="opened-year">{i18n.t('Tần suất')}</span>
                     {stats.map(stat => (
                         <div key={stat.term} role="cell" className="opened-freq">
                             <RatioBar value={stat.count} total={stat.total} />
-                            <span className="opened-freq-text">{stat.count}/{stat.total} năm</span>
+                            <span className="opened-freq-text">{stat.count}/{stat.total}{' '}{i18n.t('năm')}</span>
                         </div>
                     ))}
                 </div>
             </div>
 
             <div className="opened-legend">
-                <span><span className="opened-swatch is-opened"><LuCheck /></span>Có mở lớp</span>
-                <span><span className="opened-swatch is-closed"><LuMinus /></span>Không mở</span>
-                <span><span className="opened-swatch is-future" />Chưa diễn ra</span>
-                <span><span className="opened-swatch is-current-swatch" />Học kỳ hiện tại</span>
+                <span><span className="opened-swatch is-opened"><LuCheck /></span>{i18n.t('Có mở lớp')}</span>
+                <span><span className="opened-swatch is-closed"><LuMinus /></span>{i18n.t('Không mở')}</span>
+                <span><span className="opened-swatch is-future" />{i18n.t('Chưa diễn ra')}</span>
+                <span><span className="opened-swatch is-current-swatch" />{i18n.t('Học kỳ hiện tại')}</span>
             </div>
 
-            {summary && <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>Nhận xét: {summary}.</Text>}
+            {summary && <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>{i18n.t('Nhận xét:')}{' '}{summary}.</Text>}
         </div>
     );
 };

@@ -23,6 +23,7 @@ import {
     pickText,
     type OutlineLang,
 } from './outline-labels';
+import i18n from '@/i18n';
 
 const { Text, Title } = Typography;
 
@@ -59,7 +60,7 @@ const componentRows = (components: OutlineComponents) => COMPONENT_ORDER
 const examText = (exam: OutlineExam | null, lang: OutlineLang) => {
     if (!exam) return null;
     const format = pickText(exam.format?.name, lang) ?? exam.format?.code;
-    return [format, exam.duration_minutes ? `${exam.duration_minutes} phút` : null].filter(Boolean).join(' · ') || null;
+    return [format, exam.duration_minutes ? i18n.t('{{duration_minutes}} phút', { duration_minutes: exam.duration_minutes }) : null].filter(Boolean).join(' · ') || null;
 };
 
 /* ------------------------------------ Tab: khối lượng & đánh giá ------------------------------------ */
@@ -69,39 +70,39 @@ const WorkloadTab = ({ content, lang }: { content: OutlineContent; lang: Outline
     const hours = componentRows(content.hours.breakdown);
     const credits = componentRows(content.credit_breakdown);
     const exams = [
-        { key: 'midterm', label: 'Kiểm tra giữa kỳ', text: examText(content.assessment.midterm, lang) },
-        { key: 'final', label: 'Thi cuối kỳ', text: examText(content.assessment.final_exam, lang) },
-        { key: 'other', label: 'Hình thức khác', text: examText(content.assessment.other, lang) },
+        { key: 'midterm', label: i18n.t('Kiểm tra giữa kỳ'), text: examText(content.assessment.midterm, lang) },
+        { key: 'final', label: i18n.t('Thi cuối kỳ'), text: examText(content.assessment.final_exam, lang) },
+        { key: 'other', label: i18n.t('Hình thức khác'), text: examText(content.assessment.other, lang) },
     ].filter(item => item.text);
 
     return (
         <div className="analysis-grid">
-            <Card size="small" title="Cách tính điểm">
-                {weights.length ? <DonutChart rows={weights} centerCaption="tổng điểm" /> : <Text type="secondary">Đề cương không ghi tỷ lệ đánh giá.</Text>}
+            <Card size="small" title={i18n.t('Cách tính điểm')}>
+                {weights.length ? <DonutChart rows={weights} centerCaption={i18n.t('tổng điểm')} /> : <Text type="secondary">{i18n.t('Đề cương không ghi tỷ lệ đánh giá.')}</Text>}
                 {exams.length > 0 && (
                     <Descriptions column={1} size="small" style={{ marginTop: 16 }}>
                         {exams.map(item => <Descriptions.Item key={item.key} label={item.label}>{item.text}</Descriptions.Item>)}
                     </Descriptions>
                 )}
             </Card>
-            <Card size="small" title="Khối lượng học tập">
+            <Card size="small" title={i18n.t('Khối lượng học tập')}>
                 <Space wrap size={[16, 8]} style={{ marginBottom: 12 }}>
-                    {content.hours.total_periods && <Text>Tổng <Text strong>{content.hours.total_periods}</Text> tiết</Text>}
-                    {content.hours.total_study_hours && <Text>≈ <Text strong>{content.hours.total_study_hours}</Text> giờ học tập</Text>}
+                    {content.hours.total_periods && <Text>{i18n.t('Tổng')}{' '}<Text strong>{content.hours.total_periods}</Text>{' '}{i18n.t('tiết')}</Text>}
+                    {content.hours.total_study_hours && <Text>≈ <Text strong>{content.hours.total_study_hours}</Text>{' '}{i18n.t('giờ học tập')}</Text>}
                     {content.credits_ects && <Text type="secondary">{content.credits_ects} ECTS</Text>}
                 </Space>
-                {hours.length > 0 && <CategoryStackBar rows={hours} unit="tiết" title="Số tiết" />}
+                {hours.length > 0 && <CategoryStackBar rows={hours} unit={i18n.t('tiết')} title={i18n.t('Số tiết')} />}
                 {credits.length > 0 && (
                     <div style={{ marginTop: 12 }}>
-                        <Text type="secondary" style={{ fontSize: 12 }}>Phân bổ tín chỉ: </Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>{i18n.t('Phân bổ tín chỉ:')}{' '}</Text>
                         <Space wrap size={[4, 4]}>
-                            {credits.map(row => <Tag key={row.key}>{row.label} {row.value} TC</Tag>)}
+                            {credits.map(row => <Tag key={row.key}>{row.label} {row.value}{' '}{i18n.t('TC')}</Tag>)}
                         </Space>
                     </div>
                 )}
                 {content.teaching_methods.length > 0 && (
                     <div style={{ marginTop: 12 }}>
-                        <Text type="secondary" style={{ fontSize: 12 }}>Phương pháp giảng dạy: </Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>{i18n.t('Phương pháp giảng dạy:')}{' '}</Text>
                         <Space wrap size={[4, 4]}>
                             {content.teaching_methods.map(method => <Tag key={method.code ?? pickText(method.name, lang)}>{pickText(method.name, lang)}</Tag>)}
                         </Space>
@@ -117,7 +118,7 @@ const WorkloadTab = ({ content, lang }: { content: OutlineContent; lang: Outline
 const SessionsTab = ({ content, lang }: { content: OutlineContent; lang: OutlineLang }) => {
     const outcomes = useMemo(() => new Map(content.learning_outcomes.map(item => [item.key, item])), [content]);
     const activities = useMemo(() => new Map(content.assessment_activities.map(item => [item.code, item])), [content]);
-    if (!content.sessions.length) return <Empty description="Đề cương không có nội dung chi tiết." />;
+    if (!content.sessions.length) return <Empty description={i18n.t('Đề cương không có nội dung chi tiết.')} />;
 
     return (
         <div className="outline-sessions">
@@ -127,12 +128,12 @@ const SessionsTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                 const studentWork = [...new Set(session.items.map(item => pickText(item.student_activity, lang)).filter(Boolean))];
                 return (
                     <div key={`${session.order}-${session.label}`} className="outline-session">
-                        <div className="outline-session-label"><Tag color="blue">{session.label ? `Buổi ${session.label}` : `#${session.order}`}</Tag></div>
+                        <div className="outline-session-label"><Tag color="blue">{session.label ? i18n.t('Buổi {{label}}', { label: session.label }) : `#${session.order}`}</Tag></div>
                         <div className="outline-session-body">
                             <div className="outline-text">{pickText(session.content, lang) ?? '—'}</div>
                             {studentWork.length > 0 && (
                                 <div className="outline-session-meta">
-                                    <Text type="secondary">Sinh viên: </Text>{studentWork.join(' · ')}
+                                    <Text type="secondary">{i18n.t('Sinh viên:')}{' '}</Text>{studentWork.join(' · ')}
                                 </div>
                             )}
                             {(outcomeKeys.length > 0 || activityCodes.length > 0) && (
@@ -153,7 +154,7 @@ const SessionsTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                     </div>
                 );
             })}
-            <Text type="secondary" style={{ fontSize: 12 }}>Thẻ xanh: chuẩn đầu ra đạt được trong buổi · thẻ vàng: hoạt động đánh giá. Rê chuột để xem nội dung.</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>{i18n.t('Thẻ xanh: chuẩn đầu ra đạt được trong buổi · thẻ vàng: hoạt động đánh giá. Rê chuột để xem nội dung.')}</Text>
         </div>
     );
 };
@@ -168,7 +169,7 @@ const OutcomesTab = ({ content, lang }: { content: OutlineContent; lang: Outline
         () => new Map(content.outcome_assessments.map(item => [item.outcome_key, item.activity_codes])),
         [content],
     );
-    if (!content.learning_outcomes.length) return <Empty description="Đề cương không có chuẩn đầu ra." />;
+    if (!content.learning_outcomes.length) return <Empty description={i18n.t('Đề cương không có chuẩn đầu ra.')} />;
     const active = frameworks.includes(framework) ? framework : frameworks[0];
 
     return (
@@ -201,7 +202,7 @@ const OutcomesTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                 ))}
             </div>
             {content.assessment_activities.length > 0 && (
-                <Card size="small" title="Hoạt động đánh giá">
+                <Card size="small" title={i18n.t('Hoạt động đánh giá')}>
                     <div className="outline-outcomes">
                         {content.assessment_activities.map(activity => (
                             <div key={activity.code} className={`outline-outcome level-${Math.min(activity.level, 3)}`}>
@@ -249,18 +250,18 @@ const PrerequisitesTab = ({ outline, curriculumRelations, curriculumCode }: {
     const compare = curriculumRelations !== undefined;
     const different = rows.filter(row => !row.same).length;
 
-    if (!rows.length) return <Empty description="Đề cương và chương trình đều không ghi điều kiện cho môn này." />;
+    if (!rows.length) return <Empty description={i18n.t('Đề cương và chương trình đều không ghi điều kiện cho môn này.')} />;
 
     return (
         <div className="stack">
             {compare && (different
-                ? <Alert type="warning" showIcon title={`${different} điều kiện khác nhau giữa đề cương và chương trình ${curriculumCode ?? ''}`} description="Hai nguồn được giữ nguyên để đối chiếu. Khi xét đăng ký, trang Phân tích học tập dùng điều kiện theo chương trình đào tạo." />
-                : <Alert type="success" showIcon title="Điều kiện trong đề cương khớp với chương trình đào tạo của bạn." />)}
+                ? <Alert type="warning" showIcon title={i18n.t('{{different}} điều kiện khác nhau giữa đề cương và chương trình {{v1}}', { different: different, v1: curriculumCode ?? '' })} description={i18n.t('Hai nguồn được giữ nguyên để đối chiếu. Khi xét đăng ký, trang Phân tích học tập dùng điều kiện theo chương trình đào tạo.')} />
+                : <Alert type="success" showIcon title={i18n.t('Điều kiện trong đề cương khớp với chương trình đào tạo của bạn.')} />)}
             <div className="outline-prereq">
                 <div className="outline-prereq-head">
-                    <span>Môn liên quan</span>
-                    <span>Theo đề cương</span>
-                    {compare && <span>Theo chương trình {curriculumCode}</span>}
+                    <span>{i18n.t('Môn liên quan')}</span>
+                    <span>{i18n.t('Theo đề cương')}</span>
+                    {compare && <span>{i18n.t('Theo chương trình')}{' '}{curriculumCode}</span>}
                 </div>
                 {rows.map(row => (
                     <div key={row.code} className={`outline-prereq-row${compare && !row.same ? ' is-different' : ''}`}>
@@ -270,8 +271,8 @@ const PrerequisitesTab = ({ outline, curriculumRelations, curriculumCode }: {
                             <span>
                                 {row.fromCurriculum ? typeTag(row.fromCurriculum.type) : <Text type="secondary">—</Text>}
                                 {row.same
-                                    ? <LuCircleCheck className="outline-prereq-icon is-same" aria-label="Khớp" />
-                                    : <LuCircleAlert className="outline-prereq-icon is-diff" aria-label="Khác nhau" />}
+                                    ? <LuCircleCheck className="outline-prereq-icon is-same" aria-label={i18n.t('Khớp')} />
+                                    : <LuCircleAlert className="outline-prereq-icon is-diff" aria-label={i18n.t('Khác nhau')} />}
                             </span>
                         )}
                     </div>
@@ -307,61 +308,61 @@ export const CourseOutlineSection = ({
 
     const versionLabel = (version: typeof versions[number]): ReactNode => (
         <span>
-            v{version.version} · {version.applies_from ? `áp dụng từ HK ${version.applies_from}` : 'không rõ học kỳ'}
-            {version.id === data.selected?.id && <Tag color="green" style={{ marginLeft: 6 }}>Đang áp dụng</Tag>}
-            {version.applies_from && version.applies_from > current && <Tag color="purple" style={{ marginLeft: 6 }}>Sắp áp dụng</Tag>}
+            v{version.version} · {version.applies_from ? i18n.t('áp dụng từ HK {{applies_from}}', { applies_from: version.applies_from }) : i18n.t('không rõ học kỳ')}
+            {version.id === data.selected?.id && <Tag color="green" style={{ marginLeft: 6 }}>{i18n.t('Đang áp dụng')}</Tag>}
+            {version.applies_from && version.applies_from > current && <Tag color="purple" style={{ marginLeft: 6 }}>{i18n.t('Sắp áp dụng')}</Tag>}
         </span>
     );
 
     return (
         <Card
-            title="Đề cương môn học"
+            title={i18n.t('Đề cương môn học')}
             extra={(
                 <Space wrap>
-                    <Segmented<OutlineLang> size="small" value={lang} onChange={setLang} options={[{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'English' }]} />
+                    <Segmented<OutlineLang> size="small" value={lang} onChange={setLang} options={[{ value: 'vi', label: i18n.t('Tiếng Việt') }, { value: 'en', label: 'English' }]} />
                     <Select
                         size="small"
                         style={{ minWidth: 260 }}
                         value={versionId}
                         onChange={setVersionId}
                         options={versions.map(version => ({ value: version.id, label: versionLabel(version) }))}
-                        aria-label="Phiên bản đề cương"
+                        aria-label={i18n.t('Phiên bản đề cương')}
                     />
                 </Space>
             )}
         >
             {!data.selected && (
-                <Alert style={{ marginBottom: 16 }} type="info" showIcon title={`Chưa có đề cương áp dụng cho HK ${data.semester}; đang hiển thị bản mới nhất.`} />
+                <Alert style={{ marginBottom: 16 }} type="info" showIcon title={i18n.t('Chưa có đề cương áp dụng cho HK {{semester}}; đang hiển thị bản mới nhất.', { semester: data.semester })} />
             )}
             {!content ? (
-                otherQuery.isError ? <Alert type="error" showIcon title="Không tải được phiên bản đề cương này." /> : <Spin />
+                otherQuery.isError ? <Alert type="error" showIcon title={i18n.t('Không tải được phiên bản đề cương này.')} /> : <Spin />
             ) : (
                 <>
                     <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" style={{ marginBottom: 8 }}>
-                        <Descriptions.Item label="Tên (EN)">{content.name?.en ?? '—'}</Descriptions.Item>
-                        <Descriptions.Item label="Khoa">{pickText(content.faculty?.name, lang) ?? '—'}</Descriptions.Item>
-                        <Descriptions.Item label="Bộ môn">{pickText(content.department?.name, lang) ?? '—'}</Descriptions.Item>
-                        <Descriptions.Item label="Loại môn">{pickText(content.course_type?.name, lang) ?? content.course_type?.code ?? '—'}</Descriptions.Item>
-                        <Descriptions.Item label="Bậc">{pickText(content.level?.name, lang) ?? '—'}</Descriptions.Item>
-                        <Descriptions.Item label="Khối kiến thức">
+                        <Descriptions.Item label={i18n.t('Tên (EN)')}>{content.name?.en ?? '—'}</Descriptions.Item>
+                        <Descriptions.Item label={i18n.t('Khoa')}>{pickText(content.faculty?.name, lang) ?? '—'}</Descriptions.Item>
+                        <Descriptions.Item label={i18n.t('Bộ môn')}>{pickText(content.department?.name, lang) ?? '—'}</Descriptions.Item>
+                        <Descriptions.Item label={i18n.t('Loại môn')}>{pickText(content.course_type?.name, lang) ?? content.course_type?.code ?? '—'}</Descriptions.Item>
+                        <Descriptions.Item label={i18n.t('Bậc')}>{pickText(content.level?.name, lang) ?? '—'}</Descriptions.Item>
+                        <Descriptions.Item label={i18n.t('Khối kiến thức')}>
                             {content.knowledge_blocks.length
                                 ? content.knowledge_blocks.map(block => KNOWLEDGE_BLOCK_LABEL[block] ?? block).join(', ')
                                 : '—'}
                         </Descriptions.Item>
                         {content.programs.length > 0 && (
-                            <Descriptions.Item label="Ngành áp dụng" span={3}>
+                            <Descriptions.Item label={i18n.t('Ngành áp dụng')} span={3}>
                                 <Space wrap size={[4, 4]}>
                                     {content.programs.slice(0, 8).map(program => (
                                         <Tag key={program.code ?? pickText(program.name, lang)}>{pickText(program.name, lang)}</Tag>
                                     ))}
-                                    {content.programs.length > 8 && <Text type="secondary">+{content.programs.length - 8} ngành</Text>}
+                                    {content.programs.length > 8 && <Text type="secondary">+{content.programs.length - 8}{' '}{i18n.t('ngành')}</Text>}
                                 </Space>
                             </Descriptions.Item>
                         )}
                     </Descriptions>
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                        Nguồn: Đề cương môn học myBK{outline?.source_code ? ` (${outline.source_code})` : ''}
-                        {outline?.source_updated_at ? ` · cập nhật ${new Date(outline.source_updated_at).toLocaleDateString('vi-VN')}` : ''}.
+                        {i18n.t('Nguồn: Đề cương môn học myBK')}{outline?.source_code ? ` (${outline.source_code})` : ''}
+                        {outline?.source_updated_at ? i18n.t(' · cập nhật {{v0}}', { v0: new Date(outline.source_updated_at).toLocaleDateString('vi-VN') }) : ''}.
                     </Text>
 
                     <Tabs
@@ -370,31 +371,31 @@ export const CourseOutlineSection = ({
                             ...extraTabs,
                             {
                                 key: 'intro',
-                                label: 'Giới thiệu',
+                                label: i18n.t('Giới thiệu'),
                                 children: (
                                     <div className="stack">
-                                        <TextBlock title="Mục tiêu môn học" text={pickText(content.objectives, lang)} />
-                                        <TextBlock title="Nội dung tóm tắt" text={pickText(content.summary, lang)} />
-                                        <TextBlock title="Hướng dẫn cách học" text={pickText(content.study_guide, lang)} />
-                                        <TextBlock title="Tài liệu học tập" text={pickText(content.references, lang)} />
-                                        <TextBlock title="Ghi chú" text={pickText(content.notes, lang)} />
+                                        <TextBlock title={i18n.t('Mục tiêu môn học')} text={pickText(content.objectives, lang)} />
+                                        <TextBlock title={i18n.t('Nội dung tóm tắt')} text={pickText(content.summary, lang)} />
+                                        <TextBlock title={i18n.t('Hướng dẫn cách học')} text={pickText(content.study_guide, lang)} />
+                                        <TextBlock title={i18n.t('Tài liệu học tập')} text={pickText(content.references, lang)} />
+                                        <TextBlock title={i18n.t('Ghi chú')} text={pickText(content.notes, lang)} />
                                     </div>
                                 ),
                             },
-                            { key: 'workload', label: 'Khối lượng & đánh giá', children: <WorkloadTab content={content} lang={lang} /> },
-                            { key: 'sessions', label: `Nội dung (${content.sessions.length})`, children: <SessionsTab content={content} lang={lang} /> },
+                            { key: 'workload', label: i18n.t('Khối lượng & đánh giá'), children: <WorkloadTab content={content} lang={lang} /> },
+                            { key: 'sessions', label: i18n.t('Nội dung ({{length}})', { length: content.sessions.length }), children: <SessionsTab content={content} lang={lang} /> },
                             {
                                 key: 'outcomes',
-                                label: 'Chuẩn đầu ra',
+                                label: i18n.t('Chuẩn đầu ra'),
                                 // key theo phiên bản để Segmented hệ chuẩn đầu ra về mặc định khi đổi bản.
                                 children: <OutcomesTab key={outline!.id} content={content} lang={lang} />,
                             },
                             {
                                 key: 'prerequisites',
-                                label: `Điều kiện môn (${outline!.prerequisites.length})`,
+                                label: i18n.t('Điều kiện môn ({{length}})', { length: outline!.prerequisites.length }),
                                 children: <PrerequisitesTab outline={outline!} curriculumRelations={curriculumRelations} curriculumCode={curriculumCode} />,
                             },
-                            ...(openedSemesters ? [{ key: 'opened', label: 'Học kỳ đã mở', children: openedSemesters }] : []),
+                            ...(openedSemesters ? [{ key: 'opened', label: i18n.t('Học kỳ đã mở'), children: openedSemesters }] : []),
                         ]}
                     />
                 </>

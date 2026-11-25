@@ -1,8 +1,8 @@
 import { lazy, Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Card, Input, Popconfirm, Select, Skeleton, Space, Tabs, Tag, Typography } from 'antd';
-import { LuChartColumn, LuSave, LuSearch, LuUndo2 } from 'react-icons/lu';
-import { Link, useNavigate } from 'react-router';
-import { IOutLinedBtn, ISolidBtn, ITextBtn, PageHeader } from '@/components';
+import { Alert, Popconfirm, Segmented, Select, Skeleton } from 'antd';
+import { PiArrowCounterClockwise, PiFloppyDisk } from 'react-icons/pi';
+import { useTranslation } from 'react-i18next';
+import { Bead, ISolidBtn, ITextBtn, PageLoading, Pip, SearchLine } from '@/components';
 import {
     getCurriculum,
     listCourseGroups,
@@ -19,12 +19,10 @@ import {
     type StudentCourseStatus,
 } from '@/types';
 import { courseSearchRank } from '@/utils/course-search';
-import { computeCurriculumBlocks, summarizeCurriculumCredits } from '@/utils/curriculum-credits';
+import { computeCurriculumBlocks } from '@/utils/curriculum-credits';
 import { toastMessage } from '@/utils/toast';
 import type { StatusChange } from '@/utils/student-course-file';
 import CourseStatusFileActions from '../components/CourseStatusFileActions';
-import { StackedBar } from '../components/charts';
-import { MetricGroup, MetricTile, ProgressHero } from '../components/ProgressSummary';
 import { currentSemester, nextMainSemester, recommendedSemester } from '@/utils/semester';
 import CourseCard from './CourseCard';
 import CourseDrawer, { type CourseContext } from './CourseDrawer';
@@ -32,11 +30,11 @@ import CatalogView from './CatalogView';
 import { CategoriesView, GroupsView, SemesterView, SpecializationsView, type BoardView } from './sections';
 import { buildStructure, canPlan } from './structure';
 import { useCourseDraft } from './useCourseDraft';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 // React Flow khá nặng: chỉ tải khi mở tab sơ đồ.
 const PrerequisiteGraph = lazy(() => import('./graph/PrerequisiteGraph'));
-
-const { Text } = Typography;
 
 /** Bấm thẻ ở chế độ "Xoay vòng": Chưa khai → Đã hoàn thành → Đang học → Chưa đạt → Chưa học → Chưa khai. */
 const NEXT_STATUS: Record<StudentCourseStatus | 'none', StudentCourseStatus | null> = {
@@ -50,20 +48,20 @@ const NEXT_STATUS: Record<StudentCourseStatus | 'none', StudentCourseStatus | nu
 /** `planned` = chưa học + có học kỳ dự kiến (suy ra, không phải trạng thái lưu riêng). */
 type StatusFilter = StudentCourseStatus | 'none' | 'planned';
 
-const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
+const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = trLive([
     ...Object.values(STUDENT_COURSE_STATUS).map(value => ({ value, label: STUDENT_COURSE_STATUS_LABEL[value] })),
     { value: 'planned', label: 'Đã lên kế hoạch' },
     { value: 'none', label: 'Chưa khai' },
-];
+]);
 
-const LEGEND: { status: StudentCourseStatus | 'none' | 'planned'; label: string; color: string }[] = [
-    { status: 'none', label: 'Chưa khai', color: 'var(--border-strong)' },
-    { status: 'planned', label: 'Đã lên kế hoạch', color: 'var(--status-planned)' },
-    { status: 'completed', label: 'Đã hoàn thành', color: 'var(--status-completed)' },
-    { status: 'in-progress', label: 'Đang học', color: 'var(--status-progress)' },
-    { status: 'failed', label: 'Chưa đạt', color: 'var(--status-failed)' },
-    { status: 'not-started', label: 'Chưa học', color: 'var(--status-not-started)' },
-];
+const LEGEND: { status: StudentCourseStatus | 'none' | 'planned'; label: string }[] = trLive([
+    { status: 'none', label: 'Chưa khai' },
+    { status: 'planned', label: 'Đã lên kế hoạch' },
+    { status: 'completed', label: 'Đã hoàn thành' },
+    { status: 'in-progress', label: 'Đang học' },
+    { status: 'failed', label: 'Chưa đạt' },
+    { status: 'not-started', label: 'Chưa học' },
+]);
 
 type ViewKey = 'semester' | 'groups' | 'graph' | 'categories' | 'specializations' | 'catalog';
 
@@ -73,12 +71,13 @@ interface CurriculumBoardProps {
 }
 
 /**
- * Trang môn học của sinh viên đã chọn chương trình: toàn bộ chương trình hiển thị dạng thẻ theo kỳ/khối.
- * Bấm thẻ đổi trạng thái ngay trên client (không gọi API), nháp giữ ở localStorage;
- * chỉ ghi về server khi bấm "Lưu" hoặc "Phân tích".
+ * Bảng chương trình (section of the "Phân tích" tab): the whole curriculum as course cards by semester / block /
+ * graph / category / specialization / catalog. Clicking a card changes its status on the client only; the draft is
+ * kept in localStorage and written to the server with "Lưu". The credit overview above it (AnalysisTab) reads saved
+ * data, so saving refreshes it.
  */
 const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
-    const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // Dùng chung cache với trang Hồ sơ / Phân tích học tập.
     const curriculumQuery = useApiQuery(['curriculum', curriculumId], () => getCurriculum(curriculumId));
@@ -135,23 +134,6 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
         [draft.statusMap, courseById],
     );
     const blocks = useMemo(() => computeCurriculumBlocks(courses, groups, completed), [courses, groups, completed]);
-
-    const stats = useMemo(() => {
-        const creditsWith = (status: StudentCourseStatus) => [...draft.statusMap]
-            .filter(([, value]) => value === status)
-            .reduce((total, [id]) => total + (courseById.get(id)?.credits ?? 0), 0);
-        const plannedIds = [...draft.planMap.keys()].filter(id => canPlan(draft.statusMap.get(id) ?? null));
-        return {
-            requiredCourses: blocks.reduce((total, block) => total + block.needCount, 0),
-            completedCourses: blocks.reduce((total, block) => total + block.doneCount, 0),
-            completedCredits: blocks.reduce((total, block) => total + block.doneCredits, 0),
-            // Cùng cách tính với trang Phân tích (tổng các khối), không dùng số khai báo ở nguồn.
-            totalCredits: summarizeCurriculumCredits(courses, groups).totalCredits,
-            inProgressCredits: creditsWith(STUDENT_COURSE_STATUS.IN_PROGRESS),
-            failedCount: [...draft.statusMap.values()].filter(status => status === STUDENT_COURSE_STATUS.FAILED).length,
-            plannedCredits: plannedIds.reduce((total, id) => total + (courseById.get(id)?.credits ?? 0), 0),
-        };
-    }, [blocks, draft.statusMap, draft.planMap, courseById, courses, groups]);
 
     // Callback ổn định (đọc giá trị mới qua ref) để thẻ đã memo không render lại hết mỗi lần bấm.
     const { statusMap, planMap, changedIds, setStatus, setStatuses } = draft;
@@ -242,13 +224,13 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
     const applyFileChanges = useCallback((changes: StatusChange[], fileCourses: CourseSummary[]) => {
         const byId = new Map(fileCourses.map(course => [course.id, course]));
         changes.forEach(change => setStatus(change.courseId, change.to, byId.get(change.courseId)));
-        toastMessage.info(`Đã đưa ${changes.length} môn vào bản nháp. Bấm “Lưu” để ghi lại.`);
-    }, [setStatus]);
+        toastMessage.info(t('Đã đưa {{count}} môn vào bản nháp. Bấm “Lưu” để ghi lại.', { count: changes.length }));
+    }, [setStatus, t]);
 
     const drawerContext = useMemo<CourseContext | null>(() => {
         if (!openCourse) return null;
         return {
-            placement: structure.placementById.get(openCourse.id) ?? 'Ngoài chương trình',
+            placement: structure.placementById.get(openCourse.id) ?? i18n.t('Ngoài chương trình'),
             groups: structure.groupNamesById.get(openCourse.id) ?? [],
         };
     }, [openCourse, structure]);
@@ -256,17 +238,12 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
     const save = async () => {
         const count = draft.changeCount;
         const result = await draft.save();
-        if (result.ok) toastMessage.success(`Đã lưu thay đổi của ${count} môn.`);
-        else if (result.failed.length === 2) toastMessage.error('Chưa lưu được. Thay đổi vẫn được giữ trên trình duyệt, hãy thử lại.');
+        if (result.ok) toastMessage.success(t('Đã lưu thay đổi của {{count}} môn.', { count }));
+        else if (result.failed.length === 2) toastMessage.error(t('Chưa lưu được. Thay đổi vẫn được giữ trên trình duyệt, hãy thử lại.'));
         else toastMessage.error(result.failed[0] === 'plan'
-            ? 'Đã lưu trạng thái, nhưng chưa lưu được học kỳ dự kiến. Hãy thử lại.'
-            : 'Đã lưu học kỳ dự kiến, nhưng chưa lưu được trạng thái môn. Hãy thử lại.');
+            ? t('Đã lưu trạng thái, nhưng chưa lưu được học kỳ dự kiến. Hãy thử lại.')
+            : t('Đã lưu học kỳ dự kiến, nhưng chưa lưu được trạng thái môn. Hãy thử lại.'));
         return result.ok;
-    };
-
-    const analyze = async () => {
-        if (draft.changeCount && !(await save())) return;
-        navigate('/courses/analysis');
     };
 
     const loading = curriculumQuery.isLoading || coursesQuery.isLoading || groupsQuery.isLoading
@@ -276,218 +253,120 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
     const curriculum = curriculumQuery.data;
     const specializations = specializationsQuery.data ?? [];
 
-    const pct = (value: number) => (stats.totalCredits ? Math.min(100, (value / stats.totalCredits) * 100) : 0);
+    const views: { value: ViewKey; label: string }[] = [
+        { value: 'semester', label: t('Theo học kỳ') },
+        { value: 'groups', label: t('Theo khối kiến thức ({{count}})', { count: structure.rootGroups.length + 1 }) },
+        { value: 'graph', label: t('Sơ đồ điều kiện') },
+        { value: 'categories', label: t('Nhóm học phần ({{count}})', { count: categoriesQuery.data?.length ?? 0 }) },
+        { value: 'specializations', label: t('Chuyên ngành ({{count}})', { count: specializations.length }) },
+        { value: 'catalog', label: t('Danh mục môn học') },
+    ];
+
+    if (loadError) {
+        return <Alert type="error" showIcon title={t('Không tải được chương trình đào tạo')} description={t('Vui lòng tải lại trang để thử lại.')} />;
+    }
+    if (loading || !curriculum) return <PageLoading label={t('Đang tải chương trình...')} />;
 
     return (
-        // Chừa sẵn chỗ ở đáy cho thanh "chưa lưu" nổi, để nó không che hàng thẻ cuối.
-        <section style={{ paddingBottom: 72 }}>
-            <PageHeader
-                title="Chương trình của tôi"
-                subtitle="Bấm vào thẻ môn để đổi trạng thái ngay. Thay đổi được giữ tạm trên trình duyệt và chỉ lưu khi bạn bấm “Lưu” hoặc “Phân tích”."
-                extra={(
-                    <Space wrap>
-                        <ISolidBtn icon={<LuSave />} disabled={!draft.changeCount} loading={draft.saving} onClick={() => void save()}>
-                            Lưu
-                        </ISolidBtn>
-                        <IOutLinedBtn icon={<LuChartColumn />} loading={draft.saving} onClick={() => void analyze()}>
-                            Phân tích
-                        </IOutLinedBtn>
-                        <CourseStatusFileActions
-                            statusByCourseId={draft.statusMap}
-                            templateCourses={templateCourses}
-                            onApply={applyFileChanges}
-                        />
-                    </Space>
-                )}
+        // Room at the bottom for the floating "unsaved" bar, so it never covers the last row of cards.
+        <section className="board" style={{ paddingBottom: draft.changeCount ? 72 : 0 }}>
+            <div className="board-toolbar">
+                <div className="board-filters">
+                    <SearchLine
+                        placeholder={t('Tìm theo mã hoặc tên môn')}
+                        aria-label={t('Tìm môn theo mã hoặc tên')}
+                        value={search}
+                        onChange={event => setSearch(event.target.value)}
+                    />
+                    <Select<StatusFilter>
+                        allowClear
+                        placeholder={t('Mọi trạng thái')}
+                        aria-label={t('Lọc theo trạng thái')}
+                        style={{ width: 190 }}
+                        options={STATUS_FILTER_OPTIONS.map(option => ({ ...option, label: t(option.label) }))}
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                    />
+                </div>
+                <div className="board-actions">
+                    <CourseStatusFileActions
+                        statusByCourseId={draft.statusMap}
+                        templateCourses={templateCourses}
+                        onApply={applyFileChanges}
+                    />
+                    <ISolidBtn icon={<PiFloppyDisk />} disabled={!draft.changeCount} loading={draft.saving} onClick={() => void save()}>
+                        {t('Lưu')}
+                    </ISolidBtn>
+                </div>
+            </div>
+
+            <div className="board-legend">
+                {LEGEND.map(item => (
+                    <span key={item.status} className="board-legend-item">
+                        <Bead state={item.status} />
+                        {t(item.label)}
+                    </span>
+                ))}
+                <span className="board-legend-item">
+                    <Pip />{t('Chưa lưu')}
+                </span>
+            </div>
+
+            <Segmented<ViewKey>
+                className="board-views"
+                value={view}
+                onChange={setView}
+                options={views}
             />
 
-            {loadError ? (
-                <Alert type="error" showIcon title="Không tải được chương trình đào tạo" description="Vui lòng tải lại trang để thử lại." />
-            ) : loading || !curriculum ? (
-                <Card><Skeleton active paragraph={{ rows: 8 }} /></Card>
-            ) : (
-                <div className="stack">
-                    <Card size="small">
-                        <div className="board-curriculum-head">
-                            <div style={{ minWidth: 0 }}>
-                                <h2 className="board-curriculum-title">{curriculum.name}</h2>
-                                <div className="board-curriculum-meta">
-                                    <Tag style={{ marginInlineEnd: 0 }}>{curriculum.code}</Tag>
-                                    <Tag style={{ marginInlineEnd: 0 }}>Khóa {curriculum.cohort}</Tag>
-                                    <Tag style={{ marginInlineEnd: 0 }}>{curriculum.major}</Tag>
-                                </div>
-                            </div>
-                            <Link to="/profile"><ITextBtn size="small">Giới thiệu chương trình</ITextBtn></Link>
-                        </div>
-                        <div className="progress-overview" style={{ marginBottom: 16 }}>
-                            <ProgressHero
-                                percent={pct(stats.completedCredits)}
-                                value={stats.completedCredits}
-                                total={stats.totalCredits}
-                                unit="TC"
-                                label="Tín chỉ tích lũy / chuẩn tốt nghiệp"
-                                caption={`${stats.completedCourses} / ${stats.requiredCourses} môn được tính vào chuẩn tốt nghiệp`}
-                            />
-                            <div className="progress-overview-groups">
-                                <MetricGroup title="Tín chỉ">
-                                    <MetricTile label="Đang học" value={stats.inProgressCredits} unit="TC" tone="progress" />
-                                    <MetricTile label="Đã lên kế hoạch" value={stats.plannedCredits} unit="TC" tone="plan-status" />
-                                    <MetricTile
-                                        label="Còn thiếu"
-                                        value={Math.max(0, stats.totalCredits - stats.completedCredits - stats.inProgressCredits - stats.plannedCredits)}
-                                        unit="TC"
-                                        tone="remaining"
-                                        note="chưa học, chưa xếp kỳ"
-                                    />
-                                </MetricGroup>
-                                <MetricGroup title="Môn học">
-                                    <MetricTile
-                                        label="Đã hoàn thành"
-                                        value={stats.completedCourses}
-                                        unit={`/ ${stats.requiredCourses} môn`}
-                                        tone="done"
-                                    />
-                                    <MetricTile
-                                        label="Chưa đạt"
-                                        value={stats.failedCount}
-                                        unit="môn"
-                                        tone={stats.failedCount ? 'danger' : 'neutral'}
-                                        note={stats.failedCount ? 'cần học lại' : undefined}
-                                    />
-                                </MetricGroup>
-                            </div>
-                        </div>
-                        <StackedBar
-                            title="Tín chỉ chuẩn tốt nghiệp"
-                            total={stats.totalCredits}
-                            segments={[
-                                { key: 'done', value: stats.completedCredits, label: 'Đã tích lũy' },
-                                { key: 'inProgress', value: stats.inProgressCredits },
-                                { key: 'planStatus', value: stats.plannedCredits },
-                            ]}
+            <div className="board-view">
+                {view === 'semester' && <SemesterView structure={structure} view={boardView} outsideCourses={outsideCourses} />}
+                {view === 'groups' && <GroupsView structure={structure} view={boardView} outsideCourses={outsideCourses} />}
+                {view === 'graph' && (
+                    <Suspense fallback={<PageLoading label={t('Đang tải sơ đồ...')} />}>
+                        <PrerequisiteGraph
+                            curriculumId={curriculumId}
+                            courses={courses}
+                            groups={groups}
+                            statusMap={statusMap}
+                            planMap={planMap}
                         />
-                    </Card>
-
-                    {draft.changeCount > 0 && (
-                        <div className="board-savebar" role="status">
-                            <span className="board-savebar-text">
-                                <Text strong>{draft.changeCount} môn</Text> có thay đổi chưa lưu, đang giữ tạm trên trình duyệt.
-                            </span>
-                            <Popconfirm
-                                title="Hoàn tác mọi thay đổi chưa lưu?"
-                                okText="Hoàn tác"
-                                cancelText="Không"
-                                onConfirm={draft.discard}
-                            >
-                                <ITextBtn icon={<LuUndo2 />} disabled={draft.saving}>Hoàn tác</ITextBtn>
-                            </Popconfirm>
-                            <ISolidBtn icon={<LuSave />} loading={draft.saving} onClick={() => void save()}>Lưu</ISolidBtn>
-                        </div>
-                    )}
-
-                    <Card size="small">
-                        <div className="stack" style={{ gap: 12 }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-                                <Input
-                                    allowClear
-                                    prefix={<LuSearch />}
-                                    placeholder="Tìm theo mã hoặc tên môn"
-                                    aria-label="Tìm môn theo mã hoặc tên"
-                                    value={search}
-                                    onChange={event => setSearch(event.target.value)}
-                                    style={{ maxWidth: 300 }}
-                                />
-                                <Select<StatusFilter>
-                                    allowClear
-                                    placeholder="Mọi trạng thái"
-                                    aria-label="Lọc theo trạng thái"
-                                    style={{ width: 170 }}
-                                    options={STATUS_FILTER_OPTIONS}
-                                    value={statusFilter}
-                                    onChange={setStatusFilter}
-                                />
-                            </div>
-                            <div className="board-legend">
-                                {LEGEND.map(item => (
-                                    <span key={item.status} className="board-legend-item">
-                                        <span className="board-legend-swatch" style={{ borderColor: item.color, background: 'var(--bg-subtle)' }} />
-                                        {item.label}
-                                    </span>
-                                ))}
-                                <span className="board-legend-item">
-                                    <span style={{ color: 'var(--status-dirty)', fontSize: 10 }}>●</span>Chưa lưu
-                                </span>
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Tabs
-                        activeKey={view}
-                        onChange={key => setView(key as ViewKey)}
-                        items={[
-                            {
-                                key: 'semester',
-                                label: 'Theo học kỳ',
-                                children: <SemesterView structure={structure} view={boardView} outsideCourses={outsideCourses} />,
-                            },
-                            {
-                                key: 'groups',
-                                label: `Theo khối kiến thức (${structure.rootGroups.length + 1})`,
-                                children: <GroupsView structure={structure} view={boardView} outsideCourses={outsideCourses} />,
-                            },
-                            {
-                                key: 'graph',
-                                label: 'Sơ đồ điều kiện',
-                                children: (
-                                    <Suspense fallback={<Card><Skeleton active paragraph={{ rows: 8 }} /></Card>}>
-                                        <PrerequisiteGraph
-                                            curriculumId={curriculumId}
-                                            courses={courses}
-                                            groups={groups}
-                                            statusMap={statusMap}
-                                            planMap={planMap}
-                                        />
-                                    </Suspense>
-                                ),
-                            },
-                            {
-                                key: 'categories',
-                                label: `Nhóm học phần (${categoriesQuery.data?.length ?? 0})`,
-                                children: categoriesQuery.isLoading
-                                    ? <Skeleton active />
-                                    : <CategoriesView categories={categoriesQuery.data ?? []} structure={structure} view={boardView} />,
-                            },
-                            {
-                                key: 'specializations',
-                                label: `Chuyên ngành (${specializations.length})`,
-                                children: specializationsQuery.isLoading
-                                    ? <Skeleton active />
-                                    : (
-                                        <SpecializationsView
-                                            specializations={specializations}
-                                            required={curriculum.specialization_required}
-                                            view={boardView}
-                                        />
-                                    ),
-                            },
-                            {
-                                key: 'catalog',
-                                label: 'Danh mục môn học',
-                                children: (
-                                    <CatalogView
-                                        outsideCourses={outsideCourses}
-                                        placementById={structure.placementById}
-                                        statusMap={statusMap}
-                                        planMap={planMap}
-                                        changedIds={changedIds}
-                                        statusFilter={statusFilter}
-                                        onToggle={toggle}
-                                        onOpen={setOpenCourse}
-                                    />
-                                ),
-                            },
-                        ]}
+                    </Suspense>
+                )}
+                {view === 'categories' && (categoriesQuery.isLoading
+                    ? <Skeleton active />
+                    : <CategoriesView categories={categoriesQuery.data ?? []} structure={structure} view={boardView} />)}
+                {view === 'specializations' && (specializationsQuery.isLoading
+                    ? <Skeleton active />
+                    : <SpecializationsView specializations={specializations} required={curriculum.specialization_required} view={boardView} />)}
+                {view === 'catalog' && (
+                    <CatalogView
+                        outsideCourses={outsideCourses}
+                        placementById={structure.placementById}
+                        statusMap={statusMap}
+                        planMap={planMap}
+                        changedIds={changedIds}
+                        statusFilter={statusFilter}
+                        onToggle={toggle}
+                        onOpen={setOpenCourse}
                     />
+                )}
+            </div>
+
+            {draft.changeCount > 0 && (
+                <div className="board-savebar" role="status">
+                    <span className="board-savebar-text">
+                        {t('{{count}} môn có thay đổi chưa lưu, đang giữ tạm trên trình duyệt.', { count: draft.changeCount })}
+                    </span>
+                    <Popconfirm
+                        title={t('Hoàn tác mọi thay đổi chưa lưu?')}
+                        okText={t('Hoàn tác')}
+                        cancelText={t('Không')}
+                        onConfirm={draft.discard}
+                    >
+                        <ITextBtn icon={<PiArrowCounterClockwise />} disabled={draft.saving}>{t('Hoàn tác')}</ITextBtn>
+                    </Popconfirm>
+                    <ISolidBtn size="small" icon={<PiFloppyDisk />} loading={draft.saving} onClick={() => void save()}>{t('Lưu')}</ISolidBtn>
                 </div>
             )}
 

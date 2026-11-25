@@ -43,6 +43,7 @@ import {
 } from '@/apis/course';
 import { useApiMutation, useApiQuery, useDebounce, usePageLocation } from '@/hooks';
 import type { Course, CoursePayload } from '@/types';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -100,7 +101,7 @@ const CourseFormModal = ({ open, course, onClose }: CourseFormModalProps) => {
             if (!sameCodes(codes, previous)) await replaceOpenedSemesters(saved.id, codes);
             return saved;
         },
-        successMessage: isEditing ? 'Đã cập nhật môn học.' : 'Đã tạo môn học.',
+        successMessage: isEditing ? i18n.t('Đã cập nhật môn học.') : i18n.t('Đã tạo môn học.'),
         onSuccess: (saved) => {
             void queryClient.invalidateQueries({ queryKey: ['course', saved.id, 'opened-semesters'] });
             refreshList();
@@ -124,9 +125,9 @@ const CourseFormModal = ({ open, course, onClose }: CourseFormModalProps) => {
     return (
         <Modal
             open={open}
-            title={isEditing ? `Sửa môn học ${course.code}` : 'Thêm môn học'}
-            okText={isEditing ? 'Lưu thay đổi' : 'Tạo môn học'}
-            cancelText="Huỷ"
+            title={isEditing ? i18n.t('Sửa môn học {{code}}', { code: course.code }) : i18n.t('Thêm môn học')}
+            okText={isEditing ? i18n.t('Lưu thay đổi') : i18n.t('Tạo môn học')}
+            cancelText={i18n.t('Huỷ')}
             confirmLoading={saving}
             okButtonProps={{ disabled: !semestersReady }}
             maskClosable={!saving}
@@ -152,31 +153,31 @@ const CourseFormModal = ({ open, course, onClose }: CourseFormModalProps) => {
             >
                 <FormField
                     name="code"
-                    label="Mã môn học"
+                    label={i18n.t('Mã môn học')}
                     placeholder="CO2003"
-                    hint="Mã môn tối đa 50 ký tự và không được trùng với môn đã có."
+                    hint={i18n.t('Mã môn tối đa 50 ký tự và không được trùng với môn đã có.')}
                     inputProps={{ maxLength: 50, disabled: saving }}
                     rules={[
-                        { required: true, whitespace: true, message: 'Nhập mã môn học.' },
-                        { max: 50, message: 'Mã môn học tối đa 50 ký tự.' },
+                        { required: true, whitespace: true, message: i18n.t('Nhập mã môn học.') },
+                        { max: 50, message: i18n.t('Mã môn học tối đa 50 ký tự.') },
                     ]}
                 />
 
                 <FormField
                     name="name"
-                    label="Tên môn học"
-                    placeholder="Cấu trúc dữ liệu và giải thuật"
+                    label={i18n.t('Tên môn học')}
+                    placeholder={i18n.t('Cấu trúc dữ liệu và giải thuật')}
                     inputProps={{ maxLength: 255, disabled: saving }}
                     rules={[
-                        { required: true, whitespace: true, message: 'Nhập tên môn học.' },
-                        { max: 255, message: 'Tên môn học tối đa 255 ký tự.' },
+                        { required: true, whitespace: true, message: i18n.t('Nhập tên môn học.') },
+                        { max: 255, message: i18n.t('Tên môn học tối đa 255 ký tự.') },
                     ]}
                 />
 
                 <Form.Item
                     name="credits"
-                    label="Số tín chỉ"
-                    rules={[{ required: true, message: 'Nhập số tín chỉ.' }]}
+                    label={i18n.t('Số tín chỉ')}
+                    rules={[{ required: true, message: i18n.t('Nhập số tín chỉ.') }]}
                 >
                     <InputNumber
                         min={CREDITS_MIN}
@@ -190,22 +191,22 @@ const CourseFormModal = ({ open, course, onClose }: CourseFormModalProps) => {
 
                 <FormField
                     name="description"
-                    label="Mô tả ngắn"
-                    placeholder="Kiến thức nền tảng"
-                    hint="Hiển thị dưới tên môn trong danh sách học phần. Không bắt buộc."
+                    label={i18n.t('Mô tả ngắn')}
+                    placeholder={i18n.t('Kiến thức nền tảng')}
+                    hint={i18n.t('Hiển thị dưới tên môn trong danh sách học phần. Không bắt buộc.')}
                     inputProps={{ maxLength: 255, disabled: saving }}
-                    rules={[{ max: 255, message: 'Mô tả tối đa 255 ký tự.' }]}
+                    rules={[{ max: 255, message: i18n.t('Mô tả tối đa 255 ký tự.') }]}
                 />
 
                 <Form.Item
                     name="opened_semesters"
-                    label="Học kỳ đã mở"
-                    extra="Gõ mã học kỳ dạng YYK (ví dụ 251, 252, 253) rồi Enter; bấm × để bỏ. Lưu sẽ thay toàn bộ danh sách."
+                    label={i18n.t('Học kỳ đã mở')}
+                    extra={i18n.t('Gõ mã học kỳ dạng YYK (ví dụ 251, 252, 253) rồi Enter; bấm × để bỏ. Lưu sẽ thay toàn bộ danh sách.')}
                     rules={[{
                         validator: (_rule, value: string[] | undefined) => {
                             const invalid = (value ?? []).filter(code => !SEMESTER_CODE_PATTERN.test(code.trim()));
                             return invalid.length
-                                ? Promise.reject(new Error(`Mã học kỳ không hợp lệ: ${invalid.join(', ')}.`))
+                                ? Promise.reject(new Error(i18n.t('Mã học kỳ không hợp lệ: {{v0}}.', { v0: invalid.join(', ') })))
                                 : Promise.resolve();
                         },
                     }]}
@@ -215,7 +216,7 @@ const CourseFormModal = ({ open, course, onClose }: CourseFormModalProps) => {
                         open={false}
                         suffixIcon={null}
                         tokenSeparators={[',', ' ']}
-                        placeholder={semestersReady ? 'Chưa mở học kỳ nào' : 'Đang tải học kỳ đã mở…'}
+                        placeholder={semestersReady ? i18n.t('Chưa mở học kỳ nào') : i18n.t('Đang tải học kỳ đã mở…')}
                         disabled={saving || !semestersReady}
                         loading={!semestersReady}
                         style={{ width: '100%' }}
@@ -226,9 +227,9 @@ const CourseFormModal = ({ open, course, onClose }: CourseFormModalProps) => {
                     <Alert
                         type="error"
                         showIcon
-                        title="Không tải được học kỳ đã mở"
+                        title={i18n.t('Không tải được học kỳ đã mở')}
                         description={semestersQuery.error.message}
-                        action={<IOutLinedBtn onClick={() => void semestersQuery.refetch()}>Thử lại</IOutLinedBtn>}
+                        action={<IOutLinedBtn onClick={() => void semestersQuery.refetch()}>{i18n.t('Thử lại')}</IOutLinedBtn>}
                     />
                 )}
             </Form>
@@ -260,7 +261,7 @@ const AdminCoursesPage = () => {
 
     const deleteMutation = useApiMutation<null, string>({
         mutationFn: deleteCourse,
-        successMessage: 'Đã xoá môn học và toàn bộ dữ liệu con.',
+        successMessage: i18n.t('Đã xoá môn học và toàn bộ dữ liệu con.'),
         onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['courses'] }),
     });
 
@@ -282,17 +283,17 @@ const AdminCoursesPage = () => {
         return (
             <section>
                 <PageHeader
-                    title="Quản lý môn học"
-                    subtitle="Tạo, sửa, xoá môn học và quản lý học kỳ đã mở."
+                    title={i18n.t('Quản lý môn học')}
+                    subtitle={i18n.t('Tạo, sửa, xoá môn học và quản lý học kỳ đã mở.')}
                 />
                 <Alert
                     type="error"
                     showIcon
-                    title="Không tải được danh sách môn học"
+                    title={i18n.t('Không tải được danh sách môn học')}
                     description={coursesQuery.error.message}
                     action={(
                         <IOutLinedBtn onClick={() => void coursesQuery.refetch()}>
-                            Thử lại
+                            {i18n.t('Thử lại')}
                         </IOutLinedBtn>
                     )}
                 />
@@ -305,26 +306,26 @@ const AdminCoursesPage = () => {
 
     const columns: ColumnsType<Course> = [
         {
-            title: 'Mã môn',
+            title: i18n.t('Mã môn'),
             dataIndex: 'code',
             width: 130,
             render: (code: string) => <Text strong>{code}</Text>,
         },
         {
-            title: 'Tên môn học',
+            title: i18n.t('Tên môn học'),
             dataIndex: 'name',
             render: (name: string) => name,
         },
         {
-            title: 'Tín chỉ',
+            title: i18n.t('Tín chỉ'),
             dataIndex: 'credits',
             width: 100,
             align: 'center',
             sorter: (a, b) => a.credits - b.credits,
-            render: (credits: number) => <Tag>{credits} TC</Tag>,
+            render: (credits: number) => <Tag>{credits}{' '}{i18n.t('TC')}</Tag>,
         },
         {
-            title: 'Thao tác',
+            title: i18n.t('Thao tác'),
             key: 'actions',
             width: 140,
             align: 'right',
@@ -334,31 +335,29 @@ const AdminCoursesPage = () => {
                         to={`/courses/${encodeURIComponent(record.code)}`}
                         state={{ from: `${location.pathname}${location.search}` }}
                     >
-                        <IconBtn icon={<LuEye />} label={`Xem môn ${record.code}`} />
+                        <IconBtn icon={<LuEye />} label={i18n.t('Xem môn {{code}}', { code: record.code })} />
                     </Link>
                     <IconBtn
                         icon={<LuPencil />}
-                        label={`Sửa môn ${record.code}`}
+                        label={i18n.t('Sửa môn {{code}}', { code: record.code })}
                         onClick={() => openEditForm(record)}
                     />
                     <Popconfirm
-                        title="Xoá môn học?"
+                        title={i18n.t('Xoá môn học?')}
                         description={(
                             <span>
-                                Xoá <strong>{record.code}</strong> sẽ xoá toàn bộ dữ liệu con: học kỳ đã mở,
-                                môn trong chương trình, trạng thái môn, dòng kế hoạch học tập, thành viên nhóm
-                                môn và quan hệ tiên quyết liên quan. Không thể hoàn tác.
+                                {i18n.t('Xoá')}{' '}<strong>{record.code}</strong>{' '}{i18n.t('sẽ xoá toàn bộ dữ liệu con: học kỳ đã mở, môn trong chương trình, trạng thái môn, dòng kế hoạch học tập, thành viên nhóm môn và quan hệ tiên quyết liên quan. Không thể hoàn tác.')}
                             </span>
                         )}
-                        okText="Xoá môn"
-                        cancelText="Huỷ"
+                        okText={i18n.t('Xoá môn')}
+                        cancelText={i18n.t('Huỷ')}
                         okButtonProps={{ danger: true }}
                         onConfirm={() => deleteMutation.mutate(record.id)}
                     >
                         <IconBtn
                             danger
                             icon={<LuTrash2 />}
-                            label={`Xoá môn ${record.code}`}
+                            label={i18n.t('Xoá môn {{code}}', { code: record.code })}
                             loading={deleteMutation.isPending && deleteMutation.variables === record.id}
                         />
                     </Popconfirm>
@@ -370,11 +369,11 @@ const AdminCoursesPage = () => {
     return (
         <section>
             <PageHeader
-                title="Quản lý môn học"
-                subtitle="Tạo, sửa, xoá môn học và quản lý danh sách học kỳ đã mở của từng môn."
+                title={i18n.t('Quản lý môn học')}
+                subtitle={i18n.t('Tạo, sửa, xoá môn học và quản lý danh sách học kỳ đã mở của từng môn.')}
                 extra={(
                     <ISolidBtn icon={<LuPlus />} onClick={openCreateForm}>
-                        Thêm môn học
+                        {i18n.t('Thêm môn học')}
                     </ISolidBtn>
                 )}
             />
@@ -394,21 +393,21 @@ const AdminCoursesPage = () => {
                         allowClear
                         size="large"
                         prefix={<LuSearch />}
-                        placeholder="Tìm theo mã hoặc tên môn học"
-                        aria-label="Tìm môn học theo mã hoặc tên"
+                        placeholder={i18n.t('Tìm theo mã hoặc tên môn học')}
+                        aria-label={i18n.t('Tìm môn học theo mã hoặc tên')}
                         value={search}
                         onChange={event => setSearch(event.target.value)}
                         style={{ maxWidth: 420 }}
                     />
 
                     <Space size={8}>
-                        <Text type="secondary">{total} môn học</Text>
+                        <Text type="secondary">{total}{' '}{i18n.t('môn học')}</Text>
                         <ITextBtn
                             icon={<LuRefreshCw />}
                             loading={coursesQuery.isFetching}
                             onClick={() => void coursesQuery.refetch()}
                         >
-                            Làm mới
+                            {i18n.t('Làm mới')}
                         </ITextBtn>
                     </Space>
                 </div>
@@ -425,7 +424,7 @@ const AdminCoursesPage = () => {
                         current: page,
                         pageSize,
                     }}
-                    emptyText={keyword ? `Không có môn học nào khớp "${keyword}"` : 'Chưa có môn học nào'}
+                    emptyText={keyword ? i18n.t('Không có môn học nào khớp "{{keyword}}"', { keyword: keyword }) : i18n.t('Chưa có môn học nào')}
                 />
             </Card>
 

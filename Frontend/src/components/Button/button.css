@@ -1,6 +1,5 @@
 /*
- * Button system, from ui-template/buttons.html (sizes, states, all variants); dense sizes from
- * components-template-2.html; large size from dang-nhap.html.
+ * Button system, from ui-template/controls.html (sizes, states, all variants); large size as on dang-nhap.html.
  * Keyed on antd's own classes, so every antd Button follows it: our wrappers in ./index.tsx, raw <Button>,
  * and buttons antd renders itself (Popconfirm, Modal).
  *   primary   = color-primary + variant-solid   (ISolidBtn, type="primary")       42px | small 36 | large 46
@@ -21,7 +20,7 @@
     }
 
     .ant-btn:focus-visible {
-        outline: 2px solid var(--accent-sparkle);
+        outline: 2px solid var(--focus-ring);
         outline-offset: 2px;
     }
 
@@ -33,16 +32,16 @@
         background: var(--accent-rose);
         color: var(--ink-inverse);
         font-size: 13.5px;
-        outline: 1px solid rgba(255, 255, 255, 0.36);
+        outline: 1px solid var(--stamp-inset);
         outline-offset: -4px;
-        box-shadow: 0 10px 22px -12px rgba(184, 62, 108, 0.72);
+        box-shadow: var(--shadow-stamp);
     }
 
     .ant-btn.ant-btn-variant-solid:not(:disabled):hover {
         border-color: var(--accent-rose-hover);
         background: var(--accent-rose-hover);
         color: var(--ink-inverse);
-        outline-color: rgba(255, 255, 255, 0.58);
+        outline-color: var(--stamp-inset-hover);
     }
 
     /* ===== Secondary: blush stamp with a double hairline ===== */
@@ -181,11 +180,11 @@
     .ant-btn.ant-btn-color-dangerous.ant-btn-variant-outlined {
         height: 38px;
         padding: 0 18px;
-        border: 1px solid rgba(174, 75, 51, 0.45);
+        border: 1px solid var(--sem-err-line);
         background: var(--sem-err-bg);
         color: var(--sem-err);
         font-size: 13px;
-        outline: 1px solid rgba(174, 75, 51, 0.16);
+        outline: 1px solid color-mix(in srgb, var(--sem-err) 16%, transparent);
         outline-offset: -4px;
         box-shadow: none;
     }
@@ -200,11 +199,11 @@
         border-color: var(--sem-err);
         background: var(--sem-err);
         color: var(--ink-inverse);
-        outline-color: rgba(255, 255, 255, 0.35);
+        outline-color: var(--stamp-inset);
     }
 
     .ant-btn.ant-btn-color-dangerous.ant-btn-variant-text:not(.ant-btn-icon-only) {
-        border-bottom-color: rgba(174, 75, 51, 0.45);
+        border-bottom-color: var(--sem-err-line);
         color: var(--sem-err);
     }
 
@@ -240,7 +239,7 @@
     .ant-btn.ant-btn-lg.ant-btn-variant-solid {
         height: 46px;
         font-size: 14px;
-        box-shadow: 0 10px 24px -12px rgba(184, 62, 108, 0.75);
+        box-shadow: var(--shadow-stamp-lg);
     }
 
     .ant-btn.ant-btn-lg.ant-btn-variant-outlined {

@@ -33,6 +33,7 @@ import {
     recommendedSemester,
     toSemesterCode,
 } from '@/utils/semester';
+import i18n from '@/i18n';
 
 export interface AnalysisInput {
     today?: Date;
@@ -267,7 +268,7 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
             recommendedSemester: hasSchedule
                 ? recommendedSemester(admissionYear, item.recommended_year!, item.recommended_term!)
                 : null,
-            recommendedLabel: hasSchedule ? `Năm ${item.recommended_year} · Kỳ ${item.recommended_term}` : null,
+            recommendedLabel: hasSchedule ? i18n.t('Năm {{recommended_year}} · Kỳ {{recommended_term}}', { recommended_year: item.recommended_year, recommended_term: item.recommended_term }) : null,
             status: statusById.get(item.course_id) ?? null,
             plannedSemester: planById.get(item.course_id) ?? null,
             groupId: groupIdByCourse.get(item.course_id) ?? null,
@@ -358,7 +359,7 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
         toCredited([...completed, ...inProgress, ...plannedIds]),
     );
 
-    const blockName = (block: CurriculumBlockProgress) => block.group?.name ?? 'Môn bắt buộc';
+    const blockName = (block: CurriculumBlockProgress) => block.group?.name ?? i18n.t('Môn bắt buộc');
     const blocks: BlockRow[] = blocksDone.map((block, index) => {
         const progress = blocksProgress[index];
         const planned = blocksPlanned[index];
@@ -569,7 +570,7 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
         while (left > 0) {
             n += 1;
             pending.push({
-                item: { key: `${group.id}-${n}`, code: '—', name: `${group.name} (môn tự chọn bất kỳ)`, credits: unit, fromPlan: false, kind: 'free', groupName: group.name },
+                item: { key: `${group.id}-${n}`, code: '—', name: i18n.t('{{name}} (môn tự chọn bất kỳ)', { name: group.name }), credits: unit, fromPlan: false, kind: 'free', groupName: group.name },
                 course: null,
                 waited: 0,
             });
@@ -673,22 +674,22 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
     if (overdue.length) {
         warnings.push({
             level: 'error',
-            title: `${overdue.length} môn bắt buộc đã quá kỳ khuyến nghị`,
-            detail: `${overdue.slice(0, 8).map(check => check.course.code).join(', ')}${overdue.length > 8 ? '…' : ''}. Nên ưu tiên đăng ký sớm, nhất là môn là điều kiện của môn khác.`,
+            title: i18n.t('{{length}} môn bắt buộc đã quá kỳ khuyến nghị', { length: overdue.length }),
+            detail: i18n.t('{{v0}}{{v1}}. Nên ưu tiên đăng ký sớm, nhất là môn là điều kiện của môn khác.', { v0: overdue.slice(0, 8).map(check => check.course.code).join(', '), v1: overdue.length > 8 ? '…' : '' }),
         });
     }
     if (failed.length) {
         warnings.push({
             level: 'error',
-            title: `${failed.length} môn chưa đạt cần học lại`,
+            title: i18n.t('{{length}} môn chưa đạt cần học lại', { length: failed.length }),
             detail: failed.map(course => course.code).join(', '),
         });
     }
     if (semestersLeft > 0 && leftAfterProgress / semestersLeft > curriculum.max_semester_credits) {
         warnings.push({
             level: 'error',
-            title: 'Không kịp tốt nghiệp đúng hạn với mức tín chỉ tối đa',
-            detail: `Còn ${leftAfterProgress} TC trong ${semestersLeft} học kỳ chính (≈ ${(leftAfterProgress / semestersLeft).toFixed(1)} TC/kỳ), vượt mức ${curriculum.max_semester_credits} TC/kỳ. Cân nhắc học kỳ hè.`,
+            title: i18n.t('Không kịp tốt nghiệp đúng hạn với mức tín chỉ tối đa'),
+            detail: i18n.t('Còn {{leftAfterProgress}} TC trong {{semestersLeft}} học kỳ chính (≈ {{v2}} TC/kỳ), vượt mức {{max_semester_credits}} TC/kỳ. Cân nhắc học kỳ hè.', { leftAfterProgress: leftAfterProgress, semestersLeft: semestersLeft, v2: (leftAfterProgress / semestersLeft).toFixed(1), max_semester_credits: curriculum.max_semester_credits }),
         });
     }
     const plannedBySemester = new Map<string, StudentPlanCourse[]>();
@@ -701,25 +702,25 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
         entries.forEach(entry => {
             const course = info.get(entry.course_id);
             if (completed.has(entry.course_id)) {
-                warnings.push({ level: 'warning', title: `${entry.course.code} đã hoàn thành nhưng vẫn nằm trong kế hoạch HK ${code}`, detail: 'Có thể xoá khỏi kế hoạch để giải phóng tín chỉ.' });
+                warnings.push({ level: 'warning', title: i18n.t('{{code}} đã hoàn thành nhưng vẫn nằm trong kế hoạch HK {{code2}}', { code: entry.course.code, code2: code }), detail: i18n.t('Có thể xoá khỏi kế hoạch để giải phóng tín chỉ.') });
                 return;
             }
             if (code < current && !inProgress.has(entry.course_id)) {
-                warnings.push({ level: 'warning', title: `${entry.course.code} xếp ở HK ${code} đã qua`, detail: 'Môn chưa được khai là đã học/đang học. Cập nhật trạng thái hoặc dời sang kỳ khác.' });
+                warnings.push({ level: 'warning', title: i18n.t('{{code}} xếp ở HK {{code2}} đã qua', { code: entry.course.code, code2: code }), detail: i18n.t('Môn chưa được khai là đã học/đang học. Cập nhật trạng thái hoặc dời sang kỳ khác.') });
             }
             if (!course) return;
             const check = checkCourse(course, planPassed, planTaken, term);
             if (check.missing.length) {
-                warnings.push({ level: 'error', title: `${course.code} (HK ${code}) chưa đủ điều kiện`, detail: `Cần học trước: ${check.missing.join(', ')} — chưa hoàn thành và chưa xếp ở kỳ sớm hơn.` });
+                warnings.push({ level: 'error', title: i18n.t('{{code}} (HK {{code2}}) chưa đủ điều kiện', { code: course.code, code2: code }), detail: i18n.t('Cần học trước: {{v0}} — chưa hoàn thành và chưa xếp ở kỳ sớm hơn.', { v0: check.missing.join(', ') }) });
             }
             if (check.offered === false) {
-                warnings.push({ level: 'warning', title: `${course.code} chưa từng mở ở kỳ ${term}`, detail: `Các kỳ đã mở: ${course.openedSemesters.join(', ')}. Kế hoạch HK ${code} có thể không đăng ký được.` });
+                warnings.push({ level: 'warning', title: i18n.t('{{code}} chưa từng mở ở kỳ {{term}}', { code: course.code, term: term }), detail: i18n.t('Các kỳ đã mở: {{v0}}. Kế hoạch HK {{code}} có thể không đăng ký được.', { v0: course.openedSemesters.join(', '), code: code }) });
             }
         });
         entries.forEach(entry => { planPassed.add(entry.course_id); planTaken.add(entry.course_id); });
         const credits = entries.reduce((total, entry) => total + entry.course.credits, 0);
         if (credits > curriculum.max_semester_credits) {
-            warnings.push({ level: 'warning', title: `HK ${code}: ${credits} TC vượt mức tối đa`, detail: `Tối đa ${curriculum.max_semester_credits} TC/kỳ.` });
+            warnings.push({ level: 'warning', title: i18n.t('HK {{code}}: {{credits}} TC vượt mức tối đa', { code: code, credits: credits }), detail: i18n.t('Tối đa {{max_semester_credits}} TC/kỳ.', { max_semester_credits: curriculum.max_semester_credits }) });
         }
     });
     blocks.forEach((block, index) => {
@@ -730,14 +731,14 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
         ));
         const extra = chosen.length - block.needCount;
         if (extra > 0 && block.needCount > 0) {
-            warnings.push({ level: 'info', title: `${group.name}: chọn dư ${extra} môn`, detail: `Khối chỉ tính ${block.needCount} môn; môn dư không được chuyển sang khối khác.` });
+            warnings.push({ level: 'info', title: i18n.t('{{name}}: chọn dư {{extra}} môn', { name: group.name, extra: extra }), detail: i18n.t('Khối chỉ tính {{needCount}} môn; môn dư không được chuyển sang khối khác.', { needCount: block.needCount }) });
         }
     });
     const undeclaredPast = [...info.values()].filter(course => (
         !course.groupId && course.status === null && course.recommendedSemester !== null && course.recommendedSemester < current
     )).length;
     if (undeclaredPast) {
-        warnings.push({ level: 'info', title: `${undeclaredPast} môn đã qua kỳ khuyến nghị nhưng chưa khai trạng thái`, detail: 'Nếu đã học, khai trạng thái để phân tích chính xác hơn.' });
+        warnings.push({ level: 'info', title: i18n.t('{{undeclaredPast}} môn đã qua kỳ khuyến nghị nhưng chưa khai trạng thái', { undeclaredPast: undeclaredPast }), detail: i18n.t('Nếu đã học, khai trạng thái để phân tích chính xác hơn.') });
     }
     // Khối tự chọn có kỳ gợi ý (kế hoạch giảng dạy myBK) đã qua mà chưa đủ yêu cầu.
     const overdueBlocks = blocks.filter((block, index) => {
@@ -749,8 +750,8 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
     if (overdueBlocks.length) {
         warnings.push({
             level: 'warning',
-            title: `${overdueBlocks.length} khối tự chọn đã qua kỳ gợi ý nhưng chưa đủ yêu cầu`,
-            detail: overdueBlocks.map(block => `${block.name} (còn ${block.remaining} TC)`).join('; '),
+            title: i18n.t('{{length}} khối tự chọn đã qua kỳ gợi ý nhưng chưa đủ yêu cầu', { length: overdueBlocks.length }),
+            detail: overdueBlocks.map(block => i18n.t('{{name}} (còn {{remaining}} TC)', { name: block.name, remaining: block.remaining })).join('; '),
         });
     }
     if (curriculum.specialization_required && specializations.length) {
@@ -758,19 +759,19 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
         if (!target) {
             warnings.push({
                 level: 'warning',
-                title: 'Chương trình yêu cầu đạt một chuyên ngành',
-                detail: `Cần hoàn thành danh sách môn của đúng một chuyên ngành (${specializations.map(option => option.specialization.name).join(', ')}) mới đủ điều kiện tốt nghiệp. Hãy chọn chuyên ngành mục tiêu.`,
+                title: i18n.t('Chương trình yêu cầu đạt một chuyên ngành'),
+                detail: i18n.t('Cần hoàn thành danh sách môn của đúng một chuyên ngành ({{v0}}) mới đủ điều kiện tốt nghiệp. Hãy chọn chuyên ngành mục tiêu.', { v0: specializations.map(option => option.specialization.name).join(', ') }),
             });
         } else if (!target.achievable) {
             warnings.push({
                 level: 'error',
-                title: `Không còn đạt được chuyên ngành ${target.specialization.name}`,
-                detail: 'Chương trình yêu cầu đạt một chuyên ngành để tốt nghiệp; xem lại các môn đã chọn ngoài danh sách chuyên ngành.',
+                title: i18n.t('Không còn đạt được chuyên ngành {{name}}', { name: target.specialization.name }),
+                detail: i18n.t('Chương trình yêu cầu đạt một chuyên ngành để tốt nghiệp; xem lại các môn đã chọn ngoài danh sách chuyên ngành.'),
             });
         }
     }
     if (outsideUncountedCredits > 0) {
-        warnings.push({ level: 'info', title: `${outsideUncountedCredits} TC đã hoàn thành không được tính vào chuẩn tốt nghiệp`, detail: 'Gồm môn ngoài chương trình không khớp khối tự chọn tự do hoặc môn dư của khối tự chọn.' });
+        warnings.push({ level: 'info', title: i18n.t('{{outsideUncountedCredits}} TC đã hoàn thành không được tính vào chuẩn tốt nghiệp', { outsideUncountedCredits: outsideUncountedCredits }), detail: i18n.t('Gồm môn ngoài chương trình không khớp khối tự chọn tự do hoặc môn dư của khối tự chọn.') });
     }
 
     const metRegulations = new Set(input.regulationStatuses
@@ -778,7 +779,7 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
         .map(item => item.regulation_id));
     const unmetRegulations = input.regulations.filter(regulation => !metRegulations.has(regulation.id));
     if (unmetRegulations.length) {
-        warnings.push({ level: 'info', title: `${unmetRegulations.length}/${input.regulations.length} điều kiện tốt nghiệp chưa đạt`, detail: unmetRegulations.map(item => item.name).join('; ') });
+        warnings.push({ level: 'info', title: i18n.t('{{length}}/{{length2}} điều kiện tốt nghiệp chưa đạt', { length: unmetRegulations.length, length2: input.regulations.length }), detail: unmetRegulations.map(item => item.name).join('; ') });
     }
 
     // Đề cương: điều kiện chương trình không khai, và kỳ dồn nhiều môn thí nghiệm/đồ án.
@@ -786,15 +787,15 @@ export const analyzeStudent = (input: AnalysisInput): Analysis => {
     if (outlineNotes.length) {
         warnings.push({
             level: 'warning',
-            title: `${outlineNotes.length} môn đủ điều kiện theo chương trình nhưng đề cương ghi thêm điều kiện bạn chưa đáp ứng`,
-            detail: `${outlineNotes.slice(0, 8).map(check => `${check.course.code} (${check.outlineMissing.map(item => `${COURSE_RELATION_TYPE_LABEL[item.type].toLowerCase()} ${item.code}`).join(', ')})`).join('; ')}${outlineNotes.length > 8 ? '…' : ''}. Hệ thống xét theo chương trình đào tạo; nên hỏi lại khoa trước khi đăng ký.`,
+            title: i18n.t('{{length}} môn đủ điều kiện theo chương trình nhưng đề cương ghi thêm điều kiện bạn chưa đáp ứng', { length: outlineNotes.length }),
+            detail: i18n.t('{{v0}}{{v1}}. Hệ thống xét theo chương trình đào tạo; nên hỏi lại khoa trước khi đăng ký.', { v0: outlineNotes.slice(0, 8).map(check => `${check.course.code} (${check.outlineMissing.map(item => `${COURSE_RELATION_TYPE_LABEL[item.type].toLowerCase()} ${item.code}`).join(', ')})`).join('; '), v1: outlineNotes.length > 8 ? '…' : '' }),
         });
     }
     roadmap.filter(semester => semester.heavyCount >= HEAVY_COURSES_PER_SEMESTER).slice(0, 3).forEach(semester => {
         warnings.push({
             level: 'info',
-            title: `HK ${semester.code}: ${semester.heavyCount} môn có thí nghiệm hoặc đồ án`,
-            detail: `Theo đề cương, lộ trình đề xuất xếp nhiều môn thực hành nặng vào cùng kỳ${semester.hoursKnown ? ` (≈ ${semester.studyHours} giờ học tập cho ${semester.hoursKnown} môn có đề cương)` : ''}. Cân nhắc dời bớt sang kỳ khác.`,
+            title: i18n.t('HK {{code}}: {{heavyCount}} môn có thí nghiệm hoặc đồ án', { code: semester.code, heavyCount: semester.heavyCount }),
+            detail: i18n.t('Theo đề cương, lộ trình đề xuất xếp nhiều môn thực hành nặng vào cùng kỳ{{v0}}. Cân nhắc dời bớt sang kỳ khác.', { v0: semester.hoursKnown ? i18n.t(' (≈ {{hours}} giờ học tập cho {{count}} môn có đề cương)', { hours: semester.studyHours, count: semester.hoursKnown }) : '' }),
         });
     });
 

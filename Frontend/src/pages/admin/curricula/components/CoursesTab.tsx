@@ -19,6 +19,7 @@ import { useApiMutation, useApiQuery, useDebounce } from '@/hooks';
 import type { CurriculumCourse, CurriculumCoursePayload } from '@/types';
 import { summarizeCurriculumCredits } from '@/utils/curriculum-credits';
 import type { CurriculumTabProps } from '../types';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -65,7 +66,7 @@ const schedulePairRule = (otherField: 'recommended_year' | 'recommended_term') =
     ({ getFieldValue }: { getFieldValue: (name: string) => unknown }) => ({
         validator: (_rule: unknown, value: number | null | undefined) => (
             isBlank(value) !== isBlank(getFieldValue(otherField))
-                ? Promise.reject(new Error('Nhập đủ năm và kỳ, hoặc để trống cả hai.'))
+                ? Promise.reject(new Error(i18n.t('Nhập đủ năm và kỳ, hoặc để trống cả hai.')))
                 : Promise.resolve()
         ),
     });
@@ -151,7 +152,7 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
             .filter(course => !existingCourseIds.has(course.id))
             .map(course => ({
                 value: course.id,
-                label: `${course.code} · ${course.name} (${course.credits} TC)`,
+                label: i18n.t('{{code}} · {{name}} ({{credits}} TC)', { code: course.code, name: course.name, credits: course.credits }),
             })),
         [existingCourseIds, pickerQuery.data],
     );
@@ -182,7 +183,7 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                 await replaceCourseCategories(curriculumId, input.courseId, input.categoryIds);
             }
         },
-        successMessage: 'Đã cập nhật môn trong chương trình.',
+        successMessage: i18n.t('Đã cập nhật môn trong chương trình.'),
         onSuccess: () => {
             setEditing(null);
             refresh();
@@ -193,7 +194,7 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const addCourse = useApiMutation({
         mutationFn: (payload: CurriculumCoursePayload) => upsertCurriculumCourse(curriculumId, payload),
-        successMessage: 'Đã lưu môn vào chương trình.',
+        successMessage: i18n.t('Đã lưu môn vào chương trình.'),
         onSuccess: () => {
             setAdding(false);
             setSearch('');
@@ -204,7 +205,7 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const removeCourse = useApiMutation({
         mutationFn: (courseId: string) => removeCurriculumCourse(curriculumId, courseId),
-        successMessage: 'Đã xoá môn khỏi chương trình.',
+        successMessage: i18n.t('Đã xoá môn khỏi chương trình.'),
         onSuccess: refresh,
     });
 
@@ -248,40 +249,40 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const columns: ColumnsType<CurriculumCourse> = [
         {
-            title: 'Mã môn',
+            title: i18n.t('Mã môn'),
             key: 'code',
             width: 120,
             render: (_value, record) => <Text strong>{record.course.code}</Text>,
         },
         {
-            title: 'Tên môn học',
+            title: i18n.t('Tên môn học'),
             key: 'name',
             width: 260,
             render: (_value, record) => <span style={{ wordBreak: 'break-word' }}>{record.course.name}</span>,
         },
         {
-            title: 'Tín chỉ',
+            title: i18n.t('Tín chỉ'),
             key: 'credits',
             width: 96,
             align: 'center',
-            render: (_value, record) => <Tag>{record.course.credits} TC</Tag>,
+            render: (_value, record) => <Tag>{record.course.credits}{' '}{i18n.t('TC')}</Tag>,
         },
         {
-            title: 'Nhóm học phần',
+            title: i18n.t('Nhóm học phần'),
             key: 'categories',
             width: 240,
             render: (_value, record) => {
                 if (categoriesQuery.isLoading) {
-                    return <Text type="secondary">Đang tải nhóm…</Text>;
+                    return <Text type="secondary">{i18n.t('Đang tải nhóm…')}</Text>;
                 }
 
                 if (categoriesQuery.isError) {
-                    return <Text type="danger">Không tải được nhóm học phần</Text>;
+                    return <Text type="danger">{i18n.t('Không tải được nhóm học phần')}</Text>;
                 }
 
                 const names = categoryNamesByCourseId.get(record.course_id) ?? [];
                 if (names.length === 0) {
-                    return <Text type="secondary">Chưa xếp nhóm</Text>;
+                    return <Text type="secondary">{i18n.t('Chưa xếp nhóm')}</Text>;
                 }
 
                 return (
@@ -296,7 +297,7 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
             },
         },
         {
-            title: 'Năm – Kỳ khuyến nghị',
+            title: i18n.t('Năm – Kỳ khuyến nghị'),
             key: 'schedule',
             width: 170,
             sorter: compareSchedule,
@@ -304,20 +305,20 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
             sortDirections: ['ascend', 'descend', 'ascend'],
             render: (_value, record) => {
                 const { recommended_year: year, recommended_term: term } = record;
-                if (year === null) return <Tag color="default">Chưa xếp kỳ</Tag>;
+                if (year === null) return <Tag color="default">{i18n.t('Chưa xếp kỳ')}</Tag>;
 
                 return (
                     <Space size={4}>
-                        <Tag color={YEAR_TAG_COLOR[year] ?? 'default'} style={{ marginInlineEnd: 0 }}>Năm {year}</Tag>
+                        <Tag color={YEAR_TAG_COLOR[year] ?? 'default'} style={{ marginInlineEnd: 0 }}>{i18n.t('Năm')}{' '}{year}</Tag>
                         {term !== null && (
-                            <Tag color={TERM_TAG_COLOR[term] ?? 'default'} style={{ marginInlineEnd: 0 }}>Kỳ {term}</Tag>
+                            <Tag color={TERM_TAG_COLOR[term] ?? 'default'} style={{ marginInlineEnd: 0 }}>{i18n.t('Kỳ')}{' '}{term}</Tag>
                         )}
                     </Space>
                 );
             },
         },
         {
-            title: 'Hành động',
+            title: i18n.t('Hành động'),
             key: 'actions',
             width: 120,
             render: (_value, record) => (
@@ -326,21 +327,21 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                         to={`/courses/${encodeURIComponent(record.course.code)}`}
                         state={{ from: `${location.pathname}${location.search}` }}
                     >
-                        <IconBtn size="small" icon={<LuEye />} label={`Xem môn ${record.course.code}`} />
+                        <IconBtn size="small" icon={<LuEye />} label={i18n.t('Xem môn {{code}}', { code: record.course.code })} />
                     </Link>
 
                     <IconBtn
                         size="small"
                         icon={<LuPencil />}
-                        label={`Sửa môn ${record.course.code}`}
+                        label={i18n.t('Sửa môn {{code}}', { code: record.course.code })}
                         onClick={() => openEdit(record)}
                     />
 
                     <Popconfirm
-                        title="Xoá môn khỏi chương trình?"
-                        description="Xoá môn sẽ kéo theo thành viên nhóm, quan hệ môn và dòng kế hoạch học tập của sinh viên liên quan."
-                        okText="Xoá"
-                        cancelText="Huỷ"
+                        title={i18n.t('Xoá môn khỏi chương trình?')}
+                        description={i18n.t('Xoá môn sẽ kéo theo thành viên nhóm, quan hệ môn và dòng kế hoạch học tập của sinh viên liên quan.')}
+                        okText={i18n.t('Xoá')}
+                        cancelText={i18n.t('Huỷ')}
                         okButtonProps={{ color: 'danger', variant: 'solid' }}
                         onConfirm={() => removeCourse.mutate(record.course_id)}
                     >
@@ -348,7 +349,7 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                             size="small"
                             color="danger"
                             icon={<LuTrash2 />}
-                            label={`Xoá môn ${record.course.code}`}
+                            label={i18n.t('Xoá môn {{code}}', { code: record.course.code })}
                             loading={removeCourse.isPending && removeCourse.variables === record.course_id}
                         />
                     </Popconfirm>
@@ -371,36 +372,36 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                 }}
             >
                 <Space wrap size={8}>
-                    <Tag color="blue">{courses.length} môn</Tag>
+                    <Tag color="blue">{courses.length}{' '}{i18n.t('môn')}</Tag>
                     {groupsQuery.isSuccess && (
                         <>
-                            <Tag color="geekblue">Chuẩn tốt nghiệp {creditSummary.totalCredits} TC</Tag>
+                            <Tag color="geekblue">{i18n.t('Chuẩn tốt nghiệp')}{' '}{creditSummary.totalCredits}{' '}{i18n.t('TC')}</Tag>
                             <Text type="secondary">
-                                {creditSummary.standaloneCredits} TC môn có lộ trình (không thuộc khối)
+                                {creditSummary.standaloneCredits}{' '}{i18n.t('TC môn có lộ trình (không thuộc khối)')}
                                 {' + '}
-                                {creditSummary.groupCredits} TC yêu cầu các khối tự chọn
+                                {creditSummary.groupCredits}{' '}{i18n.t('TC yêu cầu các khối tự chọn')}
                             </Text>
                         </>
                     )}
                 </Space>
 
-                <ISolidBtn icon={<LuPlus />} onClick={openAdd}>Thêm môn</ISolidBtn>
+                <ISolidBtn icon={<LuPlus />} onClick={openAdd}>{i18n.t('Thêm môn')}</ISolidBtn>
             </div>
 
             {coursesQuery.isError && (
                 <Alert
                     type="error"
                     showIcon
-                    title="Không tải được danh sách môn của chương trình"
-                    description={coursesQuery.error?.message ?? 'Vui lòng tải lại trang để thử lại.'}
+                    title={i18n.t('Không tải được danh sách môn của chương trình')}
+                    description={coursesQuery.error?.message ?? i18n.t('Vui lòng tải lại trang để thử lại.')}
                 />
             )}
 
             {isEmpty && (
                 <EmptyState
-                    title="Chương trình chưa có môn học"
-                    description="Thêm môn và khai năm/kỳ khuyến nghị để bắt đầu xây dựng nội dung chương trình."
-                    action={<ISolidBtn icon={<LuPlus />} onClick={openAdd}>Thêm môn</ISolidBtn>}
+                    title={i18n.t('Chương trình chưa có môn học')}
+                    description={i18n.t('Thêm môn và khai năm/kỳ khuyến nghị để bắt đầu xây dựng nội dung chương trình.')}
+                    action={<ISolidBtn icon={<LuPlus />} onClick={openAdd}>{i18n.t('Thêm môn')}</ISolidBtn>}
                 />
             )}
 
@@ -413,13 +414,12 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                         rowKey="id"
                         pagination={false}
                         loading={coursesQuery.isLoading}
-                        emptyText="Chương trình chưa có môn học"
+                        emptyText={i18n.t('Chương trình chưa có môn học')}
                     />
 
                     {categories.length > 0 && (
                         <Text type="secondary">
-                            Một môn có thể thuộc nhiều nhóm học phần. Bấm “Sửa” để đổi năm/kỳ khuyến nghị,
-                            bỏ xếp kỳ hoặc đổi nhóm học phần của môn.
+                            {i18n.t('Một môn có thể thuộc nhiều nhóm học phần. Bấm “Sửa” để đổi năm/kỳ khuyến nghị, bỏ xếp kỳ hoặc đổi nhóm học phần của môn.')}
                         </Text>
                     )}
                 </>
@@ -427,9 +427,9 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
 
             <Modal
                 open={adding}
-                title="Thêm môn vào chương trình"
-                okText="Thêm môn"
-                cancelText="Huỷ"
+                title={i18n.t('Thêm môn vào chương trình')}
+                okText={i18n.t('Thêm môn')}
+                cancelText={i18n.t('Huỷ')}
                 confirmLoading={addCourse.isPending}
                 forceRender
                 onCancel={() => setAdding(false)}
@@ -447,16 +447,16 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                 >
                     <Form.Item
                         name="course_id"
-                        label="Môn học"
-                        rules={[{ required: true, message: 'Chọn môn học.' }]}
-                        extra="Tìm theo mã hoặc tên; chỉ hiện môn chưa có trong chương trình (lấy tối đa 100 môn khớp từ khóa)."
+                        label={i18n.t('Môn học')}
+                        rules={[{ required: true, message: i18n.t('Chọn môn học.') }]}
+                        extra={i18n.t('Tìm theo mã hoặc tên; chỉ hiện môn chưa có trong chương trình (lấy tối đa 100 môn khớp từ khóa).')}
                     >
                         <Select
-                            placeholder="Tìm và chọn môn học"
+                            placeholder={i18n.t('Tìm và chọn môn học')}
                             showSearch={{ filterOption: false, onSearch: setSearch }}
                             options={pickerOptions}
                             loading={pickerQuery.isFetching}
-                            notFoundContent={pickerQuery.isFetching ? 'Đang tìm môn…' : 'Không có môn phù hợp chưa thuộc chương trình'}
+                            notFoundContent={pickerQuery.isFetching ? i18n.t('Đang tìm môn…') : i18n.t('Không có môn phù hợp chưa thuộc chương trình')}
                             style={{ width: '100%' }}
                         />
                     </Form.Item>
@@ -464,33 +464,33 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                     <Space size={12} wrap align="start">
                         <Form.Item
                             name="recommended_year"
-                            label="Năm khuyến nghị"
+                            label={i18n.t('Năm khuyến nghị')}
                             dependencies={['recommended_term']}
                             rules={[schedulePairRule('recommended_term')]}
                         >
-                            <InputNumber {...YEAR_FIELD} placeholder="Trống" style={{ width: 140 }} />
+                            <InputNumber {...YEAR_FIELD} placeholder={i18n.t('Trống')} style={{ width: 140 }} />
                         </Form.Item>
 
                         <Form.Item
                             name="recommended_term"
-                            label="Kỳ khuyến nghị"
+                            label={i18n.t('Kỳ khuyến nghị')}
                             dependencies={['recommended_year']}
                             rules={[schedulePairRule('recommended_year')]}
                         >
-                            <InputNumber {...TERM_FIELD} placeholder="Trống" style={{ width: 140 }} />
+                            <InputNumber {...TERM_FIELD} placeholder={i18n.t('Trống')} style={{ width: 140 }} />
                         </Form.Item>
                     </Space>
                     <Text type="secondary" style={{ display: 'block', marginTop: -8, marginBottom: 16 }}>
-                        Để trống cả năm và kỳ nếu môn không gắn học kỳ cố định (môn trong pool tự chọn).
+                        {i18n.t('Để trống cả năm và kỳ nếu môn không gắn học kỳ cố định (môn trong pool tự chọn).')}
                     </Text>
                 </Form>
             </Modal>
 
             <Modal
                 open={editing !== null}
-                title={editing ? `Sửa ${editing.course.code} · ${editing.course.name}` : 'Sửa môn'}
-                okText="Lưu"
-                cancelText="Huỷ"
+                title={editing ? i18n.t('Sửa {{code}} · {{name}}', { code: editing.course.code, name: editing.course.name }) : i18n.t('Sửa môn')}
+                okText={i18n.t('Lưu')}
+                cancelText={i18n.t('Huỷ')}
                 confirmLoading={saveCourse.isPending}
                 forceRender
                 onCancel={() => setEditing(null)}
@@ -505,37 +505,37 @@ const CoursesTab = ({ curriculumId }: CurriculumTabProps) => {
                     <Space size={12} wrap align="start">
                         <Form.Item
                             name="recommended_year"
-                            label="Năm khuyến nghị"
+                            label={i18n.t('Năm khuyến nghị')}
                             dependencies={['recommended_term']}
                             rules={[schedulePairRule('recommended_term')]}
                         >
-                            <InputNumber {...YEAR_FIELD} placeholder="Trống" style={{ width: 140 }} />
+                            <InputNumber {...YEAR_FIELD} placeholder={i18n.t('Trống')} style={{ width: 140 }} />
                         </Form.Item>
 
                         <Form.Item
                             name="recommended_term"
-                            label="Kỳ khuyến nghị"
+                            label={i18n.t('Kỳ khuyến nghị')}
                             dependencies={['recommended_year']}
                             rules={[schedulePairRule('recommended_year')]}
                         >
-                            <InputNumber {...TERM_FIELD} placeholder="Trống" style={{ width: 140 }} />
+                            <InputNumber {...TERM_FIELD} placeholder={i18n.t('Trống')} style={{ width: 140 }} />
                         </Form.Item>
                     </Space>
                     <Text type="secondary" style={{ display: 'block', marginTop: -8, marginBottom: 16 }}>
-                        Để trống cả năm và kỳ nếu môn không gắn học kỳ cố định (môn trong pool tự chọn).
+                        {i18n.t('Để trống cả năm và kỳ nếu môn không gắn học kỳ cố định (môn trong pool tự chọn).')}
                     </Text>
 
                     <Form.Item
                         name="category_ids"
-                        label="Nhóm học phần"
+                        label={i18n.t('Nhóm học phần')}
                         extra={categories.length === 0
-                            ? 'Chương trình chưa có nhóm học phần; tạo nhóm ở tab “Nhóm học phần”.'
-                            : 'Một môn có thể thuộc nhiều nhóm; thay đổi không ảnh hưởng các môn khác trong nhóm.'}
+                            ? i18n.t('Chương trình chưa có nhóm học phần; tạo nhóm ở tab “Nhóm học phần”.')
+                            : i18n.t('Một môn có thể thuộc nhiều nhóm; thay đổi không ảnh hưởng các môn khác trong nhóm.')}
                     >
                         <Select
                             mode="multiple"
                             allowClear
-                            placeholder="Chưa xếp nhóm"
+                            placeholder={i18n.t('Chưa xếp nhóm')}
                             showSearch={{ optionFilterProp: 'label' }}
                             options={categoryOptions}
                             loading={categoriesQuery.isLoading}

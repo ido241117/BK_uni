@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { trLive } from '@/i18n/live';
 
 /**
  * Vai trò trong hệ thống. Khai báo bằng const object thay vì enum để tương thích
@@ -13,10 +14,10 @@ export type UserRole = (typeof ROLE)[keyof typeof ROLE];
 
 export const USER_ROLES: UserRole[] = [ROLE.STUDENT, ROLE.ADMIN];
 
-export const ROLE_LABEL: Record<UserRole, string> = {
+export const ROLE_LABEL: Record<UserRole, string> = trLive({
     [ROLE.STUDENT]: 'Sinh viên',
     [ROLE.ADMIN]: 'Quản trị viên',
-};
+});
 
 export type PermissionAction = 'view' | 'create' | 'update' | 'delete';
 

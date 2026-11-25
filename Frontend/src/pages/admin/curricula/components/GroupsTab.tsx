@@ -24,6 +24,7 @@ import {
 } from '@/types';
 import type { CurriculumTabProps } from '../types';
 import { groupRequiredCredits } from '@/utils/curriculum-credits';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -46,8 +47,8 @@ const CREDITS_FIELD = { min: 1, max: 200, precision: 0 };
 /** Mô tả ràng buộc của khối: số môn và/hoặc số tín chỉ phải đạt. */
 const describeRequirement = (group: CourseGroup): string => {
     const parts: string[] = [];
-    if (group.required_count !== null) parts.push(`${group.required_count} môn`);
-    if (group.required_credits !== null) parts.push(`${group.required_credits} TC`);
+    if (group.required_count !== null) parts.push(i18n.t('{{required_count}} môn', { required_count: group.required_count }));
+    if (group.required_credits !== null) parts.push(i18n.t('{{required_credits}} TC', { required_credits: group.required_credits }));
     return parts.length ? parts.join(' / ') : '—';
 };
 
@@ -80,7 +81,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
     const courseOptions = useMemo(
         () => (coursesQuery.data ?? []).map(item => ({
             value: item.course_id,
-            label: `${item.course.code} · ${item.course.name} (${item.course.credits} TC)`,
+            label: i18n.t('{{code}} · {{name}} ({{credits}} TC)', { code: item.course.code, name: item.course.name, credits: item.course.credits }),
         })),
         [coursesQuery.data],
     );
@@ -105,7 +106,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const createGroup = useApiMutation({
         mutationFn: (payload: CourseGroupPayload) => createCourseGroup(curriculumId, payload),
-        successMessage: 'Đã tạo nhóm môn.',
+        successMessage: i18n.t('Đã tạo nhóm môn.'),
         onSuccess: () => {
             setOpen(false);
             form.resetFields();
@@ -116,7 +117,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
     const updateGroup = useApiMutation({
         mutationFn: (input: { groupId: string; payload: Partial<CourseGroupPayload> }) =>
             updateCourseGroup(curriculumId, input.groupId, input.payload),
-        successMessage: 'Đã cập nhật nhóm môn.',
+        successMessage: i18n.t('Đã cập nhật nhóm môn.'),
         onSuccess: () => {
             setOpen(false);
             form.resetFields();
@@ -126,7 +127,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const removeGroup = useApiMutation({
         mutationFn: (groupId: string) => removeCourseGroup(curriculumId, groupId),
-        successMessage: 'Đã xoá nhóm môn.',
+        successMessage: i18n.t('Đã xoá nhóm môn.'),
         onSuccess: refresh,
     });
 
@@ -198,7 +199,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
             const count = form.getFieldValue('required_count');
             const credits = form.getFieldValue('required_credits');
             if (count == null && credits == null) {
-                return Promise.reject(new Error('Nhập số môn hoặc số tín chỉ cần đạt.'));
+                return Promise.reject(new Error(i18n.t('Nhập số môn hoặc số tín chỉ cần đạt.')));
             }
             return Promise.resolve();
         },
@@ -206,12 +207,12 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const columns: ColumnsType<CourseGroup> = [
         {
-            title: 'Tên nhóm',
+            title: i18n.t('Tên nhóm'),
             dataIndex: 'name',
             render: (name: string) => <Text strong>{name}</Text>,
         },
         {
-            title: 'Loại',
+            title: i18n.t('Loại'),
             dataIndex: 'kind',
             width: 110,
             render: (kind: CourseGroupKind) => (
@@ -219,7 +220,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
             ),
         },
         {
-            title: 'Phạm vi',
+            title: i18n.t('Phạm vi'),
             dataIndex: 'pool_scope',
             width: 130,
             render: (scope: CourseGroupScope) => (
@@ -227,7 +228,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
             ),
         },
         {
-            title: 'Yêu cầu',
+            title: i18n.t('Yêu cầu'),
             key: 'requirement',
             width: 140,
             align: 'center',
@@ -239,35 +240,35 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                 return (
                     <Space size={4}>
                         <Tag color={required ? 'orange' : undefined}>{describeRequirement(group)}</Tag>
-                        {required && <Text type="warning">thiếu môn</Text>}
+                        {required && <Text type="warning">{i18n.t('thiếu môn')}</Text>}
                     </Space>
                 );
             },
         },
         {
-            title: 'Môn trong nhóm',
+            title: i18n.t('Môn trong nhóm'),
             key: 'members',
             width: 140,
             align: 'center',
             render: (_value, group) => (group.pool_scope === COURSE_GROUP_SCOPE.ANY
-                ? <Text type="secondary">{group.pool_course_credits ? `môn ${group.pool_course_credits} TC` : 'mọi môn'}</Text>
-                : `${group.members.length} môn`),
+                ? <Text type="secondary">{group.pool_course_credits ? i18n.t('môn {{pool_course_credits}} TC', { pool_course_credits: group.pool_course_credits }) : i18n.t('mọi môn')}</Text>
+                : i18n.t('{{length}} môn', { length: group.members.length })),
         },
         {
-            title: 'Hành động',
+            title: i18n.t('Hành động'),
             key: 'actions',
             width: 190,
             render: (_value, group) => (
                 <Space size={8}>
                     <ITextBtn size="small" icon={<LuPencil />} onClick={() => openEdit(group)}>
-                        Sửa
+                        {i18n.t('Sửa')}
                     </ITextBtn>
 
                     <Popconfirm
-                        title="Xoá nhóm môn?"
-                        description="Nhóm và toàn bộ thành viên của nhóm sẽ bị xoá; môn trong chương trình vẫn được giữ."
-                        okText="Xoá"
-                        cancelText="Huỷ"
+                        title={i18n.t('Xoá nhóm môn?')}
+                        description={i18n.t('Nhóm và toàn bộ thành viên của nhóm sẽ bị xoá; môn trong chương trình vẫn được giữ.')}
+                        okText={i18n.t('Xoá')}
+                        cancelText={i18n.t('Huỷ')}
                         okButtonProps={{ color: 'danger', variant: 'solid' }}
                         onConfirm={() => removeGroup.mutate(group.id)}
                     >
@@ -277,7 +278,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                             icon={<LuTrash2 />}
                             loading={removeGroup.isPending && removeGroup.variables === group.id}
                         >
-                            Xoá
+                            {i18n.t('Xoá')}
                         </ITextBtn>
                     </Popconfirm>
                 </Space>
@@ -299,22 +300,21 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                 }}
             >
                 <Space wrap size={8}>
-                    <Tag color="geekblue">{groups.length} khối · yêu cầu {totalGroupCredits} TC</Tag>
+                    <Tag color="geekblue">{groups.length}{' '}{i18n.t('khối · yêu cầu')}{' '}{totalGroupCredits}{' '}{i18n.t('TC')}</Tag>
                     <Text type="secondary">
-                        Khối yêu cầu tính theo số môn, số tín chỉ hoặc cả hai; khối “chọn tự do” nhận mọi môn
-                        trong danh mục (tự chọn tự do).
+                        {i18n.t('Khối yêu cầu tính theo số môn, số tín chỉ hoặc cả hai; khối “chọn tự do” nhận mọi môn trong danh mục (tự chọn tự do).')}
                     </Text>
                 </Space>
 
-                <ISolidBtn icon={<LuPlus />} onClick={openCreate}>Tạo nhóm môn</ISolidBtn>
+                <ISolidBtn icon={<LuPlus />} onClick={openCreate}>{i18n.t('Tạo nhóm môn')}</ISolidBtn>
             </div>
 
             {groupsQuery.isError && (
                 <Alert
                     type="error"
                     showIcon
-                    title="Không tải được danh sách nhóm môn"
-                    description={groupsQuery.error?.message ?? 'Vui lòng tải lại trang để thử lại.'}
+                    title={i18n.t('Không tải được danh sách nhóm môn')}
+                    description={groupsQuery.error?.message ?? i18n.t('Vui lòng tải lại trang để thử lại.')}
                 />
             )}
 
@@ -322,18 +322,18 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                 <Alert
                     type="warning"
                     showIcon
-                    title="Một số nhóm chưa đủ số môn theo yêu cầu"
-                    description={`${incompleteGroups
+                    title={i18n.t('Một số nhóm chưa đủ số môn theo yêu cầu')}
+                    description={i18n.t('{{v0}}. Hệ thống chỉ cảnh báo, hãy bổ sung môn cho nhóm.', { v0: incompleteGroups
                         .map(group => `${group.name} (${group.members.length}/${group.required_count} môn)`)
-                        .join(', ')}. Hệ thống chỉ cảnh báo, hãy bổ sung môn cho nhóm.`}
+                        .join(', ') })}
                 />
             )}
 
             {isEmpty && (
                 <EmptyState
-                    title="Chương trình chưa có nhóm môn"
-                    description="Tạo khối yêu cầu để gom các môn cùng khối kiến thức: chọn 1 trong 5, chọn 5 trong 44…"
-                    action={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>Tạo nhóm môn</ISolidBtn>}
+                    title={i18n.t('Chương trình chưa có nhóm môn')}
+                    description={i18n.t('Tạo khối yêu cầu để gom các môn cùng khối kiến thức: chọn 1 trong 5, chọn 5 trong 44…')}
+                    action={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>{i18n.t('Tạo nhóm môn')}</ISolidBtn>}
                 />
             )}
 
@@ -345,20 +345,20 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                     rowKey="id"
                     pagination={false}
                     loading={groupsQuery.isLoading}
-                    emptyText="Chương trình chưa có nhóm môn"
+                    emptyText={i18n.t('Chương trình chưa có nhóm môn')}
                     expandable={{
                         expandedRowRender: group => {
                             if (group.pool_scope === COURSE_GROUP_SCOPE.ANY) {
                                 return (
                                     <Text type="secondary">
-                                        {`Khối chọn tự do: sinh viên chọn mọi môn ${group.pool_course_credits ?? ''} tín chỉ trong danh mục, `
-                                        + `cần đạt ${group.required_credits ?? '?'} tín chỉ.`}
+                                        {i18n.t('Khối chọn tự do: sinh viên chọn mọi môn {{v0}} tín chỉ trong danh mục, ', { v0: group.pool_course_credits ?? '' })
+                                        + i18n.t('cần đạt {{v0}} tín chỉ.', { v0: group.required_credits ?? '?' })}
                                     </Text>
                                 );
                             }
 
                             return group.members.length === 0
-                                ? <Text type="secondary">Nhóm chưa có môn nào.</Text>
+                                ? <Text type="secondary">{i18n.t('Nhóm chưa có môn nào.')}</Text>
                                 : (
                                     <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                                         <ol style={{ margin: 0, paddingLeft: 24 }}>
@@ -368,7 +368,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                                                     <li key={member.course_id} style={{ padding: '2px 0' }}>
                                                         <Text strong>{member.course.code}</Text>
                                                         {` · ${member.course.name} `}
-                                                        <Text type="secondary">({member.course.credits} TC)</Text>
+                                                        <Text type="secondary">({member.course.credits}{' '}{i18n.t('TC)')}</Text>
                                                     </li>
                                                 ))}
                                         </ol>
@@ -377,7 +377,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                                             <Alert
                                                 type="warning"
                                                 showIcon
-                                                title={`Nhóm cần ${group.required_count} môn nhưng mới có ${group.members.length} môn.`}
+                                                title={i18n.t('Nhóm cần {{required_count}} môn nhưng mới có {{length}} môn.', { required_count: group.required_count, length: group.members.length })}
                                             />
                                         )}
                                     </Space>
@@ -389,9 +389,9 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
 
             <Modal
                 open={open}
-                title={editingGroup ? 'Sửa nhóm môn' : 'Tạo nhóm môn'}
-                okText={editingGroup ? 'Lưu' : 'Tạo nhóm'}
-                cancelText="Huỷ"
+                title={editingGroup ? i18n.t('Sửa nhóm môn') : i18n.t('Tạo nhóm môn')}
+                okText={editingGroup ? i18n.t('Lưu') : i18n.t('Tạo nhóm')}
+                cancelText={i18n.t('Huỷ')}
                 confirmLoading={createGroup.isPending || updateGroup.isPending}
                 forceRender
                 onCancel={() => setOpen(false)}
@@ -401,8 +401,8 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                     <Alert
                         type="info"
                         showIcon
-                        title="Chương trình chưa có môn học"
-                        description="Thêm môn ở tab “Môn học” trước khi gán môn cho nhóm."
+                        title={i18n.t('Chương trình chưa có môn học')}
+                        description={i18n.t('Thêm môn ở tab “Môn học” trước khi gán môn cho nhóm.')}
                         style={{ marginBottom: 16 }}
                     />
                 )}
@@ -425,27 +425,27 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                 >
                     <FormField
                         name="name"
-                        label="Tên nhóm"
-                        placeholder="Cơ sở ngành"
+                        label={i18n.t('Tên nhóm')}
+                        placeholder={i18n.t('Cơ sở ngành')}
                         rules={[
-                            { required: true, message: 'Nhập tên nhóm.' },
-                            { max: 255, message: 'Tên nhóm tối đa 255 ký tự.' },
+                            { required: true, message: i18n.t('Nhập tên nhóm.') },
+                            { max: 255, message: i18n.t('Tên nhóm tối đa 255 ký tự.') },
                         ]}
                     />
 
                     <Space size={12} wrap>
                         <Form.Item
                             name="kind"
-                            label="Loại nhóm"
-                            rules={[{ required: true, message: 'Chọn loại nhóm.' }]}
+                            label={i18n.t('Loại nhóm')}
+                            rules={[{ required: true, message: i18n.t('Chọn loại nhóm.') }]}
                         >
                             <Select options={KIND_OPTIONS} style={{ width: 160 }} />
                         </Form.Item>
 
                         <Form.Item
                             name="pool_scope"
-                            label="Phạm vi môn"
-                            rules={[{ required: true, message: 'Chọn phạm vi môn.' }]}
+                            label={i18n.t('Phạm vi môn')}
+                            rules={[{ required: true, message: i18n.t('Chọn phạm vi môn.') }]}
                         >
                             <Select options={SCOPE_OPTIONS} style={{ width: 160 }} />
                         </Form.Item>
@@ -460,7 +460,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                                     {!isAny && (
                                         <Form.Item
                                             name="required_count"
-                                            label="Số môn cần"
+                                            label={i18n.t('Số môn cần')}
                                             rules={[targetValidator()]}
                                         >
                                             <InputNumber {...COUNT_FIELD} style={{ width: 140 }} />
@@ -469,7 +469,7 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
 
                                     <Form.Item
                                         name="required_credits"
-                                        label="Số tín chỉ cần"
+                                        label={i18n.t('Số tín chỉ cần')}
                                         rules={[targetValidator()]}
                                     >
                                         <InputNumber {...CREDITS_FIELD} style={{ width: 140 }} />
@@ -478,8 +478,8 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                                     {isAny && (
                                         <Form.Item
                                             name="pool_course_credits"
-                                            label="Chỉ nhận môn … tín chỉ"
-                                            extra="Để trống nếu mọi môn đều hợp lệ."
+                                            label={i18n.t('Chỉ nhận môn … tín chỉ')}
+                                            extra={i18n.t('Để trống nếu mọi môn đều hợp lệ.')}
                                         >
                                             <InputNumber {...CREDITS_FIELD} style={{ width: 140 }} />
                                         </Form.Item>
@@ -495,21 +495,21 @@ const GroupsTab = ({ curriculumId }: CurriculumTabProps) => {
                                 <Alert
                                     type="info"
                                     showIcon
-                                    title="Khối chọn tự do không khai báo thành viên"
-                                    description="Sinh viên chọn bất kỳ môn nào trong danh mục môn học (kể cả môn của chương trình khác) miễn đủ số tín chỉ yêu cầu."
+                                    title={i18n.t('Khối chọn tự do không khai báo thành viên')}
+                                    description={i18n.t('Sinh viên chọn bất kỳ môn nào trong danh mục môn học (kể cả môn của chương trình khác) miễn đủ số tín chỉ yêu cầu.')}
                                     style={{ marginTop: 8 }}
                                 />
                             )
                             : (
                                 <Form.Item
                                     name="course_ids"
-                                    label="Môn trong nhóm"
-                                    extra="Chỉ chọn được môn đã có trong chương trình. Lưu nhóm sẽ thay toàn bộ danh sách môn của nhóm."
+                                    label={i18n.t('Môn trong nhóm')}
+                                    extra={i18n.t('Chỉ chọn được môn đã có trong chương trình. Lưu nhóm sẽ thay toàn bộ danh sách môn của nhóm.')}
                                 >
                                     <Select
                                         mode="multiple"
                                         allowClear
-                                        placeholder="Chọn môn cho nhóm"
+                                        placeholder={i18n.t('Chọn môn cho nhóm')}
                                         showSearch={{ optionFilterProp: 'label' }}
                                         options={courseOptions}
                                         loading={coursesQuery.isLoading}

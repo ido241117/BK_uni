@@ -5,6 +5,7 @@ import { LuSearch } from 'react-icons/lu';
 import { IOutLinedBtn, ITextBtn } from '@/components';
 import type { Curriculum } from '@/types';
 import { cohortsOfLabel, SCHOOL_PROGRAMS, type SchoolProgramRow } from './school-programs';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -33,8 +34,8 @@ interface ChipProps {
 const ProgramChip = ({ label, matches, selectedId, onPick }: ChipProps) => {
     if (!matches.length) {
         return (
-            <Tooltip title="Sẽ hỗ trợ sau">
-                <span className="program-chip" data-state="unavailable" tabIndex={0} aria-disabled="true" aria-label={`${label}: sẽ hỗ trợ sau`}>
+            <Tooltip title={i18n.t('Sẽ hỗ trợ sau')}>
+                <span className="program-chip" data-state="unavailable" tabIndex={0} aria-disabled="true" aria-label={i18n.t('{{label}}: sẽ hỗ trợ sau', { label: label })}>
                     {label}
                 </span>
             </Tooltip>
@@ -145,21 +146,21 @@ const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPic
 
     const columns: ColumnsType<PickerRow> = [
         {
-            title: 'Khoa',
+            title: i18n.t('Khoa'),
             dataIndex: 'faculty',
             width: '20%',
             onCell: row => ({ rowSpan: row.facultySpan }),
             render: (faculty: string) => <Text strong>{faculty}</Text>,
         },
-        { title: 'Ngành', dataIndex: 'major', width: '32%' },
+        { title: i18n.t('Ngành'), dataIndex: 'major', width: '32%' },
         {
-            title: 'CTĐT/Kế hoạch giảng dạy mới nhất',
+            title: i18n.t('CTĐT/Kế hoạch giảng dạy mới nhất'),
             key: 'latest',
             width: '18%',
             render: (_value, row) => chips(row, row.latest),
         },
         {
-            title: 'Chương trình đào tạo các khóa',
+            title: i18n.t('Chương trình đào tạo các khóa'),
             key: 'previous',
             render: (_value, row) => chips(row, row.previous),
         },
@@ -172,16 +173,16 @@ const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPic
                     {selected ? (
                         <>
                             <Text strong style={{ display: 'block' }} ellipsis>{selected.name}</Text>
-                            <Text type="secondary" style={{ fontSize: 12 }}>{`${selected.code} · Khóa ${selected.cohort} · ${selected.major}`}</Text>
+                            <Text type="secondary" style={{ fontSize: 12 }}>{i18n.t('{{code}} · Khóa {{cohort}} · {{major}}', { code: selected.code, cohort: selected.cohort, major: selected.major })}</Text>
                         </>
                     ) : (
-                        <Text type="secondary">{value ? 'Chương trình không còn trong hệ thống' : 'Chưa chọn chương trình đào tạo'}</Text>
+                        <Text type="secondary">{value ? i18n.t('Chương trình không còn trong hệ thống') : i18n.t('Chưa chọn chương trình đào tạo')}</Text>
                     )}
                 </div>
                 <IOutLinedBtn loading={loading} onClick={() => setOpen(true)}>
-                    {selected ? 'Đổi' : 'Chọn chương trình đào tạo'}
+                    {selected ? i18n.t('Đổi') : i18n.t('Chọn chương trình đào tạo')}
                 </IOutLinedBtn>
-                {value && <ITextBtn onClick={() => onChange?.(null)}>Bỏ chọn</ITextBtn>}
+                {value && <ITextBtn onClick={() => onChange?.(null)}>{i18n.t('Bỏ chọn')}</ITextBtn>}
             </div>
 
             <Modal
@@ -189,7 +190,7 @@ const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPic
                 onCancel={() => setOpen(false)}
                 footer={null}
                 width={1120}
-                title="Chọn chương trình đào tạo"
+                title={i18n.t('Chọn chương trình đào tạo')}
                 destroyOnHidden
             >
                 <div className="stack" style={{ gap: 12 }}>
@@ -198,33 +199,32 @@ const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPic
                             allowClear
                             autoFocus
                             prefix={<LuSearch />}
-                            placeholder="Tìm theo khoa hoặc ngành (gõ không dấu được)"
-                            aria-label="Tìm khoa hoặc ngành"
+                            placeholder={i18n.t('Tìm theo khoa hoặc ngành (gõ không dấu được)')}
+                            aria-label={i18n.t('Tìm khoa hoặc ngành')}
                             value={search}
                             onChange={event => setSearch(event.target.value)}
                             style={{ maxWidth: 360 }}
                         />
                         <span className="program-chip-legend">
-                            <span className="program-chip" data-state="available">Khóa</span> đã có dữ liệu, bấm để chọn
-                            <span className="program-chip" data-state="unavailable">Khóa</span> sẽ hỗ trợ sau
+                            <span className="program-chip" data-state="available">{i18n.t('Khóa')}</span>{' '}{i18n.t('đã có dữ liệu, bấm để chọn')}
+                            <span className="program-chip" data-state="unavailable">{i18n.t('Khóa')}</span>{' '}{i18n.t('sẽ hỗ trợ sau')}
                         </span>
                     </div>
 
                     <Table<PickerRow>
                         rowKey="index"
                         size="small"
-                        bordered
                         pagination={false}
                         columns={columns}
                         dataSource={rows}
                         className="table-wrap-text"
                         scroll={{ x: 820, y: '58vh' }}
-                        locale={{ emptyText: <Empty description="Không có ngành nào khớp từ khoá." /> }}
+                        locale={{ emptyText: <Empty description={i18n.t('Không có ngành nào khớp từ khoá.')} /> }}
                     />
 
                     {others.length > 0 && !search && (
                         <div>
-                            <Text strong>Chương trình khác đã có dữ liệu</Text>
+                            <Text strong>{i18n.t('Chương trình khác đã có dữ liệu')}</Text>
                             <div className="program-chip-list" style={{ marginTop: 8 }}>
                                 {others.map(item => (
                                     <ProgramChip key={item.id} label={`${item.code}`} matches={[item]} selectedId={value} onPick={pick} />

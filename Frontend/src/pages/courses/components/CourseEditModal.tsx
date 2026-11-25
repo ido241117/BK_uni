@@ -10,6 +10,7 @@ import {
 import { useApiMutation } from '@/hooks';
 import { STUDENT_COURSE_STATUS, STUDENT_COURSE_STATUS_LABEL, type StudentCourseStatus } from '@/types';
 import type { CourseRow } from '../types';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -63,7 +64,7 @@ const CourseEditModal = ({ row, curriculumId, onClose }: CourseEditModalProps) =
                 else await removeMyPlanCourse(curriculumId, row.courseId);
             }
         },
-        successMessage: 'Đã cập nhật môn học.',
+        successMessage: i18n.t('Đã cập nhật môn học.'),
         onSuccess: () => onClose(),
         // Thành công hay lỗi giữa chừng đều tải lại để bảng khớp dữ liệu đã lưu.
         onSettled: () => {
@@ -75,9 +76,9 @@ const CourseEditModal = ({ row, curriculumId, onClose }: CourseEditModalProps) =
     return (
         <Modal
             open={row !== null}
-            title={row ? `Sửa ${row.code} · ${row.name}` : 'Sửa môn học'}
-            okText="Lưu"
-            cancelText="Huỷ"
+            title={row ? i18n.t('Sửa {{code}} · {{name}}', { code: row.code, name: row.name }) : i18n.t('Sửa môn học')}
+            okText={i18n.t('Lưu')}
+            cancelText={i18n.t('Huỷ')}
             confirmLoading={save.isPending}
             onOk={() => form.submit()}
             onCancel={onClose}
@@ -86,37 +87,37 @@ const CourseEditModal = ({ row, curriculumId, onClose }: CourseEditModalProps) =
             <Form<EditValues> form={form} layout="vertical" onFinish={values => save.mutate(values)}>
                 <Form.Item
                     name="status"
-                    label="Trạng thái học tập"
-                    extra="Để trống nếu muốn bỏ khai báo môn này."
+                    label={i18n.t('Trạng thái học tập')}
+                    extra={i18n.t('Để trống nếu muốn bỏ khai báo môn này.')}
                 >
                     <Select<StudentCourseStatus>
                         allowClear
-                        placeholder="Chưa khai"
+                        placeholder={i18n.t('Chưa khai')}
                         options={STATUS_OPTIONS}
                     />
                 </Form.Item>
 
                 <Form.Item
                     name="planned_semester"
-                    label="Học kỳ dự kiến"
-                    extra="Mã học kỳ dạng YYK, ví dụ 251, 252, 253. Để trống để bỏ môn khỏi kế hoạch."
+                    label={i18n.t('Học kỳ dự kiến')}
+                    extra={i18n.t('Mã học kỳ dạng YYK, ví dụ 251, 252, 253. Để trống để bỏ môn khỏi kế hoạch.')}
                     rules={[{
                         validator: (_rule, value: string | undefined) => (
                             !value?.trim() || SEMESTER_CODE_PATTERN.test(value.trim())
                                 ? Promise.resolve()
-                                : Promise.reject(new Error('Mã học kỳ phải có dạng YYK, ví dụ 252.'))
+                                : Promise.reject(new Error(i18n.t('Mã học kỳ phải có dạng YYK, ví dụ 252.')))
                         ),
                     }]}
                 >
-                    <Input maxLength={3} placeholder="Chưa lên kế hoạch" disabled={!curriculumId} />
+                    <Input maxLength={3} placeholder={i18n.t('Chưa lên kế hoạch')} disabled={!curriculumId} />
                 </Form.Item>
 
                 {!curriculumId && (
                     <Alert
                         type="info"
                         showIcon
-                        title="Chưa chọn chương trình đào tạo"
-                        description={<Text>Chọn chương trình trong Hồ sơ cá nhân để lập kế hoạch học kỳ dự kiến.</Text>}
+                        title={i18n.t('Chưa chọn chương trình đào tạo')}
+                        description={<Text>{i18n.t('Chọn chương trình trong Hồ sơ cá nhân để lập kế hoạch học kỳ dự kiến.')}</Text>}
                     />
                 )}
             </Form>

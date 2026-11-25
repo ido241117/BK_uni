@@ -26,8 +26,7 @@
     .ant-modal-title,
     .ant-drawer-title,
     .ant-collapse-title,
-    h4.ant-typography,
-    .board-curriculum-title {
+    h4.ant-typography {
         font-family: var(--serif);
         font-size: 20px;
         font-weight: 500;
@@ -46,15 +45,9 @@
     }
 
     /* KPI numbers: serif, weight 500 */
-    .ant-statistic-content,
-    .progress-hero-number,
-    .metric-number {
+    .ant-statistic-content {
         font-family: var(--serif);
         font-weight: 500;
-    }
-
-    .progress-hero-number {
-        color: var(--accent-rose);
     }
 
     /* Page tab header: 15px sans, 600 when active */

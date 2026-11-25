@@ -30,6 +30,7 @@ import {
 } from '@/types';
 import { canPlan } from '../structure';
 import { buildPrerequisiteGraph, chainOf, type GraphEdge, type GraphNode } from './layout';
+import i18n from '@/i18n';
 
 const { Paragraph, Text } = Typography;
 
@@ -46,10 +47,13 @@ const SHORT_LABEL: Record<CourseRelationType, string> = {
     recommended: 'KN',
 };
 
-/** Màu cạnh (SVG marker không đọc được biến CSS nên dùng mã màu theo theme). */
+/**
+ * Edge colors (SVG markers cannot read CSS variables): theme ink / rose / sage / soft ink, with terracotta for unmet
+ * and amber for backward edges. Relation types are also named in the filter legend, so color is never the only cue.
+ */
 const EDGE_COLORS = {
-    light: { prerequisite: '#1d1d1f', prior: '#0066cc', corequisite: '#1baf7a', recommended: '#a1a1a6', unmet: '#d93a3a', backward: '#c98500' },
-    dark: { prerequisite: '#f5f5f7', prior: '#4a9eff', corequisite: '#3fc27a', recommended: '#6e6e73', unmet: '#ff6b6b', backward: '#f2b630' },
+    light: { prerequisite: '#3B2230', prior: '#B83E6C', corequisite: '#5E7F5D', recommended: '#BE9EAA', unmet: '#AE4B33', backward: '#A0702A' },
+    dark: { prerequisite: '#F4E6EC', prior: '#EC8DB2', corequisite: '#9CC79A', recommended: '#8F7482', unmet: '#F08D77', backward: '#E2B56E' },
 };
 
 const EDGE_STYLE: Record<CourseRelationType, { width: number; dash?: string }> = {
@@ -73,8 +77,8 @@ interface HeaderNodeData extends Record<string, unknown> {
 }
 
 const statusLabel = (node: Pick<GraphNode, 'status' | 'plannedSemester'>) => {
-    if (canPlan(node.status) && node.plannedSemester) return `Kế hoạch HK ${node.plannedSemester}`;
-    return node.status ? STUDENT_COURSE_STATUS_LABEL[node.status] : 'Chưa khai';
+    if (canPlan(node.status) && node.plannedSemester) return i18n.t('Kế hoạch HK {{plannedSemester}}', { plannedSemester: node.plannedSemester });
+    return node.status ? STUDENT_COURSE_STATUS_LABEL[node.status] : i18n.t('Chưa khai');
 };
 
 const dataStatus = (status: StudentCourseStatus | null, planned: string | null) => (
@@ -95,11 +99,11 @@ const CourseNode = memo(({ data }: NodeProps<Node<CourseNodeData>>) => {
             <Handle type="target" position={Position.Left} className="graph-handle" isConnectable={false} />
             <div className="graph-node-top">
                 <span className="graph-node-code">{node.course.code}</span>
-                <span className="graph-node-credits">{node.course.credits} TC</span>
+                <span className="graph-node-credits">{node.course.credits}{' '}{i18n.t('TC')}</span>
             </div>
             <div className="graph-node-name">{node.course.name}</div>
             <div className="graph-node-status">
-                {node.unmetCount > 0 ? `⚠ Thiếu ${node.unmetCount} điều kiện` : statusLabel(node)}
+                {node.unmetCount > 0 ? i18n.t('⚠ Thiếu {{unmetCount}} điều kiện', { unmetCount: node.unmetCount }) : statusLabel(node)}
             </div>
             <Handle type="source" position={Position.Right} className="graph-handle" isConnectable={false} />
         </div>
@@ -130,9 +134,9 @@ const ConditionRow = ({ edge, other, satisfiedText }: { edge: GraphEdge; other: 
             <Text strong>{other?.course.code}</Text> {other?.course.name}
             <div className="hint">
                 {other ? statusLabel(other) : ''}
-                {edge.unmet && <Text type="danger"> · chưa thỏa</Text>}
+                {edge.unmet && <Text type="danger">{' '}{i18n.t('· chưa thỏa')}</Text>}
                 {!edge.unmet && satisfiedText && ` · ${satisfiedText}`}
-                {edge.backward && <Text type="warning"> · kỳ gợi ý không khớp thứ tự</Text>}
+                {edge.backward && <Text type="warning">{' '}{i18n.t('· kỳ gợi ý không khớp thứ tự')}</Text>}
             </div>
         </span>
     </div>
@@ -250,25 +254,25 @@ const PrerequisiteGraph = ({ curriculumId, courses, groups, statusMap, planMap }
             />
             <label className="graph-legend-item">
                 <Switch size="small" checked={showIsolated} onChange={setShowIsolated} />
-                Hiện môn không có điều kiện
+                {i18n.t('Hiện môn không có điều kiện')}
             </label>
-            <span className="hint">{graph.relatedCount}/{graph.totalCount} môn có điều kiện</span>
+            <span className="hint">{graph.relatedCount}/{graph.totalCount}{' '}{i18n.t('môn có điều kiện')}</span>
         </div>
     );
 
     if (relationsQuery.isLoading) return <Card><Skeleton active paragraph={{ rows: 8 }} /></Card>;
     if (relationsQuery.isError) {
-        return <Alert type="error" showIcon title="Không tải được điều kiện môn học" description="Vui lòng tải lại trang để thử lại." />;
+        return <Alert type="error" showIcon title={i18n.t('Không tải được điều kiện môn học')} description={i18n.t('Vui lòng tải lại trang để thử lại.')} />;
     }
     if (!graph.relatedCount) {
-        return <Card><Empty description="Chương trình chưa có dữ liệu điều kiện môn học." /></Card>;
+        return <Card><Empty description={i18n.t('Chương trình chưa có dữ liệu điều kiện môn học.')} /></Card>;
     }
 
     const unmetAlert = unmetNodes.length > 0 && (
         <Alert
             type="warning"
             showIcon
-            title={`${unmetNodes.length} môn đang học / đã lên kế hoạch chưa đủ điều kiện`}
+            title={i18n.t('{{length}} môn đang học / đã lên kế hoạch chưa đủ điều kiện', { length: unmetNodes.length })}
             description={(
                 <div className="program-chip-list" style={{ marginTop: 4 }}>
                     {unmetNodes.map(node => (
@@ -332,53 +336,52 @@ const PrerequisiteGraph = ({ curriculumId, courses, groups, statusMap, planMap }
                 </div>
 
                 {selected && (
-                    <aside className="graph-panel" aria-label={`Điều kiện của ${selected.course.code}`}>
+                    <aside className="graph-panel" aria-label={i18n.t('Điều kiện của {{code}}', { code: selected.course.code })}>
                         <div className="graph-panel-head">
                             <div style={{ minWidth: 0 }}>
                                 <Text strong>{selected.course.code}</Text>
                                 <div>{selected.course.name}</div>
-                                <div className="hint">{selected.course.credits} TC · {statusLabel(selected)}</div>
+                                <div className="hint">{selected.course.credits}{' '}{i18n.t('TC ·')}{' '}{statusLabel(selected)}</div>
                             </div>
-                            <IconBtn size="small" icon={<LuX />} label="Đóng" onClick={() => setSelectedId(null)} />
+                            <IconBtn size="small" icon={<LuX />} label={i18n.t('Đóng')} onClick={() => setSelectedId(null)} />
                         </div>
 
                         <div>
-                            <Text strong>Cần có trước ({incomingOf(selected.course.id).length})</Text>
+                            <Text strong>{i18n.t('Cần có trước (')}{incomingOf(selected.course.id).length})</Text>
                             <div className="stack" style={{ gap: 8, marginTop: 8 }}>
                                 {incomingOf(selected.course.id).length
                                     ? incomingOf(selected.course.id).map(edge => (
-                                        <ConditionRow key={edge.id} edge={edge} other={nodeById.get(edge.from)} satisfiedText={selected.active ? 'đã thỏa' : undefined} />
+                                        <ConditionRow key={edge.id} edge={edge} other={nodeById.get(edge.from)} satisfiedText={selected.active ? i18n.t('đã thỏa') : undefined} />
                                     ))
-                                    : <Text type="secondary">Không có điều kiện.</Text>}
+                                    : <Text type="secondary">{i18n.t('Không có điều kiện.')}</Text>}
                             </div>
                         </div>
 
                         <div>
-                            <Text strong>Là điều kiện của ({outgoingOf(selected.course.id).length})</Text>
+                            <Text strong>{i18n.t('Là điều kiện của (')}{outgoingOf(selected.course.id).length})</Text>
                             <div className="stack" style={{ gap: 8, marginTop: 8 }}>
                                 {outgoingOf(selected.course.id).length
                                     ? outgoingOf(selected.course.id).map(edge => (
                                         <ConditionRow key={edge.id} edge={edge} other={nodeById.get(edge.to)} />
                                     ))
-                                    : <Text type="secondary">Không mở khóa môn nào.</Text>}
+                                    : <Text type="secondary">{i18n.t('Không mở khóa môn nào.')}</Text>}
                             </div>
                         </div>
 
                         {chain && (
                             <Paragraph type="secondary" style={{ margin: 0, fontSize: 12 }}>
-                                Chuỗi: {chain.before.size} môn phía trước · {chain.after.size} môn phía sau (đang làm nổi bật trên đồ thị).
+                                {i18n.t('Chuỗi:')}{' '}{chain.before.size}{' '}{i18n.t('môn phía trước ·')}{' '}{chain.after.size}{' '}{i18n.t('môn phía sau (đang làm nổi bật trên đồ thị).')}
                             </Paragraph>
                         )}
 
                         <Link to={`/courses/${encodeURIComponent(selected.course.code)}`} state={{ from: '/courses' }}>
-                            <span className="graph-panel-link">Xem chi tiết môn <LuArrowUpRight aria-hidden /></span>
+                            <span className="graph-panel-link">{i18n.t('Xem chi tiết môn')}{' '}<LuArrowUpRight aria-hidden /></span>
                         </Link>
                     </aside>
                 )}
             </div>
             <Paragraph type="secondary" style={{ margin: 0, fontSize: 12 }}>
-                Cột theo kỳ gợi ý của chương trình (môn tự chọn lấy kỳ của khối). Viền đỏ, cạnh đỏ chạy: môn đang học hoặc đã lên kế hoạch
-                nhưng điều kiện chưa thỏa. Dấu “!” vàng: môn điều kiện lại nằm ở kỳ sau. Kéo để di chuyển, cuộn để phóng to.
+                {i18n.t('Cột theo kỳ gợi ý của chương trình (môn tự chọn lấy kỳ của khối). Viền đỏ, cạnh đỏ chạy: môn đang học hoặc đã lên kế hoạch nhưng điều kiện chưa thỏa. Dấu “!” vàng: môn điều kiện lại nằm ở kỳ sau. Kéo để di chuyển, cuộn để phóng to.')}
             </Paragraph>
         </div>
     );

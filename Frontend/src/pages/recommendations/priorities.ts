@@ -1,4 +1,5 @@
 import type { PlanPriorityId } from '@/types';
+import { trLive } from '@/i18n/live';
 
 export interface PriorityItem {
     id: PlanPriorityId;
@@ -9,11 +10,11 @@ export interface PriorityItem {
  * Giai đoạn 12 (12.3, W5, W12; 23/11): sinh viên chỉ thấy và sắp 3 mục; mục trên quan trọng hơn, tắt được.
  * Học phí và sở thích để sau (hiện mờ). Các mục khác của bộ giải giữ bên trong theo thứ tự cố định `HIDDEN_ORDER`.
  */
-export const PRIORITY_LABEL: Partial<Record<PlanPriorityId, string>> = {
+export const PRIORITY_LABEL: Partial<Record<PlanPriorityId, string>> = trLive({
     S1: 'Ra trường sớm nhất',
     S8: 'Mỗi kỳ chính 15–18 TC',
     S2: 'Không học dư môn tự chọn',
-};
+});
 
 export const VISIBLE_PRIORITIES: PlanPriorityId[] = ['S1', 'S8', 'S2'];
 

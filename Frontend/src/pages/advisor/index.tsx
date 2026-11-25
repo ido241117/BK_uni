@@ -13,19 +13,21 @@ import { AnswerView } from './components/AnswerView';
 import { RichText } from './components/RichText';
 import { Trajectory } from './components/Trajectory';
 import { buildAdvisorSnapshot } from './snapshot';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 const { Text, Paragraph } = Typography;
 
-const STARTERS = [
+const STARTERS = trLive([
     'Kỳ tới mình nên đăng ký những môn nào?',
     'Mình nên theo chuyên ngành nào?',
     'Nên chọn môn tự chọn nào trong các khối còn thiếu?',
     'Với tiến độ hiện tại mình có kịp tốt nghiệp đúng hạn không?',
-];
+]);
 
 const sessionKey = (id: string | null) => ['advisor-session', id];
 
-const TOOL_LABELS: Record<string, string> = {
+const TOOL_LABELS: Record<string, string> = trLive({
     get_analysis_section: 'đọc kết quả phân tích học tập',
     get_course_detail: 'tra cứu môn học',
     check_offering: 'kiểm tra lịch mở lớp',
@@ -35,17 +37,17 @@ const TOOL_LABELS: Record<string, string> = {
     search_outlines: 'tìm trong đề cương',
     find_similar_courses: 'tìm môn tương tự',
     submit_answer: 'soạn câu trả lời',
-};
+});
 
 /** Mô tả việc AI đang làm, dựa trên bước mới nhất vừa nhận qua stream. */
 const describeActivity = (step: AdvisorStep | null): string => {
     const calls = step?.role === 'assistant' ? step.tool_calls ?? [] : [];
     if (calls.length) {
         const labels = [...new Set(calls.map(call => TOOL_LABELS[call.name] ?? call.name))];
-        return `AI đang ${labels.join(', ')}…`;
+        return i18n.t('AI đang {{v0}}…', { v0: labels.join(', ') });
     }
-    if (step?.role === 'tool') return 'AI đang đọc kết quả tra cứu…';
-    return 'AI đang suy nghĩ…';
+    if (step?.role === 'tool') return i18n.t('AI đang đọc kết quả tra cứu…');
+    return i18n.t('AI đang suy nghĩ…');
 };
 
 /** Gộp các bước đã tải từ server với các bước vừa nhận qua stream (bỏ trùng theo id, xếp theo seq). */
@@ -66,7 +68,7 @@ interface PendingTurn {
 /** Phần tin nhắn sinh viên tự gõ (bỏ khối "[Trả lời lựa chọn]" do backend ghép thêm). */
 const UserBubble = ({ step }: { step: AdvisorStep }) => {
     const answers = (step.data as { answers?: AdvisorChoiceAnswer[] } | null)?.answers;
-    const typed = (step.content ?? '').split('\n[Trả lời lựa chọn]')[0];
+    const typed = (step.content ?? '').split(i18n.t('\n[Trả lời lựa chọn]'))[0];
     return (
         <div className="advisor-msg is-user">
             <div className="advisor-bubble">
@@ -74,7 +76,7 @@ const UserBubble = ({ step }: { step: AdvisorStep }) => {
                 {answers?.map(answer => (
                     <div key={answer.id} className="advisor-user-answer">
                         <Text type="secondary">{answer.question}</Text>{' '}
-                        <Text strong>{[...answer.values, ...(answer.text ? [answer.text] : [])].join('; ') || '(bỏ qua)'}</Text>
+                        <Text strong>{[...answer.values, ...(answer.text ? [answer.text] : [])].join('; ') || i18n.t('(bỏ qua)')}</Text>
                     </div>
                 ))}
             </div>
@@ -140,7 +142,7 @@ const AdvisorPage = () => {
 
     const remove = useApiMutation({
         mutationFn: (id: string) => deleteAdvisorSession(id),
-        successMessage: 'Đã xóa cuộc trò chuyện',
+        successMessage: i18n.t('Đã xóa cuộc trò chuyện'),
         onSuccess: async id => {
             queryClient.removeQueries({ queryKey: sessionKey(id) });
             setParams({});
@@ -166,20 +168,20 @@ const AdvisorPage = () => {
         );
     };
 
-    const back = <Link to="/courses/analysis"><IOutLinedBtn icon={<LuArrowLeft />}>Phân tích học tập</IOutLinedBtn></Link>;
+    const back = <Link to="/courses/analysis"><IOutLinedBtn icon={<LuArrowLeft />}>{i18n.t('Phân tích học tập')}</IOutLinedBtn></Link>;
 
     if (profileLoading) return <TablePageSkeleton />;
 
     if (!curriculumId) {
         return (
             <section>
-                <PageHeader title="Tư vấn với AI" extra={back} />
+                <PageHeader title={i18n.t('Tư vấn với AI')} extra={back} />
                 <Alert
                     type="info"
                     showIcon
-                    title="Chưa chọn chương trình đào tạo"
-                    description="AI tư vấn dựa trên kết quả Phân tích học tập theo chương trình của bạn. Hãy chọn chương trình trong hồ sơ trước."
-                    action={<Link to="/profile"><ISolidBtn size="small">Điền hồ sơ</ISolidBtn></Link>}
+                    title={i18n.t('Chưa chọn chương trình đào tạo')}
+                    description={i18n.t('AI tư vấn dựa trên kết quả Phân tích học tập theo chương trình của bạn. Hãy chọn chương trình trong hồ sơ trước.')}
+                    action={<Link to="/profile"><ISolidBtn size="small">{i18n.t('Điền hồ sơ')}</ISolidBtn></Link>}
                 />
             </section>
         );
@@ -188,8 +190,8 @@ const AdvisorPage = () => {
     if (isError) {
         return (
             <section>
-                <PageHeader title="Tư vấn với AI" extra={back} />
-                <Alert type="error" showIcon title="Không tải được dữ liệu học tập" description="Thử tải lại trang." />
+                <PageHeader title={i18n.t('Tư vấn với AI')} extra={back} />
+                <Alert type="error" showIcon title={i18n.t('Không tải được dữ liệu học tập')} description={i18n.t('Thử tải lại trang.')} />
             </section>
         );
     }
@@ -204,8 +206,7 @@ const AdvisorPage = () => {
                     <div className="advisor-empty">
                         <LuSparkles size={28} />
                         <Paragraph style={{ margin: 0 }}>
-                            Hỏi AI về học phần kỳ tới, môn tự chọn hay chuyên ngành. AI đọc kết quả Phân tích học tập,
-                            tra cứu CSDL (tiên quyết, mở lớp các kỳ trước) rồi trả lời và đưa ra lựa chọn khi cần.
+                            {i18n.t('Hỏi AI về học phần kỳ tới, môn tự chọn hay chuyên ngành. AI đọc kết quả Phân tích học tập, tra cứu CSDL (tiên quyết, mở lớp các kỳ trước) rồi trả lời và đưa ra lựa chọn khi cần.')}
                         </Paragraph>
                         <Space size={[8, 8]} wrap style={{ justifyContent: 'center' }}>
                             {STARTERS.map(starter => (
@@ -219,7 +220,7 @@ const AdvisorPage = () => {
                     if (step.role === 'error') {
                         return (
                             <div key={step.id} className="advisor-msg">
-                                <Alert type="error" showIcon title="AI chưa trả lời được" description={step.content} />
+                                <Alert type="error" showIcon title={i18n.t('AI chưa trả lời được')} description={step.content} />
                             </div>
                         );
                     }
@@ -230,7 +231,7 @@ const AdvisorPage = () => {
                                 <AnswerView
                                     answer={step.data as AdvisorAnswer}
                                     interactive={step.id === lastAnswerId && !busy}
-                                    onAnswer={answers => ask('Mình đã trả lời các câu hỏi.', answers)}
+                                    onAnswer={answers => ask(i18n.t('Mình đã trả lời các câu hỏi.'), answers)}
                                     onAsk={question => ask(question)}
                                 />
                             </div>
@@ -263,12 +264,12 @@ const AdvisorPage = () => {
                         event.preventDefault();
                         ask(draft);
                     }}
-                    placeholder={snapshot ? 'Nhập câu hỏi (Enter để gửi, Shift+Enter xuống dòng)' : 'Đang tải dữ liệu học tập…'}
+                    placeholder={snapshot ? i18n.t('Nhập câu hỏi (Enter để gửi, Shift+Enter xuống dòng)') : i18n.t('Đang tải dữ liệu học tập…')}
                     autoSize={{ minRows: 1, maxRows: 6 }}
                     maxLength={2000}
                     disabled={!snapshot}
                 />
-                <ISolidBtn icon={<LuSend />} loading={busy} disabled={!snapshot || !draft.trim()} onClick={() => ask(draft)}>Gửi</ISolidBtn>
+                <ISolidBtn icon={<LuSend />} loading={busy} disabled={!snapshot || !draft.trim()} onClick={() => ask(draft)}>{i18n.t('Gửi')}</ISolidBtn>
             </div>
         </div>
     );
@@ -276,25 +277,25 @@ const AdvisorPage = () => {
     return (
         <section>
             <PageHeader
-                title="Tư vấn với AI"
+                title={i18n.t('Tư vấn với AI')}
                 subtitle={analysis
-                    ? `Dựa trên Phân tích học tập tại ${semesterLabel(analysis.current)}; gợi ý cho ${semesterLabel(analysis.next)}. AI có thể sai — hãy kiểm tra lại trước khi đăng ký.`
-                    : 'Đang tải dữ liệu học tập…'}
+                    ? i18n.t('Dựa trên Phân tích học tập tại {{v0}}; gợi ý cho {{v1}}. AI có thể sai — hãy kiểm tra lại trước khi đăng ký.', { v0: semesterLabel(analysis.current), v1: semesterLabel(analysis.next) })
+                    : i18n.t('Đang tải dữ liệu học tập…')}
                 extra={(
                     <Space wrap>
                         <Select
                             style={{ width: 260 }}
-                            placeholder="Cuộc trò chuyện trước"
+                            placeholder={i18n.t('Cuộc trò chuyện trước')}
                             value={sessionId ?? undefined}
                             loading={sessionsQuery.isLoading}
                             onChange={id => setParams({ session: id })}
                             options={(sessionsQuery.data ?? []).map(session => ({ value: session.id, label: session.title }))}
-                            notFoundContent={<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có cuộc trò chuyện" />}
+                            notFoundContent={<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={i18n.t('Chưa có cuộc trò chuyện')} />}
                         />
-                        <IOutLinedBtn icon={<LuMessageSquarePlus />} disabled={busy} onClick={() => { setParams({}); setTab('chat'); }}>Mới</IOutLinedBtn>
+                        <IOutLinedBtn icon={<LuMessageSquarePlus />} disabled={busy} onClick={() => { setParams({}); setTab('chat'); }}>{i18n.t('Mới')}</IOutLinedBtn>
                         {sessionId && (
-                            <Popconfirm title="Xóa cuộc trò chuyện này?" okText="Xóa" cancelText="Hủy" onConfirm={() => remove.mutate(sessionId)}>
-                                <IOutLinedBtn color="danger" icon={<LuTrash2 />} disabled={busy} loading={remove.isPending}>Xóa</IOutLinedBtn>
+                            <Popconfirm title={i18n.t('Xóa cuộc trò chuyện này?')} okText={i18n.t('Xóa')} cancelText={i18n.t('Hủy')} onConfirm={() => remove.mutate(sessionId)}>
+                                <IOutLinedBtn color="danger" icon={<LuTrash2 />} disabled={busy} loading={remove.isPending}>{i18n.t('Xóa')}</IOutLinedBtn>
                             </Popconfirm>
                         )}
                     </Space>
@@ -308,7 +309,7 @@ const AdvisorPage = () => {
                         onChange={setTab}
                         tabBarExtraContent={sessionQuery.data?.model && <Tag>{sessionQuery.data.model}</Tag>}
                         items={[
-                            { key: 'chat', label: 'Trò chuyện', children: chat },
+                            { key: 'chat', label: i18n.t('Trò chuyện'), children: chat },
                             { key: 'trace', label: `Trajectory (${steps.length})`, children: <Trajectory steps={steps} /> },
                         ]}
                     />

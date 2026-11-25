@@ -1,8 +1,10 @@
 export { AppShell } from './AppShell';
 export { BrandLogo } from './BrandLogo';
 export { BrandMark } from './BrandMark';
+export { LanguageMenu } from './LanguageMenu';
 export { ShellLayoutProvider } from './LayoutContext';
 export { useShellLayout, NARROW_QUERY } from './useShellLayout';
 export { Sidebar } from './Sidebar';
 export { SidebarNavSection, SidebarNavItem, SidebarFooterLink } from './SidebarNav';
 export { Topbar, Breadcrumb, SemesterBadge } from './Topbar';
+export { ThemeToggle } from './ThemeToggle';

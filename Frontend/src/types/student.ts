@@ -1,5 +1,6 @@
 import type { BaseRecord } from './common';
 import type { CourseSummary } from './course';
+import { trLive } from '@/i18n/live';
 
 export const STUDENT_COURSE_STATUS = {
     NOT_STARTED: 'not-started',
@@ -11,14 +12,14 @@ export const STUDENT_COURSE_STATUS = {
 
 export type StudentCourseStatus = (typeof STUDENT_COURSE_STATUS)[keyof typeof STUDENT_COURSE_STATUS];
 
-export const STUDENT_COURSE_STATUS_LABEL: Record<StudentCourseStatus, string> = {
+export const STUDENT_COURSE_STATUS_LABEL: Record<StudentCourseStatus, string> = trLive({
     'not-started': 'Chưa học',
     'in-progress': 'Đang học',
     completed: 'Đã hoàn thành',
     // Người duyệt 22/11 (Q3): nhãn vui "Đã học nhưng gãy"; TRƯỚC KHI RA HỘI ĐỒNG đổi thành "Trượt môn".
     // Nhập PDF ghi mọi "--" là Chưa học; ai rớt tự đổi ở Hiệu chỉnh.
     failed: 'Đã học nhưng gãy',
-};
+});
 
 /** Màu Tag của từng trạng thái, dùng chung cho mọi bảng/trang. */
 export const STUDENT_COURSE_STATUS_COLOR: Record<StudentCourseStatus, string> = {
@@ -35,10 +36,10 @@ export const STUDENT_REGULATION_STATUS = {
 
 export type StudentRegulationStatus = (typeof STUDENT_REGULATION_STATUS)[keyof typeof STUDENT_REGULATION_STATUS];
 
-export const STUDENT_REGULATION_STATUS_LABEL: Record<StudentRegulationStatus, string> = {
+export const STUDENT_REGULATION_STATUS_LABEL: Record<StudentRegulationStatus, string> = trLive({
     'not-started': 'Chưa đạt',
     completed: 'Đã đạt',
-};
+});
 
 export interface StudentProfile extends BaseRecord {
     user_id: string;

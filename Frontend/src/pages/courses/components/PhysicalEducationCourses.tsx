@@ -2,17 +2,16 @@ import { useMemo } from 'react';
 import { Alert, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { ITable } from '@/components';
+import { CourseStatus, ITable } from '@/components';
 import { listCourses } from '@/apis/course';
 import { useApiQuery } from '@/hooks';
 import { isPhysicalEducationCourse } from '../physical-education';
 import {
     STUDENT_COURSE_STATUS,
-    STUDENT_COURSE_STATUS_COLOR,
-    STUDENT_COURSE_STATUS_LABEL,
     type Course,
     type StudentCourse,
 } from '@/types';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -61,7 +60,7 @@ export const PhysicalEducationCourses = ({ statuses }: PhysicalEducationCoursesP
 
     const columns: ColumnsType<Course> = [
         {
-            title: 'Mã môn',
+            title: i18n.t('Mã môn'),
             dataIndex: 'code',
             width: 110,
             render: (code: string) => (
@@ -70,24 +69,24 @@ export const PhysicalEducationCourses = ({ statuses }: PhysicalEducationCoursesP
                 </Link>
             ),
         },
-        { title: 'Tên môn', dataIndex: 'name' },
+        { title: i18n.t('Tên môn'), dataIndex: 'name' },
         {
-            title: 'Học phần',
+            title: i18n.t('Học phần'),
             key: 'part',
             width: 110,
             render: (_value, course) => {
                 const part = partOf(course.name);
-                return part ? <Tag color={PART_COLOR[part]}>Học phần {part}</Tag> : <Text type="secondary">—</Text>;
+                return part ? <Tag color={PART_COLOR[part]}>{i18n.t('Học phần')}{' '}{part}</Tag> : <Text type="secondary">—</Text>;
             },
         },
         ...(statuses ? [{
-            title: 'Trạng thái của tôi',
+            title: i18n.t('Trạng thái của tôi'),
             key: 'status',
             width: 150,
             render: (_value: unknown, course: Course) => {
                 const status = statusById.get(course.id);
                 return status
-                    ? <Tag color={STUDENT_COURSE_STATUS_COLOR[status]}>{STUDENT_COURSE_STATUS_LABEL[status]}</Tag>
+                    ? <CourseStatus status={status} />
                     : <Text type="secondary">—</Text>;
             },
         }] : []),
@@ -98,12 +97,11 @@ export const PhysicalEducationCourses = ({ statuses }: PhysicalEducationCoursesP
             <Alert
                 type="info"
                 showIcon
-                title="Học 2 học phần thể chất bất kỳ"
+                title={i18n.t('Học 2 học phần thể chất bất kỳ')}
                 description={(
                     <>
-                        Ví dụ Bóng đá 1 + Bóng chuyền 1, hoặc Bóng đá 1 + Bóng đá 2. Học phần 2 của một môn chỉ học được khi đã đạt học phần 1
-                        cùng môn. Hoàn thành 1 học phần thì PE1003 được tính là xong, 2 học phần thì PE1005 cũng xong.
-                        {statuses && <> Bạn đã hoàn thành <Text strong>{completedCount}</Text> học phần thể chất.</>}
+                        {i18n.t('Ví dụ Bóng đá 1 + Bóng chuyền 1, hoặc Bóng đá 1 + Bóng đá 2. Học phần 2 của một môn chỉ học được khi đã đạt học phần 1 cùng môn. Hoàn thành 1 học phần thì PE1003 được tính là xong, 2 học phần thì PE1005 cũng xong.')}
+                        {statuses && <>{' '}{i18n.t('Bạn đã hoàn thành')}{' '}<Text strong>{completedCount}</Text>{' '}{i18n.t('học phần thể chất.')}</>}
                     </>
                 )}
             />
@@ -115,7 +113,7 @@ export const PhysicalEducationCourses = ({ statuses }: PhysicalEducationCoursesP
                 dataSource={rows}
                 loading={coursesQuery.isLoading}
                 pagination={false}
-                emptyText={coursesQuery.isError ? 'Không tải được danh sách môn thể chất.' : 'Chưa có môn thể chất nào trong danh mục.'}
+                emptyText={coursesQuery.isError ? i18n.t('Không tải được danh sách môn thể chất.') : i18n.t('Chưa có môn thể chất nào trong danh mục.')}
                 onRow={course => ({
                     onClick: () => navigate(`/courses/${encodeURIComponent(course.code)}`, { state: linkState }),
                     style: { cursor: 'pointer' },

@@ -3,6 +3,7 @@ import type { ApiResult, PaginatedResult, PaginationMeta } from '@/types';
 import { ApiError, isApiResultEnvelope, isUnauthorized, toApiError } from '@/utils/error';
 import { toastMessage } from '@/utils/toast';
 import axiosMethod from './axiosMethod.config';
+import i18n from '@/i18n';
 
 export interface RequestOptions extends AxiosRequestConfig {
     /** Tắt toast lỗi toàn cục khi nơi gọi tự hiển thị lỗi (ví dụ: Alert trong form). */
@@ -49,7 +50,7 @@ async function send<T>(
 
     if (isApiResultEnvelope(body) && body.error) {
         // Backend có thể trả HTTP 200 nhưng envelope báo lỗi nghiệp vụ.
-        throw reportError(new ApiError(body.message || 'Yêu cầu không thành công.'), suppressGlobalErrorToast);
+        throw reportError(new ApiError(body.message || i18n.t('Yêu cầu không thành công.')), suppressGlobalErrorToast);
     }
 
     return pick(body);

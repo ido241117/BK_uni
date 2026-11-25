@@ -1,3 +1,5 @@
+import i18n from '@/i18n';
+
 /**
  * Mã học kỳ kiểu myBK: 2 số cuối năm bắt đầu năm học + số kỳ.
  * 251 = năm học 2025-2026 kỳ 1, 252 = kỳ 2, 253 = kỳ hè. So sánh chuỗi 3 ký tự đúng bằng thứ tự thời gian.
@@ -46,11 +48,14 @@ export const countMainSemesters = (from: string, to: string): number => {
     return count;
 };
 
+/** "HK 261 (kỳ 1 2026-2027)" / "Sem 261 (term 1 2026-2027)", in the current UI language. */
 export const semesterLabel = (code: string) => {
     const parts = parseSemester(code);
-    if (!parts) return `HK ${code}`;
-    const term = parts.term === 3 ? 'hè' : parts.term;
-    return `HK ${code} (kỳ ${term} ${parts.year}-${parts.year + 1})`;
+    if (!parts) return i18n.t('HK {{code}}', { code });
+    const years = `${parts.year}-${parts.year + 1}`;
+    return parts.term === 3
+        ? i18n.t('HK {{code}} (kỳ hè {{years}})', { code, years })
+        : i18n.t('HK {{code}} (kỳ {{term}} {{years}})', { code, term: parts.term, years });
 };
 
 /** Học kỳ liền sau, tính cả kỳ hè: 261 -> 262 -> 263 -> 271. */

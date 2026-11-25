@@ -14,6 +14,7 @@ import {
 import { useApiMutation, useApiQuery } from '@/hooks';
 import type { CurriculumCategory, CurriculumCategoryPayload } from '@/types';
 import type { CurriculumTabProps } from '../types';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -43,7 +44,7 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
     const courseOptions = useMemo(
         () => (coursesQuery.data ?? []).map(item => ({
             value: item.course_id,
-            label: `${item.course.code} · ${item.course.name} (${item.course.credits} TC)`,
+            label: i18n.t('{{code}} · {{name}} ({{credits}} TC)', { code: item.course.code, name: item.course.name, credits: item.course.credits }),
         })),
         [coursesQuery.data],
     );
@@ -54,7 +55,7 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const createCategory = useApiMutation({
         mutationFn: (payload: CurriculumCategoryPayload) => createCurriculumCategory(curriculumId, payload),
-        successMessage: 'Đã tạo nhóm học phần.',
+        successMessage: i18n.t('Đã tạo nhóm học phần.'),
         onSuccess: () => {
             setOpen(false);
             form.resetFields();
@@ -65,7 +66,7 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
     const updateCategory = useApiMutation({
         mutationFn: (input: { categoryId: string; payload: Partial<CurriculumCategoryPayload> }) =>
             updateCurriculumCategory(curriculumId, input.categoryId, input.payload),
-        successMessage: 'Đã cập nhật nhóm học phần.',
+        successMessage: i18n.t('Đã cập nhật nhóm học phần.'),
         onSuccess: () => {
             setOpen(false);
             form.resetFields();
@@ -75,7 +76,7 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const removeCategory = useApiMutation({
         mutationFn: (categoryId: string) => removeCurriculumCategory(curriculumId, categoryId),
-        successMessage: 'Đã xoá nhóm học phần.',
+        successMessage: i18n.t('Đã xoá nhóm học phần.'),
         onSuccess: refresh,
     });
 
@@ -111,32 +112,32 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const columns: ColumnsType<CurriculumCategory> = [
         {
-            title: 'Tên nhóm',
+            title: i18n.t('Tên nhóm'),
             dataIndex: 'name',
             render: (name: string) => <Text strong>{name}</Text>,
         },
         {
-            title: 'Số môn',
+            title: i18n.t('Số môn'),
             key: 'members',
             width: 110,
             align: 'center',
-            render: (_value, category) => `${category.members.length} môn`,
+            render: (_value, category) => i18n.t('{{length}} môn', { length: category.members.length }),
         },
         {
-            title: 'Hành động',
+            title: i18n.t('Hành động'),
             key: 'actions',
             width: 190,
             render: (_value, category) => (
                 <Space size={8}>
                     <ITextBtn size="small" icon={<LuPencil />} onClick={() => openEdit(category)}>
-                        Sửa
+                        {i18n.t('Sửa')}
                     </ITextBtn>
 
                     <Popconfirm
-                        title="Xoá nhóm học phần?"
-                        description="Chỉ xoá nhóm và các liên kết môn trong nhóm; môn của chương trình vẫn được giữ."
-                        okText="Xoá"
-                        cancelText="Huỷ"
+                        title={i18n.t('Xoá nhóm học phần?')}
+                        description={i18n.t('Chỉ xoá nhóm và các liên kết môn trong nhóm; môn của chương trình vẫn được giữ.')}
+                        okText={i18n.t('Xoá')}
+                        cancelText={i18n.t('Huỷ')}
                         okButtonProps={{ color: 'danger', variant: 'solid' }}
                         onConfirm={() => removeCategory.mutate(category.id)}
                     >
@@ -146,7 +147,7 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
                             icon={<LuTrash2 />}
                             loading={removeCategory.isPending && removeCategory.variables === category.id}
                         >
-                            Xoá
+                            {i18n.t('Xoá')}
                         </ITextBtn>
                     </Popconfirm>
                 </Space>
@@ -168,28 +169,26 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
                 }}
             >
                 <Text type="secondary">
-                    Nhóm học phần chỉ mang tính mô tả: tên nhóm do bạn tự đặt theo từng chương trình,
-                    không ràng buộc số môn hay số tín chỉ. Một môn có thể thuộc nhiều nhóm trong cùng
-                    chương trình, và cùng một môn có thể mang tên nhóm khác nhau ở các chương trình khác nhau.
+                    {i18n.t('Nhóm học phần chỉ mang tính mô tả: tên nhóm do bạn tự đặt theo từng chương trình, không ràng buộc số môn hay số tín chỉ. Một môn có thể thuộc nhiều nhóm trong cùng chương trình, và cùng một môn có thể mang tên nhóm khác nhau ở các chương trình khác nhau.')}
                 </Text>
 
-                <ISolidBtn icon={<LuPlus />} onClick={openCreate}>Tạo nhóm học phần</ISolidBtn>
+                <ISolidBtn icon={<LuPlus />} onClick={openCreate}>{i18n.t('Tạo nhóm học phần')}</ISolidBtn>
             </div>
 
             {categoriesQuery.isError && (
                 <Alert
                     type="error"
                     showIcon
-                    title="Không tải được danh sách nhóm học phần"
-                    description={categoriesQuery.error?.message ?? 'Vui lòng tải lại trang để thử lại.'}
+                    title={i18n.t('Không tải được danh sách nhóm học phần')}
+                    description={categoriesQuery.error?.message ?? i18n.t('Vui lòng tải lại trang để thử lại.')}
                 />
             )}
 
             {isEmpty && (
                 <EmptyState
-                    title="Chương trình chưa có nhóm học phần"
-                    description="Tạo nhóm như “Kinh tế - Chính trị - Xã hội - Luật” rồi gán các môn của chương trình vào nhóm. Một môn có thể nằm trong nhiều nhóm."
-                    action={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>Tạo nhóm học phần</ISolidBtn>}
+                    title={i18n.t('Chương trình chưa có nhóm học phần')}
+                    description={i18n.t('Tạo nhóm như “Kinh tế - Chính trị - Xã hội - Luật” rồi gán các môn của chương trình vào nhóm. Một môn có thể nằm trong nhiều nhóm.')}
+                    action={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>{i18n.t('Tạo nhóm học phần')}</ISolidBtn>}
                 />
             )}
 
@@ -201,10 +200,10 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
                     rowKey="id"
                     pagination={false}
                     loading={categoriesQuery.isLoading}
-                    emptyText="Chương trình chưa có nhóm học phần"
+                    emptyText={i18n.t('Chương trình chưa có nhóm học phần')}
                     expandable={{
                         expandedRowRender: category => (category.members.length === 0
-                            ? <Text type="secondary">Nhóm chưa có môn nào.</Text>
+                            ? <Text type="secondary">{i18n.t('Nhóm chưa có môn nào.')}</Text>
                             : (
                                 <ol style={{ margin: 0, paddingLeft: 24 }}>
                                     {[...category.members]
@@ -213,7 +212,7 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
                                             <li key={member.course_id} style={{ padding: '2px 0' }}>
                                                 <Text strong>{member.course.code}</Text>
                                                 {` · ${member.course.name} `}
-                                                <Text type="secondary">({member.course.credits} TC)</Text>
+                                                <Text type="secondary">({member.course.credits}{' '}{i18n.t('TC)')}</Text>
                                             </li>
                                         ))}
                                 </ol>
@@ -224,9 +223,9 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
 
             <Modal
                 open={open}
-                title={editingCategory ? 'Sửa nhóm học phần' : 'Tạo nhóm học phần'}
-                okText={editingCategory ? 'Lưu' : 'Tạo nhóm'}
-                cancelText="Huỷ"
+                title={editingCategory ? i18n.t('Sửa nhóm học phần') : i18n.t('Tạo nhóm học phần')}
+                okText={editingCategory ? i18n.t('Lưu') : i18n.t('Tạo nhóm')}
+                cancelText={i18n.t('Huỷ')}
                 confirmLoading={createCategory.isPending || updateCategory.isPending}
                 forceRender
                 onCancel={() => setOpen(false)}
@@ -236,8 +235,8 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
                     <Alert
                         type="info"
                         showIcon
-                        title="Chương trình chưa có môn học"
-                        description="Thêm môn ở tab “Môn học” trước khi gán môn cho nhóm."
+                        title={i18n.t('Chương trình chưa có môn học')}
+                        description={i18n.t('Thêm môn ở tab “Môn học” trước khi gán môn cho nhóm.')}
                         style={{ marginBottom: 16 }}
                     />
                 )}
@@ -250,24 +249,24 @@ const CategoriesTab = ({ curriculumId }: CurriculumTabProps) => {
                 >
                     <FormField
                         name="name"
-                        label="Tên nhóm học phần"
-                        placeholder="Kinh tế - Chính trị - Xã hội - Luật"
-                        hint="Tên do bạn tự đặt, không giới hạn theo danh sách cố định."
+                        label={i18n.t('Tên nhóm học phần')}
+                        placeholder={i18n.t('Kinh tế - Chính trị - Xã hội - Luật')}
+                        hint={i18n.t('Tên do bạn tự đặt, không giới hạn theo danh sách cố định.')}
                         rules={[
-                            { required: true, whitespace: true, message: 'Nhập tên nhóm học phần.' },
-                            { max: 255, message: 'Tên nhóm tối đa 255 ký tự.' },
+                            { required: true, whitespace: true, message: i18n.t('Nhập tên nhóm học phần.') },
+                            { max: 255, message: i18n.t('Tên nhóm tối đa 255 ký tự.') },
                         ]}
                     />
 
                     <Form.Item
                         name="course_ids"
-                        label="Môn trong nhóm"
-                        extra="Chỉ chọn được môn đã có trong chương trình; một môn có thể nằm trong nhiều nhóm. Lưu nhóm sẽ thay toàn bộ danh sách môn của nhóm."
+                        label={i18n.t('Môn trong nhóm')}
+                        extra={i18n.t('Chỉ chọn được môn đã có trong chương trình; một môn có thể nằm trong nhiều nhóm. Lưu nhóm sẽ thay toàn bộ danh sách môn của nhóm.')}
                     >
                         <Select
                             mode="multiple"
                             allowClear
-                            placeholder="Chọn môn cho nhóm"
+                            placeholder={i18n.t('Chọn môn cho nhóm')}
                             showSearch={{ optionFilterProp: 'label' }}
                             options={courseOptions}
                             loading={coursesQuery.isLoading}

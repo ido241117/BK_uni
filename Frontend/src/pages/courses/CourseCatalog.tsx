@@ -3,20 +3,19 @@ import { Alert, Card, Input, Statistic, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { LuPencil, LuSearch } from 'react-icons/lu';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { IconBtn, ISolidBtn, ITable, PageHeader } from '@/components';
+import { CourseStatus, IconBtn, ISolidBtn, ITable, PageHeader } from '@/components';
 import { listCourses } from '@/apis/course';
 import { listMyCourses } from '@/apis/student';
 import { useApiQuery, useDebounce, usePageLocation } from '@/hooks';
 import {
     STUDENT_COURSE_STATUS,
-    STUDENT_COURSE_STATUS_COLOR,
-    STUDENT_COURSE_STATUS_LABEL,
     type CourseSummary,
 } from '@/types';
 import CourseEditModal from './components/CourseEditModal';
 import CourseStatusFileActions from './components/CourseStatusFileActions';
 import { countCoursesWithoutPeDuplicates } from './physical-education';
 import type { CourseRow } from './types';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -82,14 +81,14 @@ const CourseCatalog = ({ isStudent }: { isStudent: boolean }) => {
 
     const columns: ColumnsType<CourseRow> = [
         {
-            title: 'Mã môn',
+            title: i18n.t('Mã môn'),
             dataIndex: 'code',
             width: 110,
             fixed: 'left',
             render: (code: string) => <Link to={`/courses/${encodeURIComponent(code)}`}><Text strong>{code}</Text></Link>,
         },
         {
-            title: 'Học phần',
+            title: i18n.t('Học phần'),
             dataIndex: 'name',
             render: (name: string, row) => (
                 <div>
@@ -99,23 +98,23 @@ const CourseCatalog = ({ isStudent }: { isStudent: boolean }) => {
             ),
         },
         {
-            title: 'Tín chỉ',
+            title: i18n.t('Tín chỉ'),
             dataIndex: 'credits',
             width: 84,
             align: 'center',
-            render: (credits: number) => <Tag>{credits} TC</Tag>,
+            render: (credits: number) => <Tag>{credits}{' '}{i18n.t('TC')}</Tag>,
         },
     ];
 
     if (isStudent) {
         columns.push(
             {
-                title: 'Trạng thái',
+                title: i18n.t('Trạng thái'),
                 key: 'status',
                 width: 140,
                 render: (_value, row) => (row.status
-                    ? <Tag color={STUDENT_COURSE_STATUS_COLOR[row.status]}>{STUDENT_COURSE_STATUS_LABEL[row.status]}</Tag>
-                    : <Text type="secondary">Chưa khai</Text>),
+                    ? <CourseStatus status={row.status} />
+                    : <Text type="secondary">{i18n.t('Chưa khai')}</Text>),
             },
             {
                 title: '',
@@ -123,7 +122,7 @@ const CourseCatalog = ({ isStudent }: { isStudent: boolean }) => {
                 width: 56,
                 align: 'center',
                 render: (_value, row) => (
-                    <IconBtn size="small" icon={<LuPencil />} label={`Sửa môn ${row.code}`} onClick={() => setEditing(row)} />
+                    <IconBtn size="small" icon={<LuPencil />} label={i18n.t('Sửa môn {{code}}', { code: row.code })} onClick={() => setEditing(row)} />
                 ),
             },
         );
@@ -132,10 +131,10 @@ const CourseCatalog = ({ isStudent }: { isStudent: boolean }) => {
     return (
         <section>
             <PageHeader
-                title={isStudent ? 'Môn học' : 'Danh mục môn học'}
+                title={isStudent ? i18n.t('Môn học') : i18n.t('Danh mục môn học')}
                 subtitle={isStudent
-                    ? 'Tra cứu danh mục và khai trạng thái học tập. Chọn chương trình đào tạo trong hồ sơ để xem toàn bộ chương trình dạng thẻ.'
-                    : 'Tra cứu danh mục môn học theo mã hoặc tên.'}
+                    ? i18n.t('Tra cứu danh mục và khai trạng thái học tập. Chọn chương trình đào tạo trong hồ sơ để xem toàn bộ chương trình dạng thẻ.')
+                    : i18n.t('Tra cứu danh mục môn học theo mã hoặc tên.')}
                 extra={isStudent
                     ? <CourseStatusFileActions statusByCourseId={statusByCourseId} templateCourses={templateCourses} />
                     : undefined}
@@ -146,17 +145,17 @@ const CourseCatalog = ({ isStudent }: { isStudent: boolean }) => {
                     <Alert
                         type="info"
                         showIcon
-                        title="Chưa chọn chương trình đào tạo"
-                        description="Chọn chương trình trong hồ sơ để xem môn theo kế hoạch giảng dạy, khối kiến thức và lập kế hoạch học kỳ."
-                        action={<Link to="/profile"><ISolidBtn size="small">Điền hồ sơ</ISolidBtn></Link>}
+                        title={i18n.t('Chưa chọn chương trình đào tạo')}
+                        description={i18n.t('Chọn chương trình trong hồ sơ để xem môn theo kế hoạch giảng dạy, khối kiến thức và lập kế hoạch học kỳ.')}
+                        action={<Link to="/profile"><ISolidBtn size="small">{i18n.t('Điền hồ sơ')}</ISolidBtn></Link>}
                     />
                 )}
 
                 {isStudent && (
                     <div className="stat-row">
-                        <Card><Statistic title="Môn đã khai" value={stats.declared} suffix="môn" /></Card>
-                        <Card><Statistic title="Môn đã hoàn thành" value={stats.completed} suffix="môn" /></Card>
-                        <Card><Statistic title="Tín chỉ đã hoàn thành" value={stats.completedCredits} suffix="TC" /></Card>
+                        <Card><Statistic title={i18n.t('Môn đã khai')} value={stats.declared} suffix={i18n.t('môn')} /></Card>
+                        <Card><Statistic title={i18n.t('Môn đã hoàn thành')} value={stats.completed} suffix={i18n.t('môn')} /></Card>
+                        <Card><Statistic title={i18n.t('Tín chỉ đã hoàn thành')} value={stats.completedCredits} suffix={i18n.t('TC')} /></Card>
                     </div>
                 )}
 
@@ -166,13 +165,13 @@ const CourseCatalog = ({ isStudent }: { isStudent: boolean }) => {
                             allowClear
                             size="large"
                             prefix={<LuSearch />}
-                            placeholder="Tìm theo mã hoặc tên môn học"
-                            aria-label="Tìm môn học theo mã hoặc tên"
+                            placeholder={i18n.t('Tìm theo mã hoặc tên môn học')}
+                            aria-label={i18n.t('Tìm môn học theo mã hoặc tên')}
                             value={search}
                             onChange={event => { setSearch(event.target.value); resetPage(); }}
                             style={{ maxWidth: 360 }}
                         />
-                        <Text type="secondary">{catalogQuery.data?.pagination.itemCount ?? 0} môn</Text>
+                        <Text type="secondary">{catalogQuery.data?.pagination.itemCount ?? 0}{' '}{i18n.t('môn')}</Text>
                     </div>
 
                     <ITable<CourseRow>
@@ -183,7 +182,7 @@ const CourseCatalog = ({ isStudent }: { isStudent: boolean }) => {
                         loading={catalogQuery.isFetching}
                         filters={{ search: keyword || undefined }}
                         pagination={{ total: catalogQuery.data?.pagination.itemCount ?? 0, current: page, pageSize }}
-                        emptyText="Không có môn học nào khớp từ khoá."
+                        emptyText={i18n.t('Không có môn học nào khớp từ khoá.')}
                     />
                 </Card>
             </div>

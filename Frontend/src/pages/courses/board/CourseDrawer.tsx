@@ -6,16 +6,18 @@ import { IOutLinedBtn } from '@/components';
 import { STUDENT_COURSE_STATUS, STUDENT_COURSE_STATUS_LABEL, type CourseSummary, type StudentCourseStatus } from '@/types';
 import { currentSemester } from '@/utils/semester';
 import type { CourseDraft } from './useCourseDraft';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 const { Text } = Typography;
 
 /** Mã học kỳ dạng YYK: 2 số cuối năm học + kỳ 1..3 (ví dụ 251, 252, 253). */
 const SEMESTER_CODE_PATTERN = /^\d{2}[123]$/;
 
-const STATUS_CHOICES: { value: StudentCourseStatus | 'none'; label: string }[] = [
+const STATUS_CHOICES: { value: StudentCourseStatus | 'none'; label: string }[] = trLive([
     { value: 'none', label: 'Chưa khai' },
     ...Object.values(STUDENT_COURSE_STATUS).map(value => ({ value, label: STUDENT_COURSE_STATUS_LABEL[value] })),
-];
+]);
 
 export interface CourseContext {
     /** Ví dụ "Năm 2 · Học kỳ 1", "Ngoài chương trình". */
@@ -49,21 +51,21 @@ const SemesterInput = ({ course, draft }: { course: CourseSummary; draft: Course
         <div>
             <Input
                 maxLength={3}
-                placeholder="Chưa lên kế hoạch"
+                placeholder={i18n.t('Chưa lên kế hoạch')}
                 value={value}
                 status={invalid ? 'error' : undefined}
                 onChange={event => setValue(event.target.value)}
                 onBlur={apply}
                 onPressEnter={apply}
-                aria-label="Học kỳ dự kiến"
+                aria-label={i18n.t('Học kỳ dự kiến')}
                 style={{ maxWidth: 160 }}
             />
             <div className="hint" style={{ marginTop: 4, color: invalid ? 'var(--status-failed)' : undefined }}>
                 {malformed
-                    ? 'Mã học kỳ phải có dạng YYK, ví dụ 252.'
+                    ? i18n.t('Mã học kỳ phải có dạng YYK, ví dụ 252.')
                     : past
-                        ? `Không lên kế hoạch vào học kỳ đã qua (sớm nhất HK ${minSemester}).`
-                        : 'Dạng YYK, ví dụ 251, 252, 253 (hè). Để trống để bỏ khỏi kế hoạch.'}
+                        ? i18n.t('Không lên kế hoạch vào học kỳ đã qua (sớm nhất HK {{minSemester}}).', { minSemester: minSemester })
+                        : i18n.t('Dạng YYK, ví dụ 251, 252, 253 (hè). Để trống để bỏ khỏi kế hoạch.')}
             </div>
         </div>
     );
@@ -82,10 +84,10 @@ const CourseDrawer = ({ course, context, draft, onClose }: CourseDrawerProps) =>
             {course && (
                 <Space orientation="vertical" size={20} style={{ width: '100%' }}>
                     <Descriptions column={1} size="small" bordered>
-                        <Descriptions.Item label="Tín chỉ">{course.credits} TC</Descriptions.Item>
-                        {context && <Descriptions.Item label="Vị trí">{context.placement}</Descriptions.Item>}
+                        <Descriptions.Item label={i18n.t('Tín chỉ')}>{course.credits}{' '}{i18n.t('TC')}</Descriptions.Item>
+                        {context && <Descriptions.Item label={i18n.t('Vị trí')}>{context.placement}</Descriptions.Item>}
                         {context && context.groups.length > 0 && (
-                            <Descriptions.Item label="Khối">
+                            <Descriptions.Item label={i18n.t('Khối')}>
                                 <Space wrap size={[4, 4]}>{context.groups.map(name => <Tag key={name}>{name}</Tag>)}</Space>
                             </Descriptions.Item>
                         )}
@@ -93,7 +95,7 @@ const CourseDrawer = ({ course, context, draft, onClose }: CourseDrawerProps) =>
                     {course.description && <Text type="secondary">{course.description}</Text>}
 
                     <div>
-                        <Text strong>Trạng thái học tập</Text>
+                        <Text strong>{i18n.t('Trạng thái học tập')}</Text>
                         <Radio.Group
                             style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}
                             value={status ?? 'none'}
@@ -106,14 +108,14 @@ const CourseDrawer = ({ course, context, draft, onClose }: CourseDrawerProps) =>
                     </div>
 
                     <div>
-                        <Text strong>Học kỳ dự kiến</Text>
+                        <Text strong>{i18n.t('Học kỳ dự kiến')}</Text>
                         <div style={{ marginTop: 8 }}>
                             <SemesterInput key={course.id} course={course} draft={draft} />
                         </div>
                     </div>
 
                     <Link to={`/courses/${encodeURIComponent(course.code)}`} state={{ from: '/courses' }}>
-                        <IOutLinedBtn icon={<LuExternalLink />}>Xem đề cương, điều kiện môn học</IOutLinedBtn>
+                        <IOutLinedBtn icon={<LuExternalLink />}>{i18n.t('Xem đề cương, điều kiện môn học')}</IOutLinedBtn>
                     </Link>
                 </Space>
             )}

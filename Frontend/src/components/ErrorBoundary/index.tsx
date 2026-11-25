@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { Button, Result } from 'antd';
+import i18n from '@/i18n';
 
 interface ErrorBoundaryProps {
     children: ReactNode;
@@ -27,11 +28,11 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: 16 }}>
                     <Result
                         status="500"
-                        title="Đã xảy ra lỗi giao diện"
-                        subTitle="Vui lòng tải lại trang. Nếu lỗi tiếp tục, hãy liên hệ quản trị hệ thống."
+                        title={i18n.t('Đã xảy ra lỗi giao diện')}
+                        subTitle={i18n.t('Vui lòng tải lại trang. Nếu lỗi tiếp tục, hãy liên hệ quản trị hệ thống.')}
                         extra={(
                             <Button type="primary" onClick={() => window.location.reload()}>
-                                Tải lại trang
+                                {i18n.t('Tải lại trang')}
                             </Button>
                         )}
                     />

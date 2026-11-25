@@ -5,9 +5,9 @@ export const SectionLabel = ({ children }: { children: ReactNode }) => (
     <h3 className="section-label">{children}</h3>
 );
 
-/** Label / value list separated by hairlines (template: `.row-list`). */
-export const RowList = ({ children }: { children: ReactNode }) => (
-    <div className="row-list">{children}</div>
+/** Label / value list separated by hairlines (template: `.row-list`). `wrap`: flows into as many columns as fit. */
+export const RowList = ({ children, wrap = false }: { children: ReactNode; wrap?: boolean }) => (
+    <div className="row-list" data-wrap={wrap || undefined}>{children}</div>
 );
 
 /** `chip`: value on a blush chip with a sparkle underline, for codes to double-check (template 2 `.meta-kv-row`). */

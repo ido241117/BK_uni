@@ -1,5 +1,6 @@
 import type { CourseAtSemester, PlanFix, SolvePlanPayload } from '@/types';
 import { normalizePriorities, priorityPayload, DEFAULT_PRIORITIES, type PriorityItem } from './priorities';
+import i18n from '@/i18n';
 
 /**
  * Mọi lựa chọn what-if của sinh viên trên trang Gợi ý (giai đoạn 12, mục 12.2 của docs/02-ke-hoach.md).
@@ -97,18 +98,18 @@ export const applyFix = (s: Scenario, fix: PlanFix): Scenario => {
 
 /** Mô tả giả định của một kịch bản, để so hai bản (M16). */
 export const describeScenario = (s: Scenario, label: (id: string) => string): [string, string][] => {
-    const pairs = (items: CourseAtSemester[]) => items.map(i => `${i.course_code} (${i.semester_code})`).join(', ') || 'không';
+    const pairs = (items: CourseAtSemester[]) => items.map(i => `${i.course_code} (${i.semester_code})`).join(', ') || i18n.t('không');
     return [
-        ['Học hè', s.summers.join(', ') || 'không'],
-        ['Nghỉ kỳ', s.skipped.join(', ') || 'không'],
-        ['Số TC muốn', Object.entries(s.targets).map(([k, v]) => `${k}: ${v}`).join(', ') || 'không'],
+        [i18n.t('Học hè'), s.summers.join(', ') || i18n.t('không')],
+        [i18n.t('Nghỉ kỳ'), s.skipped.join(', ') || i18n.t('không')],
+        [i18n.t('Số TC muốn'), Object.entries(s.targets).map(([k, v]) => `${k}: ${v}`).join(', ') || i18n.t('không')],
         ['Ghim', pairs(s.locked)],
-        ['Môn đang học', Object.entries(s.results).map(([k, v]) => `${k} ${v === 'pass' ? 'đậu' : 'rớt'}`).join(', ') || 'không có'],
-        ['Giả định rớt', pairs(s.assumedFail)],
-        ['Không mở', pairs(s.notOffered)],
-        ['Báo có mở', pairs(s.offered)],
-        ['Ô tự chọn tự do', pairs(s.freeChoices)],
-        ['Ưu tiên', s.priorities.filter(p => p.on).map(p => label(p.id)).join(' > ') || 'không'],
-        ['Học xong trước', s.graduateBy ?? 'không'],
+        [i18n.t('Môn đang học'), Object.entries(s.results).map(([k, v]) => `${k} ${v === 'pass' ? i18n.t('đậu') : i18n.t('rớt')}`).join(', ') || i18n.t('không có')],
+        [i18n.t('Giả định rớt'), pairs(s.assumedFail)],
+        [i18n.t('Không mở'), pairs(s.notOffered)],
+        [i18n.t('Báo có mở'), pairs(s.offered)],
+        [i18n.t('Ô tự chọn tự do'), pairs(s.freeChoices)],
+        [i18n.t('Ưu tiên'), s.priorities.filter(p => p.on).map(p => label(p.id)).join(' > ') || i18n.t('không')],
+        [i18n.t('Học xong trước'), s.graduateBy ?? i18n.t('không')],
     ];
 };

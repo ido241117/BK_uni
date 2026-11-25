@@ -30,6 +30,7 @@ import { createCurriculum, deleteCurriculum, listCurricula, updateCurriculum } f
 import { useApiMutation, useApiQuery, useDebounce, usePageLocation } from '@/hooks';
 import { toastMessage } from '@/utils/toast';
 import type { Curriculum, CurriculumPayload } from '@/types';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -124,7 +125,7 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
 
     const create = useApiMutation({
         mutationFn: (payload: CurriculumPayload) => createCurriculum(payload),
-        successMessage: 'Đã tạo chương trình đào tạo.',
+        successMessage: i18n.t('Đã tạo chương trình đào tạo.'),
         onSuccess: () => {
             void invalidateList();
             onClose();
@@ -134,7 +135,7 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
     const update = useApiMutation({
         mutationFn: (variables: { curriculumId: string; payload: Partial<CurriculumPayload> }) =>
             updateCurriculum(variables.curriculumId, variables.payload),
-        successMessage: 'Đã cập nhật chương trình đào tạo.',
+        successMessage: i18n.t('Đã cập nhật chương trình đào tạo.'),
         onSuccess: (_saved, variables) => {
             void invalidateList();
             // Trang chi tiết dùng cache riêng; làm mới để mở ra không thấy dữ liệu cũ.
@@ -153,7 +154,7 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
 
         const payload = toPatch(values, curriculum);
         if (Object.keys(payload).length === 0) {
-            toastMessage.info('Không có thay đổi nào để lưu.');
+            toastMessage.info(i18n.t('Không có thay đổi nào để lưu.'));
             onClose();
             return;
         }
@@ -164,9 +165,9 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
     return (
         <Modal
             open={open}
-            title={curriculum ? `Sửa chương trình ${curriculum.code}` : 'Tạo chương trình đào tạo'}
-            okText={curriculum ? 'Lưu thay đổi' : 'Tạo chương trình'}
-            cancelText="Huỷ"
+            title={curriculum ? i18n.t('Sửa chương trình {{code}}', { code: curriculum.code }) : i18n.t('Tạo chương trình đào tạo')}
+            okText={curriculum ? i18n.t('Lưu thay đổi') : i18n.t('Tạo chương trình')}
+            cancelText={i18n.t('Huỷ')}
             width={760}
             maskClosable={false}
             confirmLoading={isPending}
@@ -185,12 +186,12 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
                     <Col xs={24} sm={12}>
                         <FormField
                             name="code"
-                            label="Mã chương trình"
+                            label={i18n.t('Mã chương trình')}
                             placeholder="CS-2023"
-                            hint="Tối đa 50 ký tự và không trùng với chương trình khác."
+                            hint={i18n.t('Tối đa 50 ký tự và không trùng với chương trình khác.')}
                             rules={[
-                                { required: true, message: 'Nhập mã chương trình.' },
-                                { max: 50, message: 'Mã chương trình tối đa 50 ký tự.' },
+                                { required: true, message: i18n.t('Nhập mã chương trình.') },
+                                { max: 50, message: i18n.t('Mã chương trình tối đa 50 ký tự.') },
                             ]}
                             inputProps={{ maxLength: 50, allowClear: true, autoComplete: 'off' }}
                         />
@@ -198,27 +199,27 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
                     <Col xs={24} sm={12}>
                         <FormField
                             name="name"
-                            label="Tên chương trình"
-                            placeholder="Khoa học máy tính"
-                            rules={[{ required: true, message: 'Nhập tên chương trình.' }]}
+                            label={i18n.t('Tên chương trình')}
+                            placeholder={i18n.t('Khoa học máy tính')}
+                            rules={[{ required: true, message: i18n.t('Nhập tên chương trình.') }]}
                             inputProps={{ maxLength: 255 }}
                         />
                     </Col>
                     <Col xs={24} sm={12}>
                         <FormField
                             name="major"
-                            label="Ngành"
-                            placeholder="Công nghệ thông tin"
-                            rules={[{ required: true, message: 'Nhập ngành.' }]}
+                            label={i18n.t('Ngành')}
+                            placeholder={i18n.t('Công nghệ thông tin')}
+                            rules={[{ required: true, message: i18n.t('Nhập ngành.') }]}
                             inputProps={{ maxLength: 255 }}
                         />
                     </Col>
                     <Col xs={24} sm={12}>
                         <FormField
                             name="faculty"
-                            label="Khoa"
-                            placeholder="Khoa Công nghệ thông tin"
-                            rules={[{ required: true, message: 'Nhập khoa.' }]}
+                            label={i18n.t('Khoa')}
+                            placeholder={i18n.t('Khoa Công nghệ thông tin')}
+                            rules={[{ required: true, message: i18n.t('Nhập khoa.') }]}
                             inputProps={{ maxLength: 255 }}
                         />
                     </Col>
@@ -228,8 +229,8 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
                     <Col xs={12} sm={6}>
                         <Form.Item
                             name="cohort"
-                            label="Khóa"
-                            rules={[{ required: true, message: 'Nhập khóa.' }]}
+                            label={i18n.t('Khóa')}
+                            rules={[{ required: true, message: i18n.t('Nhập khóa.') }]}
                         >
                             <InputNumber
                                 size="large"
@@ -244,8 +245,8 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
                     <Col xs={12} sm={6}>
                         <Form.Item
                             name="duration_years"
-                            label="Số năm"
-                            rules={[{ required: true, message: 'Nhập số năm.' }]}
+                            label={i18n.t('Số năm')}
+                            rules={[{ required: true, message: i18n.t('Nhập số năm.') }]}
                         >
                             <InputNumber
                                 size="large"
@@ -260,10 +261,10 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
                     <Col xs={12} sm={6}>
                         <Form.Item
                             name="min_semester_credits"
-                            label="TC tối thiểu/kỳ"
+                            label={i18n.t('TC tối thiểu/kỳ')}
                             rules={[
-                                { required: true, message: 'Nhập số tín chỉ.' },
-                                { type: 'number', min: 1, message: 'Tín chỉ phải lớn hơn 0.' },
+                                { required: true, message: i18n.t('Nhập số tín chỉ.') },
+                                { type: 'number', min: 1, message: i18n.t('Tín chỉ phải lớn hơn 0.') },
                             ]}
                         >
                             <InputNumber
@@ -277,11 +278,11 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
                     <Col xs={12} sm={6}>
                         <Form.Item
                             name="max_semester_credits"
-                            label="TC tối đa/kỳ"
+                            label={i18n.t('TC tối đa/kỳ')}
                             dependencies={['min_semester_credits']}
                             rules={[
-                                { required: true, message: 'Nhập số tín chỉ.' },
-                                { type: 'number', min: 1, message: 'Tín chỉ phải lớn hơn 0.' },
+                                { required: true, message: i18n.t('Nhập số tín chỉ.') },
+                                { type: 'number', min: 1, message: i18n.t('Tín chỉ phải lớn hơn 0.') },
                                 ({ getFieldValue }) => ({
                                     validator(_rule, value: number | null) {
                                         const min = getFieldValue('min_semester_credits') as number | null | undefined;
@@ -289,7 +290,7 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
                                             return Promise.resolve();
                                         }
 
-                                        return Promise.reject(new Error('Tối đa phải lớn hơn hoặc bằng tối thiểu.'));
+                                        return Promise.reject(new Error(i18n.t('Tối đa phải lớn hơn hoặc bằng tối thiểu.')));
                                     },
                                 }),
                             ]}
@@ -304,12 +305,12 @@ const CurriculumFormModal = ({ open, curriculum, onClose }: CurriculumFormModalP
                     </Col>
                 </Row>
 
-                <Form.Item name="description" label="Mô tả">
+                <Form.Item name="description" label={i18n.t('Mô tả')}>
                     <Input.TextArea
                         rows={4}
                         size="large"
                         maxLength={1000}
-                        placeholder="Mô tả ngắn về chương trình (không bắt buộc)"
+                        placeholder={i18n.t('Mô tả ngắn về chương trình (không bắt buộc)')}
                     />
                 </Form.Item>
             </Form>
@@ -371,7 +372,7 @@ const AdminCurriculaPage = () => {
 
     const remove = useApiMutation({
         mutationFn: (curriculumId: string) => deleteCurriculum(curriculumId),
-        successMessage: 'Đã xoá chương trình đào tạo.',
+        successMessage: i18n.t('Đã xoá chương trình đào tạo.'),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: ['curricula'] });
         },
@@ -407,7 +408,7 @@ const AdminCurriculaPage = () => {
 
     const columns: ColumnsType<Curriculum> = [
         {
-            title: 'Mã',
+            title: i18n.t('Mã'),
             dataIndex: 'code',
             width: 130,
             render: (code: string, record) => (
@@ -417,37 +418,37 @@ const AdminCurriculaPage = () => {
             ),
         },
         {
-            title: 'Tên chương trình',
+            title: i18n.t('Tên chương trình'),
             dataIndex: 'name',
             render: (name: string, record) => <Link to={`/admin/curricula/${record.id}`}>{name}</Link>,
         },
-        { title: 'Ngành', dataIndex: 'major' },
-        { title: 'Khoa', dataIndex: 'faculty' },
+        { title: i18n.t('Ngành'), dataIndex: 'major' },
+        { title: i18n.t('Khoa'), dataIndex: 'faculty' },
         {
-            title: 'Khóa',
+            title: i18n.t('Khóa'),
             dataIndex: 'cohort',
             width: 96,
             align: 'center',
             render: (cohort: number) => <Tag>{cohort}</Tag>,
         },
         {
-            title: 'Thời lượng',
+            title: i18n.t('Thời lượng'),
             dataIndex: 'duration_years',
             width: 116,
             align: 'center',
-            render: (years: number) => `${years} năm`,
+            render: (years: number) => i18n.t('{{years}} năm', { years: years }),
         },
         {
-            title: 'Tín chỉ/kỳ',
+            title: i18n.t('Tín chỉ/kỳ'),
             key: 'credits',
             width: 132,
             align: 'center',
             render: (_value, record) => (
-                <Tag>{record.min_semester_credits} – {record.max_semester_credits} TC</Tag>
+                <Tag>{record.min_semester_credits} – {record.max_semester_credits}{' '}{i18n.t('TC')}</Tag>
             ),
         },
         {
-            title: 'Hành động',
+            title: i18n.t('Hành động'),
             key: 'actions',
             width: 108,
             align: 'center',
@@ -455,18 +456,18 @@ const AdminCurriculaPage = () => {
                 <Space size={4}>
                     <IconBtn
                         icon={<LuPencil />}
-                        label={`Sửa chương trình ${record.code}`}
+                        label={i18n.t('Sửa chương trình {{code}}', { code: record.code })}
                         color="primary"
                         onClick={() => openEdit(record)}
                     />
 
                     <Popconfirm
-                        title={`Xoá chương trình ${record.code}?`}
+                        title={i18n.t('Xoá chương trình {{code}}?', { code: record.code })}
                         description={(
                             <span style={{ display: 'inline-block', maxWidth: 280 }}>{DELETE_WARNING}</span>
                         )}
-                        okText="Xoá chương trình"
-                        cancelText="Huỷ"
+                        okText={i18n.t('Xoá chương trình')}
+                        cancelText={i18n.t('Huỷ')}
                         okButtonProps={{
                             color: 'danger',
                             variant: 'solid',
@@ -476,7 +477,7 @@ const AdminCurriculaPage = () => {
                     >
                         <IconBtn
                             icon={<LuTrash2 />}
-                            label={`Xoá chương trình ${record.code}`}
+                            label={i18n.t('Xoá chương trình {{code}}', { code: record.code })}
                             color="danger"
                         />
                     </Popconfirm>
@@ -492,9 +493,9 @@ const AdminCurriculaPage = () => {
     return (
         <section>
             <PageHeader
-                title="Chương trình đào tạo"
-                subtitle="Quản lý chương trình: thông tin chung, môn học, nhóm môn, quan hệ môn và quy định."
-                extra={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>Tạo chương trình</ISolidBtn>}
+                title={i18n.t('Chương trình đào tạo')}
+                subtitle={i18n.t('Quản lý chương trình: thông tin chung, môn học, nhóm môn, quan hệ môn và quy định.')}
+                extra={<ISolidBtn icon={<LuPlus />} onClick={openCreate}>{i18n.t('Tạo chương trình')}</ISolidBtn>}
             />
 
             <Card>
@@ -503,7 +504,7 @@ const AdminCurriculaPage = () => {
                         allowClear
                         size="large"
                         prefix={<LuSearch />}
-                        placeholder="Tìm theo mã, tên chương trình hoặc khoa"
+                        placeholder={i18n.t('Tìm theo mã, tên chương trình hoặc khoa')}
                         value={search}
                         onChange={event => setSearch(event.target.value)}
                         style={{ maxWidth: 420 }}
@@ -513,9 +514,9 @@ const AdminCurriculaPage = () => {
                         <Alert
                             type="error"
                             showIcon
-                            title="Không tải được danh sách chương trình"
-                            description={listQuery.error?.message ?? 'Vui lòng thử lại sau.'}
-                            action={<IOutLinedBtn onClick={() => void listQuery.refetch()}>Thử lại</IOutLinedBtn>}
+                            title={i18n.t('Không tải được danh sách chương trình')}
+                            description={listQuery.error?.message ?? i18n.t('Vui lòng thử lại sau.')}
+                            action={<IOutLinedBtn onClick={() => void listQuery.refetch()}>{i18n.t('Thử lại')}</IOutLinedBtn>}
                         />
                     )}
 
@@ -527,8 +528,8 @@ const AdminCurriculaPage = () => {
                         loading={listQuery.isFetching}
                         filters={{ search: urlSearch || undefined }}
                         emptyText={urlSearch
-                            ? 'Không tìm thấy chương trình phù hợp'
-                            : 'Chưa có chương trình đào tạo nào'}
+                            ? i18n.t('Không tìm thấy chương trình phù hợp')
+                            : i18n.t('Chưa có chương trình đào tạo nào')}
                         pagination={{ total, current: page, pageSize }}
                     />
                 </Space>

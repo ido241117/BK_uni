@@ -1,7 +1,9 @@
 import axios from 'axios';
 import type { ApiResult } from '@/types';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
-const STATUS_MESSAGE: Record<number, string> = {
+const STATUS_MESSAGE: Record<number, string> = trLive({
     400: 'Yêu cầu không hợp lệ. Vui lòng kiểm tra lại dữ liệu.',
     401: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
     403: 'Bạn không có quyền thực hiện thao tác này.',
@@ -13,7 +15,7 @@ const STATUS_MESSAGE: Record<number, string> = {
     502: 'Hệ thống đang bận. Vui lòng thử lại sau.',
     503: 'Hệ thống đang bận. Vui lòng thử lại sau.',
     504: 'Máy chủ phản hồi quá lâu. Vui lòng thử lại sau.',
-};
+});
 
 const DEFAULT_ERROR_MESSAGE = 'Đã xảy ra lỗi. Vui lòng thử lại.';
 
@@ -70,18 +72,18 @@ export const toApiError = (error: unknown): ApiError => {
         if (bodyMessage) return new ApiError(bodyMessage, status);
 
         if (!error.response) {
-            return new ApiError('Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối và thử lại.');
+            return new ApiError(i18n.t('Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối và thử lại.'));
         }
 
         const statusMessage = status === undefined ? undefined : STATUS_MESSAGE[status];
-        return new ApiError(statusMessage ?? DEFAULT_ERROR_MESSAGE, status);
+        return new ApiError(statusMessage ?? i18n.t(DEFAULT_ERROR_MESSAGE), status);
     }
 
     if (error instanceof Error && error.message.trim()) {
         return new ApiError(error.message);
     }
 
-    return new ApiError(DEFAULT_ERROR_MESSAGE);
+    return new ApiError(i18n.t(DEFAULT_ERROR_MESSAGE));
 };
 
 /** Thông điệp hiển thị được cho người dùng cuối. */

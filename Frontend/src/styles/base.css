@@ -59,16 +59,34 @@
         background: var(--accent-glow);
     }
 
+    /* Template foundations.html (scrollbar): thin rose thumb, no track or gutter box.
+       Browsers that support the standard properties (Chrome 121+, Firefox) use these and ignore
+       the ::-webkit-* rules below, which stay as the fallback (gradient thumb) for Safari. */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent-sparkle) transparent;
+    }
+
     ::-webkit-scrollbar {
         width: 10px;
         height: 10px;
     }
 
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+        background: transparent;
+    }
+
     ::-webkit-scrollbar-thumb {
-        background: var(--scrollbar-thumb);
+        background: linear-gradient(180deg, var(--accent-sparkle), var(--accent-rose));
+        background-clip: padding-box;
         border: 2px solid transparent;
         border-radius: var(--radius-pill);
-        background-clip: content-box;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--accent-rose), var(--ink-primary));
+        background-clip: padding-box;
     }
 
     :focus-visible {

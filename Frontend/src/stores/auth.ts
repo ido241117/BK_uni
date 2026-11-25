@@ -6,6 +6,7 @@ import type { Account, Credentials } from '@/types';
 import { getErrorMessage, isUnauthorized } from '@/utils/error';
 import { setSessionExpiredHandler } from '@/utils/session-bus';
 import { toastMessage } from '@/utils/toast';
+import i18n from '@/i18n';
 
 export type AuthStatus = 'loading' | 'authenticated' | 'anonymous' | 'error';
 
@@ -85,7 +86,7 @@ setSessionExpiredHandler(() => {
     if (!useAuthStore.getState().account) return;
 
     useAuthStore.getState().reset();
-    toastMessage.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+    toastMessage.error(i18n.t('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'));
 });
 
 export default useAuthStore;

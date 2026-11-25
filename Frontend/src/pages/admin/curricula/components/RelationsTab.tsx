@@ -3,7 +3,7 @@ import { Alert, Card, Select, Space, Spin, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
 import { LuSave } from 'react-icons/lu';
-import { EmptyState, ISolidBtn, ITable } from '@/components';
+import { EmptyState, ISolidBtn, ITable, PageLoading } from '@/components';
 import { listCourseRelations, listCurriculumCourses, replaceCourseRelations } from '@/apis/curriculum';
 import { useApiMutation, useApiQuery } from '@/hooks';
 import {
@@ -14,6 +14,8 @@ import {
     type CourseRelationsPayload,
 } from '@/types';
 import type { CurriculumTabProps } from '../types';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 const { Text } = Typography;
 
@@ -42,7 +44,7 @@ const RELATION_FIELDS: {
     payloadKey: keyof CourseRelationsPayload;
     placeholder: string;
     hint: string;
-}[] = [
+}[] = trLive([
     {
         type: COURSE_RELATION_TYPE.PREREQUISITE,
         payloadKey: 'prerequisite_course_ids',
@@ -67,7 +69,7 @@ const RELATION_FIELDS: {
         placeholder: 'Chọn các môn nên học trước',
         hint: 'KN: nên học trước để theo kịp môn đang chọn (không bắt buộc).',
     },
-];
+]);
 
 const RELATION_TYPE_OPTIONS = Object.values(COURSE_RELATION_TYPE).map(value => ({
     value,
@@ -99,7 +101,7 @@ const findCircularPrerequisites = (relations: CourseRelation[]): string[] => {
         if (reportedPairs.has(pairKey)) return;
 
         reportedPairs.add(pairKey);
-        warnings.push(`${item.course_code} là tiên quyết của ${item.related_course_code} và ngược lại.`);
+        warnings.push(i18n.t('{{course_code}} là tiên quyết của {{related_course_code}} và ngược lại.', { course_code: item.course_code, related_course_code: item.related_course_code }));
     });
 
     return warnings;
@@ -136,7 +138,7 @@ const RelationEditor = ({ options, relations, saving, onSave }: RelationEditorPr
         <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             {RELATION_FIELDS.map(field => (
                 <Space key={field.type} orientation="vertical" size={4} style={{ width: '100%' }}>
-                    <Text strong>Môn {COURSE_RELATION_TYPE_LABEL[field.type].toLowerCase()}</Text>
+                    <Text strong>{i18n.t('Môn')}{' '}{COURSE_RELATION_TYPE_LABEL[field.type].toLowerCase()}</Text>
                     <Select<string[]>
                         mode="multiple"
                         allowClear
@@ -156,7 +158,7 @@ const RelationEditor = ({ options, relations, saving, onSave }: RelationEditorPr
                 loading={saving}
                 onClick={save}
             >
-                Lưu quan hệ
+                {i18n.t('Lưu quan hệ')}
             </ISolidBtn>
         </Space>
     );
@@ -218,7 +220,7 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const saveRelations = useApiMutation<CourseRelation[], SaveRelationsVariables>({
         mutationFn: variables => replaceCourseRelations(curriculumId, variables.courseId, variables.payload),
-        successMessage: 'Đã lưu quan hệ môn học.',
+        successMessage: i18n.t('Đã lưu quan hệ môn học.'),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['curriculum-relations', curriculumId] }),
     });
 
@@ -229,18 +231,18 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
 
     const columns: ColumnsType<CourseRelation> = [
         {
-            title: 'Môn học',
+            title: i18n.t('Môn học'),
             dataIndex: 'course_code',
             width: 280,
             render: (_code, record) => (
                 <Space orientation="vertical" size={0}>
                     <Text strong>{record.course_code}</Text>
-                    <Text type="secondary">{courseNames.get(record.course_id) ?? 'Không còn trong chương trình'}</Text>
+                    <Text type="secondary">{courseNames.get(record.course_id) ?? i18n.t('Không còn trong chương trình')}</Text>
                 </Space>
             ),
         },
         {
-            title: 'Loại quan hệ',
+            title: i18n.t('Loại quan hệ'),
             dataIndex: 'type',
             width: 140,
             render: (type: CourseRelationType) => (
@@ -248,19 +250,19 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
             ),
         },
         {
-            title: 'Môn liên quan',
+            title: i18n.t('Môn liên quan'),
             dataIndex: 'related_course_code',
             render: (_code, record) => (
                 <Space orientation="vertical" size={0}>
                     <Text strong>{record.related_course_code}</Text>
-                    <Text type="secondary">{courseNames.get(record.related_course_id) ?? 'Không còn trong chương trình'}</Text>
+                    <Text type="secondary">{courseNames.get(record.related_course_id) ?? i18n.t('Không còn trong chương trình')}</Text>
                 </Space>
             ),
         },
     ];
 
     if (coursesQuery.isLoading) {
-        return <div style={{ display: 'grid', placeItems: 'center', minHeight: '30vh' }}><Spin size="large" /></div>;
+        return <PageLoading />;
     }
 
     if (coursesQuery.isError) {
@@ -268,7 +270,7 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
             <Alert
                 type="error"
                 showIcon
-                title="Không tải được danh sách môn của chương trình"
+                title={i18n.t('Không tải được danh sách môn của chương trình')}
                 description={coursesQuery.error?.message}
             />
         );
@@ -277,8 +279,8 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
     if (courseOptions.length === 0) {
         return (
             <EmptyState
-                title="Chương trình chưa có môn học"
-                description="Thêm môn vào chương trình ở tab “Môn học” trước khi khai báo quan hệ môn học."
+                title={i18n.t('Chương trình chưa có môn học')}
+                description={i18n.t('Thêm môn vào chương trình ở tab “Môn học” trước khi khai báo quan hệ môn học.')}
             />
         );
     }
@@ -290,17 +292,17 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
             <Card
                 size="small"
                 title={selectedCourse
-                    ? `Khai báo quan hệ cho ${selectedCourse.course.code} · ${selectedCourse.course.name}`
-                    : 'Khai báo quan hệ cho một môn'}
+                    ? i18n.t('Khai báo quan hệ cho {{code}} · {{name}}', { code: selectedCourse.course.code, name: selectedCourse.course.name })
+                    : i18n.t('Khai báo quan hệ cho một môn')}
             >
                 <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                     <Space orientation="vertical" size={4} style={{ width: '100%' }}>
-                        <Text strong>Môn học</Text>
+                        <Text strong>{i18n.t('Môn học')}</Text>
                         <Select<string>
                             allowClear
                             showSearch
                             optionFilterProp="label"
-                            placeholder="Chọn môn trong chương trình"
+                            placeholder={i18n.t('Chọn môn trong chương trình')}
                             options={courseOptions}
                             value={courseId}
                             onChange={value => setCourseId(value)}
@@ -309,7 +311,7 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
 
                     {!courseId && (
                         <Text type="secondary">
-                            Chọn một môn để khai báo môn tiên quyết, học trước, song hành và khuyến nghị của môn đó.
+                            {i18n.t('Chọn một môn để khai báo môn tiên quyết, học trước, song hành và khuyến nghị của môn đó.')}
                         </Text>
                     )}
 
@@ -329,11 +331,11 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
 
             <Card
                 size="small"
-                title="Tổng hợp quan hệ của chương trình"
+                title={i18n.t('Tổng hợp quan hệ của chương trình')}
                 extra={(
                     <Select<CourseRelationType>
                         allowClear
-                        placeholder="Tất cả loại quan hệ"
+                        placeholder={i18n.t('Tất cả loại quan hệ')}
                         style={{ width: 200 }}
                         options={RELATION_TYPE_OPTIONS}
                         value={typeFilter}
@@ -346,7 +348,7 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
                         <Alert
                             type="warning"
                             showIcon
-                            title="Phát hiện quan hệ tiên quyết vòng tròn"
+                            title={i18n.t('Phát hiện quan hệ tiên quyết vòng tròn')}
                             description={(
                                 <ul style={{ margin: 0, paddingLeft: 18 }}>
                                     {circularWarnings.map(item => <li key={item}>{item}</li>)}
@@ -363,7 +365,7 @@ const RelationsTab = ({ curriculumId }: CurriculumTabProps) => {
                         loading={relationsQuery.isFetching}
                         pagination={false}
                         syncLocation={false}
-                        emptyText="Chương trình chưa có quan hệ môn nào"
+                        emptyText={i18n.t('Chương trình chưa có quan hệ môn nào')}
                     />
                 </Space>
             </Card>

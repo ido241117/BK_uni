@@ -5,16 +5,18 @@ import { Link } from 'react-router';
 import { IOutLinedBtn, ISolidBtn } from '@/components';
 import type { AdvisorAnswer, AdvisorChoice, AdvisorChoiceAnswer, AdvisorRecommendation, OfferingVerdict } from '@/types';
 import { RichText } from './RichText';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 const { Text } = Typography;
 
-const PRIORITY: Record<AdvisorRecommendation['priority'], { label: string; color: string }> = {
+const PRIORITY: Record<AdvisorRecommendation['priority'], { label: string; color: string }> = trLive({
     high: { label: 'Ưu tiên cao', color: 'red' },
     medium: { label: 'Nên học', color: 'blue' },
     low: { label: 'Có thể học', color: 'default' },
-};
+});
 
-const OFFERING: Record<OfferingVerdict, { label: string; color: string }> = {
+const OFFERING: Record<OfferingVerdict, { label: string; color: string }> = trLive({
     confirmed: { label: 'Có mở lớp', color: 'green' },
     not_offered: { label: 'Không mở lớp', color: 'red' },
     likely: { label: 'Nhiều khả năng mở', color: 'green' },
@@ -22,7 +24,7 @@ const OFFERING: Record<OfferingVerdict, { label: string; color: string }> = {
     unlikely: { label: 'Khó mở', color: 'orange' },
     never: { label: 'Chưa từng mở kỳ này', color: 'red' },
     no_data: { label: 'Chưa có dữ liệu mở lớp', color: 'default' },
-};
+});
 
 /** "thi trắc nghiệm 90′ · ≈ 183 giờ · có thí nghiệm" từ đề cương; câu trả lời cũ (chưa có trường này) thì bỏ qua. */
 const outlineLine = (item: AdvisorRecommendation): string | null => {
@@ -33,9 +35,9 @@ const outlineLine = (item: AdvisorRecommendation): string | null => {
         : null;
     return [
         exam,
-        outline.study_hours ? `≈ ${Math.round(outline.study_hours)} giờ` : null,
-        outline.has_lab ? 'có thí nghiệm' : null,
-        outline.has_project ? 'có đồ án' : null,
+        outline.study_hours ? i18n.t('≈ {{v0}} giờ', { v0: Math.round(outline.study_hours) }) : null,
+        outline.has_lab ? i18n.t('có thí nghiệm') : null,
+        outline.has_project ? i18n.t('có đồ án') : null,
     ].filter(Boolean).join(' · ') || null;
 };
 
@@ -45,26 +47,26 @@ const Recommendation = ({ item }: { item: AdvisorRecommendation }) => (
             <span>
                 <Link to={`/courses/${encodeURIComponent(item.code)}`}><Text strong>{item.code}</Text></Link>
                 {' '}<Text>{item.name}</Text>
-                {item.credits !== null && <Text type="secondary"> · {item.credits} TC</Text>}
+                {item.credits !== null && <Text type="secondary"> · {item.credits}{' '}{i18n.t('TC')}</Text>}
             </span>
             <Tag color={PRIORITY[item.priority].color}>{PRIORITY[item.priority].label}</Tag>
         </div>
         {item.reason && <div className="advisor-rec-reason">{item.reason}</div>}
-        {outlineLine(item) && <div className="hint">Đề cương: {outlineLine(item)}</div>}
+        {outlineLine(item) && <div className="hint">{i18n.t('Đề cương:')}{' '}{outlineLine(item)}</div>}
         <Space size={[4, 4]} wrap>
             {item.eligible === true && (
-                <Tag color="green" icon={<LuCircleCheck style={{ marginRight: 4, verticalAlign: -2 }} />}>Đủ điều kiện</Tag>
+                <Tag color="green" icon={<LuCircleCheck style={{ marginRight: 4, verticalAlign: -2 }} />}>{i18n.t('Đủ điều kiện')}</Tag>
             )}
             {item.eligible === false && (
                 <Tag color="red" icon={<LuCircleAlert style={{ marginRight: 4, verticalAlign: -2 }} />}>
-                    Thiếu {item.missing.join(', ') || 'điều kiện'}
+                    {i18n.t('Thiếu')}{' '}{item.missing.join(', ') || i18n.t('điều kiện')}
                 </Tag>
             )}
-            {!item.in_curriculum && <Tag color="purple">Ngoài chương trình</Tag>}
+            {!item.in_curriculum && <Tag color="purple">{i18n.t('Ngoài chương trình')}</Tag>}
             {item.offering && (
                 <Tooltip title={item.offering.note}>
                     <Tag color={OFFERING[item.offering.verdict].color}>
-                        HK {item.offering.semester}: {OFFERING[item.offering.verdict].label}
+                        {i18n.t('HK')}{' '}{item.offering.semester}: {OFFERING[item.offering.verdict].label}
                     </Tag>
                 </Tooltip>
             )}
@@ -135,7 +137,7 @@ const ChoicesForm = ({ choices, disabled, onSubmit }: {
                         <Input
                             size="small"
                             disabled={disabled}
-                            placeholder={choice.type === 'text' ? 'Nhập câu trả lời' : 'Ý khác (không bắt buộc)'}
+                            placeholder={choice.type === 'text' ? i18n.t('Nhập câu trả lời') : i18n.t('Ý khác (không bắt buộc)')}
                             value={current.text}
                             onChange={event => set(choice.id, { text: event.target.value })}
                             maxLength={1000}
@@ -144,7 +146,7 @@ const ChoicesForm = ({ choices, disabled, onSubmit }: {
                 );
             })}
             <div>
-                <ISolidBtn size="small" icon={<LuSend />} disabled={disabled || !answered} onClick={submit}>Gửi lựa chọn</ISolidBtn>
+                <ISolidBtn size="small" icon={<LuSend />} disabled={disabled || !answered} onClick={submit}>{i18n.t('Gửi lựa chọn')}</ISolidBtn>
             </div>
         </div>
     );
@@ -162,8 +164,8 @@ export const AnswerView = ({ answer, interactive, onAnswer, onAsk }: {
         {answer.recommendations.length > 0 && (
             <div className="advisor-recs">
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                    Môn đề xuất · {answer.recommendations.reduce((total, item) => total + (item.credits ?? 0), 0)} TC.
-                    {' '}Điều kiện lấy từ trang Phân tích học tập; mở lớp lấy từ dữ liệu myBK hoặc dự đoán theo các năm trước.
+                    {i18n.t('Môn đề xuất ·')}{' '}{answer.recommendations.reduce((total, item) => total + (item.credits ?? 0), 0)}{' '}{i18n.t('TC.')}
+                    {' '}{i18n.t('Điều kiện lấy từ trang Phân tích học tập; mở lớp lấy từ dữ liệu myBK hoặc dự đoán theo các năm trước.')}
                 </Text>
                 {answer.recommendations.map(item => <Recommendation key={item.code} item={item} />)}
             </div>

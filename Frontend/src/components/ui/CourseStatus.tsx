@@ -1,28 +1,19 @@
 import { Select, type SelectProps } from 'antd';
 import type { ReactNode } from 'react';
-import {
-    PiArrowRight, PiCalendarBlank, PiCheckBold, PiCheckCircleFill, PiCircleDashed, PiCircleHalfFill, PiWarningCircleFill,
-    PiWarningFill, PiXCircle,
-} from 'react-icons/pi';
+import { PiArrowRight, PiCalendarBlank, PiCheckBold, PiWarningCircleFill, PiWarningFill } from 'react-icons/pi';
 import { STUDENT_COURSE_STATUS_LABEL, type StudentCourseStatus } from '@/types';
+import i18n from '@/i18n';
+import { Bead } from './Bead';
 
 /*
- * Status and marker pieces from ui-template/components-template.html (status micro-glyphs) and
- * components-template-2.html (file column, differs-from-file flag, load warning, source badge, status change,
+ * Status and marker pieces from ui-template/data-display.html (course status with beads, file column, differs-from-file flag, load warning, source badge, status change,
  * course option). The template's sparkle placeholders are replaced by icons that say what they mean.
  */
 
-const STATUS_ICON: Record<StudentCourseStatus, ReactNode> = {
-    completed: <PiCheckCircleFill />,
-    'in-progress': <PiCircleHalfFill />,
-    'not-started': <PiCircleDashed />,
-    failed: <PiXCircle />,
-};
-
-/** Course status as glyph + label: done sage, in progress rose, not started muted, failed terracotta. */
+/** Course status as bead + label (bead family, Bead.tsx): done sage, in progress rose, not started muted, failed terracotta. */
 export const CourseStatus = ({ status }: { status: StudentCourseStatus }) => (
     <span className="course-status" data-status={status}>
-        <span className="course-status-icon" aria-hidden="true">{STATUS_ICON[status]}</span>
+        <Bead state={status} />
         {STUDENT_COURSE_STATUS_LABEL[status]}
     </span>
 );
@@ -39,11 +30,11 @@ export const CourseStatusSelect = (props: Omit<SelectProps<StudentCourseStatus>,
 
 /** "Đạt" column of the myBK file: check when passed, "--" otherwise. */
 export const FileMark = ({ passed }: { passed: boolean }) => (passed
-    ? <span className="file-mark" data-passed="true" role="img" aria-label="Đạt"><PiCheckBold /></span>
+    ? <span className="file-mark" data-passed="true" role="img" aria-label={i18n.t('Đạt')}><PiCheckBold /></span>
     : <span className="file-mark" data-passed="false">--</span>);
 
 /** Web status differs from the myBK file (terracotta: a conflict). */
-export const DiffFlag = ({ children = 'Khác file tiến độ' }: { children?: ReactNode }) => (
+export const DiffFlag = ({ children = i18n.t('Khác file tiến độ') }: { children?: ReactNode }) => (
     <span className="diff-flag"><PiWarningFill aria-hidden="true" />{children}</span>
 );
 
@@ -61,7 +52,7 @@ export const SourceBadge = ({ children, icon = <PiCalendarBlank /> }: { children
 export const StatusChange = ({ from, to }: { from: StudentCourseStatus; to: StudentCourseStatus }) => (
     <span className="status-change">
         <CourseStatus status={from} />
-        <PiArrowRight aria-label="thành" />
+        <PiArrowRight aria-label={i18n.t('thành')} />
         <CourseStatus status={to} />
     </span>
 );
@@ -76,6 +67,6 @@ export const CourseOption = ({ code, name, credits }: { code: string; name: stri
             <span className="course-option-code">{code}</span>
             <span>{name}</span>
         </span>
-        {credits !== undefined && <span className="course-option-tc">{credits} TC</span>}
+        {credits !== undefined && <span className="course-option-tc">{credits}{' '}{i18n.t('TC')}</span>}
     </span>
 );

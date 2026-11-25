@@ -5,6 +5,7 @@ import { useAsyncAction, useCurrentUser, usePermission } from '@/hooks';
 import { PAGE_RESOURCES, toPageViewPermission } from '@/config/access-control/page-resources';
 import { useAuthStore } from '@/stores';
 import { ROLE_LABEL } from '@/types';
+import i18n from '@/i18n';
 
 /** Avatar + account text; the dropdown holds the profile link and logout (spec: one account menu). */
 export const AccountMenu = () => {
@@ -21,8 +22,8 @@ export const AccountMenu = () => {
 
     // The account has no display name, only email + role.
     const items: MenuProps['items'] = [
-        ...(canViewProfile ? [{ key: 'profile', icon: <PiUser />, label: 'Hồ sơ cá nhân' }, { type: 'divider' as const }] : []),
-        { key: 'logout', icon: <PiSignOut />, label: 'Đăng xuất', disabled: logout.loading },
+        ...(canViewProfile ? [{ key: 'profile', icon: <PiUser />, label: i18n.t('Hồ sơ cá nhân') }, { type: 'divider' as const }] : []),
+        { key: 'logout', icon: <PiSignOut />, label: i18n.t('Đăng xuất'), disabled: logout.loading },
     ];
 
     const onClick: MenuProps['onClick'] = ({ key }) => {
@@ -32,7 +33,7 @@ export const AccountMenu = () => {
 
     return (
         <Dropdown menu={{ items, onClick }} trigger={['click']} placement="bottomRight">
-            <button type="button" className="account-cluster" aria-label="Tài khoản">
+            <button type="button" className="account-cluster" aria-label={i18n.t('Tài khoản')}>
                 <span className="avatar" aria-hidden="true">{account.email.slice(0, 2)}</span>
                 <span className="account-text">
                     <div className="name" title={account.email}>{account.email}</div>

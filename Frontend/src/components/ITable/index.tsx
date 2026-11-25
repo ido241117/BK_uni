@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo } from 'react';
-import { Empty, Table, type TableProps } from 'antd';
+import { type ReactNode, useCallback, useEffect, useMemo } from 'react';
+import { Table, type TableProps } from 'antd';
+import { EmptyTableLine } from '@/components/ui';
 import { useLocation, useNavigate } from 'react-router';
+import i18n from '@/i18n';
 
 export interface ITablePagination {
     total: number;
@@ -19,7 +21,7 @@ export interface ITableProps<T> extends Omit<TableProps<T>, 'pagination'> {
     filters?: Record<string, unknown>;
     syncLocation?: boolean;
     showIndex?: boolean;
-    emptyText?: string;
+    emptyText?: ReactNode;
 }
 
 /**
@@ -37,7 +39,7 @@ export function ITable<T extends object>({
     filters = {},
     syncLocation = true,
     showIndex = true,
-    emptyText = 'Không có dữ liệu phù hợp',
+    emptyText = i18n.t('Không có dữ liệu phù hợp'),
     ...rest
 }: ITableProps<T>) {
     const navigate = useNavigate();
@@ -125,7 +127,7 @@ export function ITable<T extends object>({
                 scroll={{ x: minTableWidth, ...scroll }}
                 rowHoverable
                 size="middle"
-                locale={{ emptyText: <Empty description={emptyText} /> }}
+                locale={{ emptyText: typeof emptyText === 'string' ? <EmptyTableLine>{emptyText}</EmptyTableLine> : emptyText }}
                 pagination={pagination === false ? false : {
                     total: pagination.total,
                     pageSize: pagination.pageSize,

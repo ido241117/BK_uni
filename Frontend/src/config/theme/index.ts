@@ -12,8 +12,8 @@ export const PALETTE = {
         elevated: '#FFF8F4',
         tintHover: '#FBEDF2',
         ink: '#3B2230',
-        inkMuted: '#8E6B78',
-        inkSoft: '#BE9EAA',
+        inkMuted: '#745762',
+        inkSoft: '#906072',
         rose: '#B83E6C',
         roseHover: '#A03460',
         roseActive: '#8A2C52',
@@ -22,35 +22,36 @@ export const PALETTE = {
         glow: 'rgba(229, 143, 176, 0.22)',
         hairline: '#F3E3EA',
         chrome: '#E4B7CB',
-        good: '#5E7F5D',
-        warn: '#A0702A',
+        good: '#577556',
+        warn: '#916526',
         err: '#AE4B33',
     },
+    // Mirrors the [data-theme='dark'] block in styles/tokens.css (reasoning: DESIGN-SYSTEM.md 1.4).
     dark: {
-        canvas: '#1C1218',
-        blush: '#24171E',
-        elevated: '#2B1C24',
-        tintHover: '#33212B',
-        ink: '#F6E9EE',
-        inkMuted: '#C7A5B2',
-        inkSoft: '#8C6E7A',
-        rose: '#C2507E',
-        roseHover: '#A8436C',
-        roseActive: '#8F3A5D',
-        roseSoft: 'rgba(194, 80, 126, 0.16)',
-        sparkle: '#B86A8A',
-        glow: 'rgba(229, 143, 176, 0.16)',
-        hairline: '#3A2731',
-        chrome: '#5A3546',
-        good: '#8DB38B',
-        warn: '#D2A157',
-        err: '#E07A62',
+        canvas: '#1A1216',
+        blush: '#21171D',
+        elevated: '#2A1E25',
+        tintHover: '#33242D',
+        ink: '#F4E6EC',
+        inkMuted: '#C3A4B1',
+        inkSoft: '#A08995',
+        rose: '#EC8DB2',
+        roseHover: '#F4A9C6',
+        roseActive: '#D6789D',
+        roseSoft: 'rgba(236, 141, 178, 0.14)',
+        sparkle: '#B5718F',
+        glow: 'rgba(236, 141, 178, 0.18)',
+        hairline: '#33252D',
+        chrome: '#4E3442',
+        good: '#9CC79A',
+        warn: '#E2B56E',
+        err: '#F08D77',
     },
 } as const;
 
 export const FONT = {
     sans: "'Be Vietnam Pro', system-ui, sans-serif",
-    serif: "'Fraunces', Georgia, serif",
+    serif: "'Fraunces Variable', 'Fraunces', 'Times New Roman', Georgia, serif",
 } as const;
 
 export const RADIUS = { xs: 4, sm: 8, md: 12, lg: 16 } as const;
@@ -98,7 +99,9 @@ export const buildAntdTheme = (isDark: boolean): ThemeConfig => {
             controlItemBgHover: p.tintHover,
             controlItemBgActive: p.roseSoft,
             controlOutline: p.glow,
-            colorBgMask: 'rgba(59, 34, 48, 0.25)',
+            colorBgMask: isDark ? 'rgba(0, 0, 0, 0.55)' : 'rgba(59, 34, 48, 0.25)',
+            // Text on filled accents: white in light, dark plum in dark (light rose fill).
+            colorTextLightSolid: isDark ? '#2A1120' : '#FFFFFF',
             boxShadowSecondary: isDark
                 ? '0 16px 40px rgba(0, 0, 0, 0.45)'
                 : '0 14px 34px -14px rgba(120, 40, 70, 0.45)',
@@ -144,13 +147,20 @@ export const buildAntdTheme = (isDark: boolean): ThemeConfig => {
                 hoverBorderColor: p.rose,
                 activeBorderColor: p.rose,
                 activeOutlineColor: 'transparent',
-                // components-template.html option list: blush on hover, tint when selected, no bold.
+                // controls.html dropdown menu: blush on hover, tint when selected, no bold.
                 optionSelectedBg: p.tintHover,
                 optionActiveBg: p.blush,
                 optionSelectedFontWeight: 500,
             },
-            // Bead on a thread (components-template.html): 34 x 22 box, 13px bead; the thread is drawn in
+            // Bead on a thread (controls.html): 34 x 22 box, 13px bead; the thread is drawn in
             // styles/antd-skin.css.
+            // Checkbox / radio edges must reach 3:1 (WCAG 1.4.11): ink-soft, not the decorative chrome line.
+            Checkbox: {
+                colorBorder: p.inkSoft,
+            },
+            Radio: {
+                colorBorder: p.inkSoft,
+            },
             Switch: {
                 trackHeight: 22,
                 trackMinWidth: 34,
@@ -162,8 +172,8 @@ export const buildAntdTheme = (isDark: boolean): ThemeConfig => {
                 itemColor: p.inkMuted,
                 itemHoverColor: p.ink,
                 itemHoverBg: p.tintHover,
-                itemSelectedBg: p.rose,
-                itemSelectedColor: '#FFFFFF',
+                itemSelectedBg: p.tintHover,
+                itemSelectedColor: p.rose,
             },
             Skeleton: {
                 gradientFromColor: p.blush,

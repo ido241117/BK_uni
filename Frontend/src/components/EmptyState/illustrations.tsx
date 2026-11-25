@@ -1,7 +1,7 @@
 import type { SVGProps } from 'react';
 
 /*
- * Empty-state illustrations from ui-template/icon.html. Colors are CSS variables, so they follow the theme:
+ * Empty-state illustrations shown in ui-template/foundations.html. Colors are CSS variables, so they follow the theme:
  * blush disc = --bg-blush, page = --bg-elevated, outline = --accent-sparkle, folded corner = --illus-fold,
  * face = --ink-primary, accent marks = --accent-rose.
  */
@@ -75,7 +75,7 @@ export const SurprisedSearch = (props: Svg) => (
     </svg>
 );
 
-/** Loading: page with a minimal dash and two sparkles (icon.html "floating sparkle page"). Sparkles twinkle via CSS. */
+/** Loading: page with a minimal dash and two sparkles (foundations.html, "Loading"). Sparkles twinkle via CSS. */
 export const SparklePage = (props: Svg) => (
     <svg {...base} {...props}>
         <circle cx="48" cy="50" r="31" fill="var(--bg-blush)" />

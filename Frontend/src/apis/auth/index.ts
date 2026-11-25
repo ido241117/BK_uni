@@ -1,6 +1,7 @@
 import { queryMethod } from '@/config/query-method';
 import type { Account, Credentials } from '@/types';
 import { ApiError } from '@/utils/error';
+import i18n from '@/i18n';
 
 const isAccount = (value: unknown): value is Account => (
     typeof value === 'object'
@@ -13,7 +14,7 @@ const isAccount = (value: unknown): value is Account => (
 
 const parseAccount = (value: unknown): Account => {
     if (!isAccount(value)) {
-        throw new ApiError('Phản hồi tài khoản từ máy chủ không hợp lệ.');
+        throw new ApiError(i18n.t('Phản hồi tài khoản từ máy chủ không hợp lệ.'));
     }
     return { id: value.id, email: value.email, role: value.role };
 };

@@ -1,9 +1,11 @@
 import { memo } from 'react';
 import { LuArrowUpRight, LuMinus, LuPlus, LuX } from 'react-icons/lu';
 import { Link } from 'react-router';
+import { Bead, Pip } from '@/components';
 import { STUDENT_COURSE_STATUS_LABEL, type CourseSummary, type StudentCourseStatus } from '@/types';
 import { nextSemester, previousSemester } from '@/utils/semester';
 import { canPlan } from './structure';
+import i18n from '@/i18n';
 
 interface CourseCardProps {
     course: CourseSummary;
@@ -20,7 +22,8 @@ interface CourseCardProps {
 }
 
 /**
- * Thẻ một môn, các vùng tách biệt:
+ * Một môn dạng hạt (cùng kiểu với hạt môn ở trang Gợi ý lộ trình): chấm theo trạng thái + mã + TC, tên bên dưới.
+ * Các vùng tách biệt:
  * - thân thẻ bấm để đổi trạng thái ngay (chỉ đổi nháp ở client);
  * - với môn chưa học: dải dưới "+ Lên kế hoạch", hoặc "− HK 262 + ×" để dời sớm/trễ hay bỏ kế hoạch;
  * - dải bên phải là link sang trang chi tiết môn (nháp vẫn giữ trong localStorage khi rời trang).
@@ -31,7 +34,7 @@ const CourseCard = ({
 }: CourseCardProps) => {
     const plannable = canPlan(status);
     const planned = plannable && plannedSemester !== null;
-    const statusLabel = planned ? 'Đã lên kế hoạch' : status ? STUDENT_COURSE_STATUS_LABEL[status] : 'Chưa khai';
+    const statusLabel = planned ? i18n.t('Đã lên kế hoạch') : status ? STUDENT_COURSE_STATUS_LABEL[status] : i18n.t('Chưa khai');
     const previous = plannedSemester ? previousSemester(plannedSemester) : null;
 
     return (
@@ -40,18 +43,19 @@ const CourseCard = ({
                 type="button"
                 className="course-card-main"
                 onClick={() => onToggle(course)}
-                title={`${course.code} · ${course.name} — ${statusLabel}. Bấm để đổi trạng thái.`}
-                aria-label={`${course.code} ${course.name}, ${course.credits} tín chỉ, ${statusLabel}${dirty ? ', chưa lưu' : ''}. Bấm để đổi trạng thái.`}
+                title={i18n.t('{{code}} · {{name}} — {{statusLabel}}. Bấm để đổi trạng thái.', { code: course.code, name: course.name, statusLabel: statusLabel })}
+                aria-label={i18n.t('{{code}} {{name}}, {{credits}} tín chỉ, {{statusLabel}}{{v4}}. Bấm để đổi trạng thái.', { code: course.code, name: course.name, credits: course.credits, statusLabel: statusLabel, v4: dirty ? ', chưa lưu' : '' })}
             >
                 <span className="course-card-top">
+                    <Bead state={planned ? 'planned' : status ?? 'none'} />
                     <span className="course-card-code">{course.code}</span>
-                    <span className="course-card-credits">{course.credits} TC</span>
+                    <span className="course-card-credits">{course.credits}{' '}{i18n.t('TC')}</span>
                 </span>
                 <span className="course-card-name">{course.name}</span>
                 <span className="course-card-meta">
                     <span className="course-card-status">{statusLabel}</span>
-                    {!plannable && plannedSemester && <span className="course-card-plan">HK {plannedSemester}</span>}
-                    {dirty && <span className="course-card-dirty" aria-hidden>●</span>}
+                    {!plannable && plannedSemester && <span className="course-card-plan">{i18n.t('HK')}{' '}{plannedSemester}</span>}
+                    {dirty && <Pip />}
                 </span>
             </button>
 
@@ -64,18 +68,18 @@ const CourseCard = ({
                                 className="course-card-planbtn"
                                 disabled={!previous || previous < minSemester}
                                 onClick={() => previous && onPlanChange(course, previous)}
-                                aria-label={`Dời ${course.code} sớm hơn một học kỳ`}
-                                title="Sớm hơn một kỳ"
+                                aria-label={i18n.t('Dời {{code}} sớm hơn một học kỳ', { code: course.code })}
+                                title={i18n.t('Sớm hơn một kỳ')}
                             >
                                 <LuMinus aria-hidden />
                             </button>
-                            <span className="course-card-plansem" aria-label={`Dự kiến học kỳ ${plannedSemester}`}>HK {plannedSemester}</span>
+                            <span className="course-card-plansem" aria-label={i18n.t('Dự kiến học kỳ {{plannedSemester}}', { plannedSemester: plannedSemester })}>{i18n.t('HK')}{' '}{plannedSemester}</span>
                             <button
                                 type="button"
                                 className="course-card-planbtn"
                                 onClick={() => onPlanChange(course, nextSemester(plannedSemester!))}
-                                aria-label={`Dời ${course.code} trễ hơn một học kỳ`}
-                                title="Trễ hơn một kỳ"
+                                aria-label={i18n.t('Dời {{code}} trễ hơn một học kỳ', { code: course.code })}
+                                title={i18n.t('Trễ hơn một kỳ')}
                             >
                                 <LuPlus aria-hidden />
                             </button>
@@ -83,8 +87,8 @@ const CourseCard = ({
                                 type="button"
                                 className="course-card-planbtn course-card-planremove"
                                 onClick={() => onPlanChange(course, null)}
-                                aria-label={`Bỏ ${course.code} khỏi kế hoạch`}
-                                title="Bỏ khỏi kế hoạch"
+                                aria-label={i18n.t('Bỏ {{code}} khỏi kế hoạch', { code: course.code })}
+                                title={i18n.t('Bỏ khỏi kế hoạch')}
                             >
                                 <LuX aria-hidden />
                             </button>
@@ -94,10 +98,10 @@ const CourseCard = ({
                             type="button"
                             className="course-card-planadd"
                             onClick={() => onPlanChange(course, defaultSemester)}
-                            aria-label={`Lên kế hoạch ${course.code} vào học kỳ ${defaultSemester}`}
-                            title={`Lên kế hoạch vào HK ${defaultSemester}`}
+                            aria-label={i18n.t('Lên kế hoạch {{code}} vào học kỳ {{defaultSemester}}', { code: course.code, defaultSemester: defaultSemester })}
+                            title={i18n.t('Lên kế hoạch vào HK {{defaultSemester}}', { defaultSemester: defaultSemester })}
                         >
-                            <LuPlus aria-hidden /> Lên kế hoạch
+                            <LuPlus aria-hidden />{' '}{i18n.t('Lên kế hoạch')}
                         </button>
                     )}
                 </div>
@@ -107,8 +111,8 @@ const CourseCard = ({
                 to={`/courses/${encodeURIComponent(course.code)}`}
                 state={{ from: '/courses' }}
                 className="course-card-link"
-                aria-label={`Xem chi tiết môn ${course.code}`}
-                title="Xem chi tiết môn học"
+                aria-label={i18n.t('Xem chi tiết môn {{code}}', { code: course.code })}
+                title={i18n.t('Xem chi tiết môn học')}
             >
                 <LuArrowUpRight aria-hidden />
             </Link>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Tooltip } from 'antd';
 import { PiSidebarSimple } from 'react-icons/pi';
+import { useTranslation } from 'react-i18next';
 import { BrandLogo } from './BrandLogo';
 import { useShellLayout } from './useShellLayout';
 
@@ -13,8 +14,9 @@ interface SidebarProps {
 
 /** Sidebar frame: brand + collapse toggle at the top, scrollable sections, footer at the bottom. */
 export const Sidebar = ({ children, footer }: SidebarProps) => {
+    const { t } = useTranslation();
     const { collapsed, narrow, toggle, collapse } = useShellLayout();
-    const toggleLabel = collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên';
+    const toggleLabel = collapsed ? t('Mở rộng thanh bên') : t('Thu gọn thanh bên');
     const overlay = narrow && !collapsed;
 
     return (

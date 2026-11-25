@@ -1,6 +1,6 @@
 /*
  * Controls, status markers, row notes, loading and modal pieces.
- * Sources: ui-template/components-template.html, components-template-2.html, modal.html.
+ * Sources: ui-template/controls.html, data-display.html, feedback.html.
  */
 @layer components {
     /* ===== Search (`.search-editorial`) ===== */
@@ -98,7 +98,7 @@
         opacity: 0.55;
     }
 
-    /* ===== Course status glyphs ===== */
+    /* ===== Course status: bead + label ===== */
     .course-status {
         --status-tone: var(--ink-muted);
         display: inline-flex;
@@ -108,11 +108,6 @@
         font-size: 13px;
         font-weight: 500;
         white-space: nowrap;
-    }
-
-    .course-status-icon {
-        display: grid;
-        font-size: 14px;
     }
 
     .course-status[data-status='completed'] { --status-tone: var(--sem-good); }
@@ -137,8 +132,6 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        padding-left: var(--space-2);
-        border-left: 1.5px solid var(--sem-err);
         color: var(--sem-err);
         font-size: 12px;
         font-weight: 600;
@@ -147,8 +140,6 @@
 
     .load-warn {
         gap: 6px;
-        padding-left: 10px;
-        border-left-width: 2px;
         font-size: 12.5px;
     }
 
@@ -300,6 +291,116 @@
         display: grid;
         color: var(--accent-sparkle);
         font-size: 16px;
+    }
+
+    /* ===== Status bar (feedback.html `.status-line`): a band between two hairlines,
+       a 24px icon ring in the tone color, bold title, muted detail, action on the right ===== */
+    .status-line {
+        --status-tone: var(--accent-rose);
+        --status-line: var(--line-hairline);
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        border-top: 1px solid var(--status-line);
+        border-bottom: 1px solid var(--status-line);
+        background: var(--bg-blush);
+        color: var(--ink-primary);
+        font-size: 13.5px;
+        line-height: 1.5;
+    }
+
+    .status-line[data-tone='good'] {
+        --status-tone: var(--sem-good);
+        --status-line: var(--line-chrome);
+    }
+
+    .status-line[data-tone='rose'] {
+        --status-line: var(--accent-sparkle);
+        background: var(--bg-tint-hover);
+    }
+
+    .status-line[data-tone='warn'] {
+        --status-tone: var(--sem-warn);
+        --status-line: color-mix(in srgb, var(--sem-warn) 28%, transparent);
+        background: var(--sem-warn-bg);
+    }
+
+    .status-line[data-tone='err'] {
+        --status-tone: var(--sem-err);
+        --status-line: color-mix(in srgb, var(--sem-err) 28%, transparent);
+        background: var(--sem-err-bg);
+    }
+
+    .status-line-icon {
+        display: grid;
+        flex: none;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        border: 1px solid color-mix(in srgb, var(--status-tone) 40%, transparent);
+        border-radius: 50%;
+        background: var(--bg-canvas);
+        color: var(--status-tone);
+        font-size: 13.5px;
+    }
+
+    .status-line[data-tone='rose'] .status-line-icon,
+    .status-line[data-tone='loading'] .status-line-icon {
+        border-color: var(--accent-sparkle);
+    }
+
+    .status-line-spin {
+        animation: status-spin 0.9s linear infinite;
+    }
+
+    @keyframes status-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .status-line-title {
+        padding-top: 1px;
+        font-weight: 600;
+    }
+
+    .status-line[data-tone='err'] .status-line-title {
+        color: var(--sem-err);
+    }
+
+    .status-line-detail ul {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        margin: var(--space-1) 0 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .status-line-detail li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+        color: var(--ink-primary);
+    }
+
+    .status-line-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .status-line-detail {
+        margin-top: 2px;
+        color: var(--ink-muted);
+        font-size: 12.5px;
+        font-weight: 400;
+    }
+
+    .status-line-action {
+        display: flex;
+        flex: none;
+        align-items: center;
+        align-self: center;
     }
 
     /* ===== Loading shell ===== */
@@ -508,4 +609,65 @@
 @keyframes spark-twinkle {
     0%, 100% { opacity: 0.55; transform: scale(0.85); }
     50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* ===== Small shared layout pieces (cells, modal content) ===== */
+@layer components {
+    /* Several small items stacked in one table cell */
+    .cell-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    /* Icon + label inside a tab (feedback.html, modal tabs) */
+    .tab-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .ant-tabs-tab-active .tab-label > svg {
+        color: var(--accent-rose);
+    }
+
+    /* Instruction paragraph in a modal (feedback.html `.modal-prose`) */
+    .modal-prose {
+        margin: 0 0 22px;
+        color: var(--ink-primary);
+        font-size: 13.5px;
+        line-height: 1.6;
+    }
+
+    /* Label row above a paste area, with a character count on the right (feedback.html `.paste-label`) */
+    .paste-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-2);
+        color: var(--ink-muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    .paste-count {
+        color: var(--ink-soft);
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    /* Compact two-column list of changes (feedback.html `.diff-mini-table`) */
+    .diff-mini-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+    }
+
+    .diff-mini-table td {
+        padding: var(--space-2) 6px;
+        border-bottom: 1px solid var(--line-hairline);
+    }
 }

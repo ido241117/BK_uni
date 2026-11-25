@@ -1,9 +1,10 @@
 import { Input, Switch, type InputProps, type InputRef } from 'antd';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PiMagnifyingGlass, PiX } from 'react-icons/pi';
+import i18n from '@/i18n';
 
 interface SearchLineProps extends Omit<InputProps, 'prefix' | 'suffix' | 'allowClear'> {
-    /** Blush-washed variant for dense toolbars (components-template.html `.search-editorial.tinted`). */
+    /** Blush-washed variant for dense toolbars (controls.html `.search-line[data-tinted]`). */
     tinted?: boolean;
     /** Press "/" anywhere (outside a text field) to focus this search; shows a "/" hint while empty. */
     slashShortcut?: boolean;
@@ -12,7 +13,7 @@ interface SearchLineProps extends Omit<InputProps, 'prefix' | 'suffix' | 'allowC
 const isTyping = (target: EventTarget | null) => target instanceof HTMLElement
     && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
-/** Underlined search with a magnifier and a clear button (components-template.html `.search-editorial`). */
+/** Underlined search with a magnifier and a clear button (controls.html `.search-line`). */
 export const SearchLine = ({ className, tinted = false, slashShortcut = false, ...rest }: SearchLineProps) => {
     const ref = useRef<InputRef>(null);
     const [focused, setFocused] = useState(false);
@@ -37,7 +38,7 @@ export const SearchLine = ({ className, tinted = false, slashShortcut = false, .
             data-tinted={tinted}
             prefix={<PiMagnifyingGlass aria-hidden="true" />}
             suffix={slashShortcut && empty && !focused ? <kbd className="search-kbd">/</kbd> : <span />}
-            allowClear={{ clearIcon: <PiX aria-label="Xóa tìm kiếm" /> }}
+            allowClear={{ clearIcon: <PiX aria-label={i18n.t('Xóa tìm kiếm')} /> }}
             onFocus={(event) => { setFocused(true); rest.onFocus?.(event); }}
             onBlur={(event) => { setFocused(false); rest.onBlur?.(event); }}
         />
@@ -67,7 +68,7 @@ interface ToggleRowProps {
     disabled?: boolean;
 }
 
-/** Setting row: title + description left, thread switch right (components-template.html `.toggle-row`). */
+/** Setting row: title + description left, thread switch right (controls.html `.toggle-row`). */
 export const ToggleRow = ({ title, description, checked, onChange, disabled }: ToggleRowProps) => (
     <label className="toggle-row" data-disabled={disabled}>
         <span className="toggle-text">

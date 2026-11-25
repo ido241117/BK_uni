@@ -1,0 +1,86 @@
+/* Tiến độ học tập page layout (ui-template/tien-do-hoc-tap-page.html). Shared pieces live in components/ui. */
+@layer components {
+    /* Student info left, accumulated credits right */
+    .info-panel {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: var(--space-10);
+        padding-bottom: var(--space-7);
+        border-bottom: 1px solid var(--line-hairline);
+    }
+
+    .info-panel-rows {
+        margin-top: 18px;
+    }
+
+    .load-summary {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    /* Hiệu chỉnh panel */
+    .adjust-desc {
+        max-width: 680px;
+        margin: 0 0 var(--space-4);
+        color: var(--ink-muted);
+        font-size: 12.5px;
+    }
+
+    .adjust-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-10);
+        margin-bottom: 14px;
+    }
+
+    .semester-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 34px;
+    }
+
+    .semester-row .row-value {
+        text-align: left;
+    }
+
+    .adjust-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-5);
+        margin: 18px 0;
+    }
+
+    .add-course-select {
+        width: 360px;
+        max-width: 100%;
+    }
+
+    .add-course-select .ant-select-prefix {
+        color: var(--accent-rose);
+        font-size: 16px;
+    }
+
+    .adjust-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .course-groups {
+        margin-top: 10px;
+    }
+
+    @media (max-width: 860px) {
+        .info-panel {
+            grid-template-columns: 1fr;
+            gap: var(--space-6);
+        }
+    }
+}

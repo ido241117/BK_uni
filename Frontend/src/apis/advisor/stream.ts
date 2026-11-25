@@ -2,6 +2,7 @@ import type { AdvisorSession, AdvisorStep, SendAdvisorMessagePayload } from '@/t
 import { ApiError, isApiResultEnvelope, isUnauthorized } from '@/utils/error';
 import { emitSessionExpired } from '@/utils/session-bus';
 import { toastMessage } from '@/utils/toast';
+import i18n from '@/i18n';
 
 export interface AdvisorStreamHandlers {
     /** Phát đầu tiên: cuộc trò chuyện (mới tạo hoặc đang có) của lượt này. */
@@ -21,7 +22,7 @@ const fail = (message: string, status?: number): never => {
 
 /** Đọc lỗi HTTP (trước khi stream mở) theo envelope `{ error, message }` của backend. */
 const readHttpError = async (response: Response): Promise<never> => {
-    let message = 'Đã xảy ra lỗi. Vui lòng thử lại.';
+    let message = i18n.t('Đã xảy ra lỗi. Vui lòng thử lại.');
     try {
         const body: unknown = await response.json();
         if (isApiResultEnvelope(body) && typeof body.message === 'string' && body.message.trim()) message = body.message;
@@ -51,7 +52,7 @@ export const streamAdvisorMessage = async (
         });
     } catch (error) {
         if (signal?.aborted) throw error;
-        return fail('Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối và thử lại.');
+        return fail(i18n.t('Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối và thử lại.'));
     }
     if (!response.ok || !response.body) return readHttpError(response);
 
@@ -68,7 +69,7 @@ export const streamAdvisorMessage = async (
             session = (parsed as { session: AdvisorSession }).session;
             done = true;
         } else if (event === 'error') {
-            fail((parsed as { message?: string }).message || 'AI chưa trả lời được.');
+            fail((parsed as { message?: string }).message || i18n.t('AI chưa trả lời được.'));
         }
     };
 
@@ -95,6 +96,6 @@ export const streamAdvisorMessage = async (
         }
     }
 
-    if (!done || !session) return fail('Kết nối bị ngắt trước khi AI trả lời xong. Hãy tải lại cuộc trò chuyện để xem kết quả.');
+    if (!done || !session) return fail(i18n.t('Kết nối bị ngắt trước khi AI trả lời xong. Hãy tải lại cuộc trò chuyện để xem kết quả.'));
     return session;
 };

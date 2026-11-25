@@ -2,7 +2,7 @@ import { Alert, Card, Descriptions, Space, Spin, Tabs, Tag, Typography } from 'a
 import { useMemo } from 'react';
 import { LuArrowLeft } from 'react-icons/lu';
 import { Link, useLocation, useParams } from 'react-router';
-import { IOutLinedBtn, PageHeader } from '@/components';
+import { CourseStatus, IOutLinedBtn, PageHeader, PageLoading } from '@/components';
 import { getCourseByCode, getOpenedSemesters } from '@/apis/course';
 import { getCurriculum, listCourseRelations, listCurriculumCategories } from '@/apis/curriculum';
 import { getCourseOutlineByCode } from '@/apis/outline';
@@ -14,9 +14,8 @@ import { isGenericPhysicalEducation } from './physical-education';
 import { CourseOutlineSection, type CurriculumRelationView } from './components/outline/CourseOutlineSection';
 import {
     ROLE,
-    STUDENT_COURSE_STATUS_COLOR as STATUS_COLOR,
-    STUDENT_COURSE_STATUS_LABEL,
 } from '@/types';
+import i18n from '@/i18n';
 
 const { Paragraph, Text } = Typography;
 
@@ -27,7 +26,7 @@ const CourseDetailPage = () => {
     // Trang mở từ chỗ khác (vd. tab Môn học của chương trình ở trang admin) truyền `state.from` để quay về đúng chỗ.
     const from = (useLocation().state as { from?: string } | null)?.from;
     const backTo = from ?? '/courses';
-    const backLabel = from ? 'Quay lại' : 'Danh sách môn';
+    const backLabel = from ? i18n.t('Quay lại') : i18n.t('Danh sách môn');
 
     const courseQuery = useApiQuery(['course', code], () => getCourseByCode(code), {
         enabled: Boolean(code),
@@ -89,7 +88,7 @@ const CourseDetailPage = () => {
     const currentStatus = myCoursesQuery.data?.find(item => item.course_id === course?.id);
 
     if (courseQuery.isLoading || outlineQuery.isLoading) {
-        return <div style={{ display: 'grid', placeItems: 'center', minHeight: '40vh' }}><Spin size="large" /></div>;
+        return <PageLoading />;
     }
 
     if (!course && !outline) {
@@ -97,9 +96,9 @@ const CourseDetailPage = () => {
             <Alert
                 type="error"
                 showIcon
-                title="Không tìm thấy môn học"
-                description={`Không có môn học hay đề cương nào với mã "${code}".`}
-                action={<Link to={backTo}><IOutLinedBtn>{from ? 'Quay lại' : 'Về danh sách'}</IOutLinedBtn></Link>}
+                title={i18n.t('Không tìm thấy môn học')}
+                description={i18n.t('Không có môn học hay đề cương nào với mã "{{code}}".', { code: code })}
+                action={<Link to={backTo}><IOutLinedBtn>{from ? i18n.t('Quay lại') : i18n.t('Về danh sách')}</IOutLinedBtn></Link>}
             />
         );
     }
@@ -108,21 +107,21 @@ const CourseDetailPage = () => {
     const openedSemesters = semestersQuery.isLoading
         ? <Spin />
         : semesters.length === 0
-            ? <Paragraph type="secondary">Môn học chưa được mở ở học kỳ nào.</Paragraph>
+            ? <Paragraph type="secondary">{i18n.t('Môn học chưa được mở ở học kỳ nào.')}</Paragraph>
             : <OpenedSemesterChart semesterCodes={semesters.map(semester => semester.semester_code)} />;
     const displayCode = course?.code ?? outline!.course_code;
     const displayName = course?.name ?? outline?.selected?.name_vi ?? outline?.versions.at(-1)?.name_vi ?? '';
     const credits = course?.credits ?? outline?.selected?.credits ?? outline?.versions.at(-1)?.credits;
     const noOutline = (
         <Paragraph type="secondary" style={{ margin: 0 }}>
-            {outlineQuery.isError ? 'Không tải được đề cương.' : 'Môn học này chưa có đề cương trong hệ thống.'}
+            {outlineQuery.isError ? i18n.t('Không tải được đề cương.') : i18n.t('Môn học này chưa có đề cương trong hệ thống.')}
         </Paragraph>
     );
     // GDTC 1/2 (PE1003/PE1005) là mã chung: thêm tab liệt kê các học phần thể chất thực tế được học.
     const peTabs = isGenericPhysicalEducation(displayCode)
         ? [{
             key: 'physical-education',
-            label: 'Các môn thể chất',
+            label: i18n.t('Các môn thể chất'),
             children: <PhysicalEducationCourses statuses={isStudent ? myCoursesQuery.data ?? [] : undefined} />,
         }]
         : [];
@@ -131,49 +130,47 @@ const CourseDetailPage = () => {
         <section>
             <PageHeader
                 title={`${displayCode} · ${displayName}`}
-                subtitle={outline ? 'Thông tin môn học, đề cương và các học kỳ đã mở.' : 'Thông tin môn học và các học kỳ đã mở.'}
+                subtitle={outline ? i18n.t('Thông tin môn học, đề cương và các học kỳ đã mở.') : i18n.t('Thông tin môn học và các học kỳ đã mở.')}
                 extra={<Link to={backTo}><IOutLinedBtn icon={<LuArrowLeft />}>{backLabel}</IOutLinedBtn></Link>}
             />
 
             <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                 {!course && (
-                    <Alert type="info" showIcon title="Môn chưa có trong danh mục môn học của hệ thống" description="Chỉ có đề cương nhập từ myBK; chưa xếp được vào chương trình hay khai trạng thái." />
+                    <Alert type="info" showIcon title={i18n.t('Môn chưa có trong danh mục môn học của hệ thống')} description={i18n.t('Chỉ có đề cương nhập từ myBK; chưa xếp được vào chương trình hay khai trạng thái.')} />
                 )}
                 <Card>
                     <Descriptions column={{ xs: 1, sm: 2 }} size="middle">
-                        <Descriptions.Item label="Mã môn"><Text strong>{displayCode}</Text></Descriptions.Item>
-                        <Descriptions.Item label="Số tín chỉ">{credits !== undefined && credits !== null ? <Tag>{credits} TC</Tag> : '—'}</Descriptions.Item>
-                        <Descriptions.Item label="Tên môn" span={2}>{displayName}</Descriptions.Item>
+                        <Descriptions.Item label={i18n.t('Mã môn')}><Text strong>{displayCode}</Text></Descriptions.Item>
+                        <Descriptions.Item label={i18n.t('Số tín chỉ')}>{credits !== undefined && credits !== null ? <Tag>{credits}{' '}{i18n.t('TC')}</Tag> : '—'}</Descriptions.Item>
+                        <Descriptions.Item label={i18n.t('Tên môn')} span={2}>{displayName}</Descriptions.Item>
                         {isStudent && course && (
-                            <Descriptions.Item label="Nhóm học phần" span={2}>
+                            <Descriptions.Item label={i18n.t('Nhóm học phần')} span={2}>
                                 {categoryNames.length
                                     ? (
                                         <Space wrap size={[4, 4]}>
                                             {categoryNames.map(name => <Tag key={name}>{name}</Tag>)}
                                         </Space>
                                     )
-                                    : <Text type="secondary">Chưa xếp nhóm</Text>}
+                                    : <Text type="secondary">{i18n.t('Chưa xếp nhóm')}</Text>}
                             </Descriptions.Item>
                         )}
                         {course?.description && (
-                            <Descriptions.Item label="Mô tả">{course.description}</Descriptions.Item>
+                            <Descriptions.Item label={i18n.t('Mô tả')}>{course.description}</Descriptions.Item>
                         )}
                         {isStudent && course && (
-                            <Descriptions.Item label="Trạng thái học tập của tôi" span={2}>
+                            <Descriptions.Item label={i18n.t('Trạng thái học tập của tôi')} span={2}>
                                 {currentStatus
                                     ? (
                                         <Space size={8} wrap>
-                                            <Tag color={STATUS_COLOR[currentStatus.status]}>
-                                                {STUDENT_COURSE_STATUS_LABEL[currentStatus.status]}
-                                            </Tag>
-                                            <Text type="secondary">Chỉnh sửa nhanh ở danh sách môn học.</Text>
+                                            <CourseStatus status={currentStatus.status} />
+                                            <Text type="secondary">{i18n.t('Chỉnh sửa nhanh ở danh sách môn học.')}</Text>
                                         </Space>
                                     )
-                                    : <Text type="secondary">Chưa khai báo — chọn trạng thái ở danh sách môn học.</Text>}
+                                    : <Text type="secondary">{i18n.t('Chưa khai báo — chọn trạng thái ở danh sách môn học.')}</Text>}
                             </Descriptions.Item>
                         )}
                         {course && (
-                            <Descriptions.Item label="Cập nhật lần cuối" span={2}>
+                            <Descriptions.Item label={i18n.t('Cập nhật lần cuối')} span={2}>
                                 {new Date(course.updated_at).toLocaleString('vi-VN')}
                             </Descriptions.Item>
                         )}
@@ -197,17 +194,17 @@ const CourseDetailPage = () => {
                         <Tabs
                             items={[
                                 ...peTabs,
-                                { key: 'outline', label: 'Đề cương', children: noOutline },
-                                ...(course ? [{ key: 'opened', label: 'Học kỳ đã mở', children: openedSemesters }] : []),
+                                { key: 'outline', label: i18n.t('Đề cương'), children: noOutline },
+                                ...(course ? [{ key: 'opened', label: i18n.t('Học kỳ đã mở'), children: openedSemesters }] : []),
                             ]}
                         />
                     </Card>
                 )}
 
-                {!outline && peTabs.length === 0 && <Card title="Đề cương môn học">{noOutline}</Card>}
+                {!outline && peTabs.length === 0 && <Card title={i18n.t('Đề cương môn học')}>{noOutline}</Card>}
 
                 {/* Có đề cương thì "Học kỳ đã mở" là một tab trong khung đề cương; không có thì giữ thẻ riêng. */}
-                {course && !outline && peTabs.length === 0 && <Card title="Học kỳ đã mở">{openedSemesters}</Card>}
+                {course && !outline && peTabs.length === 0 && <Card title={i18n.t('Học kỳ đã mở')}>{openedSemesters}</Card>}
             </Space>
         </section>
     );

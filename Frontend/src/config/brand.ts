@@ -4,7 +4,7 @@
  * its <title> and description mirror it by hand.
  */
 export const BRAND = {
-    name: 'BKPlan',
-    /** Wordmark split: the second part is drawn in --accent-teal. */
-    wordmark: ['BK', 'Plan'] as const,
+    name: 'BKPath',
+    /** Wordmark split: the second part is drawn in the brand accent (--accent-brand). */
+    wordmark: ['BK', 'Path'] as const,
 } as const;

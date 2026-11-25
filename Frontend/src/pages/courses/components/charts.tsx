@@ -2,25 +2,29 @@ import { useMemo } from 'react';
 import { Progress } from 'antd';
 import { Bar, Column, Pie } from '@ant-design/plots';
 import { useAppTheme } from '@/contexts';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 /*
  * Biểu đồ dùng chung cho các trang môn học, vẽ bằng @ant-design/plots (canvas) và antd Progress.
- * Canvas không đọc được biến CSS nên màu được truyền dạng hex; giá trị khớp token `--viz-*` / `--status-*`.
- * Màu series đã kiểm tra tách biệt cho người mù màu ở cả hai chế độ sáng/tối.
+ * Canvas cannot read CSS variables, so colors are passed as hex; they mirror the `--viz-*` tokens (components.css).
+ * Progress series are ordinal stages (done > in progress > planned > suggested), so they use one rose hue stepped by
+ * lightness: validated with the dataviz skill's `validate_palette.js --ordinal` in both modes (DESIGN-SYSTEM.md 3.12).
+ * Dark reverses the ramp so the most finished stage is the brightest. Legends always name the series.
  */
 
 const SERIES_COLOR = {
-    done: { light: '#2a78d6', dark: '#3987e5' },
-    inProgress: { light: '#1baf7a', dark: '#199e70' },
-    planned: { light: '#eda100', dark: '#c98500' },
-    /** Trạng thái "đã lên kế hoạch" trên trang Môn học (cùng màu thẻ môn). */
-    planStatus: { light: '#6250d6', dark: '#9085e9' },
-    suggested: { light: '#6250d6', dark: '#9085e9' },
-    remaining: { light: '#e8e8ea', dark: '#2a2f37' },
+    done: { light: '#7A2A4E', dark: '#F5BCD1' },
+    inProgress: { light: '#B83E6C', dark: '#EC8DB2' },
+    planned: { light: '#D9709A', dark: '#C9628E' },
+    /** "Planned" status of a course card: same stage as planned. */
+    planStatus: { light: '#D9709A', dark: '#C9628E' },
+    suggested: { light: '#E99AB9', dark: '#9A4A6E' },
+    remaining: { light: '#F3E3EA', dark: '#33252D' },
 } as const;
 
 /** Các trạng thái tiến độ dùng chung; phần còn thiếu là nền xám. */
-export const SERIES = {
+export const SERIES = trLive({
     done: 'Đã hoàn thành',
     inProgress: 'Đang học',
     planned: 'Đã lên kế hoạch',
@@ -28,7 +32,7 @@ export const SERIES = {
     /** Chỉ dùng ở lộ trình: môn hệ thống tự xếp thêm. */
     suggested: 'Hệ thống đề xuất',
     remaining: 'Còn thiếu',
-} as const;
+} as const);
 
 export type SeriesKey = keyof typeof SERIES;
 
@@ -55,7 +59,9 @@ const useChartTheme = () => {
             theme: { type: isDark ? 'classicDark' : 'classic', view: { viewFill: 'transparent' } },
             categorical: CATEGORICAL[mode],
             seriesColor: (key: SeriesKey) => SERIES_COLOR[key][mode],
-            surface: isDark ? '#141414' : '#ffffff',
+            surface: isDark ? '#1A1216' : '#FFFFFF',
+            // --ink-muted: chart text must pass AA like the rest of the UI (the library's default grey does not).
+            ink: isDark ? '#C3A4B1' : '#745762',
         };
     }, [isDark]);
 };
@@ -85,7 +91,7 @@ export const ProgressRing = ({ percent, size = 96 }: { percent: number; size?: n
             railColor={chart.seriesColor('remaining')}
             strokeWidth={10}
             format={value => <span style={{ fontWeight: 700 }}>{value}%</span>}
-            aria-label={`Đã đạt ${clamped.toFixed(0)}%`}
+            aria-label={i18n.t('Đã đạt {{v0}}%', { v0: clamped.toFixed(0) })}
         />
     );
 };
@@ -120,7 +126,7 @@ interface StackedBarProps {
 }
 
 /** Một thanh ngang xếp chồng có chú thích và tooltip. */
-export const StackedBar = ({ title, segments, total, remainingLabel, unit = 'TC' }: StackedBarProps) => {
+export const StackedBar = ({ title, segments, total, remainingLabel, unit = i18n.t('TC') }: StackedBarProps) => {
     const chart = useChartTheme();
     const sum = segments.reduce((acc, segment) => acc + segment.value, 0);
     const rest = Math.max(0, (total ?? 0) - sum);
@@ -139,7 +145,7 @@ export const StackedBar = ({ title, segments, total, remainingLabel, unit = 'TC'
             scale={{ color: seriesScale(all, chart), y: { domain: [0, Math.max(total ?? 0, sum, 1)] } }}
             axis={false}
             style={{ maxWidth: 18, radius: 4, inset: 1 }}
-            legend={{ color: { position: 'bottom', itemMarker: 'square' } }}
+            legend={{ color: { position: 'bottom', itemMarker: 'square', itemLabelFill: chart.ink, itemLabelFillOpacity: 1 } }}
             tooltip={{
                 title: 'group',
                 items: [(datum: { series: string; value: number }) => ({ name: datum.series, value: `${datum.value} ${unit}` })],
@@ -173,7 +179,7 @@ interface BlockBarsProps {
 }
 
 /** Thanh ngang xếp chồng, mỗi hàng một mục; giá trị ghi ở cuối thanh. */
-export const BlockBars = ({ rows, unit = 'TC', normalize = true, onRowClick }: BlockBarsProps) => {
+export const BlockBars = ({ rows, unit = i18n.t('TC'), normalize = true, onRowClick }: BlockBarsProps) => {
     const chart = useChartTheme();
     const used: Segment[] = [];
     const data = rows.flatMap(row => {
@@ -205,11 +211,11 @@ export const BlockBars = ({ rows, unit = 'TC', normalize = true, onRowClick }: B
             paddingRight={84}
             scale={{ color: seriesScale(used, chart), x: { domain: rows.map(row => row.label) }, y: { domain: [0, max] } }}
             axis={{
-                x: { title: false, tick: false, line: false, labelFontSize: 12, labelAutoEllipsis: true },
+                x: { title: false, tick: false, line: false, labelFontSize: 12, labelAutoEllipsis: true, labelFill: chart.ink, labelOpacity: 1 },
                 y: false,
             }}
             style={{ maxWidth: 16, radius: 4, inset: 1, cursor: onRowClick ? 'pointer' : 'default' }}
-            legend={{ color: { position: 'bottom', itemMarker: 'square' } }}
+            legend={{ color: { position: 'bottom', itemMarker: 'square', itemLabelFill: chart.ink, itemLabelFillOpacity: 1 } }}
             onReady={onRowClick ? ({ chart: instance }) => {
                 instance.on('element:click', (event: { data?: { data?: { rowKey?: string } } }) => {
                     const key = event.data?.data?.rowKey;
@@ -224,7 +230,7 @@ export const BlockBars = ({ rows, unit = 'TC', normalize = true, onRowClick }: B
                 type: 'text',
                 data: rows.map(row => ({ row: row.label, value: max, text: row.valueText })),
                 encode: { x: 'row', y: 'value', text: 'text' },
-                style: { textAlign: 'left', textBaseline: 'middle', dx: 8, fontSize: 12, fill: chart.isDark ? '#c3c2b7' : '#52514e' },
+                style: { textAlign: 'left', textBaseline: 'middle', dx: 8, fontSize: 12, fill: chart.isDark ? '#C3A4B1' : '#745762' },
                 tooltip: false,
             }]}
         />
@@ -253,7 +259,7 @@ interface ColumnChartProps {
 }
 
 /** Biểu đồ cột xếp chồng, một trục tung. */
-export const ColumnChart = ({ columns, references = [], height = 240, unit = 'TC' }: ColumnChartProps) => {
+export const ColumnChart = ({ columns, references = [], height = 240, unit = i18n.t('TC') }: ColumnChartProps) => {
     const chart = useChartTheme();
     const used = columns.flatMap(column => column.segments.filter(segment => segment.value > 0));
     const axisLabel = (column: Column) => [column.label, column.sublabel, column.highlight ? `▲ ${column.highlight}` : null].filter(Boolean).join('\n');
@@ -261,12 +267,12 @@ export const ColumnChart = ({ columns, references = [], height = 240, unit = 'TC
         const total = column.segments.reduce((acc, segment) => acc + segment.value, 0);
         return column.segments.filter(segment => segment.value > 0).map(segment => ({
             x: axisLabel(column),
-            title: `${column.label}${column.sublabel ? ` · ${column.sublabel}` : ''} — tổng ${total} ${unit}${column.note ? ` · ${column.note}` : ''}`,
+            title: i18n.t('{{label}}{{v1}} — tổng {{total}} {{unit}}{{v4}}', { label: column.label, v1: column.sublabel ? ` · ${column.sublabel}` : '', total: total, unit: unit, v4: column.note ? ` · ${column.note}` : '' }),
             series: seriesName(segment),
             value: segment.value,
         }));
     });
-    const textColor = chart.isDark ? '#c3c2b7' : '#52514e';
+    const textColor = chart.isDark ? '#C3A4B1' : '#745762';
 
     return (
         <Column
@@ -279,11 +285,11 @@ export const ColumnChart = ({ columns, references = [], height = 240, unit = 'TC
             theme={chart.theme}
             scale={{ color: seriesScale(used, chart), x: { domain: columns.map(axisLabel) } }}
             axis={{
-                x: { title: false, tick: false, labelFontSize: 11, labelAutoRotate: false, labelAutoHide: true },
-                y: { title: false, tickCount: 4, labelFormatter: (value: number) => `${value}` },
+                x: { title: false, tick: false, labelFontSize: 11, labelAutoRotate: false, labelAutoHide: true, labelFill: chart.ink, labelOpacity: 1 },
+                y: { title: false, tickCount: 4, labelFormatter: (value: number) => `${value}`, labelFill: chart.ink, labelOpacity: 1 },
             }}
             style={{ maxWidth: 32, radius: 4, inset: 1 }}
-            legend={{ color: { position: 'bottom', itemMarker: 'square' } }}
+            legend={{ color: { position: 'bottom', itemMarker: 'square', itemLabelFill: chart.ink, itemLabelFillOpacity: 1 } }}
             tooltip={{
                 title: 'title',
                 items: [(datum: { series: string; value: number }) => ({ name: datum.series, value: `${datum.value} ${unit}` })],
@@ -310,7 +316,7 @@ export interface PieRow {
 /** Quá 8 phần thì gộp phần đuôi vào "Khác" thay vì lặp màu. */
 const foldRows = (rows: PieRow[]): PieRow[] => (rows.length <= 8 ? rows : [
     ...rows.slice(0, 7),
-    { key: '__rest', label: 'Khác', value: rows.slice(7).reduce((sum, row) => sum + row.value, 0) },
+    { key: '__rest', label: i18n.t('Khác'), value: rows.slice(7).reduce((sum, row) => sum + row.value, 0) },
 ]);
 
 /** Biểu đồ vành khuyên cho tỷ lệ cấu thành (vd cách tính điểm, tổng 100%). */
@@ -330,7 +336,7 @@ export const DonutChart = ({ rows, unit = '%', centerCaption }: { rows: PieRow[]
             style={{ stroke: chart.surface, inset: 1, radius: 4 }}
             label={{ text: (row: PieRow) => `${row.value}${unit}`, position: 'outside', fontSize: 12 }}
             legend={{ color: { position: 'right', layout: { justifyContent: 'center' }, itemMarker: 'circle' } }}
-            tooltip={{ title: 'label', items: [(row: PieRow) => ({ name: 'Tỷ lệ', value: `${row.value}${unit}` })] }}
+            tooltip={{ title: 'label', items: [(row: PieRow) => ({ name: i18n.t('Tỷ lệ'), value: `${row.value}${unit}` })] }}
             annotations={[{
                 type: 'text',
                 style: { text: `${total}${unit}\n${centerCaption}`, x: '50%', y: '50%', textAlign: 'center', fontSize: 16, fontWeight: 600, lineHeight: 20 },

@@ -65,21 +65,18 @@
         color: var(--ink-primary);
     }
 
+    /* The badge (logo.html) draws its own ring: no box around it. */
     .bk-icon-box {
         display: grid;
         flex: none;
         place-items: center;
-        width: 36px;
-        height: 36px;
-        border: 1px solid var(--accent-sparkle);
-        border-radius: 10px;
-        background: var(--bg-canvas);
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        width: 40px;
+        height: 40px;
+        transition: transform 0.2s ease;
     }
 
     .bk-logo:hover .bk-icon-box {
         transform: translateY(-1px);
-        border-color: var(--accent-rose);
     }
 
     .bk-title {
@@ -91,7 +88,7 @@
     }
 
     .bk-title span {
-        color: var(--accent-teal);
+        color: var(--accent-brand);
     }
 
     .nav-toggle {
@@ -162,12 +159,8 @@
     }
 
     .nav-item:hover {
-        background: rgba(255, 255, 255, 0.65);
+        background: var(--nav-hover-bg);
         color: var(--ink-primary);
-    }
-
-    [data-theme='dark'] .nav-item:hover {
-        background: var(--bg-tint-hover);
     }
 
     .nav-item[data-active='true'] {
@@ -275,8 +268,9 @@
         white-space: nowrap;
     }
 
+    /* Brand accent place #2: "now" (DESIGN-SYSTEM.md 2.1) */
     .sem-badge > svg {
-        color: var(--accent-rose);
+        color: var(--accent-brand);
         font-size: 17px;
     }
 
@@ -406,7 +400,7 @@
             position: fixed;
             inset: 0;
             z-index: 45;
-            background: rgba(59, 34, 48, 0.18);
+            background: var(--scrim);
         }
 
         .workspace {

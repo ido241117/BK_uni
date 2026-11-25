@@ -5,6 +5,7 @@ import { RouteLoading } from '@/components';
 import { useAuthzStore, useAuthStore } from '@/stores';
 import type { PermissionRequirement, UserRole } from '@/types';
 import { homeForRole } from '@/utils/auth';
+import i18n from '@/i18n';
 
 /** Khôi phục phiên từ cookie trước khi render bất kỳ route nào. */
 export const SessionBoundary = () => {
@@ -19,7 +20,7 @@ export const SessionBoundary = () => {
     if (status === 'loading') {
         return (
             <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
-                <RouteLoading label="Đang kiểm tra phiên đăng nhập..." />
+                <RouteLoading label={i18n.t('Đang kiểm tra phiên đăng nhập...')} />
             </div>
         );
     }
@@ -28,9 +29,9 @@ export const SessionBoundary = () => {
         return (
             <Result
                 status="error"
-                title="Không thể kiểm tra phiên đăng nhập"
-                subTitle={error ?? 'Vui lòng thử lại.'}
-                extra={<Button type="primary" onClick={() => void restoreSession()}>Thử lại</Button>}
+                title={i18n.t('Không thể kiểm tra phiên đăng nhập')}
+                subTitle={error ?? i18n.t('Vui lòng thử lại.')}
+                extra={<Button type="primary" onClick={() => void restoreSession()}>{i18n.t('Thử lại')}</Button>}
             />
         );
     }
@@ -71,11 +72,11 @@ export const RequireAccess = ({ roles, permission }: RequireAccessProps) => {
         return (
             <Result
                 status="403"
-                title="Bạn không có quyền truy cập"
-                subTitle="Tài khoản hiện tại không được phép xem trang này."
+                title={i18n.t('Bạn không có quyền truy cập')}
+                subTitle={i18n.t('Tài khoản hiện tại không được phép xem trang này.')}
                 extra={(
                     <Button type="primary" onClick={() => navigate(account ? homeForRole(account.role) : '/login', { replace: true })}>
-                        Về trang của tôi
+                        {i18n.t('Về trang của tôi')}
                     </Button>
                 )}
             />

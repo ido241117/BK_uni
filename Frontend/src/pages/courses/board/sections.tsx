@@ -14,6 +14,7 @@ import {
 } from '@/types';
 import { describeGroupRequirement, type CurriculumBlockProgress } from '@/utils/curriculum-credits';
 import { groupCourses, termLabel, type CurriculumStructure } from './structure';
+import i18n from '@/i18n';
 
 const { Paragraph, Text } = Typography;
 
@@ -40,12 +41,12 @@ const MarkAll = ({ courses, view }: { courses: CourseSummary[]; view: BoardView 
     if (!courses.length) return null;
     const allDone = courses.every(course => view.statusOf(course.id) === STUDENT_COURSE_STATUS.COMPLETED);
     return allDone
-        ? <ITextBtn size="small" onClick={() => view.setMany(courses, null)}>Bỏ đánh dấu</ITextBtn>
-        : <ITextBtn size="small" onClick={() => view.setMany(courses, STUDENT_COURSE_STATUS.COMPLETED)}>Hoàn thành tất cả</ITextBtn>;
+        ? <ITextBtn size="small" onClick={() => view.setMany(courses, null)}>{i18n.t('Bỏ đánh dấu')}</ITextBtn>
+        : <ITextBtn size="small" onClick={() => view.setMany(courses, STUDENT_COURSE_STATUS.COMPLETED)}>{i18n.t('Hoàn thành tất cả')}</ITextBtn>;
 };
 
 const progressText = (block: CurriculumBlockProgress | undefined) => (
-    block ? `${block.doneCount}/${block.needCount} môn · ${block.doneCredits}/${block.needCredits} TC` : ''
+    block ? i18n.t('{{doneCount}}/{{needCount}} môn · {{doneCredits}}/{{needCredits}} TC', { doneCount: block.doneCount, needCount: block.needCount, doneCredits: block.doneCredits, needCredits: block.needCredits }) : ''
 );
 
 /** Một khối tự chọn: tiêu đề + tiến độ, danh sách môn thu gọn được (khối lớn mặc định thu gọn). */
@@ -85,13 +86,13 @@ export const GroupSection = ({
                 </button>
                 <span className="board-section-sub">
                     {progressText(block)}
-                    {group.pool_scope === COURSE_GROUP_SCOPE.LISTED && ` · ${members.length} môn để chọn`}
+                    {group.pool_scope === COURSE_GROUP_SCOPE.LISTED && i18n.t(' · {{length}} môn để chọn', { length: members.length })}
                 </span>
             </div>
             {expanded && (group.pool_scope === COURSE_GROUP_SCOPE.ANY ? (
                 <>
                     <Paragraph type="secondary" style={{ margin: shown.length ? '0 0 10px' : 0, fontSize: 13 }}>
-                        Chọn môn bất kỳ ngoài chương trình. Tìm và đánh dấu môn ở tab “Danh mục môn học”; môn đã hoàn thành sẽ được tính vào khối này.
+                        {i18n.t('Chọn môn bất kỳ ngoài chương trình. Tìm và đánh dấu môn ở tab “Danh mục môn học”; môn đã hoàn thành sẽ được tính vào khối này.')}
                     </Paragraph>
                     {shown.length > 0 && <Grid courses={shown} view={view} />}
                 </>
@@ -133,8 +134,8 @@ export const SemesterView = ({
         sections.push(
             <Section
                 key={semester.key}
-                title={`Năm ${semester.year} · ${termLabel(semester.term)}`}
-                sub={`${done}/${sumCredits(semester.courses)} TC bắt buộc đã hoàn thành${groups.length ? ` · ${groups.length} khối tự chọn` : ''}`}
+                title={i18n.t('Năm {{year}} · {{v1}}', { year: semester.year, v1: termLabel(semester.term) })}
+                sub={i18n.t('{{done}}/{{v1}} TC bắt buộc đã hoàn thành{{v2}}', { done: done, v1: sumCredits(semester.courses), v2: groups.length ? i18n.t(' · {{count}} khối tự chọn', { count: groups.length }) : '' })}
                 extra={<MarkAll courses={semester.courses} view={view} />}
             >
                 {shown.length > 0 && <Grid courses={shown} view={view} />}
@@ -148,7 +149,7 @@ export const SemesterView = ({
     const unscheduled = structure.unscheduled.filter(view.visible);
     if (unscheduled.length) {
         sections.push(
-            <Section key="unscheduled" title="Chưa xếp kỳ" sub={`${structure.unscheduled.length} môn`} extra={<MarkAll courses={structure.unscheduled} view={view} />}>
+            <Section key="unscheduled" title={i18n.t('Chưa xếp kỳ')} sub={i18n.t('{{length}} môn', { length: structure.unscheduled.length })} extra={<MarkAll courses={structure.unscheduled} view={view} />}>
                 <Grid courses={unscheduled} view={view} />
             </Section>,
         );
@@ -159,13 +160,13 @@ export const SemesterView = ({
             <GroupSection key={group.id} group={group} view={view} outsideCourses={outsideCourses} defaultOpen={false} />
         ));
         sections.push(
-            <Section key="floating" title="Khối tự chọn không gắn kỳ">{groups}</Section>,
+            <Section key="floating" title={i18n.t('Khối tự chọn không gắn kỳ')}>{groups}</Section>,
         );
     }
 
     return sections.length
         ? <div className="stack">{sections}</div>
-        : <Card><Empty description="Không có môn nào khớp bộ lọc." /></Card>;
+        : <Card><Empty description={i18n.t('Không có môn nào khớp bộ lọc.')} /></Card>;
 };
 
 /**
@@ -190,10 +191,10 @@ export const CategoriesView = ({
             name: category.name,
             courses: category.members.map(member => member.course).sort((a, b) => a.code.localeCompare(b.code)),
         })),
-        ...(uncategorized.length ? [{ key: 'uncategorized', name: 'Chưa phân nhóm', courses: uncategorized }] : []),
+        ...(uncategorized.length ? [{ key: 'uncategorized', name: i18n.t('Chưa phân nhóm'), courses: uncategorized }] : []),
     ];
 
-    if (!categories.length) return <Card><Empty description="Chương trình chưa chia nhóm học phần." /></Card>;
+    if (!categories.length) return <Card><Empty description={i18n.t('Chương trình chưa chia nhóm học phần.')} /></Card>;
 
     const sections = lists.flatMap(list => {
         const shown = list.courses.filter(view.visible);
@@ -203,7 +204,7 @@ export const CategoriesView = ({
             <Section
                 key={list.key}
                 title={list.name}
-                sub={`${done}/${sumCredits(list.courses)} TC đã hoàn thành · ${list.courses.length} môn`}
+                sub={i18n.t('{{done}}/{{v1}} TC đã hoàn thành · {{length}} môn', { done: done, v1: sumCredits(list.courses), length: list.courses.length })}
                 extra={<MarkAll courses={list.courses} view={view} />}
             >
                 <Grid courses={shown} view={view} />
@@ -213,7 +214,7 @@ export const CategoriesView = ({
 
     return sections.length
         ? <div className="stack">{sections}</div>
-        : <Card><Empty description="Không có môn nào khớp bộ lọc." /></Card>;
+        : <Card><Empty description={i18n.t('Không có môn nào khớp bộ lọc.')} /></Card>;
 };
 
 /** Theo khối kiến thức xét tốt nghiệp, kèm tiến độ từng khối. */
@@ -231,7 +232,7 @@ export const GroupsView = ({
         <div className="stack">
             {(!view.filtering || standalone.length > 0) && (
                 <Section
-                    title="Môn bắt buộc"
+                    title={i18n.t('Môn bắt buộc')}
                     sub={progressText(view.standaloneBlock)}
                     extra={<MarkAll courses={structure.standalone} view={view} />}
                 >
@@ -255,13 +256,13 @@ export const SpecializationsView = ({
     required: boolean;
     view: BoardView;
 }) => {
-    if (!specializations.length) return <Card><Empty description="Chương trình không chia chuyên ngành." /></Card>;
+    if (!specializations.length) return <Card><Empty description={i18n.t('Chương trình không chia chuyên ngành.')} /></Card>;
     return (
         <div className="stack">
             <Text type="secondary">
                 {required
-                    ? 'Phải đạt đúng một chuyên ngành mới đủ điều kiện tốt nghiệp. Môn chuyên ngành vẫn được tính vào khối tự chọn gốc.'
-                    : 'Chuyên ngành không bắt buộc. Môn chuyên ngành vẫn được tính vào khối tự chọn gốc.'}
+                    ? i18n.t('Phải đạt đúng một chuyên ngành mới đủ điều kiện tốt nghiệp. Môn chuyên ngành vẫn được tính vào khối tự chọn gốc.')
+                    : i18n.t('Chuyên ngành không bắt buộc. Môn chuyên ngành vẫn được tính vào khối tự chọn gốc.')}
             </Text>
             {specializations.map(specialization => (
                 <Section key={specialization.id} title={specialization.name} sub={specialization.code}>

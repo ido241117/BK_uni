@@ -1,0 +1,320 @@
+/*
+ * Curriculum board (Phân tích tab): course cards by semester / block / category / specialization, toolbar, legend,
+ * floating save bar. Line-driven like the rest of the theme: hairline cards, a status rule on the left, no shadows
+ * except the floating save bar (it floats over content, like a popover).
+ */
+@layer components {
+    /* Course status colors from the theme tokens; soft tints mix with transparent, so both themes follow. */
+    :root {
+        --status-completed: var(--sem-good);
+        --status-progress: var(--accent-rose);
+        --status-failed: var(--sem-err);
+        --status-not-started: var(--ink-soft);
+        --status-dirty: var(--sem-warn);
+        --status-planned: var(--ink-muted);
+        --status-completed-soft: color-mix(in srgb, var(--status-completed) 12%, transparent);
+        --status-progress-soft: color-mix(in srgb, var(--status-progress) 10%, transparent);
+        --status-failed-soft: color-mix(in srgb, var(--status-failed) 10%, transparent);
+        --status-not-started-soft: color-mix(in srgb, var(--status-not-started) 14%, transparent);
+        --status-planned-soft: color-mix(in srgb, var(--status-planned) 12%, transparent);
+    }
+
+    /* ===== Toolbar, legend, view switch ===== */
+    .board-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: var(--space-4) var(--space-6);
+        margin-bottom: var(--space-4);
+    }
+
+    .board-filters,
+    .board-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4);
+    }
+
+    .board-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-4);
+        margin-bottom: var(--space-4);
+        color: var(--ink-muted);
+        font-size: 12px;
+    }
+
+    .board-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .board-views {
+        margin-bottom: var(--space-5);
+    }
+
+    /* ===== Sections (semester / block) ===== */
+    .board-section-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-1) var(--space-3);
+        margin-bottom: 10px;
+    }
+
+    .board-section-title {
+        color: var(--ink-primary);
+        font-family: var(--serif);
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .board-section-sub {
+        color: var(--ink-muted);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .board-group {
+        padding: var(--space-3) 0;
+        border-top: 1px dashed var(--line-chrome);
+    }
+
+    /* ===== Course bead (bead family, Bead.tsx: no box, a status ring leads) ===== */
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr));
+        gap: var(--space-4) var(--space-3);
+    }
+
+    .course-card {
+        --accent: var(--status-not-started);
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: auto auto;
+        border-radius: var(--radius-xs);
+        transition: background 0.12s;
+    }
+
+    .course-card[data-status='completed'] { --accent: var(--status-completed); }
+    .course-card[data-status='in-progress'] { --accent: var(--status-progress); }
+    .course-card[data-status='failed'] { --accent: var(--status-failed); }
+    .course-card[data-status='planned'] { --accent: var(--status-planned); }
+
+    .course-card:hover {
+        background: var(--bg-tint-hover);
+    }
+
+    .course-card-main {
+        display: flex;
+        flex-direction: column;
+        grid-column: 1;
+        grid-row: 1;
+        gap: 2px;
+        min-width: 0;
+        padding: var(--space-1);
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .course-card-main:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 1px;
+    }
+
+    .course-card-top {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12.5px;
+    }
+
+
+    .course-card-code {
+        color: var(--ink-primary);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    .course-card-credits {
+        color: var(--ink-muted);
+        font-size: 11.5px;
+        white-space: nowrap;
+    }
+
+    .course-card-name {
+        display: -webkit-box;
+        overflow: hidden;
+        padding-left: 16px;
+        color: var(--ink-muted);
+        font-size: 12px;
+        line-height: 1.35;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .course-card-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-left: 16px;
+        color: var(--ink-muted);
+        font-size: 11px;
+    }
+
+    .course-card-status {
+        color: var(--accent);
+        font-weight: 600;
+    }
+
+    .course-card[data-status='none'] .course-card-status,
+    .course-card[data-status='not-started'] .course-card-status {
+        color: var(--ink-muted);
+        font-weight: 400;
+    }
+
+    .course-card-plan {
+        color: var(--accent-rose);
+    }
+
+    /* Link to the course page: a small arrow at the top right, no strip. */
+    .course-card-link {
+        display: grid;
+        grid-column: 2;
+        grid-row: 1;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        margin: 2px;
+        border-radius: var(--radius-xs);
+        color: var(--ink-soft);
+        font-size: 14px;
+        transition: background 0.12s, color 0.12s;
+    }
+
+    .course-card-link:hover,
+    .course-card-link:focus-visible {
+        background: var(--bg-blush);
+        color: var(--accent-rose);
+    }
+
+    /* Plan controls of a not-started course: a text row under the name, outside the status button. */
+    .course-card-planbar {
+        display: flex;
+        grid-column: 1 / -1;
+        grid-row: 2;
+        align-items: center;
+        gap: 2px;
+        padding: 0 var(--space-1) var(--space-1) 20px;
+        font-size: 11.5px;
+    }
+
+    .course-card-planadd,
+    .course-card-planbtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 0;
+        border: 0;
+        border-bottom: 1px dashed transparent;
+        background: none;
+        color: var(--ink-muted);
+        font: inherit;
+        line-height: 1.4;
+        cursor: pointer;
+        transition: color 0.12s, border-color 0.12s;
+    }
+
+    .course-card-planadd {
+        border-bottom-color: var(--ink-soft);
+    }
+
+    .course-card-planbtn {
+        width: 20px;
+        height: 20px;
+    }
+
+    .course-card-planadd:hover,
+    .course-card-planbtn:not(:disabled):hover {
+        border-bottom-color: var(--accent-rose);
+        color: var(--accent-rose);
+    }
+
+    .course-card-planbtn:disabled {
+        cursor: not-allowed;
+        opacity: 0.4;
+    }
+
+    .course-card-plansem {
+        min-width: 48px;
+        color: var(--accent-rose);
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .course-card-planremove:not(:disabled):hover {
+        color: var(--sem-err);
+    }
+
+    /* Clickable status in the catalog table */
+    .status-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .status-toggle:hover .ant-tag {
+        color: var(--accent-rose);
+    }
+
+    /* ===== Floating "unsaved" bar: styled like the confirm popover ===== */
+    .board-savebar {
+        position: fixed;
+        bottom: var(--space-6);
+        left: 50%;
+        z-index: 30;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2) var(--space-4);
+        width: max-content;
+        max-width: calc(100vw - 32px);
+        padding: 10px var(--space-4);
+        border: 1px solid var(--accent-sparkle);
+        border-radius: var(--radius-xs);
+        background: var(--bg-elevated);
+        outline: 1px solid var(--line-hairline);
+        outline-offset: -4px;
+        box-shadow: var(--shadow-pop);
+        transform: translateX(-50%);
+        animation: board-savebar-in 0.16s ease-out;
+    }
+
+    .board-savebar-text {
+        flex: 1;
+        min-width: 180px;
+        color: var(--ink-primary);
+        font-size: 13px;
+    }
+}
+
+@keyframes board-savebar-in {
+    from { opacity: 0; transform: translate(-50%, 8px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}

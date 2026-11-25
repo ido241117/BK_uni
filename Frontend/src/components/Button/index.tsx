@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 /**
  * Shared buttons. Each wrapper only picks antd's `color` + `variant`; the look comes from ./button.css
- * (ui-template/buttons.html). `size`: small = dense rows, large = login. `color="danger"` for destructive actions.
+ * (ui-template/controls.html). `size`: small = dense rows, large = login. `color="danger"` for destructive actions.
  */
 export interface IButtonProps extends Omit<ButtonProps, 'type' | 'color' | 'variant'> {
     color?: ButtonProps['color'];

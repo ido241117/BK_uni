@@ -1,11 +1,13 @@
 import { Card, Collapse, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import type { EngineReport } from '@/types';
 import { semesterLabel } from '@/utils/semester';
+import i18n from '@/i18n';
+import { trLive } from '@/i18n/live';
 
 const { Text } = Typography;
 
 /** Tên các mức mục tiêu của engine ASP (pipeline/engine/asp/core/optimize.lp). */
-const OBJECTIVE_LABEL: Record<string, string> = {
+const OBJECTIVE_LABEL: Record<string, string> = trLive({
     gaps: 'Kỳ chính bị bỏ trống',
     last_semester: 'Kỳ cuối (chỉ số kỳ)',
     retakes: 'Học lại môn rớt (chỉ số kỳ, càng nhỏ càng sớm)',
@@ -15,11 +17,11 @@ const OBJECTIVE_LABEL: Record<string, string> = {
     level_order: 'Môn cấp 1–2 học muộn',
     balance: 'Kỳ nặng nhất (TC)',
     taste: 'Sở thích',
-};
+});
 
-const REQUIREMENT_LABEL: Record<string, string> = {
+const REQUIREMENT_LABEL: Record<string, string> = trLive({
     social_work_days: 'Ngày công tác xã hội (web chưa có dữ liệu)',
-};
+});
 
 interface EngineReportCardProps {
     report: EngineReport;
@@ -35,41 +37,41 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
     const picked = new Set(Object.keys(report.interests ?? {}));
 
     return (
-        <Card title="Thông tin thêm từ bộ giải Clingo (engine ASP)">
+        <Card title={i18n.t('Thông tin thêm từ bộ giải Clingo (engine ASP)')}>
             <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                 <Space orientation="vertical" size={4}>
-                    <Text strong>GPA (từ điểm trong file tiến độ myBK)</Text>
+                    <Text strong>{i18n.t('GPA (từ điểm trong file tiến độ myBK)')}</Text>
                     {gpa10 === undefined && gpa4 === undefined ? (
-                        <Text type="secondary">Chưa có điểm: tải file PDF tiến độ myBK ở trang Môn học (file Excel không có điểm).</Text>
+                        <Text type="secondary">{i18n.t('Chưa có điểm: tải file PDF tiến độ myBK ở trang Môn học (file Excel không có điểm).')}</Text>
                     ) : (
                         <Space wrap>
-                            {gpa10 !== undefined && <Tag>Hệ 10: {gpa10.toFixed(2)}</Tag>}
-                            {gpa4 !== undefined && <Tag>Hệ 4: {gpa4.toFixed(2)}</Tag>}
+                            {gpa10 !== undefined && <Tag>{i18n.t('Hệ 10:')}{' '}{gpa10.toFixed(2)}</Tag>}
+                            {gpa4 !== undefined && <Tag>{i18n.t('Hệ 4:')}{' '}{gpa4.toFixed(2)}</Tag>}
                             {report.gpa_required_avg !== undefined && !report.gpa_already_satisfied && (
-                                <Tag color="blue">Trung bình cần đạt ở các môn còn lại (hệ 4): {report.gpa_required_avg.toFixed(2)}</Tag>
+                                <Tag color="blue">{i18n.t('Trung bình cần đạt ở các môn còn lại (hệ 4):')}{' '}{report.gpa_required_avg.toFixed(2)}</Tag>
                             )}
-                            {report.gpa_already_satisfied && <Tag color="green">Đã đủ GPA tốt nghiệp</Tag>}
-                            {report.gpa_requirement_impossible && <Tag color="red">Không thể đạt GPA tốt nghiệp với các môn còn lại</Tag>}
+                            {report.gpa_already_satisfied && <Tag color="green">{i18n.t('Đã đủ GPA tốt nghiệp')}</Tag>}
+                            {report.gpa_requirement_impossible && <Tag color="red">{i18n.t('Không thể đạt GPA tốt nghiệp với các môn còn lại')}</Tag>}
                         </Space>
                     )}
                 </Space>
 
                 <Space orientation="vertical" size={4}>
-                    <Text strong>Điều kiện tốt nghiệp ngoài môn học</Text>
+                    <Text strong>{i18n.t('Điều kiện tốt nghiệp ngoài môn học')}</Text>
                     {report.graduation_blocked.length === 0 && report.external_pending.length === 0
                         && report.external_missed.length === 0 ? (
-                            <Text type="secondary">Không có điều kiện nào đang thiếu theo dữ liệu hiện có.</Text>
+                            <Text type="secondary">{i18n.t('Không có điều kiện nào đang thiếu theo dữ liệu hiện có.')}</Text>
                         ) : (
                             <Space wrap>
-                                {report.graduation_blocked.map(r => <Tag key={r} color="red">Chưa đạt: {REQUIREMENT_LABEL[r] ?? r}</Tag>)}
+                                {report.graduation_blocked.map(r => <Tag key={r} color="red">{i18n.t('Chưa đạt:')}{' '}{REQUIREMENT_LABEL[r] ?? r}</Tag>)}
                                 {report.external_missed.map(m => (
                                     <Tag key={`${m.requirement}-${m.year}`} color="red">
-                                        Trễ hạn năm {m.year}: {REQUIREMENT_LABEL[m.requirement] ?? m.requirement}
+                                        {i18n.t('Trễ hạn năm')}{' '}{m.year}: {REQUIREMENT_LABEL[m.requirement] ?? m.requirement}
                                     </Tag>
                                 ))}
                                 {report.external_pending.map(m => (
                                     <Tag key={`${m.requirement}-${m.year}`} color="orange">
-                                        Cần thêm {m.missing} trước hết năm {m.year}: {REQUIREMENT_LABEL[m.requirement] ?? m.requirement}
+                                        {i18n.t('Cần thêm')}{' '}{m.missing}{' '}{i18n.t('trước hết năm')}{' '}{m.year}: {REQUIREMENT_LABEL[m.requirement] ?? m.requirement}
                                     </Tag>
                                 ))}
                             </Space>
@@ -78,10 +80,10 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
 
                 {report.majors.length > 0 && (
                     <Space orientation="vertical" size={4}>
-                        <Text strong>Chuyên ngành (số môn của chuyên ngành có trong bảng điểm và lộ trình)</Text>
+                        <Text strong>{i18n.t('Chuyên ngành (số môn của chuyên ngành có trong bảng điểm và lộ trình)')}</Text>
                         <Space wrap>
                             {report.majors.map(m => (
-                                <Tag key={m.code} color={m.earned ? 'green' : undefined}>{m.code}: {m.count} môn{m.earned ? ' · đủ' : ''}</Tag>
+                                <Tag key={m.code} color={m.earned ? 'green' : undefined}>{m.code}: {m.count}{' '}{i18n.t('môn')}{m.earned ? i18n.t(' · đủ') : ''}</Tag>
                             ))}
                         </Space>
                     </Space>
@@ -89,21 +91,21 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
 
                 {report.offering_misses.length > 0 && (
                     <Space orientation="vertical" size={4} style={{ width: '100%' }}>
-                        <Text strong>Môn xếp vào kỳ ít khi mở lớp (theo lịch sử mở lớp)</Text>
+                        <Text strong>{i18n.t('Môn xếp vào kỳ ít khi mở lớp (theo lịch sử mở lớp)')}</Text>
                         <Table
                             size="small"
                             rowKey={r => `${r.course}-${r.semester}`}
                             pagination={false}
                             dataSource={report.offering_misses}
                             columns={[
-                                { title: 'Mã', dataIndex: 'course', width: 110 },
-                                { title: 'Môn', key: 'name', render: (_v, r) => courseName(r.course) },
-                                { title: 'Kỳ', key: 'semester', width: 160, render: (_v, r) => semesterLabel(r.semester) },
+                                { title: i18n.t('Mã'), dataIndex: 'course', width: 110 },
+                                { title: i18n.t('Môn'), key: 'name', render: (_v, r) => courseName(r.course) },
+                                { title: i18n.t('Kỳ'), key: 'semester', width: 160, render: (_v, r) => semesterLabel(r.semester) },
                                 {
-                                    title: 'Không mở ở',
+                                    title: i18n.t('Không mở ở'),
                                     key: 'missed',
                                     width: 140,
-                                    render: (_v, r) => `${r.missed_percent}% kỳ cùng loại`,
+                                    render: (_v, r) => i18n.t('{{missed_percent}}% kỳ cùng loại', { missed_percent: r.missed_percent }),
                                 },
                             ]}
                         />
@@ -137,8 +139,8 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
                             pagination={false}
                             dataSource={tags}
                             columns={[
-                                { title: 'Mã', key: 'code', width: 110, render: (_v, [code]) => code },
-                                { title: 'Môn', key: 'name', render: (_v, [code]) => courseName(code) },
+                                { title: i18n.t('Mã'), key: 'code', width: 110, render: (_v, [code]) => code },
+                                { title: i18n.t('Môn'), key: 'name', render: (_v, [code]) => courseName(code) },
                                 {
                                     title: 'Tags',
                                     key: 'tags',
@@ -156,14 +158,14 @@ const EngineReportCard = ({ report, courseName }: EngineReportCardProps) => {
                 <Collapse
                     items={[{
                         key: 'objective',
-                        label: 'Giá trị các mục tiêu (theo thứ tự ưu tiên)',
+                        label: i18n.t('Giá trị các mục tiêu (theo thứ tự ưu tiên)'),
                         children: (
                             <Space orientation="vertical" size={2}>
                                 {report.objective.map(o => (
                                     <Text key={o.level}>@{o.priority} {OBJECTIVE_LABEL[o.level] ?? o.level}: {o.value}</Text>
                                 ))}
                                 {report.ground_and_solve_ms !== undefined && (
-                                    <Text type="secondary">Grounding và giải: {report.ground_and_solve_ms} ms</Text>
+                                    <Text type="secondary">{i18n.t('Grounding và giải:')}{' '}{report.ground_and_solve_ms} ms</Text>
                                 )}
                             </Space>
                         ),

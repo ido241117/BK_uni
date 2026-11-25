@@ -10,6 +10,7 @@ import {
     type StudentCourseStatus,
 } from '@/types';
 import { canPlan } from '../structure';
+import i18n from '@/i18n';
 
 /** Cột cuối cho môn không có kỳ gợi ý (môn tự chọn không gắn kỳ). */
 const ELECTIVE_COLUMN = 999;
@@ -54,10 +55,10 @@ export interface PrerequisiteGraphData {
 
 const columnKey = (year: number, term: number) => (year - 1) * 3 + (term - 1);
 const columnLabel = (key: number) => {
-    if (key === ELECTIVE_COLUMN) return 'Tự chọn (không gắn kỳ)';
+    if (key === ELECTIVE_COLUMN) return i18n.t('Tự chọn (không gắn kỳ)');
     const year = Math.floor(key / 3) + 1;
     const term = (key % 3) + 1;
-    return `Năm ${year} · ${term === 3 ? 'Hè' : `HK${term}`}`;
+    return i18n.t('Năm {{year}} · {{v1}}', { year: year, v1: term === 3 ? 'Hè' : `HK${term}` });
 };
 
 /** Thứ tự thời gian của một môn trong kế hoạch cá nhân: đã học < đang học < kế hoạch theo mã học kỳ. */

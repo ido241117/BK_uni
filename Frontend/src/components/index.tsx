@@ -5,11 +5,10 @@ export { ITable, type ITableProps, type ITablePagination } from './ITable';
 export { TablePageSkeleton } from './Skeletons';
 export { PageHeader } from './PageHeader';
 export { EmptyState } from './EmptyState';
-export { ComingSoon } from './ComingSoon';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export {
     CollapsibleGroup, CreditLabel, TextTag, MetaSep, Disclosure, KpiCount, ProgressThread, SectionLabel, RowList, RowItem,
-    SearchLine, LabeledSwitch, ToggleRow,
+    SearchLine, LabeledSwitch, ToggleRow, Bead, Pip, SparkleMark, type BeadState, type BeadTone,
     CourseStatus, CourseStatusSelect, FileMark, DiffFlag, LoadWarning, SourceBadge, StatusChange, CourseCode, CourseOption,
-    NoteTrigger, NoteBox, EmptyTableLine, PageLoading, RouteLoading, ModalTitle, UploadZone, StepList, PageTabs,
+    NoteTrigger, NoteBox, EmptyTableLine, PageLoading, RouteLoading, StatusLine, ModalTitle, UploadZone, StepList, PageTabs,
 } from './ui';

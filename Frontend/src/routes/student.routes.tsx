@@ -6,13 +6,11 @@ import { RequireAccess } from './guards';
 
 const CoursesPage = lazy(() => import('@/pages/courses'));
 const CourseDetailPage = lazy(() => import('@/pages/courses/detail'));
-const CourseAnalysisPage = lazy(() => import('@/pages/courses/analysis'));
+const ProgramPage = lazy(() => import('@/pages/program'));
 // Người duyệt 22/11: tạm tắt trang Quy định tốt nghiệp (điều kiện tốt nghiệp sửa ở Hiệu chỉnh, trang Môn học).
-// const RegulationsPage = lazy(() => import('@/pages/regulations'));
 const RecommendationsPage = lazy(() => import('@/pages/recommendations'));
 const AdvisorPage = lazy(() => import('@/pages/advisor'));
 const ProfilePage = lazy(() => import('@/pages/profile'));
-const ProgramPage = lazy(() => import('@/pages/program'));
 
 /** Route cho sinh viên (đã bọc `RequireAuth` + `PrivateLayout` ở `routes/index`). */
 export const studentRoutes: RouteObject[] = [
@@ -25,27 +23,17 @@ export const studentRoutes: RouteObject[] = [
         ),
         children: [
             { path: 'courses', Component: CoursesPage },
-            { path: 'courses/analysis', Component: CourseAnalysisPage },
+            // Merged into the "Phân tích" tab of Tiến độ học tập; old links keep working.
+            { path: 'courses/analysis', element: <Navigate to="/courses?tab=analysis" replace /> },
             { path: 'courses/:code', Component: CourseDetailPage },
-            // Former "Chương trình" tab of /courses, now its own page (/courses?tab=board redirects here).
             { path: 'program', Component: ProgramPage },
             // Hai trang cũ đã gộp vào /courses; giữ đường dẫn để link/bookmark cũ không gãy.
             { path: 'student-courses', element: <Navigate to="/courses" replace /> },
             { path: 'plan', element: <Navigate to="/courses" replace /> },
         ],
     },
-    // Tạm tắt 22/11 (xem ghi chú ở import): link/bookmark cũ chuyển về trang Môn học. Bật lại thì bỏ comment khối dưới
-    // và xóa dòng Navigate.
-    // {
-    //     element: (
-    //         <RequireAccess
-    //             roles={[ROLE.STUDENT]}
-    //             permission={toPageViewPermission(PAGE_RESOURCES.REGULATIONS)}
-    //         />
-    //     ),
-    //     children: [{ path: 'regulations', Component: RegulationsPage }],
-    // },
-    { path: 'regulations', element: <Navigate to="/courses" replace /> },
+    // Regulations are edited in the "Điều kiện tốt nghiệp" parts of Tiến độ học tập (both tabs).
+    { path: 'regulations', element: <Navigate to="/courses?tab=analysis" replace /> },
     {
         element: (
             <RequireAccess

@@ -1,20 +1,21 @@
 import {
+    PiBookOpen,
     PiChartLineUp,
     PiGraduationCap,
     PiPath,
-    PiTreeStructure,
     PiRobot,
     PiSquaresFour,
     PiUser,
 } from 'react-icons/pi';
 import { ROLE, type NavItem } from '@/types';
 import { PAGE_RESOURCES, toPageViewPermission } from '@/config/access-control/page-resources';
+import { trLive } from '@/i18n/live';
 
 /**
  * Declared menu (not hard-coded in the layout). The shell filters it by permission and renders one
  * sidebar section per `group` (display case; CSS uppercases it). Group + label also form the breadcrumb.
  */
-export const sidebarMenu: NavItem[] = [
+export const sidebarMenu: NavItem[] = trLive([
     {
         key: 'student.courses',
         label: 'Tiến độ học tập',
@@ -24,17 +25,15 @@ export const sidebarMenu: NavItem[] = [
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.COURSES),
     },
-    // Người duyệt 22/11: tạm ẩn mục "Quy định tốt nghiệp" (điều kiện tốt nghiệp đã sửa được ở Hiệu chỉnh trang Môn học).
-    // Trang /regulations vẫn còn; bật lại thì bỏ comment và thêm lại icon (react-icons/pi).
-    // {
-    //     key: 'student.regulations',
-    //     label: 'Quy định tốt nghiệp',
-    //     path: '/regulations',
-    //     icon: <LuFileCheck />,
-    //     group: 'Học tập',
-    //     roles: [ROLE.STUDENT],
-    //     permission: toPageViewPermission(PAGE_RESOURCES.REGULATIONS),
-    // },
+    {
+        key: 'student.program',
+        label: 'Chương trình',
+        path: '/program',
+        icon: <PiBookOpen />,
+        group: 'Học tập',
+        roles: [ROLE.STUDENT],
+        permission: toPageViewPermission(PAGE_RESOURCES.COURSES),
+    },
     {
         key: 'student.recommendations',
         label: 'Gợi ý lộ trình',
@@ -43,15 +42,6 @@ export const sidebarMenu: NavItem[] = [
         group: 'Học tập',
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.RECOMMENDATIONS),
-    },
-    {
-        key: 'student.program',
-        label: 'Chương trình',
-        path: '/program',
-        icon: <PiTreeStructure />,
-        group: 'Học tập',
-        roles: [ROLE.STUDENT],
-        permission: toPageViewPermission(PAGE_RESOURCES.COURSES),
     },
     {
         key: 'student.advisor',
@@ -89,7 +79,7 @@ export const sidebarMenu: NavItem[] = [
         roles: [ROLE.ADMIN],
         permission: toPageViewPermission(PAGE_RESOURCES.ADMIN_COURSES),
     },
-];
+]);
 
 /** Lọc menu theo role + quyền của người dùng hiện tại. */
 export const filterSidebarMenu = (

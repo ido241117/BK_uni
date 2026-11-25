@@ -1,4 +1,5 @@
 import type { OutlineComponentKey, OutlineText } from '@/types';
+import { trLive } from '@/i18n/live';
 
 export type OutlineLang = 'vi' | 'en';
 
@@ -8,7 +9,7 @@ export const pickText = (text: OutlineText | undefined, lang: OutlineLang): stri
     return text[lang] ?? text[lang === 'vi' ? 'en' : 'vi'] ?? null;
 };
 
-export const COMPONENT_LABEL: Record<OutlineComponentKey, string> = {
+export const COMPONENT_LABEL: Record<OutlineComponentKey, string> = trLive({
     theory: 'Lý thuyết',
     exercise: 'Bài tập / thực hành',
     lab: 'Thí nghiệm',
@@ -23,22 +24,22 @@ export const COMPONENT_LABEL: Record<OutlineComponentKey, string> = {
     midterm: 'Kiểm tra giữa kỳ',
     final_exam: 'Thi cuối kỳ',
     theory_other: 'Lý thuyết khác',
-};
+});
 
-export const KNOWLEDGE_BLOCK_LABEL: Record<string, string> = {
+export const KNOWLEDGE_BLOCK_LABEL: Record<string, string> = trLive({
     general: 'Giáo dục đại cương',
     professional: 'Giáo dục chuyên nghiệp',
     foundation: 'Cơ sở ngành',
     major: 'Ngành',
     specialization: 'Chuyên ngành',
     graduation: 'Tốt nghiệp',
-};
+});
 
-export const FRAMEWORK_LABEL: Record<string, string> = {
+export const FRAMEWORK_LABEL: Record<string, string> = trLive({
     LO: 'Chuẩn đầu ra môn học (LO)',
     CDIO: 'Theo CDIO',
     ABET: 'Theo ABET',
-};
+});
 
 /** Thứ tự hiển thị thành phần trong các bảng phân bổ. */
 export const COMPONENT_ORDER: OutlineComponentKey[] = [

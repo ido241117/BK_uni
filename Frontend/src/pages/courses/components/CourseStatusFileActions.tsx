@@ -3,13 +3,11 @@ import { Alert, Dropdown, Modal, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
 import { LuArrowRight, LuDownload, LuUpload } from 'react-icons/lu';
-import { IOutLinedBtn } from '@/components';
+import { CourseStatus, IOutLinedBtn } from '@/components';
 import { listCoursesByCodes } from '@/apis/course';
 import { bulkUpsertMyCourses } from '@/apis/student';
 import { useApiMutation } from '@/hooks';
 import {
-    STUDENT_COURSE_STATUS_COLOR as STATUS_COLOR,
-    STUDENT_COURSE_STATUS_LABEL,
     type CourseSummary,
     type StudentCourseStatus,
 } from '@/types';
@@ -25,6 +23,7 @@ import {
     type RowError,
     type StatusChange,
 } from '@/utils/student-course-file';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -68,7 +67,7 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }:
             if (format === 'xlsx') await downloadXlsxTemplate(rows, fileName);
             else downloadCsvTemplate(rows, fileName);
         } catch {
-            toastMessage.error('Không tạo được file mẫu. Vui lòng thử lại.');
+            toastMessage.error(i18n.t('Không tạo được file mẫu. Vui lòng thử lại.'));
         } finally {
             setExporting(false);
         }
@@ -83,8 +82,8 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }:
             setPending({ fileName: file.name, analysis: analyzeStatusFile(rows, courses, statusByCourseId), courses });
         } catch (error) {
             if (!(error instanceof ApiError)) {
-                const message = error instanceof Error ? error.message : 'Lỗi không xác định.';
-                toastMessage.error(`Không đọc được file: ${message}`);
+                const message = error instanceof Error ? error.message : i18n.t('Lỗi không xác định.');
+                toastMessage.error(i18n.t('Không đọc được file: {{message}}', { message: message }));
             }
         } finally {
             setReading(false);
@@ -96,7 +95,7 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }:
         mutationFn: (changes: StatusChange[]) => bulkUpsertMyCourses(
             changes.map(change => ({ course_id: change.courseId, status: change.to })),
         ),
-        successMessage: 'Đã lưu trạng thái học tập từ file.',
+        successMessage: i18n.t('Đã lưu trạng thái học tập từ file.'),
         onSuccess: (saved) => {
             queryClient.setQueryData(['student-courses'], saved);
             void queryClient.invalidateQueries({ queryKey: ['student-courses'] });
@@ -106,32 +105,32 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }:
 
     const changeColumns: ColumnsType<StatusChange> = [
         {
-            title: 'Môn học',
+            title: i18n.t('Môn học'),
             key: 'course',
             render: (_value, change) => (
                 <span><Text strong>{change.code}</Text> · {change.name}</span>
             ),
         },
         {
-            title: 'Thay đổi',
+            title: i18n.t('Thay đổi'),
             key: 'change',
             width: 260,
             render: (_value, change) => (
                 <Space size={4}>
                     {change.from
-                        ? <Tag color={STATUS_COLOR[change.from]}>{STUDENT_COURSE_STATUS_LABEL[change.from]}</Tag>
-                        : <Text type="secondary">Chưa khai</Text>}
+                        ? <CourseStatus status={change.from} />
+                        : <Text type="secondary">{i18n.t('Chưa khai')}</Text>}
                     <LuArrowRight />
-                    <Tag color={STATUS_COLOR[change.to]}>{STUDENT_COURSE_STATUS_LABEL[change.to]}</Tag>
+                    <CourseStatus status={change.to} />
                 </Space>
             ),
         },
     ];
 
     const errorColumns: ColumnsType<RowError> = [
-        { title: 'Dòng', dataIndex: 'line', width: 70 },
-        { title: 'Mã môn', dataIndex: 'code', width: 110, render: (code: string) => code || '—' },
-        { title: 'Lỗi', dataIndex: 'message' },
+        { title: i18n.t('Dòng'), dataIndex: 'line', width: 70 },
+        { title: i18n.t('Mã môn'), dataIndex: 'code', width: 110, render: (code: string) => code || '—' },
+        { title: i18n.t('Lỗi'), dataIndex: 'message' },
     ];
 
     const analysis = pending?.analysis;
@@ -144,17 +143,17 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }:
                     disabled={exporting}
                     menu={{
                         items: [
-                            { key: 'xlsx', label: 'Excel (.xlsx) – có ô chọn trạng thái' },
+                            { key: 'xlsx', label: i18n.t('Excel (.xlsx) – có ô chọn trạng thái') },
                             { key: 'csv', label: 'CSV (.csv)' },
                         ],
                         onClick: ({ key }) => void exportTemplate(key as 'xlsx' | 'csv'),
                     }}
                 >
-                    <IOutLinedBtn icon={<LuDownload />} loading={exporting}>Tải file mẫu</IOutLinedBtn>
+                    <IOutLinedBtn icon={<LuDownload />} loading={exporting}>{i18n.t('Tải file mẫu')}</IOutLinedBtn>
                 </Dropdown>
 
                 <IOutLinedBtn icon={<LuUpload />} loading={reading} onClick={() => inputRef.current?.click()}>
-                    Nhập từ file
+                    {i18n.t('Nhập từ file')}
                 </IOutLinedBtn>
                 <input
                     ref={inputRef}
@@ -171,11 +170,11 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }:
             <Modal
                 open={pending !== null}
                 width={760}
-                title={pending ? `Xem trước: ${pending.fileName}` : 'Xem trước'}
+                title={pending ? i18n.t('Xem trước: {{fileName}}', { fileName: pending.fileName }) : i18n.t('Xem trước')}
                 okText={analysis?.changes.length
-                    ? `${onApply ? 'Đưa vào bản nháp' : 'Lưu'} ${analysis.changes.length} môn`
-                    : 'Đóng'}
-                cancelText="Huỷ"
+                    ? i18n.t('{{v0}} {{length}} môn', { v0: onApply ? 'Đưa vào bản nháp' : 'Lưu', length: analysis.changes.length })
+                    : i18n.t('Đóng')}
+                cancelText={i18n.t('Huỷ')}
                 confirmLoading={save.isPending}
                 onCancel={() => setPending(null)}
                 onOk={() => {
@@ -190,17 +189,17 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }:
                 {analysis && (
                     <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                         <Space wrap size={8}>
-                            <Tag color="blue">{analysis.changes.length} môn thay đổi</Tag>
-                            <Tag>{analysis.unchanged} môn không đổi</Tag>
-                            <Tag>{analysis.blank} dòng để trống (giữ nguyên)</Tag>
-                            {analysis.errors.length > 0 && <Tag color="red">{analysis.errors.length} dòng lỗi</Tag>}
+                            <Tag color="blue">{analysis.changes.length}{' '}{i18n.t('môn thay đổi')}</Tag>
+                            <Tag>{analysis.unchanged}{' '}{i18n.t('môn không đổi')}</Tag>
+                            <Tag>{analysis.blank}{' '}{i18n.t('dòng để trống (giữ nguyên)')}</Tag>
+                            {analysis.errors.length > 0 && <Tag color="red">{analysis.errors.length}{' '}{i18n.t('dòng lỗi')}</Tag>}
                         </Space>
 
                         {analysis.errors.length > 0 && (
                             <Alert
                                 type="warning"
                                 showIcon
-                                title="Các dòng lỗi sẽ bị bỏ qua"
+                                title={i18n.t('Các dòng lỗi sẽ bị bỏ qua')}
                                 description={(
                                     <Table<RowError>
                                         size="small"
@@ -227,7 +226,7 @@ const CourseStatusFileActions = ({ statusByCourseId, templateCourses, onApply }:
                                     pagination={analysis.changes.length > 10 ? { pageSize: 10 } : false}
                                 />
                             )
-                            : <Text type="secondary">File không có thay đổi nào so với trạng thái đang lưu.</Text>}
+                            : <Text type="secondary">{i18n.t('File không có thay đổi nào so với trạng thái đang lưu.')}</Text>}
                     </Space>
                 )}
             </Modal>

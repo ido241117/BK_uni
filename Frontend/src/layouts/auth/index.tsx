@@ -1,50 +1,56 @@
-import { Link, Outlet, useLocation } from 'react-router';
+import type { ReactNode } from 'react';
+import { PiArrowsSplit, PiChartBar, PiCompass, PiPath } from 'react-icons/pi';
+import { useTranslation } from 'react-i18next';
+import { Link, Outlet } from 'react-router';
+import { BrandMark, LanguageMenu, ThemeToggle } from '@/components/shell';
 import { BRAND } from '@/config/brand';
+import { currentSemester, parseSemester } from '@/utils/semester';
 
-const COPY = {
-    login: {
-        eyebrow: 'Chào mừng bạn trở lại',
-        title: 'Tiếp tục hành trình học tập.',
-        description: 'Đăng nhập để xem chương trình đào tạo, khai trạng thái môn học và xây dựng kế hoạch học tập của bạn.',
-    },
-    register: {
-        eyebrow: 'Bắt đầu hành trình của bạn',
-        title: 'Học tập có kế hoạch. Tiến bước vững vàng.',
-        description: 'Tạo tài khoản để theo dõi tiến độ, khám phá chương trình đào tạo và chủ động xây dựng kế hoạch học tập.',
-    },
-} as const;
+const Feature = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
+    <div className="feat-item"><span className="feat-icon" aria-hidden="true">{icon}</span><span>{children}</span></div>
+);
 
-/** Layout hai cột cho trang đăng nhập/đăng ký. */
+/**
+ * Split editorial layout for login / register (ui-template/dang-nhap.html): blush brand pane on the left
+ * (hidden below 900px), white form canvas on the right.
+ */
 const AuthLayout = () => {
-    const isRegister = useLocation().pathname === '/register';
-    const copy = isRegister ? COPY.register : COPY.login;
+    const { t } = useTranslation();
+    const year = parseSemester(currentSemester())?.year ?? new Date().getFullYear();
 
     return (
-        <main className="auth-page">
-            <aside className="auth-intro" aria-label={`Giới thiệu ${BRAND.name}`}>
-                <Link to="/" className="app-brand">
-                    <span className="app-brand-mark">bk</span>
-                    <span className="app-brand-text">
-                        <strong>{BRAND.name}</strong>
-                        <small>Hành trình học tập</small>
-                    </span>
+        <div className="login-shell">
+            <aside className="brand-pane" aria-label={t('Giới thiệu {{name}}', { name: BRAND.name })}>
+                <Link to="/" className="brand-lockup">
+                    <span className="brand-mark"><BrandMark /></span>
+                    <span className="brand-name">{BRAND.wordmark[0]}<span>{BRAND.wordmark[1]}</span></span>
                 </Link>
 
-                <div className="auth-copy">
-                    <span className="auth-eyebrow">{copy.eyebrow}</span>
-                    <h1>{copy.title}</h1>
-                    <p>{copy.description}</p>
+                <div className="editorial-pitch">
+                    <div className="eyebrow"><PiCompass aria-hidden="true" /> {t('Cổng hoạch định học tập')}</div>
+                    <h2>{t('Thiết kế lộ trình tốt nghiệp theo nhịp độ của riêng bạn.')}</h2>
+                    <p>{t('Theo dõi tín chỉ tích lũy, kiểm tra điều kiện tiên quyết và mô phỏng các kịch bản đăng ký môn học chỉ trong vài giây.')}</p>
+                    <div className="feature-thread">
+                        <Feature icon={<PiPath />}>{t('Tự động gợi ý lộ trình tối ưu số kỳ học và tải tín chỉ')}</Feature>
+                        <Feature icon={<PiArrowsSplit />}>{t('Mô phỏng giả định What-If trước mỗi đợt đăng ký môn')}</Feature>
+                        <Feature icon={<PiChartBar />}>{t('Đối chiếu trực quan tiến độ từng khối kiến thức')}</Feature>
+                    </div>
                 </div>
 
-                <p>{BRAND.name} hỗ trợ lập kế hoạch học tập; kết quả không thay thế xác nhận chính thức của nhà trường.</p>
+                <div className="pane-foot">
+                    {t('Hệ thống hỗ trợ lập kế hoạch học tập; kết quả không thay thế xác nhận chính thức của nhà trường.')}
+                    <br />
+                    {t('Năm học {{from}}–{{to}}', { from: year, to: year + 1 })}
+                </div>
             </aside>
 
-            <section className="auth-form-side">
-                <div className="auth-form-wrap">
+            <main className="form-pane">
+                <div className="top-utility"><ThemeToggle /><LanguageMenu /></div>
+                <div className="form-box">
                     <Outlet />
                 </div>
-            </section>
-        </main>
+            </main>
+        </div>
     );
 };
 

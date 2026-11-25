@@ -1,9 +1,10 @@
 import { useId, useState, type ReactNode } from 'react';
 import { PiCaretRight } from 'react-icons/pi';
+import { Bead } from './Bead';
 
 interface CollapsibleGroupProps {
     title: ReactNode;
-    /** Filled green dot when the group's requirement is met; hollow otherwise. Omit for no dot. */
+    /** Completed bead (filled with a pinhole) when the group's requirement is met; empty ring otherwise. Omit for none. */
     met?: boolean;
     /** Right side of the header, e.g. `<CreditLabel>` · `<TextTag>`. */
     meta?: ReactNode;
@@ -22,7 +23,7 @@ export const CollapsibleGroup = ({ title, met, meta, defaultOpen = true, childre
                 onClick={() => setOpen(value => !value)}>
                 <span className="group-left">
                     <PiCaretRight className="chev" aria-hidden="true" />
-                    {met !== undefined && <span className="group-dot" data-met={met} aria-hidden="true" />}
+                    {met !== undefined && <Bead state={met ? 'completed' : 'not-started'} />}
                     <h2>{title}</h2>
                 </span>
                 {meta && <span className="group-meta">{meta}</span>}

@@ -1,10 +1,11 @@
 import { Alert, Form } from 'antd';
-import { Link, useNavigate } from 'react-router';
-import { ConfirmPasswordField, FormField, ISolidBtn, PasswordField } from '@/components';
+import { PiEnvelopeSimple, PiSignIn, PiSparkleFill, PiStudent } from 'react-icons/pi';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { ConfirmPasswordField, FormField, IOutLinedBtn, ISolidBtn, PasswordField } from '@/components';
 import { register } from '@/apis/auth';
 import { useAsyncAction } from '@/hooks';
 import { emailRules } from '@/utils/auth-validation';
-import { BRAND } from '@/config/brand';
 
 interface RegisterForm {
     email: string;
@@ -12,64 +13,55 @@ interface RegisterForm {
     confirm: string;
 }
 
+/** Register: same layout as login. Registering does not sign in, so it returns to the login page. */
 const RegisterPage = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const submit = useAsyncAction(
         ({ email, password }: RegisterForm) => register({ email, password }),
-        {
-            // Đăng ký không tạo phiên (API-FRONTEND.md 3) → quay về trang đăng nhập.
-            onSuccess: () => navigate('/login', { replace: true, state: { registered: true } }),
-        },
+        { onSuccess: () => navigate('/login', { replace: true, state: { registered: true } }) },
     );
 
     return (
         <>
-            <span className="auth-eyebrow">Tài khoản sinh viên</span>
-            <h2>Tạo tài khoản</h2>
-            <p>Đăng ký bằng email và mật khẩu để bắt đầu sử dụng {BRAND.name}.</p>
+            <h1 className="auth-title">{t('Tạo tài khoản')} <PiSparkleFill aria-hidden="true" /></h1>
 
             <Form<RegisterForm>
                 layout="vertical"
                 requiredMark={false}
                 onFinish={values => void submit.run(values)}
                 onValuesChange={submit.reset}
+                className="auth-form"
             >
                 <FormField
                     name="email"
-                    label="Email"
-                    placeholder="you@example.com"
+                    label={t('Email')}
+                    placeholder="ten.ho@hcmut.edu.vn"
                     rules={emailRules}
-                    hint="Sử dụng email bạn thường xuyên truy cập."
-                    inputProps={{ type: 'email', autoComplete: 'email' }}
+                    hint={t('Sử dụng email bạn thường xuyên truy cập.')}
+                    inputProps={{ type: 'email', autoComplete: 'email', prefix: <PiEnvelopeSimple aria-hidden="true" /> }}
                 />
-
                 <PasswordField
                     name="password"
-                    hint="Ít nhất 8 ký tự, tối đa 72 byte UTF-8. Không dùng lại mật khẩu quan trọng khác."
                     autoComplete="new-password"
-                    placeholder="Tạo mật khẩu"
+                    placeholder={t('Tạo mật khẩu')}
+                    hint={t('Ít nhất 8 ký tự, tối đa 72 byte UTF-8. Không dùng lại mật khẩu quan trọng khác.')}
                 />
+                <ConfirmPasswordField hint={t('Nhập lại chính xác mật khẩu ở trên.')} />
 
-                <ConfirmPasswordField hint="Nhập lại chính xác mật khẩu ở trên." />
+                {submit.error && <Alert showIcon type="error" title={submit.error} />}
 
-                <ISolidBtn
-                    className="auth-button"
-                    htmlType="submit"
-                    block
-                    loading={submit.loading}
-                >
-                    Tạo tài khoản
+                <ISolidBtn htmlType="submit" size="large" block icon={<PiStudent />} loading={submit.loading}>
+                    {t('Tạo tài khoản')}
                 </ISolidBtn>
             </Form>
 
-            {submit.error && (
-                <Alert showIcon type="error" title={submit.error} style={{ marginTop: 16 }} />
-            )}
+            <div className="divider-line">{t('hoặc')}</div>
 
-            <p className="auth-footer">
-                Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
-            </p>
+            <IOutLinedBtn size="large" block icon={<PiSignIn />} onClick={() => navigate('/login')}>
+                {t('Đăng nhập')}
+            </IOutLinedBtn>
         </>
     );
 };

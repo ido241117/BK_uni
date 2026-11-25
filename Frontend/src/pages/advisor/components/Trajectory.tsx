@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Empty, Segmented, Tag, Typography } from 'antd';
 import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
 import type { AdvisorStep, AdvisorStepRole } from '@/types';
+import i18n from '@/i18n';
 
 const { Text } = Typography;
 
@@ -39,7 +40,7 @@ const preview = (step: AdvisorStep): string => {
     if (step.role === 'assistant') {
         const calls = step.tool_calls?.map(call => call.name).join(', ');
         const prefix = isFormatter(step) ? '[JSON mode] ' : '';
-        if (calls) return `${prefix}${oneLine(step.content, 60) || oneLine(step.reasoning, 80)} ⟶ gọi ${calls}`;
+        if (calls) return i18n.t('{{prefix}}{{v1}} ⟶ gọi {{calls}}', { prefix: prefix, v1: oneLine(step.content, 60) || oneLine(step.reasoning, 80), calls: calls });
         return prefix + (oneLine(step.content) || oneLine(step.reasoning));
     }
     return oneLine(step.content);
@@ -72,14 +73,14 @@ const StepRow = ({ step }: { step: AdvisorStep }) => {
             {open && (
                 <div className="trace-body">
                     {step.reasoning && <Block title="Thinking (reasoning_content)">{step.reasoning}</Block>}
-                    {step.role === 'tool' && <Block title={`Tham số ${step.tool_name}`}>{pretty(step.tool_args)}</Block>}
+                    {step.role === 'tool' && <Block title={i18n.t('Tham số {{tool_name}}', { tool_name: step.tool_name })}>{pretty(step.tool_args)}</Block>}
                     {step.tool_calls?.map(call => (
-                        <Block key={call.id} title={`Gọi tool ${call.name} (${call.id})`}>{pretty(call.arguments)}</Block>
+                        <Block key={call.id} title={i18n.t('Gọi tool {{name}} ({{id}})', { name: call.name, id: call.id })}>{pretty(call.arguments)}</Block>
                     ))}
                     {step.role === 'answer'
-                        ? <Block title="Câu trả lời đã kiểm chứng (JSON)">{pretty(step.data)}</Block>
-                        : step.content && <Block title={step.role === 'tool' ? 'Kết quả' : 'Nội dung'}>{step.role === 'tool' || step.role === 'context' ? pretty(step.content) : step.content}</Block>}
-                    <Text type="secondary" style={{ fontSize: 12 }}>Lượt {step.turn} · bước {step.seq} · {new Date(step.created_at).toLocaleTimeString('vi-VN')}</Text>
+                        ? <Block title={i18n.t('Câu trả lời đã kiểm chứng (JSON)')}>{pretty(step.data)}</Block>
+                        : step.content && <Block title={step.role === 'tool' ? i18n.t('Kết quả') : i18n.t('Nội dung')}>{step.role === 'tool' || step.role === 'context' ? pretty(step.content) : step.content}</Block>}
+                    <Text type="secondary" style={{ fontSize: 12 }}>{i18n.t('Lượt')}{' '}{step.turn}{' '}{i18n.t('· bước')}{' '}{step.seq} · {new Date(step.created_at).toLocaleTimeString('vi-VN')}</Text>
                 </div>
             )}
         </div>
@@ -98,7 +99,7 @@ export const Trajectory = ({ steps }: { steps: AdvisorStep[] }) => {
         requests: sum.requests + (step.role === 'assistant' ? 1 : 0),
     }), { prompt: 0, completion: 0, cache: 0, calls: 0, requests: 0 }), [steps]);
 
-    if (!steps.length) return <Empty description="Chưa có bước nào. Gửi câu hỏi để xem agent làm việc." />;
+    if (!steps.length) return <Empty description={i18n.t('Chưa có bước nào. Gửi câu hỏi để xem agent làm việc.')} />;
 
     const visible = steps.filter(step => (
         filter === 'all' || (filter === 'model' ? step.role === 'assistant' : step.role === 'tool')
@@ -112,16 +113,16 @@ export const Trajectory = ({ steps }: { steps: AdvisorStep[] }) => {
                     size="small"
                     value={filter}
                     onChange={setFilter}
-                    options={[{ value: 'all', label: 'Tất cả' }, { value: 'model', label: 'Model' }, { value: 'tools', label: 'Tools' }]}
+                    options={[{ value: 'all', label: i18n.t('Tất cả') }, { value: 'model', label: 'Model' }, { value: 'tools', label: 'Tools' }]}
                 />
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                    {turns.length} lượt · {totals.requests} request · {totals.calls} tool call · {totals.prompt + totals.completion} tok
+                    {turns.length}{' '}{i18n.t('lượt ·')}{' '}{totals.requests} request · {totals.calls} tool call · {totals.prompt + totals.completion} tok
                     {totals.prompt > 0 && ` · cache hit ${Math.round((totals.cache / totals.prompt) * 100)}%`}
                 </Text>
             </div>
             {turns.map(turn => (
                 <div key={turn} className="trace-turn">
-                    <div className="trace-turn-label">Lượt {turn}</div>
+                    <div className="trace-turn-label">{i18n.t('Lượt')}{' '}{turn}</div>
                     {visible.filter(step => step.turn === turn).map(step => <StepRow key={step.id} step={step} />)}
                 </div>
             ))}

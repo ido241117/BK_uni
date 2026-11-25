@@ -1,5 +1,7 @@
 import { Form, Input, type FormItemProps } from 'antd';
 import type { ReactNode } from 'react';
+import { PiLockSimple } from 'react-icons/pi';
+import { useTranslation } from 'react-i18next';
 import { PASSWORD_MIN_LENGTH, confirmPasswordRules, passwordRules } from '@/utils/auth-validation';
 
 interface BasePasswordProps {
@@ -15,50 +17,56 @@ export interface PasswordFieldProps extends BasePasswordProps {
     autoComplete?: string;
 }
 
-/** Ô mật khẩu dùng chung: rule độ dài + byte UTF-8 lấy từ `utils/auth-validation`. */
+/** Shared password field (underlined, leading lock icon): length + UTF-8 byte rules from `utils/auth-validation`. */
 export const PasswordField = ({
     name,
-    label = 'Mật khẩu',
+    label,
     hint,
-    placeholder = 'Nhập mật khẩu',
+    placeholder,
     minLength = PASSWORD_MIN_LENGTH,
     autoComplete = 'current-password',
     formItemProps,
-}: PasswordFieldProps) => (
-    <Form.Item
-        name={name}
-        label={label}
-        rules={passwordRules(minLength)}
-        extra={hint}
-        {...formItemProps}
-    >
-        <Input.Password size="large" autoComplete={autoComplete} placeholder={placeholder} />
-    </Form.Item>
-);
+}: PasswordFieldProps) => {
+    const { t } = useTranslation();
+    return (
+        <Form.Item name={name} label={label ?? t('Mật khẩu')} rules={passwordRules(minLength)} extra={hint} {...formItemProps}>
+            <Input.Password
+                size="large" autoComplete={autoComplete} placeholder={placeholder ?? t('Nhập mật khẩu')}
+                prefix={<PiLockSimple aria-hidden="true" />}
+            />
+        </Form.Item>
+    );
+};
 
 export interface ConfirmPasswordFieldProps extends Omit<BasePasswordProps, 'name'> {
-    /** Mặc định `confirm`. */
+    /** Default `confirm`. */
     name?: FormItemProps['name'];
-    /** Tên field mật khẩu gốc trong cùng form. */
+    /** Name of the original password field in the same form. */
     passwordField?: string;
 }
 
 export const ConfirmPasswordField = ({
     name = 'confirm',
-    label = 'Nhập lại mật khẩu',
+    label,
     hint,
-    placeholder = 'Nhập lại mật khẩu',
+    placeholder,
     passwordField = 'password',
     formItemProps,
-}: ConfirmPasswordFieldProps) => (
-    <Form.Item
-        name={name}
-        label={label}
-        dependencies={[passwordField]}
-        rules={confirmPasswordRules(passwordField)}
-        extra={hint}
-        {...formItemProps}
-    >
-        <Input.Password size="large" autoComplete="new-password" placeholder={placeholder} />
-    </Form.Item>
-);
+}: ConfirmPasswordFieldProps) => {
+    const { t } = useTranslation();
+    return (
+        <Form.Item
+            name={name}
+            label={label ?? t('Nhập lại mật khẩu')}
+            dependencies={[passwordField]}
+            rules={confirmPasswordRules(passwordField)}
+            extra={hint}
+            {...formItemProps}
+        >
+            <Input.Password
+                size="large" autoComplete="new-password" placeholder={placeholder ?? t('Nhập lại mật khẩu')}
+                prefix={<PiLockSimple aria-hidden="true" />}
+            />
+        </Form.Item>
+    );
+};

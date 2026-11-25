@@ -17,6 +17,9 @@ npm run dev
 - `npm run build` — kiểm tra TypeScript và build production.
 - `npm run lint` — ESLint.
 - `npm run preview` — xem bản build.
+- `npm run i18n:check` — lists UI text missing from or unused in `src/i18n/en.json`.
+- `npm run i18n:rename -- "old" "new" [--en "English"] [--dry]` — changes a UI text everywhere (code + `en.json`) in one step (ui-docs/DESIGN-SYSTEM.md §5.6).
+- `npm run contrast:check` — checks the palette in `styles/tokens.css` against the contrast rules (ui-docs/DESIGN-SYSTEM.md §1.3).
 
 `VITE_API_URL` là URL gốc của API (mặc định `/api`). Vite mặc định chuyển tiếp `/api` tới backend tại `http://localhost:3210`; đặt `VITE_API_PROXY_TARGET` trong `.env` nếu backend chạy ở địa chỉ khác. Proxy giữ nguyên prefix `/api`.
 
@@ -28,14 +31,16 @@ Triển khai production: frontend và backend phải cùng site để cookie `Sa
 src/
   apis/            Hàm gọi API theo nghiệp vụ (auth, course, curriculum, student)
   components/      Component dùng chung + barrel `components/index.tsx`
-  config/          access-control, query-client, query-method, sider-options, theme
+                   shell/ (AppShell, Sidebar, Topbar, BrandMark, LanguageMenu), ui/ (design-system components), Button, EmptyState
+  config/          access-control, query-client, query-method, sider-options, theme, brand (name + wordmark)
   contexts/        ThemeProvider + useAppTheme
   hooks/           Hook dùng chung + barrel `hooks/index.ts`
-  layouts/         auth / private (Sider + Header) / public
+  i18n/            VN/EN language switch: setup, en.json (keys = Vietnamese text), trLive, useLanguage
+  layouts/         auth (split login layout) / private (AppShell wiring) / public
   pages/           Trang theo nghiệp vụ
   routes/          guards + public/student/admin routes
   stores/          Zustand: auth (phiên), authz (quyền)
-  styles/          tokens.css, base.css, layout.css, components.css
+  styles/          tokens.css (light + dark), base.css, typography.css, antd-skin.css, components.css, index.css (imports every CSS file)
   types/           Kiểu dữ liệu theo nghiệp vụ + barrel
   utils/           error, toast, lazy, auth-validation, session-bus
 ```
@@ -45,7 +50,9 @@ src/
 | Nhu cầu | Nơi sửa |
 | --- | --- |
 | Thêm trang | `pages/<nghiệp-vụ>/index.tsx` + khai route trong `routes/student.routes.tsx` hoặc `routes/admin.routes.tsx` + thêm mục menu ở `config/sider-options` + resource ở `config/access-control/page-resources.ts` |
-| Đổi màu/bo góc/nhãn | `config/theme/index.ts` (antd token) và `styles/tokens.css` (biến CSS) — hai nơi phải khớp nhau |
+| Change colors / type / components (design system) | Read `ui-docs/DESIGN-SYSTEM.md`, section 5; the visual source of truth is `ui-docs/ui-template/`. Colors: `styles/tokens.css` + `config/theme/index.ts` (must match), then `npm run contrast:check` |
+| Change the product name / logo | `ui-docs/ui-template/logo.html` first, then `config/brand.ts` + `components/shell/BrandMark.tsx` (+ `index.html` title and favicon) |
+| Add or change UI text | New text: write Vietnamese inside `t('...')` / `i18n.t('...')`, add the English to `i18n/en.json`. Existing text: `npm run i18n:rename`. Then `npm run i18n:check` |
 | Đổi quyền xem trang | `config/access-control/index.ts` (`routeAccessRules`, `getPermissionsForRole`) |
 | Thêm endpoint | `apis/<nghiệp-vụ>/index.ts` + kiểu trong `types/<nghiệp-vụ>.ts` |
 | Thêm component dùng chung | `components/<Tên>/index.tsx` + export ở `components/index.tsx` |
@@ -69,7 +76,8 @@ page  →  hooks (useApiQuery / useApiMutation)  →  apis/<nghiệp-vụ>  → 
 - Alias `@/` trỏ `src`. Page/layout đặt trong thư mục riêng với `index.tsx`.
 - TypeScript strict: không `any`, không `@ts-ignore`, không `enum` (dùng const object + union type), `import type` cho kiểu.
 - antd v6: `Button` dùng `color` + `variant` (không dùng `type`), `Alert` dùng `title`, `Space` dùng `orientation`, `Tabs` dùng `items`.
-- Component dùng chung: `PageHeader`, `ISolidBtn`/`IOutLinedBtn`/`ITextBtn`/`IconBtn`, `FormField`, `PasswordField`/`ConfirmPasswordField`, `ITable`, `TablePageSkeleton`, `EmptyState`, `ComingSoon`.
+- Shared components: see `ui-docs/DESIGN-SYSTEM.md` section 3 (which component for which content) and the templates in `ui-docs/ui-template/` for how each looks.
+- Component CSS lives next to the component but is imported from `styles/index.css`, never from a `.tsx` file (a JS-imported CSS file can reorder the cascade layers).
 - Hook dùng chung: `useApiQuery`, `useApiMutation`, `usePageLocation`, `useDebounce`, `useAsyncAction`, `useMediaQuery`, `useCurrentUser`/`useCurrentRole`, `usePermission`/`useHasRole`, `useDocumentTitle`.
 - Danh sách phải đồng bộ `page`/`pageSize`/filter lên URL qua `usePageLocation` + `ITable` để F5 và chia sẻ link không mất trạng thái.
 - Xác thực: cookie HttpOnly + `withCredentials`, khôi phục phiên bằng `GET /auth/me`, không lưu token/user trong localStorage.

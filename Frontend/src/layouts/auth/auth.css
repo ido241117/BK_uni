@@ -1,0 +1,222 @@
+/* Login / register (ui-template/dang-nhap.html): split editorial layout, blush brand pane + white form canvas. */
+@layer components {
+    .login-shell {
+        display: grid;
+        grid-template-columns: 44% 56%;
+        min-height: 100vh;
+        background: var(--bg-canvas);
+    }
+
+    /* ===== Left: blush brand pane ===== */
+    .brand-pane {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        padding: var(--space-11) 52px;
+        border-right: 1px solid var(--line-hairline);
+        background: var(--bg-blush);
+    }
+
+    /* Decorative vertical thread */
+    .brand-pane::after {
+        position: absolute;
+        top: 0;
+        right: 36px;
+        bottom: 0;
+        width: 1px;
+        background: linear-gradient(180deg, transparent, var(--line-hairline) 20%, var(--line-hairline) 80%, transparent);
+        content: '';
+        pointer-events: none;
+    }
+
+    .brand-lockup {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        color: var(--ink-primary);
+        text-decoration: none;
+    }
+
+    .brand-lockup:hover {
+        color: var(--ink-primary);
+    }
+
+    /* The badge (logo.html) draws its own ring: no box around it. */
+    .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+    }
+
+    .brand-name {
+        font-family: var(--serif);
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+    }
+
+    .brand-name span {
+        color: var(--accent-brand);
+    }
+
+    .editorial-pitch {
+        max-width: 380px;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 14px;
+        color: var(--accent-rose);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .editorial-pitch h2 {
+        margin: 0 0 var(--space-4);
+        font-family: var(--serif);
+        font-size: 34px;
+        font-weight: 500;
+        line-height: 1.18;
+        letter-spacing: -0.01em;
+    }
+
+    .editorial-pitch p {
+        margin: 0 0 var(--space-7);
+        color: var(--ink-muted);
+        font-size: 13.5px;
+    }
+
+    .feature-thread {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding-top: var(--space-5);
+        border-top: 1px solid var(--line-hairline);
+    }
+
+    .feat-item {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        color: var(--ink-primary);
+        font-size: 13px;
+    }
+
+    .feat-icon {
+        display: grid;
+        flex: none;
+        color: var(--accent-rose);
+        font-size: 15px;
+        transform: translateY(2px);
+    }
+
+    .pane-foot {
+        color: var(--ink-muted);
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    /* ===== Right: form canvas ===== */
+    .form-pane {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-11) 56px;
+    }
+
+    /* Language switch, top right of the form canvas */
+    .top-utility {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        position: absolute;
+        top: var(--space-6);
+        right: var(--space-8);
+    }
+
+    .form-box {
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .auth-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0 0 var(--space-8);
+        font-family: var(--serif);
+        font-size: 36px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+    }
+
+    .auth-title > svg {
+        color: var(--accent-rose);
+        font-size: 22px;
+    }
+
+    .auth-form .ant-form-item {
+        margin-bottom: 26px;
+    }
+
+    .auth-form .ant-input-prefix {
+        margin-inline-end: 10px;
+        color: var(--ink-soft);
+        font-size: 17px;
+        transition: color 0.16s ease;
+    }
+
+    .auth-form .ant-input-affix-wrapper-focused .ant-input-prefix {
+        color: var(--accent-rose);
+    }
+
+    .auth-form .ant-alert {
+        margin-bottom: var(--space-4);
+    }
+
+    .form-box > .ant-alert {
+        margin-bottom: var(--space-6);
+    }
+
+    /* "hoặc" between the two stamps */
+    .divider-line {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: var(--space-6) 0;
+        color: var(--ink-soft);
+        font-size: 11.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .divider-line::before,
+    .divider-line::after {
+        flex: 1;
+        height: 1px;
+        background: var(--line-hairline);
+        content: '';
+    }
+
+    @media (max-width: 900px) {
+        .login-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .brand-pane {
+            display: none;
+        }
+
+        .form-pane {
+            padding: var(--space-8) var(--space-6);
+        }
+    }
+}

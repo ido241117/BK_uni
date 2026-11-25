@@ -2,20 +2,24 @@
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./base.css";
-@import "./layout.css";
 @import "./components.css";
 @import "./typography.css";
 @import "./antd-skin.css";
 /* Component styles live next to their components but are imported here, never from a .tsx file:
    a CSS import from JS can land before this file and re-order the cascade layers above. */
 @import "../components/shell/shell.css";
+@import "../layouts/auth/auth.css";
 @import "../components/EmptyState/empty-state.css";
 @import "../components/Button/button.css";
 @import "../components/ui/ui.css";
 @import "../components/ui/controls.css";
+@import "../pages/courses/components/mybk-progress.css";
+@import "../pages/courses/board/board.css";
+@import "../pages/courses/analysis/analysis.css";
+@import "../pages/recommendations/recommendations.css";
 
 /* Tailwind font utilities (font-sans / font-serif) use the same two families. */
 @theme {
     --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
-    --font-serif: 'Fraunces', Georgia, serif;
+    --font-serif: 'Fraunces Variable', 'Fraunces', 'Times New Roman', Georgia, serif;
 }

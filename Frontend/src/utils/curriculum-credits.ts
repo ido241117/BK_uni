@@ -1,4 +1,5 @@
 import { COURSE_GROUP_SCOPE, type CourseGroup, type CurriculumCourse } from '@/types';
+import i18n from '@/i18n';
 
 /**
  * Tín chỉ mà một khối yêu cầu.
@@ -203,14 +204,14 @@ export const summarizeCurriculumProgress = (
 /** Yêu cầu của khối dạng chữ, ví dụ "15 TC · 5 môn", "môn bất kỳ 3 TC". */
 export const describeGroupRequirement = (group: CourseGroup): string => {
     const parts: string[] = [];
-    if (group.required_credits !== null) parts.push(`${group.required_credits} TC`);
-    if (group.required_count !== null) parts.push(`${group.required_count} môn`);
+    if (group.required_credits !== null) parts.push(i18n.t('{{required_credits}} TC', { required_credits: group.required_credits }));
+    if (group.required_count !== null) parts.push(i18n.t('{{required_count}} môn', { required_count: group.required_count }));
     if (!parts.length) {
         const credits = groupRequiredCredits(group);
-        if (credits) parts.push(`${credits} TC`);
+        if (credits) parts.push(i18n.t('{{credits}} TC', { credits: credits }));
     }
     if (group.pool_scope === COURSE_GROUP_SCOPE.ANY) {
-        parts.push(group.pool_course_credits ? `môn bất kỳ ${group.pool_course_credits} TC` : 'chọn tự do');
+        parts.push(group.pool_course_credits ? i18n.t('môn bất kỳ {{pool_course_credits}} TC', { pool_course_credits: group.pool_course_credits }) : i18n.t('chọn tự do'));
     }
     return parts.join(' · ') || '—';
 };

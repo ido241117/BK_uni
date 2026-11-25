@@ -1,7 +1,10 @@
 /*
- * Design tokens: the single source for color, type, spacing and layout sizes.
- * Values follow UI-SPECIFICATION.md (light-pink, line-driven theme) and ui-template/sidebar-topbar.html.
- * The antd theme in `config/theme` mirrors the color values; change both together.
+ * Design tokens: the single source for color, type, spacing, elevation and layout sizes.
+ * Light-pink, line-driven theme; palette rules and the measured contrast of every pair are in ui-docs/DESIGN-SYSTEM.md §1.
+ * Rule: every text token reaches WCAG AA (4.5:1) on all four surfaces (canvas, blush, elevated, tint-hover), and
+ * every non-text cue a user needs (control edge, focus ring, status ring) reaches 3:1. --accent-sparkle and the
+ * lines are decorative only. Every color used in CSS must come from here, so both themes stay complete.
+ * The antd theme in `config/theme` mirrors the color values (antd needs literals); change both together.
  */
 :root {
     color-scheme: light;
@@ -11,11 +14,14 @@
     --bg-blush: #FDF4F7;
     --bg-elevated: #FFF8F4;
     --bg-tint-hover: #FBEDF2;
+    --bg-disabled: #F9F2F5;
 
     /* Ink */
     --ink-primary: #3B2230;
-    --ink-muted: #8E6B78;
-    --ink-soft: #BE9EAA;
+    --ink-muted: #745762;
+    --ink-soft: #906072;
+    --ink-disabled: #CBB3BD;
+    /* Text on a filled accent (primary button, selected segment) */
     --ink-inverse: #FFFFFF;
 
     /* Accents */
@@ -23,29 +29,43 @@
     --accent-rose-hover: #A03460;
     --accent-sparkle: #E58FB0;
     --accent-glow: rgba(229, 143, 176, 0.22);
-    --accent-teal: #0F766E;
+    /* Brand accent: only the logo (gear, one schedule block, "Path"), the semester badge and the next-semester sparkle (DESIGN-SYSTEM.md 2.1) */
+    --accent-brand: #2F6FB0;
+    /* Keyboard focus outline: must reach 3:1 on every surface (the pastel sparkle does not in light) */
+    --focus-ring: #B83E6C;
 
     /* Dividers: hairline = boundary inside content, chrome = edge of an app region */
     --line-hairline: #F3E3EA;
     --line-hairline-on-blush: rgba(59, 34, 48, 0.13);
     --line-chrome: #E4B7CB;
 
-    /* Semantic status (+ tinted backgrounds for notices, ui-template/components-template-2.html) */
-    --sem-good: #5E7F5D;
-    --sem-warn: #A0702A;
+    /* Semantic status + tinted washes for notices */
+    --sem-good: #577556;
+    --sem-good-bg: #F3F7F2;
+    --sem-warn: #916526;
     --sem-warn-bg: #FDF7EC;
     --sem-err: #AE4B33;
     --sem-err-bg: #FDF3F1;
+    --sem-err-line: rgba(174, 75, 51, 0.45);
+    --sem-err-glow: rgba(174, 75, 51, 0.18);
 
-    /* Disabled controls (ui-template/buttons.html) */
-    --bg-disabled: #F9F2F5;
-    --ink-disabled: #CBB3BD;
-
-    /* Illustration-only fill (folded page corner in empty states) */
+    /* Illustration-only fill (folded page corner, sparkles) */
     --illus-fold: #F5C2D4;
 
+    /* Elevation: tinted shadows, never grey */
+    --shadow-stamp: 0 10px 22px -12px rgba(184, 62, 108, 0.72);
+    --shadow-stamp-lg: 0 10px 24px -12px rgba(184, 62, 108, 0.75);
+    --shadow-pop: 0 18px 36px -16px rgba(59, 34, 48, 0.25);
+    --shadow-modal: 0 28px 64px -20px rgba(59, 34, 48, 0.35);
+    /* Inset hairline inside solid stamps (rest / hover) */
+    --stamp-inset: rgba(255, 255, 255, 0.36);
+    --stamp-inset-hover: rgba(255, 255, 255, 0.58);
+    /* Overlays */
+    --scrim: rgba(59, 34, 48, 0.18);
+    --nav-hover-bg: rgba(255, 255, 255, 0.65);
+
     /* Type */
-    --serif: 'Fraunces', Georgia, serif;
+    --serif: 'Fraunces Variable', 'Fraunces', 'Times New Roman', Georgia, serif;
     --sans: 'Be Vietnam Pro', system-ui, sans-serif;
 
     /* Spacing scale: redefine inside a media query instead of editing rules */
@@ -74,71 +94,58 @@
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-pill: 999px;
-
-    /* Legacy aliases used by pages not yet restyled (stages 2-4). Remove once nothing reads them. */
-    --brand: var(--accent-rose);
-    --brand-hover: var(--accent-rose-hover);
-    --brand-active: #8A2C52;
-    --brand-soft: rgba(184, 62, 108, 0.10);
-    --brand-soft-strong: rgba(184, 62, 108, 0.20);
-    --brand-contrast: var(--ink-inverse);
-    --bg-page: var(--bg-canvas);
-    --bg-surface: var(--bg-canvas);
-    --bg-subtle: var(--bg-blush);
-    --bg-inverse: var(--ink-primary);
-    --text-inverse: var(--ink-inverse);
-    --text-primary: var(--ink-primary);
-    --text-secondary: var(--ink-muted);
-    --text-muted: var(--ink-muted);
-    --border-soft: var(--line-hairline);
-    --border-strong: var(--line-chrome);
-    --shadow-soft: 0 8px 24px rgba(120, 40, 70, 0.06);
-    --shadow-raised: 0 16px 40px -16px rgba(120, 40, 70, 0.35);
-    --focus-ring: 0 0 0 3px var(--accent-glow);
-    --scrollbar-thumb: rgba(59, 34, 48, 0.18);
 }
 
-/* Dark palette: derived from the light one, not yet reviewed against the spec. */
+/*
+ * Dark: "the same room at night". Plum-black surfaces that keep the pink undertone (hue ~330), elevation by
+ * lightness instead of shadow, accents lifted so text on canvas passes WCAG AA, and filled accents carry dark plum
+ * text (light text on a light rose would fail). Every pair is checked by `npm run contrast:check` (DESIGN-SYSTEM.md 1.2-1.4).
+ */
 [data-theme='dark'] {
     color-scheme: dark;
 
-    --bg-canvas: #1C1218;
-    --bg-blush: #24171E;
-    --bg-elevated: #2B1C24;
-    --bg-tint-hover: #33212B;
+    --bg-canvas: #1A1216;
+    --bg-blush: #21171D;
+    --bg-elevated: #2A1E25;
+    --bg-tint-hover: #33242D;
+    --bg-disabled: #251B21;
 
-    --ink-primary: #F6E9EE;
-    --ink-muted: #C7A5B2;
-    --ink-soft: #8C6E7A;
-    --ink-inverse: #FFFFFF;
+    --ink-primary: #F4E6EC;
+    --ink-muted: #C3A4B1;
+    --ink-soft: #A08995;
+    --ink-disabled: #5F4B55;
+    --ink-inverse: #2A1120;
 
-    --accent-rose: #C2507E;
-    --accent-rose-hover: #A8436C;
-    --accent-sparkle: #B86A8A;
-    --accent-glow: rgba(229, 143, 176, 0.16);
-    --accent-teal: #2BA59A;
+    --accent-rose: #EC8DB2;
+    --accent-rose-hover: #F4A9C6;
+    --accent-sparkle: #B5718F;
+    --accent-glow: rgba(236, 141, 178, 0.18);
+    --accent-brand: #7FB2EC;
+    --focus-ring: #EC8DB2;
 
-    --line-hairline: #3A2731;
-    --line-hairline-on-blush: rgba(246, 233, 238, 0.12);
-    --line-chrome: #5A3546;
+    --line-hairline: #33252D;
+    --line-hairline-on-blush: rgba(244, 230, 236, 0.10);
+    --line-chrome: #4E3442;
 
-    --sem-good: #8DB38B;
-    --sem-warn: #D2A157;
-    --sem-warn-bg: #2E2418;
-    --sem-err: #E07A62;
-    --sem-err-bg: #2E1C18;
+    --sem-good: #9CC79A;
+    --sem-good-bg: #1C261D;
+    --sem-warn: #E2B56E;
+    --sem-warn-bg: #2C2318;
+    --sem-err: #F08D77;
+    --sem-err-bg: #2F1C19;
+    --sem-err-line: rgba(240, 141, 119, 0.45);
+    --sem-err-glow: rgba(240, 141, 119, 0.22);
 
-    --bg-disabled: #2A1D24;
-    --ink-disabled: #6E5662;
+    --illus-fold: #5B3448;
 
-    --illus-fold: #6B3A50;
-
-    --brand-active: #8F3A5D;
-    --brand-soft: rgba(194, 80, 126, 0.16);
-    --brand-soft-strong: rgba(194, 80, 126, 0.28);
-    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
-    --shadow-raised: 0 16px 40px rgba(0, 0, 0, 0.45);
-    --scrollbar-thumb: rgba(246, 233, 238, 0.22);
+    --shadow-stamp: 0 10px 22px -12px rgba(0, 0, 0, 0.7);
+    --shadow-stamp-lg: 0 10px 24px -12px rgba(0, 0, 0, 0.75);
+    --shadow-pop: 0 18px 36px -16px rgba(0, 0, 0, 0.6);
+    --shadow-modal: 0 28px 64px -20px rgba(0, 0, 0, 0.7);
+    --stamp-inset: rgba(42, 17, 32, 0.28);
+    --stamp-inset-hover: rgba(42, 17, 32, 0.45);
+    --scrim: rgba(0, 0, 0, 0.45);
+    --nav-hover-bg: var(--bg-tint-hover);
 }
 
 @media (max-width: 1024px) {
