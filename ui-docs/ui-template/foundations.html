@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BKPath – Foundations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="stylesheet" href="../../Frontend/src/styles/tokens.css">
+<link rel="stylesheet" href="template.css">
+<script src="template.js"></script>
+<style>
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px 18px; }
+  .swatch { display: flex; align-items: center; gap: 10px; }
+  .swatch i { flex: none; width: 38px; height: 38px; border: 1px solid var(--line-hairline); border-radius: 4px; }
+  .swatch b { display: block; font-size: 12.5px; font-weight: 600; }
+  .swatch span { color: var(--ink-muted); font-size: 11.5px; }
+  .type-row { display: grid; grid-template-columns: 210px 1fr; gap: 18px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--line-hairline); }
+  .type-row .hint { font-size: 12px; }
+  .space-row { display: flex; align-items: center; gap: 12px; padding: 4px 0; font-size: 12px; color: var(--ink-muted); }
+  .space-row i { display: block; height: 10px; background: var(--accent-sparkle); border-radius: 2px; }
+  .motif { display: flex; flex-direction: column; gap: 10px; }
+  .illus { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; text-align: center; }
+  .illus svg { width: 88px; height: 88px; }
+  .illus p { margin: 4px 0 0; font-size: 12px; color: var(--ink-muted); }
+  .scroll-demo { height: 120px; max-width: 420px; overflow: auto; padding: 10px 14px; border-top: 1px solid var(--line-hairline); border-bottom: 1px solid var(--line-hairline); font-size: 13px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<main class="doc">
+  <header class="doc-head">
+    <h1>Foundations</h1>
+    <p>Palette, type, space, motifs, icons and illustrations. Values are read live from <code>Frontend/src/styles/tokens.css</code>; use the toggle (top right) for dark. Rules for choosing or changing colors: <code>ui-docs/DESIGN-SYSTEM.md</code> §1.3, checked by <code>npm run contrast:check</code>.</p>
+  </header>
+
+  <section class="spec">
+    <h2>Palette</h2>
+    <p>Light pink, line-driven: about 60% canvas, 30% blush and hairlines, 10% rose, brand blue under 1%. Every text token passes 4.5:1 on all four surfaces; sparkle and lines are decorative only.</p>
+    <h3>Surfaces</h3><div class="swatches" data-tokens="bg-canvas bg-blush bg-elevated bg-tint-hover bg-disabled"></div>
+    <h3>Ink</h3><div class="swatches" data-tokens="ink-primary ink-muted ink-soft ink-disabled ink-inverse"></div>
+    <h3>Accents</h3><div class="swatches" data-tokens="accent-rose accent-rose-hover accent-sparkle accent-brand focus-ring"></div>
+    <h3>Lines</h3><div class="swatches" data-tokens="line-hairline line-chrome illus-fold"></div>
+    <h3>Semantic + washes</h3><div class="swatches" data-tokens="sem-good sem-good-bg sem-warn sem-warn-bg sem-err sem-err-bg"></div>
+  </section>
+
+  <section class="spec">
+    <h2>Type</h2>
+    <p>Serif (Fraunces) for what you read first; sans (Be Vietnam Pro) for everything you scan or operate. Both are self-hosted in the app with Vietnamese subsets.</p>
+    <div class="type-row"><span class="hint">Page title · Fraunces 36/500</span><span class="page-title" style="margin:0">Tiến độ học tập</span></div>
+    <div class="type-row"><span class="hint">KPI / semester code · Fraunces 26–32/500</span><span class="kpi-count">262 <small>16 TC</small></span></div>
+    <div class="type-row"><span class="hint">Section title · Fraunces 19–22/500</span><span class="serif" style="font-size:21px">Phân tích chi tiết</span></div>
+    <div class="type-row"><span class="hint">Section label · sans 10.5/600 caps</span><span class="section-label" style="margin:0">Tín chỉ tích lũy / chuẩn tốt nghiệp</span></div>
+    <div class="type-row"><span class="hint">Tab 15 · nav 13.5/500</span><span style="font-size:15px">Lộ trình &nbsp; <span style="font-size:13.5px; font-weight:500">Gợi ý lộ trình</span></span></div>
+    <div class="type-row"><span class="hint">Body · sans 13.5–14/400</span><span>Bấm vào thẻ môn để đổi trạng thái ngay. Thay đổi được giữ tạm trên trình duyệt.</span></div>
+    <div class="type-row"><span class="hint">Course code · sans 12.5–13/600</span><span class="course-code">CO3001</span></div>
+    <div class="type-row"><span class="hint">Caption · sans 11–12.5, muted</span><span class="hint">Nhập đúng mã theo danh mục</span></div>
+  </section>
+
+  <section class="spec">
+    <h2>Space and radius</h2>
+    <p>Scale <code>--space-1…11</code>. Radius 4px for stamps, inputs, chips and menus; 6px for modal and disclosure; full pills only for nav items and the delta pill.</p>
+    <div data-space="1 2 3 4 5 6 7 8 10 11"></div>
+  </section>
+
+  <section class="spec">
+    <h2>Motifs</h2>
+    <p>Three motifs, each with one meaning. Rules run across the page; the timeline thread is the one line that runs down, because it is the thread motif.</p>
+    <div class="demo-grid">
+      <div class="motif">
+        <div class="section-label">Thread + beads · progress through time</div>
+        <div class="progress-thread" style="max-width:260px"><div class="thread-track"><div class="thread-fill" style="width:62%"><i class="ph-fill ph-sparkle thread-sparkle"></i></div></div></div>
+        <div class="demo-row" style="gap:10px"><span class="bd" data-s="completed"></span><span class="bd" data-s="in-progress"></span><span class="bd" data-s="planned"></span><span class="bd" data-s="not-started"></span></div>
+      </div>
+      <div class="motif">
+        <div class="section-label">Sparkle · "something is coming"</div>
+        <div class="demo-row" style="gap:16px">
+          <svg class="spark-mark" data-variant="next" width="18" height="18" viewBox="0 0 24 24"><path d="M12 1.5C12.7 8.2 15.8 11.3 22.5 12C15.8 12.7 12.7 15.8 12 22.5C11.3 15.8 8.2 12.7 1.5 12C8.2 11.3 11.3 8.2 12 1.5Z"/></svg>
+          <svg class="spark-mark" data-variant="future" width="17" height="17" viewBox="0 0 24 24"><path d="M12 1.5C12.7 8.2 15.8 11.3 22.5 12C15.8 12.7 12.7 15.8 12 22.5C11.3 15.8 8.2 12.7 1.5 12C8.2 11.3 11.3 8.2 12 1.5Z"/></svg>
+          <svg class="spark-mark" data-variant="grad" width="22" height="22" viewBox="0 0 24 24"><path d="M12 1.5C12.7 8.2 15.8 11.3 22.5 12C15.8 12.7 12.7 15.8 12 22.5C11.3 15.8 8.2 12.7 1.5 12C8.2 11.3 11.3 8.2 12 1.5Z"/></svg>
+          <i class="ph-fill ph-sparkle" style="color:var(--accent-rose); font-size:16px"></i>
+        </div>
+        <span class="hint">Timeline checkpoints (next, upcoming, graduation), progress tip, loading. Never an icon for something else.</span>
+      </div>
+      <div class="motif">
+        <div class="section-label">Folded page · a document, the mascot</div>
+        <div><svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><circle cx="48" cy="50" r="31" fill="var(--bg-blush)" /> <path d="M29 20h24l12 12v40a6 6 0 0 1-6 6H29a6 6 0 0 1-6-6V26a6 6 0 0 1 6-6z" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <path d="M53 20v12h12" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <line x1="36" y1="51" x2="52" y2="51" stroke="var(--accent-sparkle)" stroke-width="1.8" stroke-linecap="round" /> <path class="spark spark-main" d="M72 19c.4 3.4 2.4 5.4 5.8 5.8-3.4.4-5.4 2.4-5.8 5.8-.4-3.4-2.4-5.4-5.8-5.8 3.4-.4 5.4-2.4 5.8-5.8z" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.2" stroke-linejoin="round" /> <path class="spark spark-small" d="M77 35c.2 1.7 1.2 2.7 2.9 2.9-1.7.2-2.7 1.2-2.9 2.9-.2-1.7-1.2-2.7-2.9-2.9 1.7-.2 2.7-1.2 2.9-2.9z" fill="var(--illus-fold)" /></svg></div>
+      </div>
+    </div>
+    <h3>Bead family</h3>
+    <p class="hint" style="margin:0">Course states as ring shapes: see <code>semester-timeline.html</code> §B. A solid 6px pip is a flag on a row, never a state.</p>
+  </section>
+
+  <section class="spec">
+    <h2>Icons</h2>
+    <p>Phosphor (Regular for UI, Fill for warnings), 16–18px in controls, 14px inline. Icons take their text's color. Icon-only buttons need an <code>aria-label</code>.</p>
+    <div class="row-list" style="max-width:760px">
+      <div class="row-item"><span class="row-label">Tiến độ học tập · Chương trình · Gợi ý lộ trình · Tư vấn với AI · Hồ sơ</span><span class="row-value" style="font-size:18px"><i class="ph ph-chart-line-up"></i> <i class="ph ph-book-open"></i> <i class="ph ph-path"></i> <i class="ph ph-robot"></i> <i class="ph ph-user"></i></span></div>
+      <div class="row-item"><span class="row-label">Conflict · over a limit</span><span class="row-value" style="font-size:18px; color:var(--sem-err)"><i class="ph-fill ph-warning"></i> <i class="ph-fill ph-warning-circle"></i></span></div>
+      <div class="row-item"><span class="row-label">Source of a value</span><span class="row-value" style="font-size:18px"><i class="ph ph-calendar-blank"></i></span></div>
+      <div class="row-item"><span class="row-label">Note · edit · close · delete</span><span class="row-value" style="font-size:18px"><i class="ph ph-note-pencil"></i> <i class="ph ph-pencil-simple-line"></i> <i class="ph ph-x"></i> <i class="ph ph-trash"></i></span></div>
+      <div class="row-item"><span class="row-label">Import · read file · save · undo</span><span class="row-value" style="font-size:18px"><i class="ph ph-file-arrow-up"></i> <i class="ph ph-file-magnifying-glass"></i> <i class="ph ph-floppy-disk"></i> <i class="ph ph-arrow-counter-clockwise"></i></span></div>
+    </div>
+  </section>
+
+  <section class="spec">
+    <h2>Illustrations</h2>
+    <p>One drawing family: the folded page with a face from the logo, pastel outline, blush disc. Colors are tokens, so they follow the theme. App: <code>components/EmptyState/illustrations.tsx</code>.</p>
+    <div class="illus">
+      <div><svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><circle cx="48" cy="48" r="32" fill="var(--bg-blush)" /> <path d="M31 24h22l11 11v31H25V30a6 6 0 0 1 6-6z" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <path d="M53 24v11h11" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <circle cx="38" cy="54" r="2.3" fill="var(--ink-primary)" /> <circle cx="51" cy="54" r="2.3" fill="var(--ink-primary)" /> <ellipse cx="33.5" cy="58" rx="3" ry="1.6" fill="var(--accent-sparkle)" opacity="0.55" /> <ellipse cx="55.5" cy="58" rx="3" ry="1.6" fill="var(--accent-sparkle)" opacity="0.55" /> <line x1="18" y1="66" x2="78" y2="66" stroke="var(--accent-sparkle)" stroke-width="1.8" stroke-linecap="round" /></svg><p>Empty / not started</p></div>
+      <div><svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><path d="M68 20h4.5l-4.5 4.5h4.5M74 14h5l-5 5h5" stroke="var(--accent-rose)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /> <path d="M31 16h22l11 11v34H25V22a6 6 0 0 1 6-6z" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <path d="M53 16v11h11" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <path d="M35.5 41c1.4 1.8 4 1.8 5.4 0M48 41c1.4 1.8 4 1.8 5.4 0" stroke="var(--ink-primary)" stroke-width="1.6" stroke-linecap="round" /> <ellipse cx="32.5" cy="45" rx="2.8" ry="1.5" fill="var(--accent-sparkle)" opacity="0.5" /> <ellipse cx="56.5" cy="45" rx="2.8" ry="1.5" fill="var(--accent-sparkle)" opacity="0.5" /> <circle cx="44.8" cy="46.5" r="1.3" fill="var(--ink-primary)" /> <path d="M21 76h54a8.5 8.5 0 0 0 1.3-16.9A11.5 11.5 0 0 0 55 55.5a10 10 0 0 0-18 2.6A8.8 8.8 0 0 0 21 76z" fill="var(--bg-blush)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /></svg><p>Cannot reach the server</p></div>
+      <div><svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><path d="M24 18h25l11 11v45a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6V24a6 6 0 0 1 6-6z" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <path d="M49 18v11h11" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <circle cx="32.5" cy="49" r="2.3" fill="var(--ink-primary)" /> <circle cx="46.5" cy="49" r="2.3" fill="var(--ink-primary)" /> <ellipse cx="28.5" cy="53.5" rx="2.8" ry="1.5" fill="var(--accent-sparkle)" opacity="0.5" /> <ellipse cx="50.5" cy="53.5" rx="2.8" ry="1.5" fill="var(--accent-sparkle)" opacity="0.5" /> <path d="M36 57.5c1.8-2.2 5.2-2.2 7 0" stroke="var(--ink-primary)" stroke-width="1.6" stroke-linecap="round" /> <path d="M68 41c0-3 2.3-5 5.2-5 2.8 0 4.8 1.8 4.8 4.3 0 2-1.2 3.1-3.1 4.1-1.4.7-1.9 1.4-1.9 2.8" stroke="var(--accent-rose)" stroke-width="2" stroke-linecap="round" /> <circle cx="73" cy="52" r="1.4" fill="var(--accent-rose)" /></svg><p>Load failed / not found</p></div>
+      <div><svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><path d="M38 18h25l11 11v45a6 6 0 0 1-6 6H38a6 6 0 0 1-6-6V24a6 6 0 0 1 6-6z" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <path d="M63 18v11h11" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <circle cx="47.5" cy="48" r="2.5" fill="var(--ink-primary)" /> <circle cx="61.5" cy="48" r="2.5" fill="var(--ink-primary)" /> <ellipse cx="43.5" cy="53" rx="2.8" ry="1.5" fill="var(--accent-sparkle)" opacity="0.5" /> <ellipse cx="65.5" cy="53" rx="2.8" ry="1.5" fill="var(--accent-sparkle)" opacity="0.5" /> <ellipse cx="54.5" cy="56" rx="2.2" ry="2.8" fill="var(--ink-primary)" /> <circle cx="26" cy="48" r="10.5" fill="var(--bg-blush)" stroke="var(--accent-rose)" stroke-width="1.8" /> <path d="M21 44.5a6 6 0 0 1 6-2" stroke="var(--accent-sparkle)" stroke-width="1.4" stroke-linecap="round" /> <line x1="26" y1="58.5" x2="26" y2="73" stroke="var(--accent-rose)" stroke-width="2.4" stroke-linecap="round" /></svg><p>No results</p></div>
+      <div><svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><circle cx="48" cy="50" r="31" fill="var(--bg-blush)" /> <path d="M29 20h24l12 12v40a6 6 0 0 1-6 6H29a6 6 0 0 1-6-6V26a6 6 0 0 1 6-6z" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <path d="M53 20v12h12" stroke="var(--accent-sparkle)" stroke-width="1.6" stroke-linejoin="round" /> <line x1="36" y1="51" x2="52" y2="51" stroke="var(--accent-sparkle)" stroke-width="1.8" stroke-linecap="round" /> <path class="spark spark-main" d="M72 19c.4 3.4 2.4 5.4 5.8 5.8-3.4.4-5.4 2.4-5.8 5.8-.4-3.4-2.4-5.4-5.8-5.8 3.4-.4 5.4-2.4 5.8-5.8z" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.2" stroke-linejoin="round" /> <path class="spark spark-small" d="M77 35c.2 1.7 1.2 2.7 2.9 2.9-1.7.2-2.7 1.2-2.9 2.9-.2-1.7-1.2-2.7-2.9-2.9 1.7-.2 2.7-1.2 2.9-2.9z" fill="var(--illus-fold)" /></svg><p>Loading (page opening)</p></div>
+    </div>
+  </section>
+
+  <section class="spec">
+    <h2>Scrollbar</h2>
+    <p>Thin, transparent track, sparkle thumb; WebKit gets a sparkle→rose gradient thumb.</p>
+    <div class="scroll-demo">Chương trình CS-2023-KHMT có 128 tín chỉ. Môn bắt buộc 99 TC, chuyên ngành nhóm A, B, C, quản lý nhóm D và tự chọn tự do. Mỗi kỳ chính đăng ký từ 14 đến 25 tín chỉ, kỳ hè tối đa 12 tín chỉ. Môn tiên quyết phải đạt trước; môn học trước chỉ cần đã học. Điều kiện tốt nghiệp gồm chuẩn ngoại ngữ, giáo dục thể chất và quốc phòng. Cuộn để xem thanh cuộn. Chương trình CS-2023-KHMT có 128 tín chỉ. Môn bắt buộc 99 TC, chuyên ngành nhóm A, B, C, quản lý nhóm D và tự chọn tự do.</div>
+  </section>
+</main>
+<script>
+  // Swatches and spacing bars read the live token values, so this page never goes stale.
+  const css = getComputedStyle(document.documentElement);
+  const paint = () => {
+    document.querySelectorAll('[data-tokens]').forEach((box) => {
+      box.innerHTML = box.dataset.tokens.split(' ').map((t) => {
+        const v = css.getPropertyValue(`--${t}`).trim();
+        return `<div class="swatch"><i style="background:var(--${t})"></i><div><b>--${t}</b><span>${v}</span></div></div>`;
+      }).join('');
+    });
+  };
+  document.querySelectorAll('[data-space]').forEach((box) => {
+    box.innerHTML = box.dataset.space.split(' ').map((n) => `<div class="space-row"><span style="width:90px">--space-${n}</span><i style="width:var(--space-${n})"></i><span>${css.getPropertyValue(`--space-${n}`).trim()}</span></div>`).join('');
+  });
+  paint();
+  new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+</script>
+</body>
+</html>

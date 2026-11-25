@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BKPath – Data display</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="stylesheet" href="../../Frontend/src/styles/tokens.css">
+<link rel="stylesheet" href="template.css">
+<script src="template.js"></script>
+</head>
+<body>
+<main class="doc">
+  <header class="doc-head">
+    <h1>Data display</h1>
+    <p>Rows, numbers, tables, status, markers and groups. App: <code>components/ui</code> (<code>RowList</code>, <code>KpiCount</code>, <code>ProgressThread</code>, <code>CourseStatus</code>, <code>CollapsibleGroup</code>, <code>Disclosure</code>) and the antd skin. Course states are beads (see <code>semester-timeline.html</code> §B); flags are solid pips.</p>
+  </header>
+
+  <section class="spec">
+    <h2>Rows and numbers</h2>
+    <p>Facts are label → value rows (label left, value right, long values wrap). A number that matters is a serif count; part of a whole adds the progress thread with a sparkle at its tip.</p>
+    <div class="demo-grid">
+      <div>
+        <div class="section-label">Tín chỉ tích lũy / chuẩn tốt nghiệp</div>
+        <div class="kpi-count">106 <small>/ 128 TC</small></div>
+        <div class="progress-thread"><div class="thread-track"><div class="thread-fill" style="width:83%"><i class="ph-fill ph-sparkle thread-sparkle"></i></div></div></div>
+        <div class="row-list" style="margin-top:14px">
+          <div class="row-item"><span class="row-label">Môn được tính vào chuẩn tốt nghiệp</span><span class="row-value">40 / 47 môn</span></div>
+          <div class="row-item"><span class="row-label">Đang học</span><span class="row-value">0 TC</span></div>
+          <div class="row-item"><span class="row-label">Còn thiếu (chưa học, chưa xếp kỳ)</span><span class="row-value">22 TC</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Nhịp học</div>
+        <div class="row-list">
+          <div class="row-item"><span class="row-label">Học kỳ đang tính</span><span class="row-value">HK 261 (kỳ 1 2026-2027)</span></div>
+          <div class="row-item"><span class="row-label">Nhịp đã học</span><span class="row-value">17.7 TC/kỳ · 6 kỳ đã qua</span></div>
+          <div class="row-item"><span class="row-label">Mã CTĐT (myBK)</span><span class="row-value" data-chip>DH_CQ_MT_KHM_2023.v01</span></div>
+          <div class="row-item"><span class="row-label">Dự kiến tốt nghiệp</span><span class="row-value">HK 271 <span class="diff-flag" style="margin-left:8px"><i class="ph-fill ph-warning-circle"></i>trễ hạn (chuẩn HK 262)</span></span></div>
+        </div>
+      </div>
+    </div>
+    <h3>KPI strip (several numbers side by side)</h3>
+    <div class="kpi-strip">
+      <div class="kpi-cell"><div class="kpi-label">Ra trường</div><div class="kpi-value"><span class="kpi-count">HK 271</span><span class="kpi-unit">(kỳ 1 2027-2028)</span></div></div>
+      <div class="kpi-cell"><div class="kpi-label">Kỳ chính nặng nhất</div><div class="kpi-value"><span class="kpi-count">16</span><span class="kpi-unit">TC</span><span class="delta-pill" data-good>−2</span></div></div>
+      <div class="kpi-cell"><div class="kpi-label">Học hè</div><div class="kpi-value"><span class="kpi-count">0</span><span class="kpi-unit">TC</span></div></div>
+    </div>
+  </section>
+
+  <section class="spec">
+    <h2>Course table, file column, conflicts, row note</h2>
+    <p>Tables are transparent: uppercase soft headers, hairline rows, tint on hover. The file column shows ✓ / --. A row that differs from the myBK file gets a terracotta pip before its first cell and a <code>DiffFlag</code>. A note opens as a blush expanded row.</p>
+    <table class="line-table">
+      <thead><tr><th style="width:100px">Mã môn</th><th>Tên học phần</th><th style="width:70px">TC</th><th style="width:70px">File</th><th style="width:150px">Trên web</th><th style="width:190px">Đối chiếu / Ghi chú</th></tr></thead>
+      <tbody>
+        <tr><td><span class="course-code">CO1007</span></td><td>Cấu trúc rời rạc</td><td>4</td><td><span class="file-mark" data-passed><i class="ph-bold ph-check"></i></span></td><td><span class="course-status" data-status="completed"><span class="bd" data-s="completed"></span>Đã hoàn thành</span></td><td><button class="note-trigger"><i class="ph ph-note-pencil"></i>Thêm ghi chú</button></td></tr>
+        <tr><td><span class="course-code">CO1027</span></td><td>Kỹ thuật lập trình</td><td>3</td><td><span class="file-mark">--</span></td><td><span class="course-status" data-status="not-started"><span class="bd" data-s="not-started"></span>Chưa học</span></td><td><button class="note-trigger"><i class="ph ph-note-pencil"></i>Thêm ghi chú</button></td></tr>
+        <tr class="is-diff"><td><span class="course-code">CO2003</span></td><td>Cấu trúc dữ liệu và giải thuật</td><td>4</td><td><span class="file-mark" data-passed><i class="ph-bold ph-check"></i></span></td><td><span class="course-status" data-status="in-progress"><span class="bd" data-s="in-progress"></span>Đang học</span></td><td><div class="cell-stack"><span class="diff-flag"><i class="ph-fill ph-warning"></i>Khác file tiến độ</span><button class="note-trigger"><i class="ph ph-note-pencil"></i>Học lại kỳ hè 263</button></div></td></tr>
+        <tr class="expanded"><td colspan="6"><div class="note-box">
+          <div class="note-box-lbl"><i class="ph ph-note-pencil"></i>Ghi chú cho CO2003</div>
+          <textarea class="paste-area">Học lại kỳ hè 263</textarea>
+          <div class="note-actions"><button class="btn btn-tertiary">Hủy</button><button class="btn btn-primary btn-sm">Lưu ghi chú</button></div>
+        </div></td></tr>
+      </tbody>
+    </table>
+    <h3>Empty table</h3>
+    <div class="empty-table-line"><i class="ph ph-list-dashes"></i>Không có môn bắt buộc nào bị chậm.</div>
+  </section>
+
+  <section class="spec">
+    <h2>Status and markers</h2>
+    <p>A course's state is a bead + its word (<code>CourseStatus</code>). Other categories use a tag with a ring in its tone, or a plain text tag. Markers sit next to what they qualify.</p>
+    <h3>Course status</h3>
+    <div class="demo-row">
+      <span class="course-status" data-status="none"><span class="bd" data-s="none"></span>Chưa khai</span>
+      <span class="course-status" data-status="not-started"><span class="bd" data-s="not-started"></span>Chưa học</span>
+      <span class="course-status" data-status="planned"><span class="bd" data-s="planned"></span>Đã lên kế hoạch</span>
+      <span class="course-status" data-status="in-progress"><span class="bd" data-s="in-progress"></span>Đang học</span>
+      <span class="course-status" data-status="completed"><span class="bd" data-s="completed"></span>Đã hoàn thành</span>
+      <span class="course-status" data-status="failed"><span class="bd" data-s="failed"></span>Chưa đạt</span>
+    </div>
+    <h3>Tags and text tags</h3>
+    <div class="demo-row">
+      <span class="tag" data-tone="rose">HK 262</span>
+      <span class="tag" data-tone="good">Đạt</span>
+      <span class="tag" data-tone="warn">Hè</span>
+      <span class="tag" data-tone="err">Ngoài CTĐT</span>
+      <span class="tag" data-tone="sparkle">KHM</span>
+      <span class="tag">3 TC</span>
+      <span class="text-tag">BẮT BUỘC</span>
+      <span class="text-tag" data-tone="rose">TỰ CHỌN</span>
+    </div>
+    <h3>Markers</h3>
+    <div class="row-list" style="max-width:720px">
+      <div class="row-item"><span class="row-label">Đang học: <strong>8 môn, 27 TC</strong></span><span class="load-warn"><i class="ph-fill ph-warning-circle"></i>nhiều hơn mức tối đa 25 TC</span></div>
+      <div class="row-item"><span class="row-label">Học kỳ hiện tại: <strong>HK 261</strong></span><span class="source-badge"><i class="ph ph-calendar-blank"></i>tự tính theo ngày</span></div>
+      <div class="row-item"><span class="row-label">CO2003 · Cấu trúc dữ liệu và giải thuật</span><span class="status-change"><span class="course-status" data-status="not-started"><span class="bd" data-s="not-started"></span>Chưa học</span><i class="ph ph-arrow-right"></i><span class="course-status" data-status="completed"><span class="bd" data-s="completed"></span>Đã hoàn thành</span></span></div>
+      <div class="row-item"><span class="row-label">Flags on a row</span><span class="demo-row" style="gap:14px"><span class="hint"><span class="pip"></span> chưa lưu</span><span class="hint"><span class="pip" data-tone="err"></span> khác file myBK</span><span class="hint"><span class="pip" data-tone="rose"></span> khác (So sánh)</span></span></div>
+    </div>
+    <h3>Course search result</h3>
+    <div class="menu menu-static" style="max-width:420px">
+      <div class="course-option"><span><span class="course-option-code">CO3005</span> Nguyên lý ngôn ngữ lập trình</span><span class="course-option-tc">4 TC</span></div>
+      <div class="course-option"><span><span class="course-option-code">CO3009</span> Vi xử lý – vi điều khiển</span><span class="course-option-tc">3 TC</span></div>
+    </div>
+  </section>
+
+  <section class="spec">
+    <h2>Groups and disclosure</h2>
+    <p><code>CollapsibleGroup</code>: chevron left, a bead (filled with a pinhole = requirement met, empty ring = not met), serif title, meta right. <code>Disclosure</code>: a blush row that opens a mode or form in place.</p>
+    <div>
+      <section class="course-group" data-open>
+        <button class="group-header"><span class="group-left"><i class="ph ph-caret-right chev"></i><span class="bd" data-s="completed"></span><h2>Toán</h2></span><span class="group-meta"><span class="credit-label" data-met>12/12</span><span class="meta-sep">·</span><span class="text-tag">BẮT BUỘC</span></span></button>
+        <div class="group-body">
+          <table class="line-table"><tbody>
+            <tr><td style="width:100px"><span class="course-code">MT1003</span></td><td>Giải tích 1</td><td style="width:60px">4</td><td style="width:160px"><span class="course-status" data-status="completed"><span class="bd" data-s="completed"></span>Đã hoàn thành</span></td></tr>
+            <tr><td><span class="course-code">MT1005</span></td><td>Giải tích 2</td><td>4</td><td><span class="course-status" data-status="completed"><span class="bd" data-s="completed"></span>Đã hoàn thành</span></td></tr>
+          </tbody></table>
+        </div>
+      </section>
+      <section class="course-group">
+        <button class="group-header"><span class="group-left"><i class="ph ph-caret-right chev"></i><span class="bd" data-s="not-started"></span><h2>Chuyên ngành – nhóm C (học kỳ 7 và 8)</h2></span><span class="group-meta"><span class="credit-label">9/15</span><span class="meta-sep">·</span><span class="text-tag" data-tone="rose">TỰ CHỌN</span></span></button>
+        <div class="group-body"><p class="hint">Chọn thêm 6 TC trong nhóm.</p></div>
+      </section>
+    </div>
+    <h3>Disclosure</h3>
+    <button class="disclosure-trigger" aria-expanded="false">
+      <span class="disclosure-text"><i class="ph ph-note-pencil disclosure-icon"></i><span><span class="disclosure-title">Hiệu chỉnh</span><span class="disclosure-sub">Thêm điều myBK không ghi: môn đang học, môn ngoài chương trình, điều kiện tốt nghiệp</span></span></span>
+      <i class="ph ph-caret-down disclosure-chev"></i>
+    </button>
+    <div class="disclosure-panel"><p class="hint" style="margin:0">Nội dung chế độ hiệu chỉnh mở ngay tại chỗ.</p></div>
+  </section>
+</main>
+</body>
+</html>

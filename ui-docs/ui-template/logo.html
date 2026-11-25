@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BKPath – Logo & favicon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../Frontend/src/styles/tokens.css" />
+  <script src="template.js"></script>
+  <style>
+    .theme-switch {
+      position: fixed; top: 14px; right: 18px; z-index: 50; padding: 6px 12px; border: 1px solid var(--line-hairline);
+      border-radius: 4px; background: var(--bg-canvas); color: var(--ink-muted); font: 600 12px var(--sans); cursor: pointer;
+    }
+    /* Colors come from the app tokens (linked above); --bg-page / --line are page chrome only. */
+    :root { --bg-page: var(--bg-canvas); --line: var(--line-hairline); }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--bg-page);
+      color: var(--ink-primary);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 40px 24px 72px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 500;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 13px;
+    }
+
+    .hero-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      align-items: center;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--bg-elevated);
+      margin-bottom: 36px;
+    }
+
+    .hero-art {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero-copy h2 {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 500;
+    }
+
+    .hero-copy p {
+      margin: 0 0 14px;
+      color: var(--ink-muted);
+      font-size: 13.5px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-rose);
+      background: var(--bg-blush);
+      border: 1px solid rgba(184, 62, 108, 0.2);
+      border-radius: 999px;
+      padding: 4px 12px;
+    }
+
+    .forms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .form-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--bg-canvas);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-label {
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--ink-muted);
+      background: var(--bg-blush);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-label code {
+      color: var(--accent-rose);
+      font-weight: 600;
+    }
+
+    .form-stage {
+      flex: 1;
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .favicon-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .favicon-sizes {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .browser-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 10px 10px 0 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--line);
+      border-bottom: 2px solid var(--accent-rose);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-primary);
+    }
+
+    /* A fixed plum surface in both themes: it shows the light-on-plum variant. */
+    .stage-dark {
+      background: #3B2230;
+    }
+
+    .stage-blush {
+      background: var(--bg-blush);
+    }
+
+    .lockup {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--line);
+    }
+
+    .lockup-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .lockup-title {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--ink-primary);
+    }
+
+    .lockup-sub {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+    }
+
+    .mono-rose {
+      --bg-blush: rgba(184, 62, 108, 0.08);
+      --bg-elevated: #FFF8F4;
+      --illus-fold: rgba(184, 62, 108, 0.22);
+      --accent-sparkle: var(--accent-rose);
+      --ink-primary: var(--accent-rose);
+      --accent-brand: var(--accent-rose);
+    }
+
+    .mono-light {
+      --bg-blush: rgba(255, 248, 244, 0.12);
+      --bg-elevated: rgba(255, 248, 244, 0.14);
+      --illus-fold: rgba(255, 248, 244, 0.28);
+      --accent-sparkle: #FFF8F4;
+      --accent-rose: #F5C2D4;
+      --ink-primary: #FFF8F4;
+      --accent-brand: var(--accent-rose);
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <!-- Favicon (24x24 grid): face page + 2 schedule blocks, with a simplified gear and pencil -->
+      <g id="logo-favicon">
+        <path d="M4 4h8.5L16 7.5v11.5a1.8 1.8 0 0 1-1.8 1.8H4a1.8 1.8 0 0 1-1.8-1.8V5.8A1.8 1.8 0 0 1 4 4z"
+              fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.4" stroke-linejoin="round" />
+        <path d="M12.5 4v3.5H16" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.4" stroke-linejoin="round" />
+        <circle cx="6.7" cy="10.4" r="1.05" fill="var(--ink-primary)" />
+        <circle cx="11.1" cy="10.4" r="1.05" fill="var(--ink-primary)" />
+        <path d="M7.5 12.7c.9.9 2.3.9 3.2 0" stroke="var(--ink-primary)" stroke-width="1.3" stroke-linecap="round" />
+        <rect x="4.6" y="15.3" width="4" height="2.2" rx="0.7" fill="var(--accent-rose)" />
+        <rect x="9.3" y="15.3" width="4" height="2.2" rx="0.7" fill="var(--accent-brand)" />
+        <g transform="translate(19.2 15.6) rotate(34)">
+          <rect x="-1.5" y="-5.6" width="3" height="9.2" rx="0.8" fill="var(--bg-elevated)" stroke="var(--accent-rose)" stroke-width="1.1" />
+          <path d="M-1.5 3.6l1.5 2.6 1.5-2.6" fill="var(--illus-fold)" stroke="var(--accent-rose)" stroke-width="1.1" stroke-linejoin="round" />
+        </g>
+        <g transform="translate(18.9 5.2)">
+          <path d="M-0.94 -3.06L-0.84 -4.32L0.84 -4.32L0.94 -3.06A3.20 3.20 0 0 1 1.50 -2.83L2.46 -3.65L3.65 -2.46L2.83 -1.50A3.20 3.20 0 0 1 3.06 -0.94L4.32 -0.84L4.32 0.84L3.06 0.94A3.20 3.20 0 0 1 2.83 1.50L3.65 2.46L2.46 3.65L1.50 2.83A3.20 3.20 0 0 1 0.94 3.06L0.84 4.32L-0.84 4.32L-0.94 3.06A3.20 3.20 0 0 1 -1.50 2.83L-2.46 3.65L-3.65 2.46L-2.83 1.50A3.20 3.20 0 0 1 -3.06 0.94L-4.32 0.84L-4.32 -0.84L-3.06 -0.94A3.20 3.20 0 0 1 -2.83 -1.50L-3.65 -2.46L-2.46 -3.65L-1.50 -2.83A3.20 3.20 0 0 1 -0.94 -3.06Z" fill="var(--accent-brand)" />
+          <circle cx="0" cy="0" r="1.3" fill="var(--bg-elevated)" />
+        </g>
+      </g>
+
+      <!-- Full logo (viewBox "16 12 64 64"): face page + mini schedule blocks + pencil + customization gear, no ring -->
+      <g id="logo-final">
+        <path d="M27 20h23l10 10v37a5.5 5.5 0 0 1-5.5 5.5H27a5.5 5.5 0 0 1-5.5-5.5V25.5A5.5 5.5 0 0 1 27 20z"
+              fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.7" stroke-linejoin="round" />
+        <path d="M50 20v10h10" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.7" stroke-linejoin="round" />
+
+        <circle cx="35.5" cy="39" r="2.2" fill="var(--ink-primary)" />
+        <circle cx="47.5" cy="39" r="2.2" fill="var(--ink-primary)" />
+        <ellipse cx="31.8" cy="43" rx="2.5" ry="1.35" fill="var(--accent-sparkle)" opacity="0.55" />
+        <ellipse cx="51.2" cy="43" rx="2.5" ry="1.35" fill="var(--accent-sparkle)" opacity="0.55" />
+        <path d="M38.8 44.8c1.5 1.6 4 1.6 5.5 0" stroke="var(--ink-primary)" stroke-width="1.65" stroke-linecap="round" />
+
+        <rect x="28.5" y="51.5" width="11.5" height="5" rx="1.8" fill="var(--accent-rose)" />
+        <rect x="42.5" y="51.5" width="11.5" height="5" rx="1.8" fill="var(--accent-brand)" />
+        <rect x="28.5" y="59.5" width="11.5" height="5" rx="1.8" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.2" />
+        <rect x="42.5" y="59.5" width="11.5" height="5" rx="1.8" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.2" stroke-dasharray="2 1.8" />
+
+        <g transform="translate(62 56) rotate(34)">
+          <rect x="-3.2" y="-12" width="6.4" height="21" rx="1.8" fill="var(--bg-elevated)" stroke="var(--accent-rose)" stroke-width="1.5" />
+          <line x1="-3.2" y1="-7.5" x2="3.2" y2="-7.5" stroke="var(--accent-rose)" stroke-width="1.25" />
+          <path d="M-3.2 9l3.2 5.8L3.2 9" fill="var(--illus-fold)" stroke="var(--accent-rose)" stroke-width="1.5" stroke-linejoin="round" />
+        </g>
+
+        <g transform="translate(65 25)">
+          <path d="M-2.11 -6.89L-1.83 -9.42L1.83 -9.42L2.11 -6.89A7.20 7.20 0 0 1 3.38 -6.36L5.37 -7.96L7.96 -5.37L6.36 -3.38A7.20 7.20 0 0 1 6.89 -2.11L9.42 -1.83L9.42 1.83L6.89 2.11A7.20 7.20 0 0 1 6.36 3.38L7.96 5.37L5.37 7.96L3.38 6.36A7.20 7.20 0 0 1 2.11 6.89L1.83 9.42L-1.83 9.42L-2.11 6.89A7.20 7.20 0 0 1 -3.38 6.36L-5.37 7.96L-7.96 5.37L-6.36 3.38A7.20 7.20 0 0 1 -6.89 2.11L-9.42 1.83L-9.42 -1.83L-6.89 -2.11A7.20 7.20 0 0 1 -6.36 -3.38L-7.96 -5.37L-5.37 -7.96L-3.38 -6.36A7.20 7.20 0 0 1 -2.11 -6.89Z" fill="var(--bg-elevated)" stroke="var(--accent-brand)" stroke-width="1.5" stroke-linejoin="round" />
+          <circle cx="0" cy="0" r="3" fill="var(--bg-blush)" stroke="var(--accent-brand)" stroke-width="1.4" />
+        </g>
+      </g>
+    </defs>
+  </svg>
+
+  <div class="container">
+    <header>
+      <h1>Logo &amp; favicon</h1>
+      <p>Hệ thống logo hoàn chỉnh: bản favicon rút gọn (16px–24px) & bản đầy đủ (40px+), cả hai đều không có viền tròn.</p>
+    </header>
+
+    <section class="hero-panel">
+      <div class="hero-art">
+        <svg width="168" height="168" viewBox="16 12 64 64" fill="none" role="img" aria-label="Logo trang kế hoạch học tập">
+          <use href="#logo-final" />
+        </svg>
+      </div>
+      <div class="hero-copy">
+        <h2>BKPath logo</h2>
+        <p>Khi thu nhỏ làm favicon (<code>16px–24px</code>), bánh răng và bút chì được vẽ đơn giản hơn để vẫn nhận ra trên tab trình duyệt; bánh răng và một khối lịch mang màu xanh thương hiệu.</p>
+        <div class="tag-row">
+          <span class="tag">No ring</span>
+          <span class="tag">Face Page</span>
+          <span class="tag">Schedule Blocks</span>
+          <span class="tag">Pencil + Gear</span>
+          <span class="tag">Blue gear + block = brand accent</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="forms-grid">
+      <!-- Favicon & Browser Tab -->
+      <div class="form-card">
+        <div class="form-label"><span>Favicon (gear + pencil)</span><code>16px / 24px</code></div>
+        <div class="form-stage">
+          <div class="favicon-stack">
+            <div class="favicon-sizes">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="#logo-favicon" /></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="#logo-favicon" /></svg>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="#logo-favicon" /></svg>
+            </div>
+            <div class="browser-tab">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="#logo-favicon" /></svg>
+              <span>Lộ trình học</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avatar / Badge -->
+      <div class="form-card">
+        <div class="form-label"><span>On blush (sidebar, login pane)</span><code>44px & 64px</code></div>
+        <div class="form-stage stage-blush">
+          <svg width="44" height="44" viewBox="16 12 64 64" fill="none" aria-hidden="true"><use href="#logo-final" /></svg>
+          <svg width="64" height="64" viewBox="16 12 64 64" fill="none" aria-hidden="true"><use href="#logo-final" /></svg>
+        </div>
+      </div>
+
+      <!-- Header Lockup -->
+      <div class="form-card">
+        <div class="form-label"><span>Header Lockup</span><code>40px + Brand</code></div>
+        <div class="form-stage">
+          <div class="lockup">
+            <svg width="40" height="40" viewBox="16 12 64 64" fill="none" aria-hidden="true"><use href="#logo-final" /></svg>
+            <div class="lockup-text">
+              <span class="lockup-title">BK<span style="color:var(--accent-brand)">Path</span></span>
+              <span class="lockup-sub">Cổng hoạch định học tập</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monochrome Rose -->
+      <div class="form-card">
+        <div class="form-label"><span>Monochrome Rose</span><code>Single Tone</code></div>
+        <div class="form-stage">
+          <svg class="mono-rose" width="84" height="84" viewBox="16 12 64 64" fill="none" aria-hidden="true"><use href="#logo-final" /></svg>
+        </div>
+      </div>
+
+      <!-- Dark / Plum Surface -->
+      <div class="form-card">
+        <div class="form-label"><span>Dark / Plum Surface</span><code>Inverted</code></div>
+        <div class="form-stage stage-dark">
+          <svg class="mono-light" width="84" height="84" viewBox="16 12 64 64" fill="none" aria-hidden="true"><use href="#logo-final" /></svg>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

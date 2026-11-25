@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BKPath – Controls</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="stylesheet" href="../../Frontend/src/styles/tokens.css">
+<link rel="stylesheet" href="template.css">
+<script src="template.js"></script>
+</head>
+<body>
+<main class="doc">
+  <header class="doc-head">
+    <h1>Controls</h1>
+    <p>Buttons, inputs, dropdown, search, switch, checkbox, chips and tabs. App: <code>components/Button</code>, <code>styles/antd-skin.css</code>, <code>components/ui/Controls.tsx</code>. Focus is always a 2px <code>--focus-ring</code> outline (press Tab).</p>
+  </header>
+
+  <!-- ===== Buttons ===== -->
+  <section class="spec">
+    <h2>Buttons</h2>
+    <p>One primary (rose stamp) per area. Stamps have a 4px radius and an inset hairline; hover is one step more emphatic. Danger actions confirm first.</p>
+    <h3>Primary and secondary stamp</h3>
+    <div class="demo-row">
+      <button class="btn btn-primary"><i class="ph ph-path"></i> Giải</button>
+      <button class="btn btn-primary btn-sm">Lưu</button>
+      <button class="btn btn-primary" disabled>Lưu</button>
+      <button class="btn btn-secondary"><i class="ph ph-file-arrow-up"></i> Nhập từ file</button>
+      <button class="btn btn-secondary btn-sm"><i class="ph ph-download-simple"></i> Tải file mẫu</button>
+      <button class="btn btn-secondary" disabled><i class="ph ph-floppy-disk"></i> Lưu bản này</button>
+    </div>
+    <h3>Large (login, block width)</h3>
+    <div style="display:grid; gap:12px; max-width:360px">
+      <button class="btn btn-primary btn-lg btn-block"><i class="ph ph-sign-in"></i> Đăng nhập vào cổng học tập</button>
+      <button class="btn btn-secondary btn-lg btn-block"><i class="ph ph-student"></i> Tạo tài khoản</button>
+    </div>
+    <h3>Tertiary, link, icon, danger</h3>
+    <div class="demo-row">
+      <button class="btn btn-tertiary">Hủy</button>
+      <button class="btn btn-tertiary">Hoàn tác</button>
+      <button class="btn btn-tertiary" disabled>Hoàn tác</button>
+      <button class="btn btn-link">Xem hướng dẫn</button>
+      <button class="btn btn-icon" aria-label="Sửa"><i class="ph ph-pencil-simple-line"></i></button>
+      <button class="btn btn-icon btn-sm" aria-label="Đóng"><i class="ph ph-x"></i></button>
+      <button class="btn btn-danger"><i class="ph ph-trash"></i> Xóa</button>
+    </div>
+  </section>
+
+  <!-- ===== Inputs ===== -->
+  <section class="spec">
+    <h2>Inputs and dropdown</h2>
+    <p>Every input is underlined: an <code>--ink-soft</code> line, rose with a soft glow on focus, terracotta on error. Labels are 11px uppercase; hints sit below.</p>
+    <div class="demo-grid">
+      <div class="field">
+        <label class="field-lbl" for="code">Mã môn tự chọn tự do</label>
+        <input id="code" class="input-line" placeholder="VD: IM1013">
+        <span class="field-hint">Nhập đúng mã theo danh mục</span>
+      </div>
+      <div class="field" data-error>
+        <label class="field-lbl" for="tc">Số tín chỉ mục tiêu</label>
+        <input id="tc" class="input-line" value="28">
+        <span class="field-hint"><i class="ph ph-warning-circle"></i> Vượt quy định tối đa 25 TC/kỳ</span>
+      </div>
+      <div class="field">
+        <span class="field-lbl">Trạng thái học phần</span>
+        <div class="select">
+          <button type="button" class="select-trigger"><span class="select-value"><span class="course-status" data-status="in-progress"><span class="bd" data-s="in-progress"></span>Đang học</span></span><i class="ph ph-caret-down"></i></button>
+          <div class="menu" role="listbox">
+            <button type="button" class="menu-opt" role="option" aria-selected="false"><span class="opt-label"><span class="course-status" data-status="completed"><span class="bd" data-s="completed"></span>Đã hoàn thành</span></span><i class="ph ph-check check"></i></button>
+            <button type="button" class="menu-opt" role="option" aria-selected="true"><span class="opt-label"><span class="course-status" data-status="in-progress"><span class="bd" data-s="in-progress"></span>Đang học</span></span><i class="ph ph-check check"></i></button>
+            <button type="button" class="menu-opt" role="option" aria-selected="false"><span class="opt-label"><span class="course-status" data-status="not-started"><span class="bd" data-s="not-started"></span>Chưa học</span></span><i class="ph ph-check check"></i></button>
+            <button type="button" class="menu-opt" role="option" aria-selected="false"><span class="opt-label"><span class="course-status" data-status="failed"><span class="bd" data-s="failed"></span>Chưa đạt</span></span><i class="ph ph-check check"></i></button>
+          </div>
+        </div>
+        <span class="field-hint">Bấm để mở danh sách</span>
+      </div>
+    </div>
+    <h3>Dropdown menu (open)</h3>
+    <div class="menu menu-static" style="max-width:300px">
+      <button type="button" class="menu-opt" aria-selected="false">Mọi trạng thái <i class="ph ph-check check"></i></button>
+      <button type="button" class="menu-opt" aria-selected="true">Đã lên kế hoạch <i class="ph ph-check check"></i></button>
+      <button type="button" class="menu-opt" aria-selected="false">Chưa khai <i class="ph ph-check check"></i></button>
+    </div>
+    <h3>Text area (paste area)</h3>
+    <div style="max-width:560px">
+      <div class="paste-label"><span>Ô dán nội dung trang myBK</span><span class="paste-count">Trống</span></div>
+      <textarea class="paste-area" placeholder="Dán nội dung đã sao chép từ trang Tiến độ hoàn thành chương trình đào tạo vào đây..."></textarea>
+    </div>
+  </section>
+
+  <!-- ===== Search ===== -->
+  <section class="spec">
+    <h2>Search</h2>
+    <p><code>SearchLine</code>: magnifier, × to clear, optional <code>/</code> shortcut hint; the tinted variant is for dense toolbars.</p>
+    <div class="demo-row">
+      <label class="search-line"><i class="ph ph-magnifying-glass"></i><input placeholder="Tìm theo mã hoặc tên môn"><span class="search-kbd">/</span></label>
+      <label class="search-line" data-tinted><i class="ph ph-magnifying-glass"></i><input value="CO3001"><button type="button" class="search-clear" aria-label="Xóa tìm kiếm"><i class="ph ph-x"></i></button></label>
+    </div>
+  </section>
+
+  <!-- ===== Switch, checkbox ===== -->
+  <section class="spec">
+    <h2>Switch and checkbox</h2>
+    <p>The switch is a bead on a thread: off = an <code>--ink-soft</code> ring, on = a filled rose bead with a glow. <code>LabeledSwitch</code> for inline filters, <code>ToggleRow</code> for settings. Checkbox and radio keep their native shape with a 3:1 edge.</p>
+    <div class="demo-row">
+      <label class="switch-row"><span class="thread-switch"><input type="checkbox"><span class="bead-knob"></span></span>Chỉ môn chưa đạt</label>
+      <label class="switch-row"><span class="thread-switch"><input type="checkbox" checked><span class="bead-knob"></span></span>Hiện môn đã học</label>
+      <label class="check-row"><input type="checkbox">nghỉ</label>
+      <label class="check-row"><input type="checkbox" checked>Học hè kỳ này</label>
+      <label class="check-row"><input type="radio" name="r" checked>Đậu</label>
+      <label class="check-row"><input type="radio" name="r">Rớt</label>
+    </div>
+    <h3>Toggle rows (settings)</h3>
+    <div class="toggle-list">
+      <label class="toggle-row"><span><span class="toggle-title">Ra trường sớm nhất</span><span class="toggle-sub">Bộ giải ưu tiên xếp để tốt nghiệp ở kỳ sớm nhất có thể</span></span><span class="thread-switch"><input type="checkbox" checked><span class="bead-knob"></span></span></label>
+      <label class="toggle-row"><span><span class="toggle-title">Mỗi kỳ chính 15–18 TC</span><span class="toggle-sub">Cảnh báo khi một kỳ chính nằm ngoài khoảng này</span></span><span class="thread-switch"><input type="checkbox"><span class="bead-knob"></span></span></label>
+    </div>
+  </section>
+
+  <!-- ===== Chips, tabs ===== -->
+  <section class="spec">
+    <h2>Chips and tabs</h2>
+    <p>Chips (<code>Segmented</code>) switch views or filters inside a section: separate chips, hairline edge, selected = sparkle edge + blush + rose. Tabs (<code>PageTabs</code>) switch the sections of a page; the bar hides when there is one section.</p>
+    <h3>Chips</h3>
+    <div class="chips">
+      <button type="button" class="chip" aria-pressed="true">Theo học kỳ</button>
+      <button type="button" class="chip" aria-pressed="false">Theo khối kiến thức (6)</button>
+      <button type="button" class="chip" aria-pressed="false">Nhóm học phần (22)</button>
+      <button type="button" class="chip" aria-pressed="false">Chuyên ngành (5)</button>
+      <button type="button" class="chip" aria-pressed="false">Danh mục môn học</button>
+    </div>
+    <h3>Small chips</h3>
+    <div class="chips chips-sm">
+      <button type="button" class="chip" aria-pressed="true">Đậu</button>
+      <button type="button" class="chip" aria-pressed="false">Rớt</button>
+      <button type="button" class="chip" aria-pressed="false">Tiếng Việt</button>
+      <button type="button" class="chip" aria-pressed="false">English</button>
+    </div>
+    <h3>Tabs</h3>
+    <div class="tabbar" role="tablist">
+      <button type="button" class="tab" role="tab" aria-selected="false">Tiến độ</button>
+      <button type="button" class="tab" role="tab" aria-selected="true">Phân tích</button>
+    </div>
+    <div class="tabbar" role="tablist">
+      <button type="button" class="tab" role="tab" aria-selected="true"><i class="ph ph-file-pdf"></i>Tải file PDF</button>
+      <button type="button" class="tab" role="tab" aria-selected="false"><i class="ph ph-clipboard-text"></i>Dán nội dung trang</button>
+    </div>
+  </section>
+</main>
+</body>
+</html>

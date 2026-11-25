@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BKPath – Semester timeline & bead family</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="stylesheet" href="../../Frontend/src/styles/tokens.css">
+<link rel="stylesheet" href="template.css">
+<script src="template.js"></script>
+<style>
+/* ===== A. Semester timeline =====
+ * The thread is the timeline motif ("thread + beads"), the one line allowed to run down the page.
+ * Each row draws its own two segments (above / below its checkpoint) with a knockout gap (--mark-gap) around
+ * the marker, so the thread never runs behind a sparkle. App: pages/recommendations (SemesterBoard, .sem-*).
+ */
+.tl { display: flex; flex-direction: column; }
+.tl-row {
+  --mark-y: 27px;
+  --mark-gap: 13px;
+  display: grid; grid-template-columns: 28px 160px minmax(0, 1fr); align-items: start;
+  border-bottom: 1px solid var(--line-hairline);
+}
+.tl-row:last-child { border-bottom: 0; }
+.tl-gutter { position: relative; align-self: stretch; }
+.tl-gutter::before, .tl-gutter::after { content: ''; position: absolute; left: 14px; width: 0; transform: translateX(-50%); }
+.tl-gutter::before { top: 0; height: max(0px, calc(var(--mark-y) - var(--mark-gap))); }
+.tl-gutter::after { top: calc(var(--mark-y) + var(--mark-gap)); bottom: -1px; }
+.tl-row[data-above='fade'] .tl-gutter::before { width: 2px; background: linear-gradient(transparent, var(--accent-rose)); }
+.tl-row[data-above='plan'] .tl-gutter::before,
+.tl-row[data-below='plan'] .tl-gutter::after { border-left: 1.5px dashed var(--accent-sparkle); }
+.tl-mark { position: absolute; left: 14px; top: var(--mark-y); display: grid; place-items: center; line-height: 0; transform: translate(-50%, -50%); }
+.tl-row[data-fold] { --mark-y: 19px; --mark-gap: 9px; }
+.tl-row[data-grad] { --mark-gap: 15px; }
+.tl-row[data-ok] { background: var(--bg-blush); }
+.tl-head, .tl-lane { padding: 14px 0; }
+.tl-row[data-fold] .tl-head, .tl-row[data-fold] .tl-lane { padding: 8px 0; }
+.tl-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.tl-code { font-family: var(--serif); font-size: 26px; font-weight: 500; line-height: 1.1; }
+.tl-code-fold { color: var(--ink-muted); font-family: var(--serif); font-size: 18px; }
+.tl-tc { color: var(--ink-muted); font-size: 12.5px; }
+.tl-tag { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.tl-tag-next { color: var(--accent-brand); }
+.tl-tag-grad { color: var(--accent-rose); }
+/* Credits accumulated after this semester: what the thread progresses through. */
+.tl-total { margin-top: 2px; color: var(--ink-muted); font-size: 12px; white-space: nowrap; }
+.tl-total b, .tl-past-meta b { color: var(--ink-primary); font-weight: 600; }
+.tl-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 4px; font-size: 11px; }
+.tl-controls .check-row { color: var(--ink-muted); font-size: 12px; }
+.tl-past .tl-code-fold { color: var(--ink-primary); }
+.tl-past-meta { color: var(--ink-muted); font-size: 12.5px; }
+.tl-mini { width: 120px; height: 2px; margin-top: 8px; border-radius: 2px; background: var(--line-hairline); }
+.tl-mini > i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent-sparkle), var(--accent-rose)); }
+.tl-after { padding: 10px 0 0 42px; color: var(--ink-soft); font-size: 12.5px; }
+.tl-warn { flex-basis: 100%; color: var(--sem-warn); font-size: 12px; }
+
+/* Course bead on the timeline (suggested course) */
+.lane { display: flex; flex-wrap: wrap; gap: 18px 10px; padding-top: 4px; }
+.cbead { width: 132px; padding: 4px; border: 0; border-radius: 4px; background: none; text-align: left; }
+.cbead[aria-expanded='true'] { background: var(--bg-blush); }
+.cbead:hover .bd { transform: scale(1.2); }
+.cbead-head { display: flex; align-items: center; gap: 7px; }
+.cbead-code { font-size: 12.5px; font-weight: 600; letter-spacing: .02em; }
+.cbead[aria-expanded='true'] .cbead-code { color: var(--accent-rose); }
+.cbead-name { margin-top: 1px; color: var(--ink-muted); font-size: 11px; line-height: 1.3; }
+.bead-detail { display: flex; flex-basis: 100%; flex-direction: column; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line-hairline); background: var(--bg-blush); }
+.bead-detail-head { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
+.bead-detail-head .btn-icon { margin-left: auto; }
+.bead-facts { display: flex; flex-wrap: wrap; gap: 2px 16px; margin: 0; padding: 0 0 0 19px; color: var(--ink-muted); font-size: 12.5px; list-style: none; }
+.bead-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding-left: 13px; }
+
+/* ===== B. Course card (Chương trình board) ===== */
+.board-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 16px; color: var(--ink-muted); font-size: 12.5px; }
+.board-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 16px 12px; }
+.card { --accent: var(--ink-muted); position: relative; padding: 6px; border-radius: 4px; }
+.card:hover { background: var(--bg-tint-hover); }
+.card[data-status='completed'] { --accent: var(--sem-good); }
+.card[data-status='in-progress'] { --accent: var(--accent-rose); }
+.card[data-status='failed'] { --accent: var(--sem-err); }
+.card[data-status='planned'] { --accent: var(--ink-muted); }
+.card-top { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
+.card-code { font-weight: 600; letter-spacing: .02em; }
+.card-tc { color: var(--ink-muted); font-size: 11.5px; }
+.card-link { position: absolute; top: 6px; right: 6px; color: var(--ink-soft); font-size: 12px; }
+.card-name { padding-left: 17px; color: var(--ink-muted); font-size: 12px; line-height: 1.35; }
+.card-meta { display: flex; align-items: center; gap: 6px; padding-left: 17px; font-size: 11px; }
+.card-status { color: var(--accent); font-weight: 600; }
+.card[data-status='none'] .card-status, .card[data-status='not-started'] .card-status { color: var(--ink-muted); font-weight: 400; }
+.card-plan { padding-left: 17px; margin-top: 2px; font-size: 11.5px; }
+.card-plan button { padding: 0; border: 0; border-bottom: 1px dashed var(--ink-soft); background: none; color: var(--accent-rose); font-size: 11.5px; }
+
+table.family { width: 100%; border-collapse: collapse; font-size: 13px; }
+.family th { padding: 8px 10px; border-bottom: 1px solid var(--line-hairline); color: var(--ink-soft); font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
+.family td { padding: 10px; border-bottom: 1px solid var(--line-hairline); vertical-align: middle; }
+.family td.c { width: 90px; text-align: center; }
+.family .big { transform: scale(1.8); }
+.family .why { color: var(--ink-muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><path id="sparkle" d="M12 1.5C12.7 8.2 15.8 11.3 22.5 12C15.8 12.7 12.7 15.8 12 22.5C11.3 15.8 8.2 12.7 1.5 12C8.2 11.3 11.3 8.2 12 1.5Z" /></defs>
+</svg>
+<main class="doc">
+  <header class="doc-head">
+    <h1>Semester timeline &amp; bead family</h1>
+    <p>A: the Gợi ý lộ trình timeline, semester checkpoints as sparkles on a thread that shows progress. B: the bead family, one ring per course whose shape carries its state, used on every page. App: <code>SemesterBoard.tsx</code>, <code>components/ui/Bead.tsx</code>.</p>
+  </header>
+
+  <!-- ================= A. Timeline ================= -->
+  <section class="spec">
+    <h2>A. Semester timeline</h2>
+    <p>The thread is solid where it fades in from the past, dashed for the plan, and ends at the graduation semester. Each checkpoint shows the credits accumulated after it. Empty semesters after graduation are hidden (they come back while a course is being moved, as targets).</p>
+
+    <div class="tl">
+      <!-- Past: one compact row for every semester already behind the student -->
+      <div class="tl-row tl-past" data-above="fade" data-below="plan" data-fold>
+        <div class="tl-gutter"><span class="tl-mark"><span class="bd" data-s="completed"></span></span></div>
+        <div class="tl-head"><span class="tl-code-fold">231 – 261</span></div>
+        <div class="tl-lane">
+          <div class="tl-past-meta">Đã qua 6 kỳ · đang ở 261 · tích lũy <b>106</b>/128 TC</div>
+          <div class="tl-mini"><i style="width: 83%"></i></div>
+        </div>
+      </div>
+
+      <!-- Next semester: solid brand-blue sparkle; one course expanded -->
+      <div class="tl-row" data-above="plan" data-below="plan">
+        <div class="tl-gutter"><span class="tl-mark"><svg class="spark-mark" data-variant="next" width="18" height="18" viewBox="0 0 24 24"><use href="#sparkle" /></svg></span></div>
+        <div class="tl-head">
+          <div class="tl-title"><span class="tl-code">262</span><span class="tl-tc">16 TC</span></div>
+          <div class="tl-tag tl-tag-next">Kỳ tới</div>
+          <div class="tl-total">→ <b>122</b>/128 TC</div>
+          <div class="tl-controls"><label class="check-row"><input type="checkbox">nghỉ</label><span class="hint">muốn — TC</span></div>
+        </div>
+        <div class="tl-lane lane">
+          <button class="cbead" aria-expanded="true"><span class="cbead-head"><span class="bd" data-s="suggest"></span><span class="cbead-code">CO4029</span></span><span class="cbead-name">Đồ án Chuyên ngành</span></button>
+          <button class="cbead" aria-expanded="false"><span class="cbead-head"><span class="bd" data-s="suggest"></span><span class="cbead-code">SP1037</span></span><span class="cbead-name">Tư tưởng Hồ Chí Minh</span></button>
+          <button class="cbead" aria-expanded="false"><span class="cbead-head"><span class="bd" data-s="suggest"></span><span class="cbead-code">Tự chọn</span></span><span class="cbead-name">Chuyên ngành – nhóm C · 3 TC</span></button>
+          <button class="cbead" aria-expanded="false"><span class="cbead-head"><span class="bd" data-s="suggest" data-dashed></span><span class="cbead-code">Tự chọn tự do</span></span><span class="cbead-name">3 TC · gõ mã môn bất kỳ</span></button>
+          <section class="bead-detail" aria-label="CO4029">
+            <div class="bead-detail-head"><span class="bd" data-s="suggest"></span>CO4029 · Đồ án Chuyên ngành<button class="btn btn-icon btn-sm" aria-label="Thu gọn"><i class="ph ph-x"></i></button></div>
+            <ul class="bead-facts"><li>2 TC · Bắt buộc</li><li>Đã ghim vào kỳ này</li></ul>
+            <div class="bead-actions">
+              <button class="btn btn-tertiary"><i class="ph ph-arrows-left-right"></i> Chuyển kỳ…</button>
+              <button class="btn btn-tertiary"><i class="ph ph-push-pin-slash"></i> Bỏ ghim</button>
+              <button class="btn btn-tertiary"><i class="ph ph-calendar-x"></i> Kỳ 262 không mở môn này</button>
+              <button class="btn btn-tertiary"><i class="ph ph-x-circle"></i> Giả định rớt kỳ này</button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Summer / off semester: folded, small ring, no sparkle -->
+      <div class="tl-row" data-above="plan" data-below="plan" data-fold>
+        <div class="tl-gutter"><span class="tl-mark"><span class="bd small" data-s="not-started" data-tone="sparkle"></span></span></div>
+        <div class="tl-head"><span class="tl-code-fold">263 · hè</span></div>
+        <div class="tl-lane"><label class="check-row"><input type="checkbox">Học hè kỳ này</label></div>
+      </div>
+
+      <!-- Upcoming main semester: hollow sparkle; a course with a warning is an amber ring -->
+      <div class="tl-row" data-above="plan" data-below="plan">
+        <div class="tl-gutter"><span class="tl-mark"><svg class="spark-mark" data-variant="future" width="17" height="17" viewBox="0 0 24 24"><use href="#sparkle" /></svg></span></div>
+        <div class="tl-head">
+          <div class="tl-title"><span class="tl-code">271</span><span class="tl-tc">3 TC</span></div>
+          <div class="tl-total">→ <b>125</b>/128 TC</div>
+        </div>
+        <div class="tl-lane lane">
+          <span class="tl-warn">Kỳ này có 3 TC, dưới mức tối thiểu 11 TC. Nếu cần, bạn hỏi phòng đào tạo nhé.</span>
+          <button class="cbead" aria-expanded="false"><span class="cbead-head"><span class="bd" data-s="suggest" data-tone="warn"></span><span class="cbead-code">Tự chọn</span></span><span class="cbead-name">Chuyên ngành – nhóm C · 3 TC</span></button>
+        </div>
+      </div>
+
+      <!-- Graduation semester: solid rose sparkle with a glow; the thread ends here -->
+      <div class="tl-row" data-above="plan" data-below="none" data-grad>
+        <div class="tl-gutter"><span class="tl-mark"><svg class="spark-mark" data-variant="grad" width="22" height="22" viewBox="0 0 24 24"><use href="#sparkle" /></svg></span></div>
+        <div class="tl-head">
+          <div class="tl-title"><span class="tl-code">272</span><span class="tl-tc">3 TC</span></div>
+          <div class="tl-tag tl-tag-grad">Ra trường</div>
+          <div class="tl-total">→ <b>128</b>/128 TC</div>
+        </div>
+        <div class="tl-lane lane">
+          <button class="cbead" aria-expanded="false"><span class="cbead-head"><span class="bd" data-s="suggest"></span><span class="cbead-code">CO4337</span></span><span class="cbead-name">Đồ án Tốt nghiệp</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="tl-after">Sau kỳ ra trường: 273, 281 — không có môn, đã ẩn</div>
+
+    <p class="note">Checkpoints: next semester = solid blue sparkle + "KỲ TỚI" (brand blue means "where you are going") · upcoming semester = hollow sparkle · summer / off = small ring, folded · graduation = solid rose sparkle with a glow + "RA TRƯỜNG". Move mode: rows that can take the course turn blush with "Chuyển vào đây"; the others fade with the reason.</p>
+  </section>
+
+  <!-- ================= B. Bead family ================= -->
+  <section class="spec">
+    <h2>B. Bead family</h2>
+    <p>Every course is a <b>ring</b> (a bead with a hole, on the curriculum's thread). The state lives in the ring's <b>shape</b>; color only reinforces it, so it reads without color. A solid 6px pip is a <b>flag</b> on a row, never a state.</p>
+    <table class="family">
+      <thead><tr><th>State</th><th style="text-align:center">Bead</th><th>What the shape says</th></tr></thead>
+      <tbody>
+        <tr><td>Chưa khai</td><td class="c"><span class="bd big" data-s="none"></span></td><td class="why">Faint dotted ring: no information yet</td></tr>
+        <tr><td>Chưa học</td><td class="c"><span class="bd big" data-s="not-started"></span></td><td class="why">Empty ring: not threaded yet</td></tr>
+        <tr><td>Đã lên kế hoạch</td><td class="c"><span class="bd big" data-s="planned"></span></td><td class="why">Dashed ring: intended, like the planned part of the thread</td></tr>
+        <tr><td>Đang học</td><td class="c"><span class="bd big" data-s="in-progress"></span></td><td class="why">Half filled: halfway there</td></tr>
+        <tr><td>Đã hoàn thành</td><td class="c"><span class="bd big" data-s="completed"></span></td><td class="why">Filled bead with a pinhole: threaded</td></tr>
+        <tr><td>Chưa đạt</td><td class="c"><span class="bd big" data-s="failed"></span></td><td class="why">Slashed ring: broken, to be retaken</td></tr>
+        <tr><td>Gợi ý (timeline)</td><td class="c"><span class="bd big" data-s="suggest"></span></td><td class="why">Pink ring; amber when it has a warning; dashed for a free-elective slot</td></tr>
+        <tr><td>Chưa lưu · khác file myBK · khác (So sánh)</td><td class="c"><span class="pip"></span>&nbsp;<span class="pip" data-tone="err"></span>&nbsp;<span class="pip" data-tone="rose"></span></td><td class="why">Flags on a row, not states: solid 6px pips</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Course cards (Chương trình board)</h3>
+    <div class="board-legend">
+      <span><span class="bd" data-s="none"></span>Chưa khai</span>
+      <span><span class="bd" data-s="planned"></span>Đã lên kế hoạch</span>
+      <span><span class="bd" data-s="completed"></span>Đã hoàn thành</span>
+      <span><span class="bd" data-s="in-progress"></span>Đang học</span>
+      <span><span class="bd" data-s="failed"></span>Chưa đạt</span>
+      <span><span class="bd" data-s="not-started"></span>Chưa học</span>
+      <span><span class="pip"></span>Chưa lưu</span>
+    </div>
+    <div class="cards">
+      <div class="card" data-status="completed"><div class="card-top"><span class="bd" data-s="completed"></span><span class="card-code">CO1005</span><span class="card-tc">3 TC</span></div><i class="ph ph-arrow-up-right card-link"></i><div class="card-name">Nhập môn Điện toán</div><div class="card-meta"><span class="card-status">Đã hoàn thành</span></div></div>
+      <div class="card" data-status="in-progress"><div class="card-top"><span class="bd" data-s="in-progress"></span><span class="card-code">CO2003</span><span class="card-tc">4 TC</span></div><i class="ph ph-arrow-up-right card-link"></i><div class="card-name">Cấu trúc Dữ liệu và Giải thuật</div><div class="card-meta"><span class="card-status">Đang học</span></div></div>
+      <div class="card" data-status="planned"><div class="card-top"><span class="bd" data-s="planned"></span><span class="card-code">CO4029</span><span class="card-tc">2 TC</span></div><i class="ph ph-arrow-up-right card-link"></i><div class="card-name">Đồ án Chuyên ngành</div><div class="card-meta"><span class="card-status">Đã lên kế hoạch</span></div><div class="card-plan"><button>− HK 262 +</button> <button>×</button></div></div>
+      <div class="card" data-status="not-started"><div class="card-top"><span class="bd" data-s="not-started"></span><span class="card-code">SP1037</span><span class="card-tc">2 TC</span><span class="pip" style="margin-left:auto; margin-right:16px"></span></div><i class="ph ph-arrow-up-right card-link"></i><div class="card-name">Tư tưởng Hồ Chí Minh</div><div class="card-meta"><span class="card-status">Chưa học</span></div><div class="card-plan"><button>+ Lên kế hoạch</button></div></div>
+      <div class="card" data-status="failed"><div class="card-top"><span class="bd" data-s="failed"></span><span class="card-code">MT2013</span><span class="card-tc">4 TC</span></div><i class="ph ph-arrow-up-right card-link"></i><div class="card-name">Xác suất và Thống kê</div><div class="card-meta"><span class="card-status">Chưa đạt</span></div></div>
+      <div class="card" data-status="none"><div class="card-top"><span class="bd" data-s="none"></span><span class="card-code">SA4001</span><span class="card-tc">0 TC</span></div><i class="ph ph-arrow-up-right card-link"></i><div class="card-name">Hoạt động sinh viên</div><div class="card-meta"><span class="card-status">Chưa khai</span></div></div>
+    </div>
+    <p class="note">Click a card to change its status; the text row under it plans the course ("+ Lên kế hoạch" or "− HK 262 + ×"); the small arrow opens the course page; an amber pip marks an unsaved change. The same rings appear in <code>CourseStatus</code>, the course groups and tags.</p>
+  </section>
+</main>
+</body>
+</html>

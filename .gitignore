@@ -23,7 +23,22 @@ coverage/
 .DS_Store
 Thumbs.db
 .idea/
+.vscode/
 .editorconfig
+
+# Personal AI-agent configuration (each user's own, not project files)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+AGENTS.md
+GEMINI.md
+.gemini/
+.codex/
+.cursor/
+.cursorrules
+.windsurfrules
+.aider*
+.github/copilot-instructions.md
 .gitattributes
 
 # Dữ liệu JSON sinh ra cho scripts backend

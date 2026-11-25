@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BKPath – Đăng nhập</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="stylesheet" href="../../Frontend/src/styles/tokens.css">
+<link rel="stylesheet" href="template.css">
+<script src="template.js"></script>
+<style>
+/* Login / register: split editorial layout. App: layouts/auth (auth.css), pages/auth. The register page uses the same
+   layout with more fields. Only what the backend supports is shown (no "remember me", no "forgot password"). */
+body { overflow-x: hidden; }
+.theme-switch { display: none; } /* the page has its own theme toggle, top right */
+.login-shell { display: grid; grid-template-columns: 44% 56%; min-height: 100vh; }
+.brand-pane { position: relative; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 44px 52px; border-right: 1px solid var(--line-hairline); background: var(--bg-blush); }
+.brand-pane::after { position: absolute; top: 0; right: 36px; bottom: 0; width: 1px; background: linear-gradient(180deg, transparent, var(--line-hairline) 20%, var(--line-hairline) 80%, transparent); content: ''; }
+.brand-lockup { display: inline-flex; align-items: center; gap: 11px; color: var(--ink-primary); text-decoration: none; }
+.brand-lockup svg { width: 40px; height: 40px; }
+.brand-name { font-family: var(--serif); font-size: 24px; font-weight: 500; letter-spacing: -.01em; }
+.brand-name span { color: var(--accent-brand); }
+.editorial-pitch { max-width: 380px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; color: var(--accent-rose); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.editorial-pitch h2 { margin: 0 0 16px; font-family: var(--serif); font-size: 34px; font-weight: 500; line-height: 1.18; letter-spacing: -.01em; }
+.editorial-pitch p { margin: 0 0 28px; color: var(--ink-muted); font-size: 13.5px; }
+.feature-thread { display: flex; flex-direction: column; gap: 14px; padding-top: 20px; border-top: 1px solid var(--line-hairline); }
+.feat-item { display: flex; align-items: baseline; gap: 10px; font-size: 13px; }
+.feat-item i { flex: none; color: var(--accent-rose); font-size: 15px; transform: translateY(2px); }
+.pane-foot { color: var(--ink-muted); font-size: 12px; line-height: 1.6; }
+.form-pane { position: relative; display: flex; align-items: center; justify-content: center; padding: 44px 56px; }
+.top-utility { position: absolute; top: 24px; right: 32px; display: flex; align-items: center; gap: 8px; }
+.top-utility button { display: inline-flex; align-items: center; gap: 4px; padding: 6px; border: 0; border-radius: 50%; background: none; color: var(--ink-muted); font-size: 13px; font-weight: 500; }
+.top-utility button:hover { color: var(--accent-rose); }
+.top-utility i { font-size: 18px; }
+.form-box { width: 100%; max-width: 380px; }
+.auth-title { display: flex; align-items: center; gap: 9px; margin: 0 0 32px; font-family: var(--serif); font-size: 36px; font-weight: 500; letter-spacing: -.01em; }
+.auth-title i { color: var(--accent-rose); font-size: 22px; }
+.auth-field { margin-bottom: 26px; }
+.auth-input { display: flex; align-items: center; gap: 10px; padding: 7px 2px; border-bottom: 1px solid var(--ink-soft); transition: border-color .16s, box-shadow .16s; }
+.auth-input:focus-within { border-bottom-color: var(--accent-rose); box-shadow: 0 3px 0 -1px var(--accent-glow); }
+.auth-input > i { color: var(--ink-soft); font-size: 17px; }
+.auth-input:focus-within > i { color: var(--accent-rose); }
+.auth-input input { flex: 1; min-width: 0; border: 0; background: none; outline: 0; font-size: 14px; }
+.auth-input input::placeholder { color: var(--ink-soft); }
+.eye-btn { display: grid; padding: 0; border: 0; background: none; color: var(--ink-soft); font-size: 17px; }
+.divider-line { display: flex; align-items: center; gap: 14px; margin: 24px 0; color: var(--ink-soft); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; }
+.divider-line::before, .divider-line::after { flex: 1; height: 1px; background: var(--line-hairline); content: ''; }
+@media (max-width: 900px) { .login-shell { grid-template-columns: 1fr; } .brand-pane { display: none; } .form-pane { padding: 32px 24px; } }
+</style>
+</head>
+<body>
+<div class="login-shell">
+  <aside class="brand-pane" aria-label="Giới thiệu BKPath">
+    <a href="#" class="brand-lockup"><svg viewBox="16 12 64 64" fill="none" aria-hidden="true"><path d="M27 20h23l10 10v37a5.5 5.5 0 0 1-5.5 5.5H27a5.5 5.5 0 0 1-5.5-5.5V25.5A5.5 5.5 0 0 1 27 20z" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.7" stroke-linejoin="round" /> <path d="M50 20v10h10" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.7" stroke-linejoin="round" /> <circle cx="35.5" cy="39" r="2.2" fill="var(--ink-primary)" /> <circle cx="47.5" cy="39" r="2.2" fill="var(--ink-primary)" /> <ellipse cx="31.8" cy="43" rx="2.5" ry="1.35" fill="var(--accent-sparkle)" opacity="0.55" /> <ellipse cx="51.2" cy="43" rx="2.5" ry="1.35" fill="var(--accent-sparkle)" opacity="0.55" /> <path d="M38.8 44.8c1.5 1.6 4 1.6 5.5 0" stroke="var(--ink-primary)" stroke-width="1.65" stroke-linecap="round" /> <rect x="28.5" y="51.5" width="11.5" height="5" rx="1.8" fill="var(--accent-rose)" /> <rect x="42.5" y="51.5" width="11.5" height="5" rx="1.8" fill="var(--accent-brand)" /> <rect x="28.5" y="59.5" width="11.5" height="5" rx="1.8" fill="var(--illus-fold)" stroke="var(--accent-sparkle)" stroke-width="1.2" /> <rect x="42.5" y="59.5" width="11.5" height="5" rx="1.8" fill="var(--bg-elevated)" stroke="var(--accent-sparkle)" stroke-width="1.2" stroke-dasharray="2 1.8" /> <g transform="translate(62 56) rotate(34)"> <rect x="-3.2" y="-12" width="6.4" height="21" rx="1.8" fill="var(--bg-elevated)" stroke="var(--accent-rose)" stroke-width="1.5" /> <line x1="-3.2" y1="-7.5" x2="3.2" y2="-7.5" stroke="var(--accent-rose)" stroke-width="1.25" /> <path d="M-3.2 9l3.2 5.8L3.2 9" fill="var(--illus-fold)" stroke="var(--accent-rose)" stroke-width="1.5" stroke-linejoin="round" /> </g> <g transform="translate(65 25)"> <path d="M-2.11 -6.89L-1.83 -9.42L1.83 -9.42L2.11 -6.89A7.20 7.20 0 0 1 3.38 -6.36L5.37 -7.96L7.96 -5.37L6.36 -3.38A7.20 7.20 0 0 1 6.89 -2.11L9.42 -1.83L9.42 1.83L6.89 2.11A7.20 7.20 0 0 1 6.36 3.38L7.96 5.37L5.37 7.96L3.38 6.36A7.20 7.20 0 0 1 2.11 6.89L1.83 9.42L-1.83 9.42L-2.11 6.89A7.20 7.20 0 0 1 -3.38 6.36L-5.37 7.96L-7.96 5.37L-6.36 3.38A7.20 7.20 0 0 1 -6.89 2.11L-9.42 1.83L-9.42 -1.83L-6.89 -2.11A7.20 7.20 0 0 1 -6.36 -3.38L-7.96 -5.37L-5.37 -7.96L-3.38 -6.36A7.20 7.20 0 0 1 -2.11 -6.89Z" fill="var(--bg-elevated)" stroke="var(--accent-brand)" stroke-width="1.5" stroke-linejoin="round" /> <circle cx="0" cy="0" r="3" fill="var(--bg-blush)" stroke="var(--accent-brand)" stroke-width="1.4" /> </g></svg><span class="brand-name">BK<span>Path</span></span></a>
+    <div class="editorial-pitch">
+      <div class="eyebrow"><i class="ph ph-compass"></i> Cổng hoạch định học tập</div>
+      <h2>Thiết kế lộ trình tốt nghiệp theo nhịp độ của riêng bạn.</h2>
+      <p>Theo dõi tín chỉ tích lũy, kiểm tra điều kiện tiên quyết và mô phỏng các kịch bản đăng ký môn học chỉ trong vài giây.</p>
+      <div class="feature-thread">
+        <div class="feat-item"><i class="ph ph-path"></i><span>Tự động gợi ý lộ trình tối ưu số kỳ học và tải tín chỉ</span></div>
+        <div class="feat-item"><i class="ph ph-arrows-split"></i><span>Mô phỏng giả định What-If trước mỗi đợt đăng ký môn</span></div>
+        <div class="feat-item"><i class="ph ph-chart-bar"></i><span>Đối chiếu trực quan tiến độ từng khối kiến thức</span></div>
+      </div>
+    </div>
+    <div class="pane-foot">Hệ thống hỗ trợ lập kế hoạch học tập; kết quả không thay thế xác nhận chính thức của nhà trường.<br>Năm học 2026–2027</div>
+  </aside>
+
+  <main class="form-pane">
+    <div class="top-utility">
+      <button type="button" aria-label="Chế độ tối" onclick="document.querySelector('.theme-switch').click()"><i class="ph ph-moon"></i></button>
+      <button type="button" style="border-radius:4px"><i class="ph ph-globe" style="font-size:16px"></i>VN <i class="ph ph-caret-down caret" style="font-size:11px; color:var(--ink-soft)"></i></button>
+    </div>
+    <div class="form-box">
+      <h1 class="auth-title">Đăng nhập <i class="ph-fill ph-sparkle"></i></h1>
+      <form onsubmit="event.preventDefault()">
+        <div class="auth-field">
+          <label class="field-lbl" for="email">Email</label>
+          <div class="auth-input"><i class="ph ph-envelope-simple"></i><input id="email" type="email" placeholder="ten.ho@hcmut.edu.vn" autocomplete="email"></div>
+        </div>
+        <div class="auth-field">
+          <label class="field-lbl" for="pwd">Mật khẩu</label>
+          <div class="auth-input"><i class="ph ph-lock-simple"></i><input id="pwd" type="password" placeholder="Nhập mật khẩu của bạn" autocomplete="current-password"><button type="button" class="eye-btn" aria-label="Hiện mật khẩu" onclick="const i=document.getElementById('pwd'); i.type=i.type==='password'?'text':'password'"><i class="ph ph-eye-slash"></i></button></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block"><i class="ph ph-sign-in"></i> Đăng nhập vào cổng học tập</button>
+        <div class="divider-line">hoặc</div>
+        <button type="button" class="btn btn-secondary btn-lg btn-block"><i class="ph ph-student"></i> Tạo tài khoản</button>
+      </form>
+    </div>
+  </main>
+</div>
+</body>
+</html>
