@@ -46,6 +46,15 @@ interface CourseOutlineSectionProps {
 
 const courseLink = (code: string) => <Link to={`/courses/${encodeURIComponent(code)}`}><Text strong>{code}</Text></Link>;
 
+/**
+ * Chip mã có tô màu (nền nhạt + viền + chữ cùng tông). Dùng thay `Tag` của antd vì skin chung vẽ Tag thành
+ * chấm tròn + chữ, khiến mã chuẩn đầu ra, mã hoạt động đánh giá và loại điều kiện trông giống hệt nhau.
+ */
+type ChipTone = 'outcome' | 'activity' | 'err' | 'warn' | 'muted';
+const Chip = ({ tone, children }: { tone: ChipTone; children: ReactNode }) => (
+    <span className="outline-chip" data-tone={tone}>{children}</span>
+);
+
 const TextBlock = ({ title, text }: { title: string; text: string | null }) => (text ? (
     <div className="outline-block">
         <Title level={5} className="outline-block-title">{title}</Title>
@@ -128,7 +137,7 @@ const SessionsTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                 const studentWork = [...new Set(session.items.map(item => pickText(item.student_activity, lang)).filter(Boolean))];
                 return (
                     <div key={`${session.order}-${session.label}`} className="outline-session">
-                        <div className="outline-session-label"><Tag color="blue">{session.label ? i18n.t('Buổi {{label}}', { label: session.label }) : `#${session.order}`}</Tag></div>
+                        <div className="outline-session-label">{session.label ? i18n.t('Buổi {{label}}', { label: session.label }) : `#${session.order}`}</div>
                         <div className="outline-session-body">
                             <div className="outline-text">{pickText(session.content, lang) ?? '—'}</div>
                             {studentWork.length > 0 && (
@@ -140,12 +149,12 @@ const SessionsTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                                 <Space wrap size={[4, 4]} style={{ marginTop: 6 }}>
                                     {outcomeKeys.map(key => (
                                         <Tooltip key={key} title={pickText(outcomes.get(key)?.name, lang)}>
-                                            <Tag color="geekblue">{outcomes.get(key)?.code ?? key}</Tag>
+                                            <Chip tone="outcome">{outcomes.get(key)?.code ?? key}</Chip>
                                         </Tooltip>
                                     ))}
                                     {activityCodes.map(code => (
                                         <Tooltip key={code} title={pickText(activities.get(code)?.name, lang)}>
-                                            <Tag color="gold">{code}</Tag>
+                                            <Chip tone="activity">{code}</Chip>
                                         </Tooltip>
                                     ))}
                                 </Space>
@@ -154,7 +163,11 @@ const SessionsTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                     </div>
                 );
             })}
-            <Text type="secondary" style={{ fontSize: 12 }}>{i18n.t('Thẻ xanh: chuẩn đầu ra đạt được trong buổi · thẻ vàng: hoạt động đánh giá. Rê chuột để xem nội dung.')}</Text>
+            <div className="outline-legend">
+                <Chip tone="outcome">{i18n.t('Chuẩn đầu ra')}</Chip>
+                <Chip tone="activity">{i18n.t('Hoạt động đánh giá')}</Chip>
+                <span className="hint">{i18n.t('Rê chuột lên thẻ để xem nội dung.')}</span>
+            </div>
         </div>
     );
 };
@@ -183,15 +196,15 @@ const OutcomesTab = ({ content, lang }: { content: OutlineContent; lang: Outline
             )}
             <div className="outline-outcomes">
                 {content.learning_outcomes.filter(item => item.framework === active).map(outcome => (
-                    <div key={outcome.key} className={`outline-outcome level-${Math.min(outcome.level, 3)}`}>
+                    <div key={outcome.key} className={`outline-outcome level-${Math.max(1, Math.min(outcome.level, 3))}`}>
                         <Text strong className="outline-outcome-code">{outcome.code}</Text>
                         <div>
-                            <div>{pickText(outcome.name, lang)}</div>
+                            <div className="outline-outcome-name">{pickText(outcome.name, lang)}</div>
                             {(assessedBy.get(outcome.key)?.length ?? 0) > 0 && (
                                 <Space wrap size={[4, 4]} style={{ marginTop: 4 }}>
                                     {assessedBy.get(outcome.key)!.map(code => (
                                         <Tooltip key={code} title={pickText(activities.get(code)?.name, lang)}>
-                                            <Tag color="gold">{code}</Tag>
+                                            <Chip tone="activity">{code}</Chip>
                                         </Tooltip>
                                     ))}
                                 </Space>
@@ -205,10 +218,10 @@ const OutcomesTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                 <Card size="small" title={i18n.t('Hoạt động đánh giá')}>
                     <div className="outline-outcomes">
                         {content.assessment_activities.map(activity => (
-                            <div key={activity.code} className={`outline-outcome level-${Math.min(activity.level, 3)}`}>
+                            <div key={activity.code} className={`outline-outcome level-${Math.max(1, Math.min(activity.level, 3))}`}>
                                 <Text strong className="outline-outcome-code">{activity.code}</Text>
                                 <div>
-                                    <div>
+                                    <div className="outline-outcome-name">
                                         {pickText(activity.name, lang)}
                                         {activity.category && <Tag style={{ marginLeft: 8 }}>{pickText(activity.category.name, lang)}</Tag>}
                                     </div>
@@ -227,9 +240,17 @@ const OutcomesTab = ({ content, lang }: { content: OutlineContent; lang: Outline
 
 /* ------------------------------------ Tab: điều kiện môn ------------------------------------ */
 
+// Tiên quyết = đỏ (chặn cứng), học trước / song hành = hổ phách, khuyến nghị = xám, như bản cũ.
+const RELATION_TONE: Record<CourseRelationType, ChipTone> = {
+    prerequisite: 'err',
+    prior: 'warn',
+    corequisite: 'warn',
+    recommended: 'muted',
+};
+
 const typeTag = (type: CourseRelationType | null, raw?: string | null) => (type
-    ? <Tag color={type === 'recommended' ? 'default' : type === 'prerequisite' ? 'red' : 'orange'}>{COURSE_RELATION_TYPE_LABEL[type]}</Tag>
-    : <Tag>{raw ?? '?'}</Tag>);
+    ? <Chip tone={RELATION_TONE[type]}>{COURSE_RELATION_TYPE_LABEL[type]}</Chip>
+    : <Chip tone="muted">{raw ?? '?'}</Chip>);
 
 const PrerequisitesTab = ({ outline, curriculumRelations, curriculumCode }: {
     outline: CourseOutlineDetail;
@@ -373,7 +394,7 @@ export const CourseOutlineSection = ({
                                 key: 'intro',
                                 label: i18n.t('Giới thiệu'),
                                 children: (
-                                    <div className="stack">
+                                    <div className="outline-intro">
                                         <TextBlock title={i18n.t('Mục tiêu môn học')} text={pickText(content.objectives, lang)} />
                                         <TextBlock title={i18n.t('Nội dung tóm tắt')} text={pickText(content.summary, lang)} />
                                         <TextBlock title={i18n.t('Hướng dẫn cách học')} text={pickText(content.study_guide, lang)} />

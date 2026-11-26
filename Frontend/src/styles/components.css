@@ -330,35 +330,104 @@
 
 /* ------------------------------ Đề cương môn học ------------------------------ */
 @layer components {
+    /*
+     * Chip mã (pages/courses/components/outline): nền nhạt + viền + chữ cùng tông, bo 4px như chip trong
+     * design system. Chuẩn đầu ra = hồng (accent), hoạt động đánh giá = hổ phách, loại điều kiện theo mức chặn.
+     */
+    .outline-chip {
+        --tone: var(--ink-muted);
+        display: inline-flex;
+        align-items: center;
+        padding: 0 7px;
+        border: 1px solid color-mix(in srgb, var(--tone) 38%, transparent);
+        border-radius: var(--radius-xs);
+        background: color-mix(in srgb, var(--tone) 10%, var(--bg-canvas));
+        color: var(--tone);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        line-height: 20px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        cursor: default;
+    }
+    .outline-chip[data-tone='outcome'] { --tone: var(--accent-rose); }
+    .outline-chip[data-tone='activity'], .outline-chip[data-tone='warn'] { --tone: var(--sem-warn); }
+    .outline-chip[data-tone='err'] { --tone: var(--sem-err); }
+    .outline-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+
+    /* Tab Giới thiệu: mỗi mục có tiêu đề serif (dưới tiêu đề thẻ 20px, trên chữ thân), ngăn bằng hairline. */
+    .outline-intro { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .outline-intro > .outline-block { padding: 14px 0; }
+    .outline-intro > .outline-block:first-child { padding-top: 4px; }
+    .outline-intro > .outline-block + .outline-block { border-top: 1px solid var(--line-hairline); }
     .outline-block { display: grid; gap: 6px; }
-    .outline-block-title.ant-typography { margin: 0; }
+    .outline-block-title.ant-typography {
+        margin: 0;
+        color: var(--ink-primary);
+        font-family: var(--serif);
+        font-size: 17px;
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 1.3;
+        text-transform: none;
+    }
     .outline-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
 
-    .outline-sessions { display: grid; gap: 12px; }
+    /* Tab Nội dung: cột trái là nhãn buổi (serif, như mã học kỳ), cột phải là nội dung + chip. */
+    .outline-sessions { display: grid; gap: 14px; }
     .outline-session {
         display: grid;
-        grid-template-columns: 120px 1fr;
-        gap: 12px;
-        padding-bottom: 12px;
+        grid-template-columns: 96px 1fr;
+        gap: 16px;
+        padding-bottom: 14px;
         border-bottom: 1px solid var(--line-hairline);
+    }
+    .outline-session-label {
+        color: var(--accent-rose);
+        font-family: var(--serif);
+        font-size: 17px;
+        font-weight: 500;
+        line-height: 1.3;
+        font-variant-numeric: tabular-nums;
     }
     .outline-session-meta { margin-top: 6px; font-size: 13px; color: var(--ink-muted); white-space: pre-wrap; }
 
-    .outline-outcomes { display: grid; gap: 8px; }
-    .outline-outcome { display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
-    .outline-outcome.level-2 { padding-left: 20px; }
-    .outline-outcome.level-3 { padding-left: 40px; }
-    .outline-outcome-code { font-variant-numeric: tabular-nums; }
+    /*
+     * Tab Chuẩn đầu ra: cấp 1 là đầu nhóm (đậm, có hairline phía trên), cấp 2 thụt 24px chữ thường,
+     * cấp 3 thụt 48px chữ nhỏ màu nhạt. Mã cùng cột để mắt dóng theo được.
+     */
+    .outline-outcomes { display: grid; gap: 6px; }
+    .outline-outcome { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: baseline; }
+    .outline-outcome-code { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+    .outline-outcome.level-1 { padding-top: 10px; }
+    .outline-outcome.level-1:not(:first-child) { margin-top: 6px; border-top: 1px solid var(--line-hairline); }
+    .outline-outcome.level-1 .outline-outcome-code.ant-typography { color: var(--accent-rose); }
+    .outline-outcome.level-1 .outline-outcome-name { font-weight: 600; }
+    .outline-outcome.level-2 { padding-left: 24px; }
+    .outline-outcome.level-3 { padding-left: 48px; }
+    .outline-outcome.level-3,
+    .outline-outcome.level-3 .outline-outcome-code.ant-typography { color: var(--ink-muted); font-size: 13px; }
+    .outline-outcome.level-3 .outline-outcome-code.ant-typography { font-weight: 500; }
 
+    /* Tab Điều kiện môn: bảng hairline, đầu cột nhãn in hoa như bảng antd. */
     .outline-prereq { border: 1px solid var(--line-hairline); border-radius: var(--radius-sm); overflow: hidden; }
     .outline-prereq-head, .outline-prereq-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 8px;
-        padding: 8px 12px;
+        padding: 10px 12px;
         align-items: center;
     }
-    .outline-prereq-head { background: var(--bg-blush); font-size: 12px; font-weight: 600; color: var(--ink-muted); }
+    .outline-prereq-head {
+        background: var(--bg-blush);
+        color: var(--ink-soft);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .outline-prereq-head + .outline-prereq-row { border-top: 1px solid var(--line-hairline); }
     .outline-prereq-row + .outline-prereq-row { border-top: 1px solid var(--line-hairline); }
     .outline-prereq-row.is-different { background: var(--sem-warn-bg); }
     .outline-prereq-icon { margin-left: 6px; vertical-align: -2px; }
@@ -368,6 +437,8 @@
     @media (max-width: 640px) {
         .outline-session { grid-template-columns: 1fr; gap: 4px; }
         .outline-outcome { grid-template-columns: 64px 1fr; }
+        .outline-outcome.level-2 { padding-left: 12px; }
+        .outline-outcome.level-3 { padding-left: 24px; }
     }
 }
 

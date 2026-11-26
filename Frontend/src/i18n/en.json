@@ -806,7 +806,7 @@
   "Thông tin sinh viên": "Student information",
   "Thông tin thêm từ bộ giải Clingo (engine ASP)": "More info from the Clingo solver (ASP engine)",
   "Thường mở": "Usually offered",
-  "Thẻ xanh: chuẩn đầu ra đạt được trong buổi · thẻ vàng: hoạt động đánh giá. Rê chuột để xem nội dung.": "Green tags: learning outcomes covered in the session · yellow tags: assessment activities. Hover to see details.",
+  "Rê chuột lên thẻ để xem nội dung.": "Hover a tag to see details.",
   "Thời gian đào tạo": "Program duration",
   "Thời lượng": "Duration",
   "Thử lại": "Try again",
