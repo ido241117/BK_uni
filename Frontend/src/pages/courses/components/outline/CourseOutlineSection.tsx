@@ -51,10 +51,10 @@ const courseLink = (code: string) => <Link to={`/courses/${encodeURIComponent(co
 // thành chấm tròn + chữ, các loại mã trông giống hệt nhau).
 
 const TextBlock = ({ title, text }: { title: string; text: string | null }) => (text ? (
-    <div className="outline-block">
-        <Title level={5} className="outline-block-title">{title}</Title>
+    <section className="doc-section">
+        <Title level={5} className="doc-section-title">{title}</Title>
         <div className="outline-text">{text}</div>
-    </div>
+    </section>
 ) : null);
 
 const componentRows = (components: OutlineComponents) => COMPONENT_ORDER
@@ -382,7 +382,7 @@ export const CourseOutlineSection = ({
                                 key: 'intro',
                                 label: i18n.t('Giới thiệu'),
                                 children: (
-                                    <div className="outline-intro">
+                                    <div className="doc-sections">
                                         <TextBlock title={i18n.t('Mục tiêu môn học')} text={pickText(content.objectives, lang)} />
                                         <TextBlock title={i18n.t('Nội dung tóm tắt')} text={pickText(content.summary, lang)} />
                                         <TextBlock title={i18n.t('Hướng dẫn cách học')} text={pickText(content.study_guide, lang)} />

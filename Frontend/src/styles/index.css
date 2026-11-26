@@ -17,6 +17,7 @@
 @import "../pages/courses/board/board.css";
 @import "../pages/courses/analysis/analysis.css";
 @import "../pages/recommendations/recommendations.css";
+@import "../pages/profile/profile.css";
 
 /* Tailwind font utilities (font-sans / font-serif) use the same two families. */
 @theme {

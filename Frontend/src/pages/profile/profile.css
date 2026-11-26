@@ -1,0 +1,128 @@
+/*
+ * Hồ sơ › Chương trình đào tạo (CurriculumOverview). Tabs reuse `.doc-sections` (components.css) for titled text;
+ * this file holds the curriculum-specific pieces: semester plan blocks, elective rows, specialization groups and
+ * the course list inside them. Same levels as the Chương trình board: section = hairline + serif title,
+ * group = blush wash panel with a 14px sans title, course = code (600) + name.
+ */
+@layer components {
+    /* ===== Kế hoạch giảng dạy: one block per semester ===== */
+    .plan-semesters {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+        gap: var(--space-6) var(--space-5);
+    }
+
+    .plan-semester-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-3);
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--line-chrome);
+    }
+
+    .plan-semester-title {
+        margin: 0;
+        color: var(--ink-primary);
+        font-family: var(--serif);
+        font-size: 17px;
+        font-weight: 500;
+    }
+
+    .plan-semester-credits {
+        color: var(--ink-muted);
+        font-size: 12.5px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .plan-elective {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 8px;
+        margin-top: 6px;
+        padding: 8px 10px;
+        border-radius: var(--radius-xs);
+        background: var(--bg-blush);
+        font-size: 13px;
+    }
+
+    .plan-elective-name {
+        color: var(--ink-primary);
+        font-weight: 600;
+    }
+
+    .plan-elective-req {
+        color: var(--ink-muted);
+    }
+
+    /* ===== Chuyên ngành: groups inside a specialization ===== */
+    .spec-groups {
+        display: grid;
+        gap: var(--space-3);
+        margin-top: var(--space-2);
+    }
+
+    .spec-group {
+        padding: 10px 14px 12px;
+        border-radius: var(--radius-sm);
+        background: var(--bg-blush);
+    }
+
+    .spec-group-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 10px;
+        margin-bottom: 8px;
+    }
+
+    .spec-group-title {
+        color: var(--ink-primary);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* Course list: code column + name, credits right; hairline rows like a table without its chrome. */
+    .course-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+        column-gap: var(--space-5);
+    }
+
+    .course-list-item {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: baseline;
+        padding: 5px 0;
+        border-bottom: 1px solid var(--line-hairline-on-blush);
+        font-size: 13px;
+    }
+
+    .course-list-code {
+        color: var(--ink-primary);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    .course-list-name {
+        color: var(--ink-primary);
+    }
+
+    .course-list-credits {
+        color: var(--ink-muted);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    /* ===== Quy định: numbered sections ===== */
+    .reg-index {
+        color: var(--accent-rose);
+        font-family: var(--serif);
+        font-size: 17px;
+        font-variant-numeric: tabular-nums;
+    }
+}

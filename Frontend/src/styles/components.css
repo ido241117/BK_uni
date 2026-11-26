@@ -328,17 +328,19 @@
     }
 }
 
-/* ------------------------------ Đề cương môn học ------------------------------ */
+/*
+ * Văn bản nhiều mục trong một tab (giới thiệu đề cương, giới thiệu CTĐT, quy định, chuyên ngành):
+ * mỗi mục có tiêu đề serif 17px (dưới tiêu đề thẻ 20px, trên chữ thân 14px), các mục ngăn bằng hairline.
+ * `.doc-subtitle` là dòng phụ dưới tiêu đề (mã, số TC...).
+ */
 @layer components {
-    .outline-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-
-    /* Tab Giới thiệu: mỗi mục có tiêu đề serif (dưới tiêu đề thẻ 20px, trên chữ thân), ngăn bằng hairline. */
-    .outline-intro { display: grid; grid-template-columns: minmax(0, 1fr); }
-    .outline-intro > .outline-block { padding: 14px 0; }
-    .outline-intro > .outline-block:first-child { padding-top: 4px; }
-    .outline-intro > .outline-block + .outline-block { border-top: 1px solid var(--line-hairline); }
-    .outline-block { display: grid; gap: 6px; }
-    .outline-block-title.ant-typography {
+    .doc-sections { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .doc-section { display: grid; gap: 6px; padding: 16px 0; }
+    .doc-section:first-child { padding-top: 4px; }
+    .doc-section + .doc-section { border-top: 1px solid var(--line-hairline); }
+    .doc-section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+    .doc-section-title,
+    .doc-section-title.ant-typography {
         margin: 0;
         color: var(--ink-primary);
         font-family: var(--serif);
@@ -348,6 +350,20 @@
         line-height: 1.3;
         text-transform: none;
     }
+    .doc-subtitle { color: var(--ink-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+    .doc-body { color: var(--ink-primary); line-height: 1.6; overflow-wrap: anywhere; }
+    .doc-body p { margin: 0 0 10px; white-space: pre-line; }
+    .doc-body p:last-child, .doc-body ul:last-child { margin-bottom: 0; }
+    .doc-body ul { margin: 0 0 10px; padding-left: 20px; }
+    .doc-body li + li { margin-top: 4px; }
+    .doc-body li::marker { color: var(--accent-sparkle); }
+    .doc-body-muted { color: var(--ink-muted); }
+}
+
+/* ------------------------------ Đề cương môn học ------------------------------ */
+@layer components {
+    .outline-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+
     .outline-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
 
     /* Tab Nội dung: cột trái là nhãn buổi (serif, như mã học kỳ), cột phải là nội dung + chip. */

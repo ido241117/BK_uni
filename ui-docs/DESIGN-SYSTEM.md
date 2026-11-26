@@ -358,6 +358,7 @@ States: hover (primary darkens one step in light, lightens in dark; secondary tu
 - **`Disclosure`**: blush row with sparkle border, rose icon, title + subtitle, chevron flips; panel below between hairlines. Controlled (the page owns `open`).
 - **Card (antd, default)**: no box; a top hairline separates it.
 - **Collapse (antd, default)**: no box; items separated by hairlines, body indented 24px.
+- **Doc sections** (`.doc-sections` > `.doc-section`, components.css): titled text inside a tab (course outline intro, curriculum intro, specializations, regulations). Serif 17px title (between the 20px card title and 14px body; not the 11px H5 label, which is for field labels), optional `.doc-subtitle` / chip beside it, `.doc-body` text (paragraphs, sparkle list markers), sections split by hairlines. Groups inside a section use the blush wash panel of the board (§3.8).
 - **Aside panel**: a side panel that holds settings for the main column (Gợi ý › Kịch bản) sits on blush, sticky under the topbar, with `--line-hairline-on-blush` between its sections; collapsed it becomes a blush rail with a vertical label.
 - **Section (page-level)**: hairline on top + serif 21px title + optional hint (`.analysis-section`).
 

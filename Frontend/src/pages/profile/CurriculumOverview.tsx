@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Empty, Segmented, Skeleton, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Empty, Segmented, Skeleton, Table, Tabs, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
     getCurriculum,
@@ -8,7 +8,7 @@ import {
     listRegulations,
     listSpecializations,
 } from '@/apis/curriculum';
-import { RowItem, RowList, StatusLine, TextTag } from '@/components';
+import { RowItem, RowList, StatusLine, ToneChip } from '@/components';
 import { useApiQuery } from '@/hooks';
 import {
     COURSE_GROUP_KIND,
@@ -55,23 +55,32 @@ const CourseTable = ({ courses }: { courses: CourseSummary[] }) => (
 
 /** Văn bản thuần từ myBK: đoạn cách bằng dòng trống, mục danh sách bắt đầu bằng "- ". */
 const ProfileText = ({ text }: { text: string }) => (
-    <>
+    <div className="doc-body">
         {text.split(/\n{2,}/).map((block, index) => {
             const lines = block.split('\n').filter(Boolean);
             if (lines.length && lines.every(line => line.startsWith('- '))) {
                 return (
-                    <ul key={index} style={{ margin: '0 0 12px', paddingLeft: 20 }}>
+                    <ul key={index}>
                         {lines.map((line, item) => <li key={item}>{line.slice(2)}</li>)}
                     </ul>
                 );
             }
-            return (
-                <Paragraph key={index} style={{ marginBottom: 12, whiteSpace: 'pre-line' }}>
-                    {block}
-                </Paragraph>
-            );
+            return <p key={index}>{block}</p>;
         })}
-    </>
+    </div>
+);
+
+/** Danh sách môn gọn (mã · tên · TC) trong nhóm chuyên ngành; thay cho Tag (skin chung vẽ Tag thành chấm + chữ). */
+const CourseList = ({ courses }: { courses: CourseSummary[] }) => (
+    <div className="course-list">
+        {courses.map(course => (
+            <div key={course.id} className="course-list-item">
+                <span className="course-list-code">{course.code}</span>
+                <span className="course-list-name">{course.name}</span>
+                <span className="course-list-credits">{course.credits}{' '}{i18n.t('TC')}</span>
+            </div>
+        ))}
+    </div>
 );
 
 const hasText = (text?: CurriculumProfileText) => CURRICULUM_PROFILE_FIELDS.some(field => text?.[field]);
@@ -103,12 +112,14 @@ const ProfileTab = ({ curriculum }: { curriculum: Curriculum }) => {
                     {i18n.t('myBK chưa có giới thiệu riêng cho khóa {{cohort}}; nội dung lấy từ chương trình {{profile_source_code}} cùng ngành.', { cohort: curriculum.cohort, profile_source_code: curriculum.profile_source_code })}
                 </StatusLine>
             )}
-            {CURRICULUM_PROFILE_FIELDS.filter(field => text[field]).map(field => (
-                <div key={field}>
-                    <Title level={5} style={{ marginTop: 0 }}>{CURRICULUM_PROFILE_FIELD_LABEL[field][lang]}</Title>
-                    <ProfileText text={text[field]!} />
-                </div>
-            ))}
+            <div className="doc-sections">
+                {CURRICULUM_PROFILE_FIELDS.filter(field => text[field]).map(field => (
+                    <section key={field} className="doc-section">
+                        <h3 className="doc-section-title">{CURRICULUM_PROFILE_FIELD_LABEL[field][lang]}</h3>
+                        <ProfileText text={text[field]!} />
+                    </section>
+                ))}
+            </div>
         </div>
     );
 };
@@ -154,24 +165,25 @@ const PlanTab = ({ courses, groups }: { courses: CurriculumCourse[]; groups: Cou
                 {i18n.t('Môn bắt buộc xếp theo kỳ gợi ý của kế hoạch giảng dạy; khối tự chọn hiện ở kỳ nên bắt đầu học.')}
                 {unscheduled > 0 && i18n.t(' {{unscheduled}} môn tự chọn không gắn kỳ cố định (xem tab Khối kiến thức).', { unscheduled: unscheduled })}
             </Paragraph>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 380px), 1fr))', gap: 16 }}>
+            <div className="plan-semesters">
                 {semesters.map(semester => {
                     const credits = semester.courses.reduce((total, course) => total + course.credits, 0)
                         + semester.groups.reduce((total, group) => total + groupRequiredCredits(group), 0);
                     return (
-                        <div key={`${semester.year}-${semester.term}`}>
-                            <Text strong>{i18n.t('Năm {{year}} · {{v1}}', { year: semester.year, v1: termLabel(semester.term) })}</Text>
-                            <Text type="secondary">{i18n.t(' — {{credits}} TC', { credits: credits })}</Text>
-                            <div style={{ marginTop: 8 }}>
-                                <CourseTable courses={semester.courses} />
-                                {semester.groups.map(group => (
-                                    <div key={group.id} style={{ padding: '6px 8px', fontSize: 13 }}>
-                                        <TextTag tone="rose">{i18n.t('Tự chọn')}</TextTag>{' '}
-                                        {group.name} <Text type="secondary">({groupRequirement(group)})</Text>
-                                    </div>
-                                ))}
+                        <section key={`${semester.year}-${semester.term}`}>
+                            <div className="plan-semester-head">
+                                <h3 className="plan-semester-title">{i18n.t('Năm {{year}} · {{v1}}', { year: semester.year, v1: termLabel(semester.term) })}</h3>
+                                <span className="plan-semester-credits">{i18n.t('{{credits}} TC', { credits: credits })}</span>
                             </div>
-                        </div>
+                            {semester.courses.length > 0 && <CourseTable courses={semester.courses} />}
+                            {semester.groups.map(group => (
+                                <div key={group.id} className="plan-elective">
+                                    <ToneChip tone="brand">{i18n.t('Tự chọn')}</ToneChip>
+                                    <span className="plan-elective-name">{group.name}</span>
+                                    <span className="plan-elective-req">{groupRequirement(group)}</span>
+                                </div>
+                            ))}
+                        </section>
                     );
                 })}
             </div>
@@ -185,8 +197,9 @@ const groupColumns: ColumnsType<CourseGroup> = trLive([
         title: 'Loại',
         dataIndex: 'kind',
         width: 100,
+        // Cùng màu với bảng Chương trình: xanh lá = khối bắt buộc, xanh dương = khối tự chọn.
         render: (kind: CourseGroup['kind']) => (
-            <TextTag tone={kind === COURSE_GROUP_KIND.REQUIRED ? 'muted' : 'rose'}>{COURSE_GROUP_KIND_LABEL[kind]}</TextTag>
+            <ToneChip tone={kind === COURSE_GROUP_KIND.REQUIRED ? 'good' : 'brand'}>{COURSE_GROUP_KIND_LABEL[kind]}</ToneChip>
         ),
     },
     { title: 'Yêu cầu', key: 'requirement', width: 180, render: (_, group) => groupRequirement(group) },
@@ -244,28 +257,32 @@ const SpecializationsTab = ({
                     ? i18n.t('Sinh viên phải đạt đúng một chuyên ngành mới đủ điều kiện tốt nghiệp.')
                     : i18n.t('Chuyên ngành không bắt buộc; không đạt chuyên ngành nào thì tốt nghiệp theo ngành.')}
             </Paragraph>
-            {specializations.map(specialization => (
-                <div key={specialization.id}>
-                    <Text strong>{specialization.name}</Text> <TextTag>{specialization.code}</TextTag>
-                    {specialization.description && (
-                        <Paragraph type="secondary" style={{ margin: '4px 0 0' }}>{specialization.description}</Paragraph>
-                    )}
-                    {specialization.groups.map(group => (
-                        <div key={group.id} style={{ marginTop: 8 }}>
-                            <Text>{group.name}</Text> <Text type="secondary">({groupRequirement(group)})</Text>
-                            {group.members.length > 0 && (
-                                <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                    {group.members.map(member => (
-                                        <Tag key={member.id} title={i18n.t('{{name}} · {{credits}} TC', { name: member.course.name, credits: member.course.credits })}>
-                                            {member.course.code} {member.course.name}
-                                        </Tag>
-                                    ))}
-                                </div>
-                            )}
+            <div className="doc-sections">
+                {specializations.map(specialization => (
+                    <section key={specialization.id} className="doc-section">
+                        <div className="doc-section-head">
+                            <h3 className="doc-section-title">{specialization.name}</h3>
+                            <ToneChip tone="muted">{specialization.code}</ToneChip>
                         </div>
-                    ))}
-                </div>
-            ))}
+                        {specialization.description && <p className="doc-body doc-body-muted" style={{ margin: 0 }}>{specialization.description}</p>}
+                        {specialization.groups.length > 0 && (
+                            <div className="spec-groups">
+                                {specialization.groups.map(group => (
+                                    <div key={group.id} className="spec-group">
+                                        <div className="spec-group-head">
+                                            <span className="spec-group-title">{group.name}</span>
+                                            <ToneChip tone={group.kind === COURSE_GROUP_KIND.REQUIRED ? 'good' : 'brand'}>{groupRequirement(group)}</ToneChip>
+                                        </div>
+                                        {group.members.length > 0 && (
+                                            <CourseList courses={group.members.map(member => member.course).sort((a, b) => a.code.localeCompare(b.code))} />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                ))}
+            </div>
         </div>
     );
 };
@@ -273,14 +290,17 @@ const SpecializationsTab = ({
 const RegulationsTab = ({ regulations }: { regulations: CurriculumRegulation[] }) => {
     if (!regulations.length) return <Empty description={i18n.t('Chương trình chưa có quy định riêng.')} />;
     return (
-        <div className="stack">
-            {regulations.map(regulation => (
-                <div key={regulation.id}>
-                    <Text strong>{regulation.name}</Text>
-                    {regulation.detail && (
-                        <Paragraph style={{ margin: '4px 0 0', whiteSpace: 'pre-line' }}>{regulation.detail}</Paragraph>
-                    )}
-                </div>
+        <div className="doc-sections">
+            {regulations.map((regulation, index) => (
+                <section key={regulation.id} className="doc-section">
+                    <div className="doc-section-head">
+                        <span className="reg-index">{index + 1}.</span>
+                        <h3 className="doc-section-title">{regulation.name}</h3>
+                    </div>
+                    {regulation.detail
+                        ? <div className="doc-body"><p>{regulation.detail}</p></div>
+                        : <span className="hint">{i18n.t('Chưa có mô tả chi tiết')}</span>}
+                </section>
             ))}
         </div>
     );
