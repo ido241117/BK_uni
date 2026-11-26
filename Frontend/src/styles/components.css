@@ -297,29 +297,115 @@
         font-weight: 600;
         line-height: 18px;
     }
+    /* One-line summary, split into typed parts (Trajectory `preview`) instead of one monospace string. */
     .trace-preview {
         flex: 1;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        color: var(--ink-primary);
+        font-size: 13px;
+    }
+    .trace-preview > * + * { margin-left: 6px; }
+    .tp-text { color: var(--ink-primary); }
+    .trace-row[data-role='user'] .tp-text { font-weight: 600; }
+    .tp-muted { color: var(--ink-muted); }
+    .tp-thinking { color: var(--ink-muted); font-style: italic; }
+    .tp-error { color: var(--sem-err); font-weight: 600; }
+    .tp-code {
+        color: var(--ink-muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11.5px;
+    }
+    .tp-out { color: var(--ink-soft); }
+    .tp-tool {
+        color: var(--sem-warn);
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 12px;
+        font-weight: 600;
+    }
+    .tp-arrow { color: var(--accent-sparkle); font-weight: 600; }
+    .tp-flag {
+        padding: 0 5px;
+        border: 1px solid color-mix(in srgb, var(--accent-brand) 38%, transparent);
+        border-radius: var(--radius-xs);
+        color: var(--accent-brand);
+        font-size: 10.5px;
+        font-weight: 600;
     }
     .trace-meta { flex: none; font-size: 12px; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
-    .trace-body { display: grid; gap: 10px; padding: 4px 12px 12px 40px; }
-    .trace-block-title { font-size: 12px; font-weight: 600; color: var(--ink-muted); margin-bottom: 4px; }
+    /*
+     * Expanded step. On the pink theme plain text on a blush wash reads as one flat block, so the body is a canvas
+     * panel under the tinted head, each block has an uppercase label + chip (tool name) + muted sub (call id), and
+     * the content type picks the surface: thinking = italic prose on cream, JSON = mono with token colors on blush
+     * with a hairline edge, plain content = body text without a box.
+     */
+    .trace-body {
+        display: grid;
+        gap: 14px;
+        padding: 12px 14px 12px 40px;
+        border-top: 1px solid color-mix(in srgb, var(--tone) 25%, var(--line-hairline));
+        background: var(--bg-canvas);
+    }
+    .trace-block { display: grid; gap: 6px; min-width: 0; }
+    .trace-block-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+    .trace-block-title {
+        color: var(--ink-soft);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .trace-block-sub {
+        color: var(--ink-muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+    }
     .trace-pre {
         margin: 0;
-        padding: 10px;
+        padding: 10px 12px;
         max-height: 420px;
         overflow: auto;
-        border-radius: var(--radius-sm);
+        border: 1px solid var(--line-hairline);
+        border-radius: var(--radius-xs);
         background: var(--bg-blush);
+        color: var(--ink-primary);
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 12px;
+        line-height: 1.55;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
+    }
+    /* JSON token colors: theme tokens only, so dark mode follows. */
+    .trace-pre .tj-key { color: var(--accent-brand); }
+    .trace-pre .tj-str { color: var(--sem-good); }
+    .trace-pre .tj-num { color: var(--sem-warn); }
+    .trace-pre .tj-lit { color: var(--accent-rose); font-weight: 600; }
+    .trace-pre .tj-punct { color: var(--ink-soft); }
+    .trace-prose {
+        max-height: 420px;
+        overflow: auto;
+        color: var(--ink-primary);
+        font-size: 13.5px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    .trace-block[data-kind='thinking'] .trace-prose {
+        padding: 10px 12px;
+        border-radius: var(--radius-xs);
+        background: var(--bg-elevated);
+        color: var(--ink-muted);
+        font-size: 13px;
+        font-style: italic;
+    }
+    .trace-foot {
+        padding-top: 8px;
+        border-top: 1px solid var(--line-hairline);
+        color: var(--ink-muted);
+        font-size: 11.5px;
+        font-variant-numeric: tabular-nums;
     }
     @media (max-width: 640px) {
         .trace-meta { display: none; }

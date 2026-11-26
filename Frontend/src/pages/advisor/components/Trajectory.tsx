@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Empty, Segmented, Typography } from 'antd';
 import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
+import { ToneChip } from '@/components';
 import type { AdvisorStep, AdvisorStepRole } from '@/types';
 import i18n from '@/i18n';
 
@@ -36,23 +37,116 @@ const oneLine = (text: string | null | undefined, max = 160) => {
 
 const isFormatter = (step: AdvisorStep) => Boolean((step.data as { formatter?: boolean } | null)?.formatter);
 
-const preview = (step: AdvisorStep): string => {
-    if (step.role === 'tool') return `${step.tool_name} ${oneLine(pretty(step.tool_args), 60)} → ${oneLine(step.content, 100)}`;
-    if (step.role === 'assistant') {
-        const calls = step.tool_calls?.map(call => call.name).join(', ');
-        const prefix = isFormatter(step) ? '[JSON mode] ' : '';
-        if (calls) return i18n.t('{{prefix}}{{v1}} ⟶ gọi {{calls}}', { prefix: prefix, v1: oneLine(step.content, 60) || oneLine(step.reasoning, 80), calls: calls });
-        return prefix + (oneLine(step.content) || oneLine(step.reasoning));
+/**
+ * Dòng tóm tắt của một bước, chia thành phần có kiểu riêng thay vì một chuỗi monospace:
+ * tên tool đậm màu cam, tham số / kết quả monospace nhạt, mũi tên tách vào → ra, lời model là chữ thường,
+ * khi chỉ có thinking thì nghiêng nhạt, context (JSON) monospace nhạt.
+ */
+const preview = (step: AdvisorStep): ReactNode => {
+    if (step.role === 'tool') {
+        return (
+            <>
+                <span className="tp-tool">{step.tool_name}</span>
+                <span className="tp-code">{oneLine(pretty(step.tool_args), 60)}</span>
+                <span className="tp-arrow" aria-hidden>→</span>
+                <span className="tp-code tp-out">{oneLine(step.content, 100)}</span>
+            </>
+        );
     }
-    return oneLine(step.content);
+    if (step.role === 'assistant') {
+        const calls = step.tool_calls?.map(call => call.name) ?? [];
+        const text = oneLine(step.content, calls.length ? 80 : 160);
+        return (
+            <>
+                {isFormatter(step) && <span className="tp-flag">JSON mode</span>}
+                {text
+                    ? <span className="tp-text">{text}</span>
+                    : <span className="tp-thinking">{oneLine(step.reasoning, calls.length ? 80 : 160)}</span>}
+                {calls.length > 0 && (
+                    <>
+                        <span className="tp-arrow" aria-hidden>⟶</span>
+                        <span className="tp-muted">{i18n.t('gọi')}</span>
+                        {calls.map((name, index) => <span key={index} className="tp-tool">{name}</span>)}
+                    </>
+                )}
+            </>
+        );
+    }
+    if (step.role === 'context') return <span className="tp-code">{oneLine(step.content)}</span>;
+    if (step.role === 'system') return <span className="tp-muted">{oneLine(step.content)}</span>;
+    return <span className={step.role === 'error' ? 'tp-error' : 'tp-text'}>{oneLine(step.content)}</span>;
 };
 
-const Block = ({ title, children }: { title: string; children: string }) => (
-    <div className="trace-block">
-        <div className="trace-block-title">{title}</div>
-        <pre className="trace-pre">{children}</pre>
-    </div>
-);
+/** `value` → { text, json }: JSON (object hoặc chuỗi JSON) được format 2 khoảng trắng, còn lại giữ nguyên. */
+const toDisplay = (value: unknown): { text: string; json: boolean } => {
+    if (value === null || value === undefined) return { text: '', json: false };
+    if (typeof value === 'string') {
+        try {
+            const parsed: unknown = JSON.parse(value);
+            if (parsed !== null && typeof parsed === 'object') return { text: JSON.stringify(parsed, null, 2), json: true };
+        } catch { /* không phải JSON: hiện như văn bản */ }
+        return { text: value, json: false };
+    }
+    return { text: JSON.stringify(value, null, 2), json: true };
+};
+
+const JSON_TOKEN = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
+/** Quá dài thì bỏ tô màu (kết quả tool có thể vài trăm KB), vẫn hiện đủ nội dung. */
+const HIGHLIGHT_LIMIT = 60_000;
+
+/** Tô màu JSON đã format: khóa / chuỗi / số / true-false-null, phần còn lại (ngoặc, dấu phẩy) màu nhạt. */
+const JsonText = ({ text }: { text: string }) => {
+    const parts = useMemo(() => {
+        if (text.length > HIGHLIGHT_LIMIT) return null;
+        const out: ReactNode[] = [];
+        let last = 0;
+        for (const match of text.matchAll(JSON_TOKEN)) {
+            const index = match.index ?? 0;
+            if (index > last) out.push(<span key={`p${last}`} className="tj-punct">{text.slice(last, index)}</span>);
+            const [token, str, colon, literal] = match;
+            if (str && colon) {
+                out.push(<span key={index} className="tj-key">{str}</span>, <span key={`c${index}`} className="tj-punct">{colon}</span>);
+            } else if (str) {
+                out.push(<span key={index} className="tj-str">{str}</span>);
+            } else {
+                out.push(<span key={index} className={literal ? 'tj-lit' : 'tj-num'}>{token}</span>);
+            }
+            last = index + token.length;
+        }
+        if (last < text.length) out.push(<span key={`p${last}`} className="tj-punct">{text.slice(last)}</span>);
+        return out;
+    }, [text]);
+    return <pre className="trace-pre" data-kind="json">{parts ?? text}</pre>;
+};
+
+type BlockKind = 'thinking' | 'input' | 'output' | 'text';
+
+/**
+ * Một khối trong thân bước: nhãn mục (chữ in hoa nhỏ) + chip tên tool / mã gọi nếu có, rồi nội dung.
+ * thinking = văn xuôi nghiêng trên nền kem; input / output = JSON tô màu trên nền hồng nhạt; text = văn bản thường.
+ */
+const Block = ({ kind, label, chip, sub, value }: {
+    kind: BlockKind;
+    label: string;
+    chip?: string;
+    sub?: string;
+    value: unknown;
+}) => {
+    const { text, json } = toDisplay(value);
+    if (!text) return null;
+    return (
+        <section className="trace-block" data-kind={kind}>
+            <div className="trace-block-head">
+                <span className="trace-block-title">{label}</span>
+                {chip && <ToneChip tone={kind === 'output' ? 'good' : 'warn'}>{chip}</ToneChip>}
+                {sub && <span className="trace-block-sub">{sub}</span>}
+            </div>
+            {json
+                ? <JsonText text={text} />
+                : <div className="trace-prose">{text}</div>}
+        </section>
+    );
+};
 
 const StepRow = ({ step }: { step: AdvisorStep }) => {
     const [open, setOpen] = useState(false);
@@ -73,15 +167,20 @@ const StepRow = ({ step }: { step: AdvisorStep }) => {
             </button>
             {open && (
                 <div className="trace-body">
-                    {step.reasoning && <Block title="Thinking (reasoning_content)">{step.reasoning}</Block>}
-                    {step.role === 'tool' && <Block title={i18n.t('Tham số {{tool_name}}', { tool_name: step.tool_name })}>{pretty(step.tool_args)}</Block>}
+                    {step.reasoning && <Block kind="thinking" label="Thinking" sub="reasoning_content" value={step.reasoning} />}
+                    {step.role === 'tool' && <Block kind="input" label={i18n.t('Tham số')} chip={step.tool_name ?? undefined} value={step.tool_args} />}
                     {step.tool_calls?.map(call => (
-                        <Block key={call.id} title={i18n.t('Gọi tool {{name}} ({{id}})', { name: call.name, id: call.id })}>{pretty(call.arguments)}</Block>
+                        <Block key={call.id} kind="input" label={i18n.t('Gọi tool')} chip={call.name} sub={call.id} value={call.arguments} />
                     ))}
                     {step.role === 'answer'
-                        ? <Block title={i18n.t('Câu trả lời đã kiểm chứng (JSON)')}>{pretty(step.data)}</Block>
-                        : step.content && <Block title={step.role === 'tool' ? i18n.t('Kết quả') : i18n.t('Nội dung')}>{step.role === 'tool' || step.role === 'context' ? pretty(step.content) : step.content}</Block>}
-                    <Text type="secondary" style={{ fontSize: 12 }}>{i18n.t('Lượt')}{' '}{step.turn}{' '}{i18n.t('· bước')}{' '}{step.seq} · {new Date(step.created_at).toLocaleTimeString('vi-VN')}</Text>
+                        ? <Block kind="output" label={i18n.t('Câu trả lời đã kiểm chứng (JSON)')} value={step.data} />
+                        : step.role === 'tool'
+                            ? <Block kind="output" label={i18n.t('Kết quả')} chip={step.tool_name ?? undefined} value={step.content} />
+                            : <Block kind="text" label={i18n.t('Nội dung')} value={step.content} />}
+                    <div className="trace-foot">
+                        {i18n.t('Lượt')}{' '}{step.turn}{' '}{i18n.t('· bước')}{' '}{step.seq} · {new Date(step.created_at).toLocaleTimeString('vi-VN')}
+                        {meta && <> · {meta}</>}
+                    </div>
                 </div>
             )}
         </div>
