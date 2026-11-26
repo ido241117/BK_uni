@@ -118,6 +118,19 @@
         white-space: nowrap;
     }
 
+    /*
+     * ===== Chọn chương trình đào tạo (CurriculumPicker modal) =====
+     * The skin blurs every modal mask (antd-skin.css). Behind this tall modal with a scrolling table that blur is
+     * recomputed on every scroll frame and makes scrolling stutter, so this modal uses a plain tinted mask.
+     */
+    .curriculum-picker-modal .ant-modal-mask {
+        backdrop-filter: none;
+    }
+
+    .curriculum-picker-modal .ant-table-body {
+        overscroll-behavior: contain;
+    }
+
     /* ===== Quy định: numbered sections ===== */
     .reg-index {
         color: var(--accent-rose);

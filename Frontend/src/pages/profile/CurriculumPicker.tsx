@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Dropdown, Empty, Input, Modal, Table, Tooltip, Typography } from 'antd';
+import { memo, useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Dropdown, Empty, Input, Modal, Table, Typography, type InputRef } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { LuSearch } from 'react-icons/lu';
 import { IOutLinedBtn, ITextBtn } from '@/components';
@@ -21,6 +21,9 @@ interface PickerRow extends SchoolProgramRow {
     facultySpan: number;
 }
 
+/** Các khóa của một ô, kèm chương trình khớp (tính một lần, không tính lại khi gõ tìm hay chọn). */
+type ChipCell = { label: string; matches: Curriculum[] }[];
+
 const normalize = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
 
 interface ChipProps {
@@ -30,15 +33,24 @@ interface ChipProps {
     onPick: (curriculum: Curriculum) => void;
 }
 
-/** Một khóa trong bảng: có dữ liệu thì bấm chọn được (nhiều bản thì mở danh sách), chưa có thì xám. */
-const ProgramChip = ({ label, matches, selectedId, onPick }: ChipProps) => {
+/**
+ * Một khóa trong bảng: có dữ liệu thì bấm chọn được (nhiều bản thì mở danh sách), chưa có thì xám.
+ * Gợi ý dùng `title` gốc của trình duyệt, không bọc antd `Tooltip`: bảng có vài trăm chip, mỗi Tooltip là một
+ * trigger riêng và lúc cuộn chuột lướt qua liên tục mount / unmount popup, gây giật.
+ */
+const ProgramChip = memo(({ label, matches, selectedId, onPick }: ChipProps) => {
     if (!matches.length) {
         return (
-            <Tooltip title={i18n.t('Sẽ hỗ trợ sau')}>
-                <span className="program-chip" data-state="unavailable" tabIndex={0} aria-disabled="true" aria-label={i18n.t('{{label}}: sẽ hỗ trợ sau', { label: label })}>
-                    {label}
-                </span>
-            </Tooltip>
+            <span
+                className="program-chip"
+                data-state="unavailable"
+                tabIndex={0}
+                aria-disabled="true"
+                title={i18n.t('Sẽ hỗ trợ sau')}
+                aria-label={i18n.t('{{label}}: sẽ hỗ trợ sau', { label: label })}
+            >
+                {label}
+            </span>
         );
     }
     const selected = matches.some(item => item.id === selectedId);
@@ -46,11 +58,15 @@ const ProgramChip = ({ label, matches, selectedId, onPick }: ChipProps) => {
     if (matches.length === 1) {
         const [curriculum] = matches;
         return (
-            <Tooltip title={`${curriculum.code} · ${curriculum.name}`}>
-                <button type="button" className="program-chip" data-state={state} onClick={() => onPick(curriculum)}>
-                    {label}
-                </button>
-            </Tooltip>
+            <button
+                type="button"
+                className="program-chip"
+                data-state={state}
+                title={`${curriculum.code} · ${curriculum.name}`}
+                onClick={() => onPick(curriculum)}
+            >
+                {label}
+            </button>
         );
     }
     return (
@@ -67,7 +83,7 @@ const ProgramChip = ({ label, matches, selectedId, onPick }: ChipProps) => {
             </button>
         </Dropdown>
     );
-};
+});
 
 interface CurriculumPickerProps {
     /** Do `Form.Item` truyền vào. */
@@ -84,6 +100,9 @@ interface CurriculumPickerProps {
 const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPickerProps) => {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
+    // Gõ tìm cập nhật ô nhập ngay; bảng lọc lại ở mức ưu tiên thấp, không chặn bàn phím.
+    const deferredSearch = useDeferredValue(search);
+    const searchRef = useRef<InputRef>(null);
     const selected = curricula.find(item => item.id === value) ?? null;
 
     /** Chương trình trong database theo khoá `TIỀN_TỐ/HẬU_TỐ`. */
@@ -98,11 +117,16 @@ const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPic
         return map;
     }, [curricula]);
 
-    const matchesOf = (row: SchoolProgramRow, label: string): Curriculum[] => {
-        if (!row.program) return [];
-        const cohorts = cohortsOfLabel(label);
-        return (byProgram.get(row.program) ?? []).filter(item => cohorts.includes(item.cohortYear));
-    };
+    /** Ô khóa của mọi dòng trong bảng trường (theo `index`), tính lại chỉ khi danh sách chương trình đổi. */
+    const cellsByRow = useMemo(() => {
+        const matchesOf = (row: SchoolProgramRow, label: string): Curriculum[] => {
+            if (!row.program) return [];
+            const cohorts = cohortsOfLabel(label);
+            return (byProgram.get(row.program) ?? []).filter(item => cohorts.includes(item.cohortYear));
+        };
+        const cell = (row: SchoolProgramRow, labels: string[]): ChipCell => labels.map(label => ({ label, matches: matchesOf(row, label) }));
+        return SCHOOL_PROGRAMS.map(row => ({ latest: cell(row, row.latest), previous: cell(row, row.previous) }));
+    }, [byProgram]);
 
     /** Chương trình có trong database nhưng bảng của trường không trỏ tới (vd khóa bảng không liệt kê). */
     const others = useMemo(() => {
@@ -116,7 +140,7 @@ const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPic
     }, [curricula, byProgram]);
 
     const rows = useMemo<PickerRow[]>(() => {
-        const needle = normalize(search.trim());
+        const needle = normalize(deferredSearch.trim());
         const filtered = SCHOOL_PROGRAMS
             .map((row, index) => ({ ...row, index }))
             .filter(row => !needle || normalize(`${row.faculty} ${row.major}`).includes(needle));
@@ -129,42 +153,46 @@ const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPic
             }
             return { ...row, facultySpan: span };
         });
-    }, [search]);
+    }, [deferredSearch]);
 
-    const pick = (curriculum: Curriculum) => {
-        onChange?.(curriculum.id);
+    // Ổn định giữa các lần render để ProgramChip (memo) không vẽ lại khi gõ tìm.
+    const latestOnChange = useRef(onChange);
+    useLayoutEffect(() => { latestOnChange.current = onChange; }, [onChange]);
+    const pick = useCallback((curriculum: Curriculum) => {
+        latestOnChange.current?.(curriculum.id);
         setOpen(false);
-    };
+    }, []);
 
-    const chips = (row: SchoolProgramRow, labels: string[]) => (labels.length ? (
-        <div className="program-chip-list">
-            {labels.map(label => (
-                <ProgramChip key={label} label={label} matches={matchesOf(row, label)} selectedId={value} onPick={pick} />
-            ))}
-        </div>
-    ) : <Text type="secondary">—</Text>);
-
-    const columns: ColumnsType<PickerRow> = [
-        {
-            title: i18n.t('Khoa'),
-            dataIndex: 'faculty',
-            width: '20%',
-            onCell: row => ({ rowSpan: row.facultySpan }),
-            render: (faculty: string) => <Text strong>{faculty}</Text>,
-        },
-        { title: i18n.t('Ngành'), dataIndex: 'major', width: '32%' },
-        {
-            title: i18n.t('CTĐT/Kế hoạch giảng dạy mới nhất'),
-            key: 'latest',
-            width: '18%',
-            render: (_value, row) => chips(row, row.latest),
-        },
-        {
-            title: i18n.t('Chương trình đào tạo các khóa'),
-            key: 'previous',
-            render: (_value, row) => chips(row, row.previous),
-        },
-    ];
+    const columns = useMemo<ColumnsType<PickerRow>>(() => {
+        const chips = (cell: ChipCell) => (cell.length ? (
+            <div className="program-chip-list">
+                {cell.map(({ label, matches }) => (
+                    <ProgramChip key={label} label={label} matches={matches} selectedId={value} onPick={pick} />
+                ))}
+            </div>
+        ) : <Text type="secondary">—</Text>);
+        return [
+            {
+                title: i18n.t('Khoa'),
+                dataIndex: 'faculty',
+                width: '20%',
+                onCell: row => ({ rowSpan: row.facultySpan }),
+                render: (faculty: string) => <Text strong>{faculty}</Text>,
+            },
+            { title: i18n.t('Ngành'), dataIndex: 'major', width: '32%' },
+            {
+                title: i18n.t('CTĐT/Kế hoạch giảng dạy mới nhất'),
+                key: 'latest',
+                width: '18%',
+                render: (_value, row) => chips(cellsByRow[row.index].latest),
+            },
+            {
+                title: i18n.t('Chương trình đào tạo các khóa'),
+                key: 'previous',
+                render: (_value, row) => chips(cellsByRow[row.index].previous),
+            },
+        ];
+    }, [cellsByRow, value, pick]);
 
     return (
         <>
@@ -185,19 +213,25 @@ const CurriculumPicker = ({ value, onChange, curricula, loading }: CurriculumPic
                 {value && <ITextBtn onClick={() => onChange?.(null)}>{i18n.t('Bỏ chọn')}</ITextBtn>}
             </div>
 
+            {/*
+              * Mount lần đầu khi mở, sau đó giữ lại (không destroyOnHidden): mở lại không phải dựng lại bảng vài trăm
+              * chip. Ô tìm kiếm được xóa sau khi modal đóng hẳn. `curriculum-picker-modal` tắt lớp mờ của mask (xem CSS).
+              */}
             <Modal
                 open={open}
                 onCancel={() => setOpen(false)}
+                afterClose={() => setSearch('')}
+                afterOpenChange={visible => { if (visible) searchRef.current?.focus(); }}
                 footer={null}
                 width={1120}
                 title={i18n.t('Chọn chương trình đào tạo')}
-                destroyOnHidden
+                rootClassName="curriculum-picker-modal"
             >
                 <div className="stack" style={{ gap: 12 }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
                         <Input
+                            ref={searchRef}
                             allowClear
-                            autoFocus
                             prefix={<LuSearch />}
                             placeholder={i18n.t('Tìm theo khoa hoặc ngành (gõ không dấu được)')}
                             aria-label={i18n.t('Tìm khoa hoặc ngành')}
