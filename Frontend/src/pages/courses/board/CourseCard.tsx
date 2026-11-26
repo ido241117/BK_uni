@@ -47,7 +47,7 @@ const CourseCard = ({
                 aria-label={i18n.t('{{code}} {{name}}, {{credits}} tín chỉ, {{statusLabel}}{{v4}}. Bấm để đổi trạng thái.', { code: course.code, name: course.name, credits: course.credits, statusLabel: statusLabel, v4: dirty ? ', chưa lưu' : '' })}
             >
                 <span className="course-card-top">
-                    <Bead state={planned ? 'planned' : status ?? 'none'} />
+                    <Bead state={planned ? 'planned' : status ?? 'none'} tone={planned ? 'brand' : undefined} />
                     <span className="course-card-code">{course.code}</span>
                     <span className="course-card-credits">{course.credits}{' '}{i18n.t('TC')}</span>
                 </span>

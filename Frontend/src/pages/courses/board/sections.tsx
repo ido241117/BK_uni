@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { Card, Empty, Tag, Typography } from 'antd';
+import { Card, Empty, Typography } from 'antd';
 import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
-import { ITextBtn } from '@/components';
+import { ITextBtn, ToneChip } from '@/components';
 import {
     COURSE_GROUP_KIND,
     COURSE_GROUP_SCOPE,
@@ -80,9 +80,9 @@ export const GroupSection = ({
                 >
                     {expanded ? <LuChevronDown aria-hidden /> : <LuChevronRight aria-hidden />}
                     <span className="board-section-title">{group.name}</span>
-                    <Tag color={group.kind === COURSE_GROUP_KIND.REQUIRED ? 'green' : 'blue'} style={{ marginInlineEnd: 0 }}>
+                    <ToneChip tone={group.kind === COURSE_GROUP_KIND.REQUIRED ? 'good' : 'brand'}>
                         {describeGroupRequirement(group)}
-                    </Tag>
+                    </ToneChip>
                 </button>
                 <span className="board-section-sub">
                     {progressText(block)}

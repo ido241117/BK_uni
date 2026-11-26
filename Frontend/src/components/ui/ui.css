@@ -201,6 +201,47 @@
         color: var(--ink-soft);
     }
 
+    /* ===== ToneChip: pale fill + edge + text in one tone (codes and kinds that must be told apart) ===== */
+    .tone-chip {
+        --tone: var(--ink-muted);
+        display: inline-flex;
+        align-items: center;
+        padding: 0 7px;
+        border: 1px solid color-mix(in srgb, var(--tone) 38%, transparent);
+        border-radius: var(--radius-xs);
+        background: color-mix(in srgb, var(--tone) 10%, var(--bg-canvas));
+        color: var(--tone);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        line-height: 20px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        cursor: default;
+    }
+
+    .tone-chip[data-tone='rose'] { --tone: var(--accent-rose); }
+    .tone-chip[data-tone='warn'] { --tone: var(--sem-warn); }
+    .tone-chip[data-tone='err'] { --tone: var(--sem-err); }
+    .tone-chip[data-tone='good'] { --tone: var(--sem-good); }
+    .tone-chip[data-tone='brand'] { --tone: var(--accent-brand); }
+
+    button.tone-chip {
+        cursor: pointer;
+        transition: background 0.12s, border-color 0.12s;
+    }
+
+    button.tone-chip:hover {
+        border-color: var(--tone);
+        background: color-mix(in srgb, var(--tone) 18%, var(--bg-canvas));
+    }
+
+    button.tone-chip:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 1px;
+    }
+
     /* ===== Disclosure trigger + panel ===== */
     .disclosure-trigger {
         display: flex;

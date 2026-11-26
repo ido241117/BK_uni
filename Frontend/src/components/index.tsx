@@ -9,6 +9,7 @@ export { default as ErrorBoundary } from './ErrorBoundary';
 export {
     CollapsibleGroup, CreditLabel, TextTag, MetaSep, Disclosure, KpiCount, ProgressThread, SectionLabel, RowList, RowItem,
     SearchLine, LabeledSwitch, ToggleRow, Bead, Pip, SparkleMark, type BeadState, type BeadTone,
+    ToneChip, RELATION_TONE, type ChipTone,
     CourseStatus, CourseStatusSelect, FileMark, DiffFlag, LoadWarning, SourceBadge, StatusChange, CourseCode, CourseOption,
     NoteTrigger, NoteBox, EmptyTableLine, PageLoading, RouteLoading, StatusLine, ModalTitle, UploadZone, StepList, PageTabs,
 } from './ui';

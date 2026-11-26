@@ -12,10 +12,10 @@ import {
     type NodeProps,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Alert, Card, Checkbox, Empty, Skeleton, Switch, Tag, Typography } from 'antd';
+import { Alert, Card, Checkbox, Empty, Skeleton, Switch, Typography } from 'antd';
 import { LuArrowUpRight, LuX } from 'react-icons/lu';
 import { Link } from 'react-router';
-import { IconBtn } from '@/components';
+import { Bead, IconBtn, RELATION_TONE, SectionLabel, ToneChip, type BeadState } from '@/components';
 import { listCourseRelations } from '@/apis/curriculum';
 import { useAppTheme } from '@/contexts';
 import { useApiQuery, useMediaQuery } from '@/hooks';
@@ -81,16 +81,17 @@ const statusLabel = (node: Pick<GraphNode, 'status' | 'plannedSemester'>) => {
     return node.status ? STUDENT_COURSE_STATUS_LABEL[node.status] : i18n.t('Chưa khai');
 };
 
-const dataStatus = (status: StudentCourseStatus | null, planned: string | null) => (
+const dataStatus = (status: StudentCourseStatus | null, planned: string | null): BeadState => (
     canPlan(status) && planned ? 'planned' : status ?? 'none'
 );
 
 const CourseNode = memo(({ data }: NodeProps<Node<CourseNodeData>>) => {
     const { node, focus } = data;
+    const beadState = dataStatus(node.status, node.plannedSemester);
     return (
         <div
             className="graph-node"
-            data-status={dataStatus(node.status, node.plannedSemester)}
+            data-status={beadState}
             data-focus={focus ?? undefined}
             data-unmet={node.unmetCount > 0 || undefined}
             style={{ width: NODE_W, height: NODE_H }}
@@ -98,6 +99,7 @@ const CourseNode = memo(({ data }: NodeProps<Node<CourseNodeData>>) => {
         >
             <Handle type="target" position={Position.Left} className="graph-handle" isConnectable={false} />
             <div className="graph-node-top">
+                <Bead state={beadState} tone={beadState === 'planned' ? 'brand' : undefined} />
                 <span className="graph-node-code">{node.course.code}</span>
                 <span className="graph-node-credits">{node.course.credits}{' '}{i18n.t('TC')}</span>
             </div>
@@ -127,11 +129,9 @@ interface PrerequisiteGraphProps {
 /** Một dòng điều kiện trong panel chi tiết / danh sách mobile. */
 const ConditionRow = ({ edge, other, satisfiedText }: { edge: GraphEdge; other: GraphNode | undefined; satisfiedText?: string }) => (
     <div className="graph-condition" data-unmet={edge.unmet || undefined}>
-        <Tag style={{ marginInlineEnd: 0 }} color={edge.type === COURSE_RELATION_TYPE.PREREQUISITE ? 'red' : edge.type === COURSE_RELATION_TYPE.RECOMMENDED ? undefined : 'blue'}>
-            {SHORT_LABEL[edge.type]}
-        </Tag>
+        <ToneChip tone={RELATION_TONE[edge.type]} title={COURSE_RELATION_TYPE_LABEL[edge.type]}>{SHORT_LABEL[edge.type]}</ToneChip>
         <span style={{ minWidth: 0 }}>
-            <Text strong>{other?.course.code}</Text> {other?.course.name}
+            <span className="graph-condition-code">{other?.course.code}</span> {other?.course.name}
             <div className="hint">
                 {other ? statusLabel(other) : ''}
                 {edge.unmet && <Text type="danger">{' '}{i18n.t('· chưa thỏa')}</Text>}
@@ -247,7 +247,8 @@ const PrerequisiteGraph = ({ curriculumId, courses, groups, statusMap, planMap }
                                     strokeDasharray={EDGE_STYLE[type].dash}
                                 />
                             </svg>
-                            {COURSE_RELATION_TYPE_LABEL[type]} ({SHORT_LABEL[type]})
+                            {COURSE_RELATION_TYPE_LABEL[type]}
+                            <ToneChip tone={RELATION_TONE[type]}>{SHORT_LABEL[type]}</ToneChip>
                         </span>
                     ),
                 }))}
@@ -276,9 +277,9 @@ const PrerequisiteGraph = ({ curriculumId, courses, groups, statusMap, planMap }
             description={(
                 <div className="program-chip-list" style={{ marginTop: 4 }}>
                     {unmetNodes.map(node => (
-                        <Tag key={node.course.id} color="red" style={{ cursor: 'pointer', marginInlineEnd: 0 }} onClick={() => setSelectedId(node.course.id)}>
+                        <ToneChip key={node.course.id} tone="err" onClick={() => setSelectedId(node.course.id)} title={node.course.name}>
                             {node.course.code}
-                        </Tag>
+                        </ToneChip>
                     ))}
                 </div>
             )}
@@ -331,7 +332,14 @@ const PrerequisiteGraph = ({ curriculumId, courses, groups, statusMap, planMap }
                     >
                         <Background gap={24} size={1} />
                         <Controls showInteractive={false} />
-                        <MiniMap pannable zoomable nodeStrokeWidth={2} />
+                        <MiniMap
+                            pannable
+                            zoomable
+                            nodeBorderRadius={2}
+                            nodeClassName={node => (node.type === 'course'
+                                ? `mm-${dataStatus((node.data as CourseNodeData).node.status, (node.data as CourseNodeData).node.plannedSemester)}`
+                                : 'mm-header')}
+                        />
                     </ReactFlow>
                 </div>
 
@@ -339,16 +347,16 @@ const PrerequisiteGraph = ({ curriculumId, courses, groups, statusMap, planMap }
                     <aside className="graph-panel" aria-label={i18n.t('Điều kiện của {{code}}', { code: selected.course.code })}>
                         <div className="graph-panel-head">
                             <div style={{ minWidth: 0 }}>
-                                <Text strong>{selected.course.code}</Text>
-                                <div>{selected.course.name}</div>
+                                <div className="graph-panel-code">{selected.course.code}</div>
+                                <div className="graph-panel-name">{selected.course.name}</div>
                                 <div className="hint">{selected.course.credits}{' '}{i18n.t('TC ·')}{' '}{statusLabel(selected)}</div>
                             </div>
                             <IconBtn size="small" icon={<LuX />} label={i18n.t('Đóng')} onClick={() => setSelectedId(null)} />
                         </div>
 
                         <div>
-                            <Text strong>{i18n.t('Cần có trước (')}{incomingOf(selected.course.id).length})</Text>
-                            <div className="stack" style={{ gap: 8, marginTop: 8 }}>
+                            <SectionLabel>{i18n.t('Cần có trước (')}{incomingOf(selected.course.id).length})</SectionLabel>
+                            <div className="stack" style={{ gap: 8 }}>
                                 {incomingOf(selected.course.id).length
                                     ? incomingOf(selected.course.id).map(edge => (
                                         <ConditionRow key={edge.id} edge={edge} other={nodeById.get(edge.from)} satisfiedText={selected.active ? i18n.t('đã thỏa') : undefined} />
@@ -358,8 +366,8 @@ const PrerequisiteGraph = ({ curriculumId, courses, groups, statusMap, planMap }
                         </div>
 
                         <div>
-                            <Text strong>{i18n.t('Là điều kiện của (')}{outgoingOf(selected.course.id).length})</Text>
-                            <div className="stack" style={{ gap: 8, marginTop: 8 }}>
+                            <SectionLabel>{i18n.t('Là điều kiện của (')}{outgoingOf(selected.course.id).length})</SectionLabel>
+                            <div className="stack" style={{ gap: 8 }}>
                                 {outgoingOf(selected.course.id).length
                                     ? outgoingOf(selected.course.id).map(edge => (
                                         <ConditionRow key={edge.id} edge={edge} other={nodeById.get(edge.to)} />

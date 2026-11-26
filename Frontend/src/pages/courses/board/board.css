@@ -11,7 +11,8 @@
         --status-failed: var(--sem-err);
         --status-not-started: var(--ink-soft);
         --status-dirty: var(--sem-warn);
-        --status-planned: var(--ink-muted);
+        /* Blue = "where you are going" (DESIGN-SYSTEM §1.1): planned must not read like not-started. */
+        --status-planned: var(--accent-brand);
         --status-completed-soft: color-mix(in srgb, var(--status-completed) 12%, transparent);
         --status-progress-soft: color-mix(in srgb, var(--status-progress) 10%, transparent);
         --status-failed-soft: color-mix(in srgb, var(--status-failed) 10%, transparent);
@@ -79,12 +80,25 @@
         font-variant-numeric: tabular-nums;
     }
 
+    /*
+     * Three levels, told apart by surface rather than boxes-in-boxes:
+     *   section (semester / block)  = hairline + serif title (antd Card skin);
+     *   elective group inside it     = blush tonal wash, sans title one step smaller;
+     *   course card                  = tile washed in its status color (below).
+     */
     .board-group {
-        padding: var(--space-3) 0;
-        border-top: 1px dashed var(--line-chrome);
+        padding: var(--space-3) 14px;
+        border-radius: var(--radius-sm);
+        background: var(--bg-blush);
     }
 
-    /* ===== Course bead (bead family, Bead.tsx: no box, a status ring leads) ===== */
+    .board-group .board-section-title {
+        font-family: var(--sans);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* ===== Course card: a tile washed in its status color; the bead still leads (shape = state) ===== */
     .course-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr));
@@ -93,20 +107,36 @@
 
     .course-card {
         --accent: var(--status-not-started);
+        --wash: 7%;
         position: relative;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         grid-template-rows: auto auto;
+        padding: 2px;
+        border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line-hairline));
         border-radius: var(--radius-xs);
-        transition: background 0.12s;
+        background: color-mix(in srgb, var(--accent) var(--wash), var(--bg-canvas));
+        transition: background 0.12s, border-color 0.12s;
     }
 
-    .course-card[data-status='completed'] { --accent: var(--status-completed); }
-    .course-card[data-status='in-progress'] { --accent: var(--status-progress); }
-    .course-card[data-status='failed'] { --accent: var(--status-failed); }
-    .course-card[data-status='planned'] { --accent: var(--status-planned); }
+    .course-card[data-status='completed'] { --accent: var(--status-completed); --wash: 12%; }
+    .course-card[data-status='in-progress'] { --accent: var(--status-progress); --wash: 11%; }
+    .course-card[data-status='failed'] { --accent: var(--status-failed); --wash: 11%; }
+    .course-card[data-status='planned'] { --accent: var(--status-planned); --wash: 10%; }
+
+    /* Not declared yet: no wash, dotted edge (same idea as the dotted bead). */
+    .course-card[data-status='none'] {
+        border-style: dashed;
+        border-color: var(--line-chrome);
+        background: var(--bg-canvas);
+    }
 
     .course-card:hover {
+        --wash: 18%;
+        border-color: var(--accent);
+    }
+
+    .course-card[data-status='none']:hover {
         background: var(--bg-tint-hover);
     }
 
@@ -184,7 +214,7 @@
     }
 
     .course-card-plan {
-        color: var(--accent-rose);
+        color: var(--status-planned);
     }
 
     /* Link to the course page: a small arrow at the top right, no strip. */
@@ -258,7 +288,7 @@
 
     .course-card-plansem {
         min-width: 48px;
-        color: var(--accent-rose);
+        color: var(--status-planned);
         font-variant-numeric: tabular-nums;
         font-weight: 600;
         text-align: center;

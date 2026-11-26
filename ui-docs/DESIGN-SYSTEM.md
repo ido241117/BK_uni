@@ -348,7 +348,7 @@ States: hover (primary darkens one step in light, lightens in dark; secondary tu
 - **KPI strip** (Gợi ý lộ trình): cells split by a hairline; uppercase soft label, serif 32px count, 13px muted unit kept on the same line as its number; dims to 45% while the result is stale.
 - **Table** (all antd tables): transparent, uppercase soft headers, hairline rows, tint hover, slim controls inside cells (28px), `is-diff` row class puts a terracotta pip before the first cell, expanded rows are blush (note boxes). Empty → `EmptyTableLine`.
 - **Course status**: `CourseStatus` (bead + label in sage / rose / muted / terracotta), `CourseStatusSelect`, `FileMark` (✓ / --), `CourseCode`, `CourseOption` (search result: rose code, name, credits right).
-- **Markers**: `DiffFlag`, `LoadWarning` (terracotta, left rule), `SourceBadge` (blush chip, rose text), `StatusChange`, `TextTag` (plain 11px tag), `CreditLabel` (sage when met), antd `Tag` (8px ring in the tone color + plum text; preset colors map to the palette).
+- **Markers**: `DiffFlag`, `LoadWarning` (terracotta, left rule), `SourceBadge` (blush chip, rose text), `StatusChange`, `TextTag` (plain 11px tag), `CreditLabel` (sage when met), antd `Tag` (8px ring in the tone color + plum text; preset colors map to the palette), `ToneChip` (pale fill + edge + text in one tone, 4px radius; for codes and kinds that must be told apart at a glance: learning outcome = rose, assessment = amber, relation type via `RELATION_TONE` = terracotta prerequisite / amber prior and co-requisite / muted recommended, group requirement = sage required / blue elective; with `onClick` it is a button).
 
 ### 3.5 Containers
 
@@ -398,7 +398,9 @@ A course is a ring: a bead with a hole, on the curriculum's thread. Its **shape*
 
 `<Bead state tone? dashed? size?>`; 10px by default, 1.6px ring. A solid 6px `Pip` is a flag on a row, never a state. Used by: course cards and the catalog column (Chương trình), the board legend, `CourseStatus`, `CollapsibleGroup`, the Gợi ý timeline; antd `Tag` draws the same ring in its tone color.
 
-**Course card** (Chương trình board): no box; bead + code (600) + credits, two-line muted name, status word. Click = change status; a text row under it holds "+ Lên kế hoạch" or "− HK 262 + ×"; a small arrow at the top right opens the course page; an amber pip when unsaved. Hover = tint.
+**Course card** (Chương trình board): a 4px-radius tile with a hairline edge and a tonal wash in its status color (sage completed, rose in progress, terracotta failed, brand blue planned with a blue dashed bead, muted not started; not declared = dashed edge, no wash); bead + code (600) + credits, two-line muted name, status word. The wash is the "tonal wash" of §1.1, not a box: there is no shadow and no left stripe, and the bead shape + word still carry the state without color. Click = change status; a text row under it holds "+ Lên kế hoạch" or "− HK 262 + ×"; a small arrow at the top right opens the course page; an amber pip when unsaved. Hover = stronger wash + full-color edge.
+
+**Board levels**: section (semester / block) = hairline + serif title; elective group inside it = blush wash panel, 14px sans title, requirement chip (sage = required block, blue = elective); course cards inside that.
 
 ### 3.9 Semester timeline (`semester-timeline.html` §A, `pages/recommendations/SemesterBoard.tsx`)
 
@@ -428,7 +430,7 @@ Write the Vietnamese text through `t()` (hook) or `i18n.t()` (anywhere), interpo
 - Chart text (axis labels, legends) is `--ink-muted` at full opacity (the chart library's default grey fails contrast).
 - Canvas charts cannot read CSS variables, so their hex values live in `charts.tsx` (`SERIES_COLOR`, `ink`) and MUST mirror the tokens.
 - Legends always name the series; text uses ink tokens, never series colors.
-- **The prerequisite graph (Chương trình › Sơ đồ điều kiện) is a placeholder.** It is a temporary feature, has not been design-reviewed and is intended to be removed. It is outside this system: do not copy its look (edge colors, node boxes) elsewhere.
+- **Prerequisite graph (Chương trình › Sơ đồ điều kiện, `board/graph`)**: kept, and drawn with the board's language. Nodes are course cards (bead + code + credits, status wash, dashed edge when not declared, terracotta edge when a condition is unmet); column headers are serif semester labels over a chrome hairline; the canvas and the side panel are 6px hairline frames; React Flow's background, controls and minimap read theme tokens through its `--xy-*` variables, and minimap nodes take the status colors. Selection = rose ring on the course, sparkle ring on its chain, the rest fade to 25%. Edge colors are the only hex values (SVG markers): ink = prerequisite (thick), rose = prior, sage = co-requisite (dashed), soft = recommended (dotted), terracotta = unmet (animated), amber "!" = backward; each type is named with its `ToneChip` in the filter legend, so color is never the only cue.
 
 ---
 
@@ -566,7 +568,7 @@ Versions as in `Frontend/package.json`. **New** = added during the 2026-11 redes
 | `react-icons` | ^5.6.0 | Icons: Phosphor (`react-icons/pi`) everywhere, a few Lucide (`react-icons/lu`) in Gợi ý action rows | Same Phosphor set as the templates (`@phosphor-icons/web` from a CDN there) |
 | `react-toastify` | ^11.0.5 | Toasts (`toastMessage.*`), skinned in `antd-skin.css`, icons in `App.tsx` | |
 | `@ant-design/plots` | ^2.6.8 | Charts on Phân tích (`charts.tsx`): bar / column / ring | Canvas: colors are hex values mirrored from the tokens; axis and legend text forced to `--ink-muted` (§3.12) |
-| `@xyflow/react` | 12.12.1 | Prerequisite graph (Chương trình › Sơ đồ điều kiện) | **Placeholder** feature, outside the system, to be removed (§3.12); removing it removes this dependency |
+| `@xyflow/react` | 12.12.1 | Prerequisite graph (Chương trình › Sơ đồ điều kiện), styled through its `--xy-*` variables (§3.12) |
 | `i18next` + `react-i18next` | ^27.2.7 / ^18.0.3 | **New.** VN / EN switch: `t()` / `i18n.t()`, Vietnamese text as keys, English in `src/i18n/en.json` (§5.6) | Tooling in `Frontend/scripts`: `i18n:check`, `i18n:rename` |
 | `@fontsource/be-vietnam-pro` | ^5.3.0 | **New.** Sans font, weights 400 / 500 / 600 / 700, self-hosted | Replaced the Google Fonts link; files split by `unicode-range` (Vietnamese / Latin-ext / Latin), imported in `src/main.tsx` |
 | `@fontsource-variable/fraunces` | ^5.3.0 | **New.** Serif font, variable (weight + optical size), self-hosted | Family name `'Fraunces Variable'`; the serif token falls back to `'Fraunces'` (templates load it from Google Fonts), then `'Times New Roman'` |
@@ -584,7 +586,7 @@ Adding a UI package: prefer what is already here (antd, Phosphor, tokens + CSS).
 | Gợi ý: "tích lũy" credits | Computed as required total minus credits still planned; can differ by a credit or two from Phân tích's earned figure when the solver's remaining set differs from the analysis |
 | ASCII-only Vietnamese words | Detected by a word list (TC, MSSV, HK, Khoa); new ones need `t()` by hand |
 | Not translated on purpose | Course / curriculum names (data), Excel template headers (file format), AI advisor context, official program list |
-| Prerequisite graph | Placeholder, not design-reviewed, intended to be removed (§3.12) |
+| Prerequisite graph | Restyled to the board's language (§3.12) but not yet design-reviewed; edge colors are hex copies of tokens and must be updated by hand when the palette changes |
 | Gợi ý lộ trình: some inline layout remains in `EngineReportCard` (tag rows) | Move to classes when the page is finalized |
 | Admin, profile, advisor, course detail | Follow the system through the global skin; no page-specific template yet; admin pages not yet checked visually |
 | Help page | Link present ("sắp có"); no page |

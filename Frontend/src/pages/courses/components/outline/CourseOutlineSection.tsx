@@ -3,6 +3,7 @@ import { Alert, Card, Descriptions, Empty, Segmented, Select, Space, Spin, Tabs,
 import { LuCircleAlert, LuCircleCheck } from 'react-icons/lu';
 import { Link } from 'react-router';
 import { getCourseOutline } from '@/apis/outline';
+import { RELATION_TONE, ToneChip } from '@/components';
 import { useApiQuery } from '@/hooks';
 import {
     COURSE_RELATION_TYPE_LABEL,
@@ -46,14 +47,8 @@ interface CourseOutlineSectionProps {
 
 const courseLink = (code: string) => <Link to={`/courses/${encodeURIComponent(code)}`}><Text strong>{code}</Text></Link>;
 
-/**
- * Chip mã có tô màu (nền nhạt + viền + chữ cùng tông). Dùng thay `Tag` của antd vì skin chung vẽ Tag thành
- * chấm tròn + chữ, khiến mã chuẩn đầu ra, mã hoạt động đánh giá và loại điều kiện trông giống hệt nhau.
- */
-type ChipTone = 'outcome' | 'activity' | 'err' | 'warn' | 'muted';
-const Chip = ({ tone, children }: { tone: ChipTone; children: ReactNode }) => (
-    <span className="outline-chip" data-tone={tone}>{children}</span>
-);
+// Mã chuẩn đầu ra = ToneChip hồng, mã hoạt động đánh giá = ToneChip hổ phách (không dùng `Tag`: skin chung vẽ Tag
+// thành chấm tròn + chữ, các loại mã trông giống hệt nhau).
 
 const TextBlock = ({ title, text }: { title: string; text: string | null }) => (text ? (
     <div className="outline-block">
@@ -149,12 +144,12 @@ const SessionsTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                                 <Space wrap size={[4, 4]} style={{ marginTop: 6 }}>
                                     {outcomeKeys.map(key => (
                                         <Tooltip key={key} title={pickText(outcomes.get(key)?.name, lang)}>
-                                            <Chip tone="outcome">{outcomes.get(key)?.code ?? key}</Chip>
+                                            <ToneChip tone="rose">{outcomes.get(key)?.code ?? key}</ToneChip>
                                         </Tooltip>
                                     ))}
                                     {activityCodes.map(code => (
                                         <Tooltip key={code} title={pickText(activities.get(code)?.name, lang)}>
-                                            <Chip tone="activity">{code}</Chip>
+                                            <ToneChip tone="warn">{code}</ToneChip>
                                         </Tooltip>
                                     ))}
                                 </Space>
@@ -164,8 +159,8 @@ const SessionsTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                 );
             })}
             <div className="outline-legend">
-                <Chip tone="outcome">{i18n.t('Chuẩn đầu ra')}</Chip>
-                <Chip tone="activity">{i18n.t('Hoạt động đánh giá')}</Chip>
+                <ToneChip tone="rose">{i18n.t('Chuẩn đầu ra')}</ToneChip>
+                <ToneChip tone="warn">{i18n.t('Hoạt động đánh giá')}</ToneChip>
                 <span className="hint">{i18n.t('Rê chuột lên thẻ để xem nội dung.')}</span>
             </div>
         </div>
@@ -204,7 +199,7 @@ const OutcomesTab = ({ content, lang }: { content: OutlineContent; lang: Outline
                                 <Space wrap size={[4, 4]} style={{ marginTop: 4 }}>
                                     {assessedBy.get(outcome.key)!.map(code => (
                                         <Tooltip key={code} title={pickText(activities.get(code)?.name, lang)}>
-                                            <Chip tone="activity">{code}</Chip>
+                                            <ToneChip tone="warn">{code}</ToneChip>
                                         </Tooltip>
                                     ))}
                                 </Space>
@@ -240,17 +235,10 @@ const OutcomesTab = ({ content, lang }: { content: OutlineContent; lang: Outline
 
 /* ------------------------------------ Tab: điều kiện môn ------------------------------------ */
 
-// Tiên quyết = đỏ (chặn cứng), học trước / song hành = hổ phách, khuyến nghị = xám, như bản cũ.
-const RELATION_TONE: Record<CourseRelationType, ChipTone> = {
-    prerequisite: 'err',
-    prior: 'warn',
-    corequisite: 'warn',
-    recommended: 'muted',
-};
-
+// Tiên quyết = đỏ (chặn cứng), học trước / song hành = hổ phách, khuyến nghị = xám (RELATION_TONE dùng chung với sơ đồ).
 const typeTag = (type: CourseRelationType | null, raw?: string | null) => (type
-    ? <Chip tone={RELATION_TONE[type]}>{COURSE_RELATION_TYPE_LABEL[type]}</Chip>
-    : <Chip tone="muted">{raw ?? '?'}</Chip>);
+    ? <ToneChip tone={RELATION_TONE[type]}>{COURSE_RELATION_TYPE_LABEL[type]}</ToneChip>
+    : <ToneChip tone="muted">{raw ?? '?'}</ToneChip>);
 
 const PrerequisitesTab = ({ outline, curriculumRelations, curriculumCode }: {
     outline: CourseOutlineDetail;

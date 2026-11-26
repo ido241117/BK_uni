@@ -303,7 +303,7 @@ const CurriculumBoard = ({ userId, curriculumId }: CurriculumBoardProps) => {
             <div className="board-legend">
                 {LEGEND.map(item => (
                     <span key={item.status} className="board-legend-item">
-                        <Bead state={item.status} />
+                        <Bead state={item.status} tone={item.status === 'planned' ? 'brand' : undefined} />
                         {t(item.label)}
                     </span>
                 ))}

@@ -1,6 +1,8 @@
 export { CollapsibleGroup, CreditLabel, TextTag, MetaSep } from './CollapsibleGroup';
 export { Bead, Pip, SparkleMark, type BeadState, type BeadTone } from './Bead';
 export { Disclosure } from './Disclosure';
+export { ToneChip } from './ToneChip';
+export { RELATION_TONE, type ChipTone } from './tones';
 export { KpiCount, ProgressThread } from './Progress';
 export { SectionLabel, RowList, RowItem } from './RowList';
 export { SearchLine, LabeledSwitch, ToggleRow } from './Controls';
