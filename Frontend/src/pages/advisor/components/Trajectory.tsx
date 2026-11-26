@@ -1,19 +1,20 @@
 import { useMemo, useState } from 'react';
-import { Empty, Segmented, Tag, Typography } from 'antd';
+import { Empty, Segmented, Typography } from 'antd';
 import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
 import type { AdvisorStep, AdvisorStepRole } from '@/types';
 import i18n from '@/i18n';
 
 const { Text } = Typography;
 
-const ROLE_UI: Record<AdvisorStepRole, { label: string; color: string }> = {
-    system: { label: 'SYSTEM', color: 'default' },
-    context: { label: 'CONTEXT', color: 'green' },
-    user: { label: 'USER', color: 'blue' },
-    assistant: { label: 'ASSISTANT', color: 'purple' },
-    tool: { label: 'TOOL', color: 'orange' },
-    answer: { label: 'ANSWER', color: 'cyan' },
-    error: { label: 'ERROR', color: 'red' },
+// Màu của từng vai trò nằm ở `.trace-row[data-role]` trong styles/components.css.
+const ROLE_UI: Record<AdvisorStepRole, { label: string }> = {
+    system: { label: 'SYSTEM' },
+    context: { label: 'CONTEXT' },
+    user: { label: 'USER' },
+    assistant: { label: 'ASSISTANT' },
+    tool: { label: 'TOOL' },
+    answer: { label: 'ANSWER' },
+    error: { label: 'ERROR' },
 };
 
 const pretty = (value: unknown): string => {
@@ -63,10 +64,10 @@ const StepRow = ({ step }: { step: AdvisorStep }) => {
     ].filter(Boolean).join(' · ');
 
     return (
-        <div className={`trace-row${open ? ' is-open' : ''}`}>
+        <div className={`trace-row${open ? ' is-open' : ''}`} data-role={step.role}>
             <button type="button" className="trace-row-head" onClick={() => setOpen(value => !value)} aria-expanded={open}>
                 <span className="trace-caret">{open ? <LuChevronDown /> : <LuChevronRight />}</span>
-                <Tag color={ui.color} className="trace-role">{ui.label}</Tag>
+                <span className="trace-role">{ui.label}</span>
                 <span className="trace-preview">{preview(step)}</span>
                 {meta && <span className="trace-meta">{meta}</span>}
             </button>

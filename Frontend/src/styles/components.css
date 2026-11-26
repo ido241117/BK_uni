@@ -244,6 +244,28 @@
         background: var(--bg-blush);
         border-bottom: 1px solid var(--line-hairline);
     }
+    /*
+     * Mỗi vai trò một tông, giữ đúng nhóm màu của bản cũ (system xám, context xanh lá, user xanh dương,
+     * assistant tím, tool cam, answer xanh ngọc, error đỏ). Dùng token có sẵn khi có; tím và xanh ngọc
+     * chỉ dùng trong trajectory nên khai báo tại chỗ. Hàng được phủ một lớp tông rất nhạt để quét mắt
+     * phân biệt được, còn nhãn vai trò là chip tô màu rõ.
+     */
+    .trace {
+        --trace-assistant: #7A4FA3;
+        --trace-answer: #2B7479;
+    }
+    [data-theme='dark'] .trace {
+        --trace-assistant: #C3A3E6;
+        --trace-answer: #7CC9CC;
+    }
+    .trace-row { --tone: var(--ink-soft); background: color-mix(in srgb, var(--tone) 4%, transparent); }
+    .trace-row[data-role='context'] { --tone: var(--sem-good); }
+    .trace-row[data-role='user'] { --tone: var(--accent-brand); }
+    .trace-row[data-role='assistant'] { --tone: var(--trace-assistant); }
+    .trace-row[data-role='tool'] { --tone: var(--sem-warn); }
+    .trace-row[data-role='answer'] { --tone: var(--trace-answer); }
+    .trace-row[data-role='error'] { --tone: var(--sem-err); }
+    .trace-row[data-role='system'] { background: transparent; }
     .trace-row + .trace-row { border-top: 1px solid var(--line-hairline); }
     .trace-row-head {
         display: flex;
@@ -258,10 +280,23 @@
         text-align: left;
         cursor: pointer;
     }
-    .trace-row-head:hover, .trace-row.is-open .trace-row-head { background: var(--bg-blush); }
+    .trace-row-head:hover, .trace-row.is-open .trace-row-head { background: color-mix(in srgb, var(--tone) 10%, var(--bg-canvas)); }
     .trace-row-head:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-glow); }
     .trace-caret { display: inline-flex; color: var(--ink-muted); flex: none; }
-    .trace-role { flex: none; margin: 0; min-width: 92px; text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+    .trace-role {
+        flex: none;
+        min-width: 92px;
+        padding: 1px 8px;
+        border: 1px solid color-mix(in srgb, var(--tone) 40%, transparent);
+        border-radius: var(--radius-sm);
+        background: color-mix(in srgb, var(--tone) 14%, var(--bg-canvas));
+        color: var(--tone);
+        text-align: center;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 18px;
+    }
     .trace-preview {
         flex: 1;
         min-width: 0;
