@@ -1,0 +1,7 @@
+# Local-only files (research-pipeline has no frontend; leftovers from other branches stay ignored)
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+/Design/

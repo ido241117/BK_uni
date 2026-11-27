@@ -1,0 +1,294 @@
+{
+ "agreement": {
+  "alpha_mean": 0.13282125204490203,
+  "alpha_per_tag": {
+   "KTTH": -0.010204081632652962,
+   "TNTN": 0.09765625,
+   "common-productivity": 0.2265625,
+   "criteria-decision-analysis": 0.0898876404494382,
+   "energy-management": 0.35546875,
+   "environmental-engineering": 0.34375,
+   "environmental-policy": 0.12567934782608692,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.013289036544850474,
+   "ky-nang-bo-tro": -0.04210526315789487,
+   "mining-area": 0.14948453608247425,
+   "project-assessment": 0.04807692307692302,
+   "sustainable-mindset": 0.08755760368663601,
+   "systems-thinking": 0.2415730337078652
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.08294142796066596,
+   "bge-m3-zeroshot vs embedding-vi": 0.03363392639532032,
+   "bge-m3-zeroshot vs keyword": -0.010362694300522694,
+   "bge-m3-zeroshot vs modernbert": 0.350927246790299,
+   "embedding vs embedding-vi": 0.5924365631429412,
+   "embedding vs keyword": -0.014719000892061029,
+   "embedding vs modernbert": 0.21513382974441547,
+   "embedding-vi vs keyword": -0.015121467526028729,
+   "embedding-vi vs modernbert": 0.10376797812908632,
+   "keyword vs modernbert": 0.21280276816608698
+  },
+  "tags_reliable": 0,
+  "tags_with_alpha": 13
+ },
+ "courses": 20,
+ "curriculum": "NRE-KTTNTN",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 1040,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 1040,
+   "scored": 780,
+   "seconds": 47.0,
+   "seconds_per_pair": 0.0603
+  },
+  "embedding-vi": {
+   "pairs": 1040,
+   "scored": 756,
+   "seconds": 31.4,
+   "seconds_per_pair": 0.0416
+  },
+  "keyword": {
+   "pairs": 1040,
+   "scored": 828,
+   "seconds": 0.3,
+   "seconds_per_pair": 0.0004
+  },
+  "modernbert": {
+   "pairs": 1040,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.825
+  },
+  "embedding": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.5440476190476191
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.5595833333333333
+  },
+  "keyword": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.85
+  },
+  "modernbert": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 20,
+   "jaccard": 0.85
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {
+    "KTTH": {
+     "precision_lb": 0.0,
+     "recall": 0.0
+    },
+    "TNTN": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": 0.0,
+   "recall": 0.0
+  },
+  "embedding": {
+   "per_specialization": {
+    "KTTH": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "TNTN": {
+     "precision_lb": 0.0,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": 0.0,
+   "recall": 0.0
+  },
+  "embedding-vi": {
+   "per_specialization": {
+    "KTTH": {
+     "precision_lb": 1.0,
+     "recall": 0.5
+    },
+    "TNTN": {
+     "precision_lb": 0.0,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": 0.5,
+   "recall": 0.25
+  },
+  "keyword": {
+   "per_specialization": {
+    "KTTH": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "TNTN": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": NaN,
+   "recall": 0.0
+  },
+  "modernbert": {
+   "per_specialization": {
+    "KTTH": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    },
+    "TNTN": {
+     "precision_lb": NaN,
+     "recall": 0.0
+    }
+   },
+   "precision_lb": NaN,
+   "recall": 0.0
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.4313690476190476
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "embedding": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   7,
+   5,
+   1,
+   0,
+   4,
+   1,
+   3,
+   2,
+   1,
+   1,
+   3,
+   3,
+   0,
+   0,
+   1
+  ],
+  "embedding-vi": [
+   3,
+   0,
+   1,
+   1,
+   2,
+   6,
+   6,
+   3,
+   1,
+   6,
+   2,
+   4,
+   7,
+   1,
+   2,
+   5,
+   3,
+   1,
+   2,
+   5
+  ],
+  "keyword": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   2,
+   1,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}

@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "_note": "DU LIEU BIA de kiem thu. Ten truong dat theo entity cua web (courses, curricula, curriculum_courses, course_relations, course_groups, course_opened_semesters, student_courses, student_plan_courses); khoa ngoai dung ma mon thay cho uuid.",
+
+  "curriculum": {
+    "code": "TOY-2025",
+    "name": "Chuong trinh do choi",
+    "cohort": 2025,
+    "duration_years": 3,
+    "min_semester_credits": 3,
+    "max_semester_credits": 12
+  },
+
+  "semesters": ["251", "252", "261", "262", "271", "272"],
+
+  "courses": [
+    { "code": "MA101", "name": "Giai tich 1", "credits": 3 },
+    { "code": "MA102", "name": "Giai tich 2", "credits": 3 },
+    { "code": "MA201", "name": "Xac suat thong ke", "credits": 3 },
+    { "code": "CS101", "name": "Nhap mon lap trinh", "credits": 3 },
+    { "code": "CS102", "name": "Ky thuat lap trinh", "credits": 3 },
+    { "code": "CS201", "name": "Cau truc du lieu va giai thuat", "credits": 4 },
+    { "code": "CS202", "name": "Kien truc may tinh", "credits": 3 },
+    { "code": "CS301", "name": "He dieu hanh", "credits": 3 },
+    { "code": "CS302", "name": "Co so du lieu", "credits": 3 },
+    { "code": "CS401", "name": "Do an", "credits": 2 },
+    { "code": "EL301", "name": "Hoc may", "credits": 3 },
+    { "code": "EL302", "name": "Lap trinh web", "credits": 3 },
+    { "code": "EL303", "name": "Mang may tinh", "credits": 3 },
+    { "code": "EL304", "name": "Do hoa may tinh", "credits": 3 }
+  ],
+
+  "curriculum_courses": [
+    { "course_code": "MA101", "recommended_year": 1, "recommended_term": 1 },
+    { "course_code": "CS101", "recommended_year": 1, "recommended_term": 1 },
+    { "course_code": "MA102", "recommended_year": 1, "recommended_term": 2 },
+    { "course_code": "CS102", "recommended_year": 1, "recommended_term": 2 },
+    { "course_code": "CS201", "recommended_year": 2, "recommended_term": 1 },
+    { "course_code": "CS202", "recommended_year": 2, "recommended_term": 1 },
+    { "course_code": "MA201", "recommended_year": 2, "recommended_term": 1 },
+    { "course_code": "CS301", "recommended_year": 2, "recommended_term": 2 },
+    { "course_code": "CS302", "recommended_year": 2, "recommended_term": 2 },
+    { "course_code": "CS401", "recommended_year": 3, "recommended_term": 1 },
+    { "course_code": "EL301", "recommended_year": null, "recommended_term": null },
+    { "course_code": "EL302", "recommended_year": null, "recommended_term": null },
+    { "course_code": "EL303", "recommended_year": null, "recommended_term": null },
+    { "course_code": "EL304", "recommended_year": null, "recommended_term": null }
+  ],
+
+  "course_relations": [
+    { "course_code": "CS102", "related_course_code": "CS101", "type": "prerequisite" },
+    { "course_code": "MA102", "related_course_code": "MA101", "type": "prior" },
+    { "course_code": "MA201", "related_course_code": "MA102", "type": "prerequisite" },
+    { "course_code": "CS201", "related_course_code": "CS102", "type": "prerequisite" },
+    { "course_code": "CS301", "related_course_code": "CS201", "type": "prerequisite" },
+    { "course_code": "CS301", "related_course_code": "CS202", "type": "corequisite" },
+    { "course_code": "CS302", "related_course_code": "CS201", "type": "prerequisite" },
+    { "course_code": "CS401", "related_course_code": "CS301", "type": "prerequisite" },
+    { "course_code": "CS401", "related_course_code": "CS302", "type": "prerequisite" },
+    { "course_code": "EL301", "related_course_code": "MA201", "type": "prerequisite" },
+    { "course_code": "EL301", "related_course_code": "CS201", "type": "prerequisite" },
+    { "course_code": "EL302", "related_course_code": "CS302", "type": "prerequisite" },
+    { "course_code": "EL303", "related_course_code": "CS301", "type": "corequisite" },
+    { "course_code": "EL304", "related_course_code": "MA102", "type": "recommended" }
+  ],
+
+  "course_groups": [
+    {
+      "name": "Bat buoc",
+      "kind": "required",
+      "required_count": null,
+      "required_credits": null,
+      "members": ["MA101", "MA102", "MA201", "CS101", "CS102", "CS201", "CS202", "CS301", "CS302", "CS401"]
+    },
+    {
+      "name": "Tu chon",
+      "kind": "elective",
+      "required_count": null,
+      "required_credits": 6,
+      "members": ["EL301", "EL302", "EL303", "EL304"]
+    }
+  ],
+
+  "offerings": {
+    "_note": "Web chi luu lich su ky da mo. O day ghi ro tung ky tuong lai: 'not-offered' la chac chan khong mo; khong co ban ghi nghia la CHUA BIET va bi xu ly theo unknown_policy.",
+    "unknown_policy": "assume-open",
+    "records": [
+      { "course_code": "EL303", "semester_code": "271", "status": "not-offered" }
+    ]
+  },
+
+  "student": {
+    "current_semester": "261",
+    "source": "simulated",
+    "student_courses": [
+      { "course_code": "MA101", "status": "completed" },
+      { "course_code": "CS101", "status": "completed" },
+      { "course_code": "CS102", "status": "completed" },
+      { "course_code": "MA102", "status": "failed" },
+      { "course_code": "CS201", "status": "in-progress" },
+      { "course_code": "CS202", "status": "in-progress" }
+    ]
+  },
+
+  "scenarios": [
+    {
+      "id": "base",
+      "label": "Co so: gia dinh dau het mon dang hoc",
+      "in_progress_results": { "CS201": "pass", "CS202": "pass" }
+    },
+    {
+      "id": "lock-electives",
+      "label": "Ky toi nhat dinh hoc EL303 va EL304",
+      "in_progress_results": { "CS201": "pass", "CS202": "pass" },
+      "locked": [
+        { "course_code": "EL303", "semester_code": "262" },
+        { "course_code": "EL304", "semester_code": "262" }
+      ]
+    },
+    {
+      "id": "fail-cs201",
+      "label": "Rot CS201 dang hoc",
+      "in_progress_results": { "CS201": "fail", "CS202": "pass" }
+    },
+    {
+      "id": "cs302-not-offered",
+      "label": "CS302 khong mo ky 262",
+      "in_progress_results": { "CS201": "pass", "CS202": "pass" },
+      "not_offered": [
+        { "course_code": "CS302", "semester_code": "262" }
+      ]
+    },
+    {
+      "id": "lock-impossible",
+      "label": "Doi hoc EL301 ngay ky toi (thieu tien quyet)",
+      "in_progress_results": { "CS201": "pass", "CS202": "pass" },
+      "locked": [
+        { "course_code": "EL301", "semester_code": "262" }
+      ]
+    }
+  ]
+}

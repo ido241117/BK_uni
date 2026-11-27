@@ -1,0 +1,189 @@
+{
+ "agreement": {
+  "alpha_mean": 0.17066588467292262,
+  "alpha_per_tag": {
+   "design-organisational-structure": 0.10465116279069775,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.35526315789473684,
+   "ky-nang-bo-tro": 0.05208333333333326
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.2553191489361704,
+   "bge-m3-zeroshot vs embedding-vi": 0.0845070422535212,
+   "bge-m3-zeroshot vs keyword": 0.0,
+   "bge-m3-zeroshot vs modernbert": 0.7826086956521738,
+   "embedding vs embedding-vi": 0.5871559633027524,
+   "embedding vs keyword": -4.163336342344338e-16,
+   "embedding vs modernbert": 0.32835820895522383,
+   "embedding-vi vs keyword": 0.0,
+   "embedding-vi vs modernbert": 0.15094339622641512,
+   "keyword vs modernbert": 0.0
+  },
+  "tags_reliable": 0,
+  "tags_with_alpha": 3
+ },
+ "courses": 10,
+ "curriculum": "NE-KTHN",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 120,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 120,
+   "scored": 20,
+   "seconds": 0.5,
+   "seconds_per_pair": 0.0267
+  },
+  "embedding-vi": {
+   "pairs": 120,
+   "scored": 8,
+   "seconds": 0.3,
+   "seconds_per_pair": 0.0402
+  },
+  "keyword": {
+   "pairs": 120,
+   "scored": 20,
+   "seconds": 0.0,
+   "seconds_per_pair": 0.0005
+  },
+  "modernbert": {
+   "pairs": 120,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.7
+  },
+  "embedding": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.5
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.4833333333333333
+  },
+  "keyword": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 1.0
+  },
+  "modernbert": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.8
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding-vi": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.6
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   0,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0
+  ],
+  "embedding": [
+   0,
+   1,
+   1,
+   0,
+   2,
+   1,
+   0,
+   1,
+   1,
+   1
+  ],
+  "embedding-vi": [
+   0,
+   2,
+   2,
+   1,
+   2,
+   2,
+   1,
+   1,
+   2,
+   1
+  ],
+  "keyword": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}

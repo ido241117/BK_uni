@@ -1,7 +1,9 @@
 % =====================================================================
 % policy.lp : grading, graduation and tuition policy
-% Generated from grading_policy.json, graduation_requirements.json
-% and tuition_policy.json by the planner CLI -- do not edit by hand.
+% Originally generated from grading_policy.json, graduation_requirements.json
+% and tuition_policy.json (research-pipeline branch).  On this branch the
+% generator is not kept: this file is the school's policy and is edited by
+% hand.  Curriculum-specific facts (total_degree) do not belong here.
 % =====================================================================
 
 % Grading policy: policy_2020
@@ -41,6 +43,19 @@ default_scale(gpa_4).
 scale(score_10, 0, 1000).
 scale_precision(score_10, 2).
 scale_role(score_10, score).
+% Score -> letter: grade_min_score(score_10, G, Lo) is the lowest score of
+% grade G (min_score of grading_policy.json, research-pipeline).  A course
+% score V gets the grade with the largest Lo <= V (core/translate.lp); the
+% letter then decides passed/failed and gives the gpa_4 points.
+grade_min_score(score_10, a_plus, 950).
+grade_min_score(score_10, a, 850).
+grade_min_score(score_10, b_plus, 800).
+grade_min_score(score_10, b, 700).
+grade_min_score(score_10, c_plus, 650).
+grade_min_score(score_10, c, 550).
+grade_min_score(score_10, d_plus, 500).
+grade_min_score(score_10, d, 400).
+grade_min_score(score_10, f, 0).
 
 % ------------------------------------------------------------------
 % Grade scale
@@ -161,10 +176,9 @@ retake_grade_cap(b).
 % Graduation requirements
 % ------------------------------------------------------------------
 graduation_requirement(all_groups_satisfied).
-graduation_requirement(min_total_credits, 128).
 graduation_requirement(min_cumulative_gpa, 250).
-map(l, total_degree, 128).
-map(u, total_degree, 128).
+% total_degree (map(l/u, total_degree, _)) depends on the curriculum, so it is
+% emitted with the curriculum facts (pipeline/planner/solve_asp.py), not here.
 min_gpa(gpa_4, 250).
 
 % ------------------------------------------------------------------

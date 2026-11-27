@@ -1,0 +1,46 @@
+# Candidate tags: AE-KTHK
+
+Kỹ thuật Hàng không ( Aeronautical Engineering) (Kỹ Thuật Giao Thông); cohorts AE-2023-KTHK, AE-2024-KTHK, AE-2026-KTHK. 0 candidates kept from the previous run (key and names unchanged). 27 of its 86 courses are used (electives with a usable syllabus). Raw candidates by source: {'structure': 3, 'profile': 15, 'syllabus': 11}; after merging and filtering: **24**, dropped 0.
+
+Coverage = courses of this curriculum: faculty members (structure), courses close in meaning (profile), courses where the cluster's phrases are top phrases or appear verbatim (syllabus). No machine translation: † = English label taken from a merged English phrase of this curriculum; *suggested* = closest English phrase of this curriculum, to confirm in the review workbook.
+
+| Key | Vietnamese label | English label | Sources | Coverage | Example courses | Evidence |
+|---|---|---|---|---|---|---|
+| `ky-nang-bo-tro` | Kỹ năng bổ trợ |  | category, group | 8 | SK1001, SK1003, SK2001, SK2003, SK3001, SK3003 … (+2) |  |
+| `kien-thuc-quan-ly-khoi-nghiep` | Kiến thức quản lý/ khởi nghiệp | *suggested: organizations development (0.68)* | category, group | 7 | IM1013, IM1023, IM1025, IM1027, IM1031, IM3001 … (+1) |  |
+| `quan-ly` | Quản lý | *suggested: human management process (0.74)* | category, group | 3 | IM1025, IM1027, IM3001 | IM1013: Những nguyên lý này được xem là nền tảng cho việc ra quyết định hiệu quả, dù người học đứn |
+| `curriculum` |  | curriculum | profile | 15 | IM1013, IM1023, IM1025, IM1031, IM3001, ME1019 … (+9) | SK1001: The curriculum includes communication theoretical concepts and hands-on practice, enabling |
+| `aircraft-design` |  | aircraft design (also: aircraft system identification; aircraft systems; airplanes) | profile, syllabus | 11 | TR3003, TR3083, TR3087, TR4043, TR4057, TR4067 … (+5) | TR3083: The course also presents some hydraulic machines used in airplanes, cars and ships. |
+| `aeronautical-engineering` |  | aeronautical engineering (also: aerospace materials; bachelor aerospace engineering) | profile, syllabus | 10 | TR3003, TR3055, TR3087, TR4043, TR4057, TR4067 … (+4) | TR3003: Objectives of this course is providing fundamental knowledge in analyzing the behavior of  |
+| `engineering-mechanics` |  | engineering mechanics | profile | 9 | IM1023, TR3003, TR3083, TR3087, TR4051, TR4073 … (+3) | profile: These specialized subjects are built upon fundamental engineering knowledge in fluid mecha |
+| `flight-mechanics` |  | flight mechanics | profile | 8 | TR3003, TR3087, TR4043, TR4057, TR4067, TR4073 … (+2) | profile: The curriculum provides a strong foundation in core areas of aerospace engineering, includ |
+| `aircraft-operation` |  | aircraft operation | profile | 7 | TR3003, TR3087, TR4043, TR4057, TR4067, TR4083 … (+1) | profile: Upon graduation, students will be well-prepared to engage in aircraft operation, maintenan |
+| `propulsion-systems` |  | propulsion systems (also: propulsion) | profile | 7 | TR3083, TR3087, TR4043, TR4057, TR4067, TR4083 … (+1) | TR4057: The course is intended to serve as an introduction to rocket propulsion systems. |
+| `aerial-vehicle-design` |  | aerial vehicle design | profile | 6 | TR3087, TR4057, TR4067, TR4069, TR4083, TR4095 | profile: + Graduates of the Aerospace Engineering program are equipped to pursue careers in a wide  |
+| `aerodynamics` |  | aerodynamics | profile | 6 | TR3083, TR3087, TR4047, TR4067, TR4083, TR4095 | TR3029: Apply knowledge of aerodynamics to analyze and calculate for wind engines. |
+| `fluid-mechanics` |  | fluid mechanics | profile | 4 | TR3083, TR3087, TR4073, TR4083 | TR3029: Apply knowledge of fluid mechanics to build the mathematical model for wind turbines |
+| `unmanned-aerial-vehicles` |  | unmanned aerial vehicles | profile | 3 | TR3087, TR4067, TR4095 | profile: Upon graduation, students will be well-prepared to engage in aircraft operation, maintenan |
+| `process-optimization` |  | process optimization | profile | 2 | IM1023, TR4071 | profile: + Graduates of the Aerospace Engineering program are equipped to pursue careers in a wide  |
+| `class-discussions` |  | class discussions (also: class discussion topics) | syllabus | 5 | TR3083, TR3087, TR4067, TR4071, TR4095 | TR3083: Collaborate with group members to jointly complete class discussion topics and projects. |
+| `element-model` |  | element model (also: element theory) | syllabus | 3 | TR3029, TR4073, TR4095 | TR3029: Blade element theory |
+| `automatic-control-systems` |  | automatic control systems (also: control system methods) | syllabus | 2 | TR3063, TR4069 | TR3063: The course provides knowledge about control systems, analysis and design control system me |
+| `design-organisational-structure` |  | design organisational structure (also: project organization structure) | syllabus | 2 | IM1025, IM3001 | IM1025: Explain project organization structures and the key factors influencing project implementa |
+| `elastic-bodies` |  | elastic bodies (also: linear elastic) | syllabus | 2 | TR3087, TR4097 | TR3087: Aeroelasticity is the study of effects of aerodynamic forces on elastic bodies, i.e. |
+| `rotor-control-methods` |  | rotor control methods (also: rotor design) | syllabus | 2 | TR3029, TR4095 | TR3029: Rotor design |
+| `solution-methodology` |  | solution methodology (also: numerical solution methods) | syllabus | 2 | TR4047, TR4067 | TR4047: Properties of numerical solution methods. |
+| `thermodynamic-relations` |  | thermodynamic relations (also: thermochemistry) | syllabus | 2 | TR3083, TR4057 | TR3083: Basic thermodynamic relations |
+| `time-task` |  | time task (also: time value) | syllabus | 2 | IM1027, TR3055 | IM1027: This course includes time value of money, equivalence, economic measures of worth, selecti |
+
+## Quality
+
+- Candidates by origin: {'structure': 3, 'profile': 12, 'syllabus': 9}; with evidence sentence: 16/24; without English label: 3 (suggested: 2)
+- Syllabus cluster purity (share of a cluster's specialization courses inside its best specialization; 1.0 = stays in one faculty grouping): mean None, per candidate {}
+- Candidate pairs sharing ≥ 60% of courses: [{'a': 'flight-mechanics', 'b': 'aircraft-operation', 'jaccard': 0.88}, {'a': 'aircraft-design', 'b': 'aeronautical-engineering', 'jaccard': 0.75}, {'a': 'aircraft-operation', 'b': 'propulsion-systems', 'jaccard': 0.75}, {'a': 'aircraft-design', 'b': 'flight-mechanics', 'jaccard': 0.73}, {'a': 'aeronautical-engineering', 'b': 'aircraft-operation', 'jaccard': 0.7}, {'a': 'quan-ly', 'b': 'design-organisational-structure', 'jaccard': 0.67}, {'a': 'flight-mechanics', 'b': 'propulsion-systems', 'jaccard': 0.67}, {'a': 'element-model', 'b': 'rotor-control-methods', 'jaccard': 0.67}, {'a': 'aircraft-design', 'b': 'aircraft-operation', 'jaccard': 0.64}, {'a': 'aircraft-design', 'b': 'propulsion-systems', 'jaccard': 0.64}, {'a': 'aeronautical-engineering', 'b': 'flight-mechanics', 'jaccard': 0.64}, {'a': 'aircraft-operation', 'b': 'aerial-vehicle-design', 'jaccard': 0.62}, {'a': 'propulsion-systems', 'b': 'aerial-vehicle-design', 'jaccard': 0.62}, {'a': 'propulsion-systems', 'b': 'aerodynamics', 'jaccard': 0.62}, {'a': 'aeronautical-engineering', 'b': 'aerial-vehicle-design', 'jaccard': 0.6}, {'a': 'unmanned-aerial-vehicles', 'b': 'class-discussions', 'jaccard': 0.6}]
+
+## Profile phrases not kept (71)
+
+vn helicopter (best 0.61, peak 0.51, near 1), helicopter (best 0.58, peak 0.50, near 1), vn helicopter corporation (best 0.57, peak 0.47, near 1), helicopter corporation (best 0.56, peak 0.45, near 1), subjects (best 0.51, peak 0.19, near 9), specialized subjects (best 0.50, peak 0.16, near 9), systems engineering (best 0.49, peak 0.14, near 8), mechanical design consulting (best 0.48, peak 0.15, near 9), design consulting (best 0.46, peak 0.18, near 3), fundamental engineering (best 0.46, peak 0.10, near 9), electronic engineering (best 0.45, peak 0.16, near 3), industrial process (best 0.44, peak 0.19, near 1), dfm engineering (best 0.43, peak 0.12, near 3), airlines (best 0.40, peak 0.33, near 1), thermodynamics (best 0.40, peak 0.21, near 1), energy systems engineering (best 0.39, peak 0.12, near 3), hovercrafts (best 0.39, peak 0.28, near 2), opportunities (best 0.39, peak 0.15, near 1), industries (best 0.38, peak 0.18, near 0), careers (best 0.37, peak 0.20, near 0), automation (best 0.37, peak 0.11, near 0), vehicle design (best 0.37, peak 0.17, near 0), computing (best 0.36, peak 0.12, near 0), consulting (best 0.35, peak 0.16, near 0), maintenance management (best 0.35, peak 0.16, near 0), marine engineering (best 0.35, peak 0.13, near 0), power plant (best 0.35, peak 0.23, near 0), career opportunities (best 0.34, peak 0.19, near 0), energy systems (best 0.33, peak 0.11, near 0), oil (best 0.32, peak 0.26, near 0)
+
+## Syllabus clusters not kept (8)
+
+engineering disciplines (best 0.53, peak 0.15, near 14), learning methods (best 0.52, peak 0.11, near 21), class policies (best 0.47, peak 0.13, near 7), effective presentation (best 0.45, peak 0.15, near 5), practical tools (best 0.44, peak 0.14, near 6), analysis report (best 0.41, peak 0.12, near 3), selection decisions (best 0.35, peak 0.22, near 2), noise mechanisms (best 0.27, peak 0.13, near 2)

@@ -1,0 +1,5 @@
+clingo>=5.7
+ortools>=9.10
+pytest>=8.0
+openpyxl>=3.1      # planner.mybk: doc file tien do myBK dang Excel
+pymupdf>=1.24.3    # planner.mybk: doc file tien do myBK dang PDF (module "pymupdf" co tu 1.24.3)

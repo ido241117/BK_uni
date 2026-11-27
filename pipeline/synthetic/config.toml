@@ -1,0 +1,114 @@
+# Synthetic pipeline (open loop, DESIGN.md) for one curriculum (CS K2023).
+# Every tunable number has base/low/high. low/high are the sensitivity range.
+# The values are modelling assumptions, not estimates from data; see README.md.
+
+[run]
+fixture = "planner/fixtures/khmt2023.json"   # relative to pipeline/
+policy = "engine/asp/policy.lp"              # grade scale and tuition
+official_plan = "synthetic/official_plan.json"
+semester_before_start = "223"                # "current semester" for a new student
+
+[grades]
+# score = clip(mu + a*(theta - b_course) + year_effect*(year-1)
+#              + retake_effect*[attempt>1] + eps, 0, 10), eps ~ N(0, noise_sd)
+mu            = { base = 6.3, low = 5.8, high = 6.8 }
+discrimination = { base = 1.2, low = 0.8, high = 1.6 }   # a
+difficulty_sd = { base = 0.5, low = 0.25, high = 0.8 }   # sd of b_course
+noise_sd      = { base = 1.2, low = 0.8, high = 1.6 }
+year_effect   = { base = 0.0, low = -0.3, high = 0.3 }   # per year in program
+retake_effect = { base = 0.5, low = 0.0, high = 1.0 }
+round_to = 0.1
+
+[targets]
+# Prior predictive targets for first-attempt scores (assumed plausible ranges,
+# to be checked by experts). course_mean bounds the 10th-90th percentile of
+# course averages. clip_mass = share of scores at 0 or 10.
+course_mean = [5.8, 7.2]
+score_sd = [1.4, 2.2]
+fail_rate = [0.05, 0.20]
+clip_mass_max = 0.03
+
+[rules]
+# QD285 Dieu 37.2: a main semester below 11 credits -> suspension. Modelled exemptions:
+# the semester completes the degree (always), or (when true) the student registered
+# every still-needed course that could legally be registered (the shortfall is forced
+# by prerequisites, not chosen). Assumption, not a rule text.
+forced_underload_exempt = true
+
+[population]
+specializations = ["CNDL", "CNPM", "MMANM", "TTNT", "XLA"]   # sampled uniformly
+preferred_max_mean = { base = 18.0, low = 16.0, high = 20.0 }  # credits
+preferred_max_sd = 1.5
+preferred_max_range = [14, 22]
+preferred_band_width = 3          # preferred load = [max - 3, max]
+summer_threshold = { base = 0.5, low = 0.3, high = 0.7 }  # opt in to summer if early_pref > this
+# Interests (ASP tags): the number of tags is uniform on [min, max]; tags are drawn
+# without replacement with weight = number of the student's specialization group-C
+# courses carrying the tag (so interests follow the specialization).
+interests_min = 1
+interests_max = 3
+# Per-student parameter draws (step 5): when true, every ranged parameter of
+# [grades], [population] and [agent] is drawn per student by Latin hypercube
+# over [low, high]; when false, everyone gets the base values.
+per_student_params = false
+
+[agent]
+# Step 2 only (AGENT-MODEL.md section 7). Utility of a candidate semester bundle
+# (section 3 without the planner's trust term; the section 6 changes are not in):
+#   - w_load * |credits - preferred_mid| / 3
+#   - w_cost * cost_sensitivity * fee / fee_ref
+#   - w_risk * (1 + panic_gain * shock) * expected_failed_credits / 3
+#   + w_progress * early_pref * credits / 3
+#   + Gumbel noise.  shock = 1 after a main semester with a fail or a warning.
+w_load     = { base = 0.5, low = 0.0, high = 1.0 }
+w_cost     = { base = 0.5, low = 0.0, high = 1.0 }
+w_risk     = { base = 1.0, low = 0.5, high = 2.0 }
+panic_gain = { base = 1.0, low = 0.0, high = 3.0 }
+w_progress = { base = 0.5, low = 0.0, high = 1.0 }
+fee_ref = 13.75                   # million VND, one regular semester of 13-18 credits
+
+[baseline]
+# "Follow the curriculum": required courses at their recommended semester
+# (curriculum_courses), electives at the semester in the group name, backlog
+# and retakes first. Free-elective slots and the C split are our choice
+# (the curriculum gives only "semester 7 and 8"). The internship is registered
+# at its recommended semester 6 and fills the next term (DESIGN.md B1).
+elective_semesters = { A = [5], B = [6], C = [7, 7, 7, 8, 8], D = [7], FREE = [6, 7, 8] }
+
+[solver]
+# Step 3 solver (solvers.py): "asp", "cpsat", or "package.module:factory" for a plugged-in
+# adapter. Outputs of steps 3-5 go to data/<pool>/solver-<label>/ (label defaults to the
+# name), so results of different solvers or solver versions sit side by side.
+name = "asp"
+label = ""
+# Preferred load -> solver (open): "none" (the solver's own loads) or "max_credits"
+# (preferred maximum becomes scenario.max_credits).
+load_mapping = "none"
+
+[solver.asp]
+# DESIGN.md B2: the stopping rule is open.
+# "conflicts": 1 thread, stop after solve_limit conflicts (reproducible);
+#              time_limit is only a safety net (a hit is recorded).
+# "time":      `threads` threads, stop at time_limit seconds (not reproducible).
+mode = "conflicts"
+threads = 1
+solve_limit = 20000
+time_limit = 120.0
+
+[solver.cpsat]
+time_limit = 30.0                 # seconds, 1 worker (wall clock: not reproducible)
+
+[cuts]
+# Step 3b (DESIGN.md B3): share of cuts after k finished main semesters.
+n = 200
+shares = { 1 = 0.25, 2 = 0.20, 3 = 0.20, 4 = 0.15, 5 = 0.10, 6 = 0.10 }
+
+[evaluation]
+on_time_main_semesters = 8
+bootstrap = 2000
+
+[sensitivity]
+# Step 5 (open): computed from a pool with per_student_params = true.
+# "src": standardized regression coefficients (numpy only);
+# "delta": SALib moment-independent delta (works on a given sample).
+method = "src"

@@ -1,0 +1,240 @@
+{
+ "agreement": {
+  "alpha_mean": 0.18424882519422656,
+  "alpha_per_tag": {
+   "biotechnology": 0.18965517241379304,
+   "bioturing": 0.14987080103359174,
+   "digital-communication-techniques": 0.14855072463768115,
+   "engineering-disciplines": 0.24388674388674392,
+   "filamentous-fungi": 0.0,
+   "kien-thuc-quan-ly-khoi-nghiep": 0.237012987012987,
+   "kinematic-characteristics": 0.2078651685393259,
+   "ky-nang-bo-tro": 0.09178743961352653,
+   "prokaryote-cells": 0.38961038961038963
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.2645161290322579,
+   "bge-m3-zeroshot vs embedding-vi": 0.2168585220943183,
+   "bge-m3-zeroshot vs keyword": 0.1253196930946285,
+   "bge-m3-zeroshot vs modernbert": 0.6115843270868823,
+   "embedding vs embedding-vi": 0.6448015742866512,
+   "embedding vs keyword": 0.13517241379310405,
+   "embedding vs modernbert": 0.10236220472440985,
+   "embedding-vi vs keyword": 0.07233273056057796,
+   "embedding-vi vs modernbert": 0.06935830907480059,
+   "keyword vs modernbert": -0.01988071570576558
+  },
+  "tags_reliable": 0,
+  "tags_with_alpha": 9
+ },
+ "courses": 19,
+ "curriculum": "DS-KHDL",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 684,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 684,
+   "scored": 552,
+   "seconds": 5.6,
+   "seconds_per_pair": 0.0102
+  },
+  "embedding-vi": {
+   "pairs": 684,
+   "scored": 508,
+   "seconds": 7.2,
+   "seconds_per_pair": 0.0142
+  },
+  "keyword": {
+   "pairs": 684,
+   "scored": 628,
+   "seconds": 0.4,
+   "seconds_per_pair": 0.0006
+  },
+  "modernbert": {
+   "pairs": 684,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.0,
+   "courses": 18,
+   "jaccard": 0.3888888888888889
+  },
+  "embedding": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.3333333333333333,
+   "courses": 18,
+   "jaccard": 0.6111111111111112
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 0.5,
+   "courses": 18,
+   "jaccard": 0.5
+  },
+  "keyword": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 1.0,
+   "courses": 18,
+   "jaccard": 0.8333333333333334
+  },
+  "modernbert": {
+   "copied_summary_courses": 1,
+   "copied_summary_jaccard": 1.0,
+   "courses": 18,
+   "jaccard": 0.5
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding-vi": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.543859649122807
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   0,
+   0,
+   0,
+   2,
+   0,
+   0,
+   1,
+   0,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   2,
+   0,
+   0
+  ],
+  "embedding": [
+   1,
+   1,
+   1,
+   2,
+   2,
+   2,
+   1,
+   3,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   2,
+   3,
+   2,
+   1,
+   0
+  ],
+  "embedding-vi": [
+   3,
+   2,
+   1,
+   3,
+   2,
+   4,
+   2,
+   3,
+   0,
+   2,
+   2,
+   1,
+   2,
+   1,
+   3,
+   3,
+   3,
+   2,
+   2
+  ],
+  "keyword": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0
+  ],
+  "modernbert": [
+   0,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   2,
+   1,
+   0,
+   0
+  ]
+ }
+}

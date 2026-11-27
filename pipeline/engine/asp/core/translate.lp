@@ -8,6 +8,12 @@
 % Raw student facts read here:
 %   taken(X,I)          attempt X was enrolled in term I (I <= t)
 %   map(g,X,G)          final grade of attempt X
+%   raw_score(X,V)      raw score of attempt X on the score scale (score_10),
+%                       fixed-point (7.3 -> 730).  When present it gives the
+%                       grade (grade_min_score/3, policy.lp) and map(g,X,G)
+%                       is ignored; the score itself is the score_10 GPA
+%                       value (extension.lp section 11) unless the retake
+%                       cap lowered the grade (capped/1).
 %   result(X,S)         direct status of a pass/fail attempt (passed|failed)
 %   course_kind(X,K) + kind_known(X)   regular / summer / transfer / ...
 %   attempt_count(E,N)  number of recorded attempts of course E
@@ -32,6 +38,7 @@
 #defined attempt_count/2.  #defined last_attempt/2.
 #defined gpa_last/2.       #defined enroll_part_in/1.
 #defined external_progress/3.
+#defined raw_score/2.      #defined grade_min_score/3.
 
 % ---------- enrollment term part ----------------------------------------
 enroll_part(Q) :- enroll_part_in(Q).
@@ -53,22 +60,35 @@ retake_no(E, N) :- attempt_count(E, N).
 % ---------- effective grade ---------------------------------------------
 % Every recorded grade is final.  A retake's effective grade is capped at
 % retake_grade_cap/1 (policy.lp) when defined; first attempts never are.
-grade_present(X, G) :- taken(X, _), map(g, X, G).
+% Score -> letter: the grade whose lowest score is the largest one <= V.
+% A score, when given, wins over the letter map(g,X,G) of the same attempt.
+has_score(X) :- taken(X, _), raw_score(X, _).
+score_floor(X, M) :- has_score(X), raw_score(X, V), scale_role(S, score),
+    M = #max{ Lo : grade_min_score(S, _, Lo), Lo <= V }.
+grade_of(X, G) :- score_floor(X, M), scale_role(S, score),
+    grade_min_score(S, G, M).
+grade_of(X, G) :- taken(X, _), map(g, X, G), not has_score(X).
+
+grade_present(X, G) :- taken(X, _), grade_of(X, G).
 
 retake_attempt(rt(E, K)) :- hist(rt(E, K), E).
 
 effective_grade(X, G) :-
-    taken(X, _), map(g, X, G), not retake_attempt(X).
+    taken(X, _), grade_of(X, G), not retake_attempt(X).
 effective_grade(X, G) :-
-    retake_attempt(X), map(g, X, G), not retake_grade_cap(_).
-effective_grade(X, Cap) :-
-    retake_attempt(X), map(g, X, Raw), retake_grade_cap(Cap),
+    retake_attempt(X), grade_of(X, G), not retake_grade_cap(_).
+% capped(X): the cap lowered the grade of retake X (extension.lp section 11
+% then also drops its raw score on the score scale).
+capped(X) :-
+    retake_attempt(X), grade_of(X, Raw), retake_grade_cap(Cap),
     grade_rank(Raw, RawRank), grade_rank(Cap, CapRank), RawRank < CapRank.
+effective_grade(X, Cap) :- capped(X), retake_grade_cap(Cap).
 effective_grade(X, G) :-
-    retake_attempt(X), map(g, X, G), retake_grade_cap(Cap),
+    retake_attempt(X), grade_of(X, G), retake_grade_cap(Cap),
     grade_rank(G, GradeRank), grade_rank(Cap, CapRank), GradeRank >= CapRank.
 
 % ---------- status: passed / failed / unknown ---------------------------
+% The letter (from the score when there is one) decides the status.
 status(X, passed) :-
     taken(X, _), effective_grade(X, G), grade_passing(G), not result(X, _).
 status(X, failed) :-

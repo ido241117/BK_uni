@@ -32,8 +32,11 @@
 #defined external_milestone/4.
 #defined pin/2.              #defined ban/1.          #defined ban/2.
 #defined interest/2.         #defined tag/2.
-#defined typical_term/2.     #defined fills_next/1.   #defined popularity/2.
+#defined typical_term/2.     #defined fills_next/1.
 #defined elective_class/3.
+#defined sem_min/2.          #defined sem_max/2.      #defined skip/1.
+#defined fee_rule/6.         #defined offer_hist/3.   #defined offer_seen/2.
+#defined raw_score/2.            #defined scale_role/2.
 
 % =====================================================================
 % 1. Calendar
@@ -157,9 +160,13 @@ in(X, noff(I)) :- base(X, E), I = t+1..n, not avail(E, I).
 empty(int(noff(I), s(I))) :- I = t+1..n.
 
 % =====================================================================
-% 8. Milestones (credits accumulated strictly before the course's term)
+% 8. Milestones (credits accumulated through the course's own term)
 % =====================================================================
-sum(ok_before(J), c, geq, Min) :-
+% milestone(C, Min): when C is in term J, the credits passed before J plus
+% the other courses of term J itself (C excluded) reach Min.
+in(E, ok_through(C, J)) :-
+    milestone(C, _), in(E, ok(I)), I <= J, J = 1..n, E != C.
+sum(ok_through(C, J), c, geq, Min) :-
     milestone(C, Min), in(X, s(J)), base(X, C), J > t.
 
 % =====================================================================
@@ -169,13 +176,21 @@ sum(ok_before(J), c, geq, Min) :-
 used(I)     :- in(_, s(I)), I > t.
 max_used(M) :- used(_), M = #max{ I : used(I) }.
 
+% Per-term bounds.  sem_max(I,M) / sem_min(I,M) (student input, optional)
+% narrow the policy bound of term I: a student may lower the maximum or raise
+% the minimum, never the other way.  If a student's maximum falls below the
+% minimum, the minimum follows it down (the term is meant to be light).
+term_max(I, M) :- I = t+1..n, semester_type(I, T), load_bound(T, _, D),
+                  M = #min{ D ; X : sem_max(I, X) }.
+term_lo(I, M)  :- I = t+1..n, semester_type(I, T), load_bound(T, D, _),
+                  M = #max{ D ; X : sem_min(I, X) }.
+term_min(I, L) :- term_lo(I, L), term_max(I, M), L <= M.
+term_min(I, M) :- term_lo(I, L), term_max(I, M), L > M.
+
 % Upper bound on every future term; the value is enumerated on 0..Max only.
-sum(s(I), c, bw, (0, Max)) :-
-    I = t+1..n, semester_type(I, T), load_bound(T, _, Max).
-sum_dom(s(I),  c, 0, Max) :-
-    I = t+1..n, semester_type(I, T), load_bound(T, _, Max).
-sum_dom(ok(I), c, 0, Max) :-
-    I = t+1..n, semester_type(I, T), load_bound(T, _, Max).
+sum(s(I), c, bw, (0, Max)) :- term_max(I, Max).
+sum_dom(s(I),  c, 0, Max)  :- term_max(I, Max).
+sum_dom(ok(I), c, 0, Max)  :- term_max(I, Max).
 
 semester_credits(I, C) :- used(I), sum_val(s(I), c, C).
 semester_credits(I, C) :- I = 1..t, in(_, s(I)),
@@ -187,20 +202,23 @@ semester_earned(I, C)  :- I = 1..t, in(_, s(I)),
 % Minimum load on every used future term except the last one.
 load_bearing(I) :- semester_credits(I, C), I > t, C > 0.
 sum(s(I), c, geq, Min) :-
-    load_bearing(I), semester_type(I, T), load_bound(T, Min, _),
-    max_used(M), I < M.
+    load_bearing(I), term_min(I, Min), max_used(M), I < M.
 
-% Core (non-extra) terms form one contiguous block; extra terms may be
-% skipped, but a core term cannot be skipped and then resumed.
-core_between(I, J) :- core_term(I), core_term(J), core_term(K), I < K, K < J.
-next_core(I, J)    :- core_term(I), core_term(J), I < J, not core_between(I, J).
-core_used(I)       :- used(I), core_term(I).
-:- core_used(I), next_core(I, J), core_used(K), J < K, not core_used(J).
+% Core (non-extra) terms should form one contiguous block from the current
+% term on; extra terms may be skipped.  A future core term left empty before
+% the last used core term is a gap(J) -- also right after the current term,
+% since the student is enrolled there.  A gap is allowed, but penalised first
+% in optimize.lp, so a plan only has one when no plan without it exists, and
+% it is shown as a warning.  skip(J) (student input) means "I take term J
+% off": it is kept empty and is not reported as a gap.
+core_used(I) :- used(I), core_term(I).
+gap(J) :- core_term(J), J > t, not core_used(J), not skip(J),
+          core_used(K), J < K.
+empty(s(J)) :- skip(J), J > t.
 
 % Attempted credits of the whole plan.
 in(X, planned) :- in(X, s(I)), I > t.
-plan_cap(H) :- H = #sum{ Mx, I : I = t+1..n, not closed_term(I),
-                                 semester_type(I, T), load_bound(T, _, Mx) }.
+plan_cap(H) :- H = #sum{ Mx, I : term_max(I, Mx), not closed_term(I) }.
 sum_dom(planned, c, 0, H) :- plan_cap(H).
 total_planned(T)   :- sum_val(planned, c, T).
 total_attempted(T) :- total_planned(T).
@@ -240,8 +258,16 @@ gpa_attempt(E, X, Scale) :-
     gpa_sel(E, X), effective_grade(X, G),
     grade_in_gpa(Scale, G), grade_points(Scale, G, _),
     course_kind(X, K), included_course_kind(K).
+% On the score scale (scale_role(S, score), e.g. score_10) a raw_score(X,V)
+% from the transcript is used as is; the grade's band midpoint is the
+% fallback when no raw score is known or when the retake cap lowered the
+% grade (capped/1, translate.lp), so the cap applies on this scale too.
+raw_points(Scale, X) :- gpa_attempt(_, X, Scale), scale_role(Scale, score), raw_score(X, _),
+    not capped(X).
 effective_points(Scale, X, P) :-
-    gpa_attempt(E, X, Scale), effective_grade(X, G), grade_points(Scale, G, P).
+    gpa_attempt(E, X, Scale), effective_grade(X, G), grade_points(Scale, G, P),
+    not raw_points(Scale, X).
+effective_points(Scale, X, V) :- raw_points(Scale, X), raw_score(X, V).
 
 gpa_den(Scale, D) :- scale(Scale, _, _),
     D = #sum{ C, E : gpa_attempt(E, X, Scale), map(c, E, C) }.
@@ -338,8 +364,11 @@ fee(I, F) :- semester_credits(I, C), I > t, C > 0, semester_type(I, Type),
     F = Base + Rate * (C - Over).
 semester_fee(I, F) :- fee(I, F).
 :- fee(I, F1), fee(I, F2), F1 < F2.
-% A billed term without a matching rule would silently cost 0.
-:- semester_credits(I, C), I > t, C > 0, not fee(I, _).
+% Tuition is optional: without any fee_rule/6 there is no fee, no cost
+% objective and no fee output.  When fee rules exist, a billed term without a
+% matching rule would silently cost 0, so it is rejected.
+tuition_known :- fee_rule(_, _, _, _, _, _).
+:- tuition_known, semester_credits(I, C), I > t, C > 0, not fee(I, _).
 
 % Budget, in money_scale units, as an encoding.lp sum constraint.
 in(I, billed)  :- fee(I, _).
@@ -440,7 +469,8 @@ term_pos(I, 2*K + 1) :- extra_term(I), K = #count{ J : core_term(J), J < I }.
 typical_gap(E, |P - 2*K|) :- typical_term(E, K), placed(E, I), term_pos(I, P).
 
 % =====================================================================
-% 19. Interests, tags and popularity (reported here, ranked in optimize.lp)
+% 19. Interests, tags and offering history (reported here, ranked in
+%     optimize.lp)
 % =====================================================================
 % tag(E,K) (curriculum) plus two automatic tags: every major list is a tag
 % (major id) and every elective is tagged with its own id.  interest(K,W)
@@ -450,12 +480,19 @@ tag(E, M)  :- major_course(M, E).
 tag(E, E)  :- in(E, el).
 score(E, S) :- in(E, el), S = #sum{ W,K : tag(E, K), interest(K, W) }, S != 0.
 
-% popularity(E,P) (data/elective_popularity.json): historical enrollment.
-% When any value is known, an elective without a value counts as 0.
-pop_known       :- popularity(_, _).
-pop_max(M)      :- pop_known, M = #max{ P : popularity(_, P) }.
-pop_value(E, P) :- popularity(E, P), in(E, el).
-pop_value(E, 0) :- pop_known, in(E, el), not popularity(E, _).
+% Offering history: which part of the year a course usually opens in.
+%   offer_hist(E, P, N)  course E opened in N past terms of part P
+%   offer_seen(P, M)     M past terms of part P are covered by the history
+% A placement of E in a term of part P misses (M - N) / M of the observed
+% terms; offer_miss/3 expresses that share in percent so parts with a
+% different number of observed terms are comparable.  A course without any
+% history is not penalised (missing data is not evidence), and a part with
+% no observed term is not judged.
+offer_known(E)       :- offer_hist(E, _, _).
+offer_count(E, P, N) :- offer_hist(E, P, N).
+offer_count(E, P, 0) :- offer_known(E), offer_seen(P, _), not offer_hist(E, P, _).
+offer_miss(E, I, (100 * (M - N)) / M) :-
+    placed(E, I), part(I, P), offer_seen(P, M), M > 0, offer_count(E, P, N), N < M.
 
 % =====================================================================
 % 20. Elective slots and symmetry breaking
@@ -469,7 +506,7 @@ named(E) :- interest(E, _), in(E, m).
 % elective_class(E,K,R) (curriculum): electives of class K are
 % interchangeable -- same credits, groups, majors, tags, requisites (both
 % directions), offering, level, typical term, fills_next, note and
-% popularity.  For a student who has not singled any of them out, swapping
+% offering history (offer_hist).  For a student who has not singled any of them out, swapping
 % two members changes no constraint and no objective, so only the plan that
 % uses the lowest-ranked members, in non-decreasing term order, is kept.
 % This removes permutations and keeps at least one optimal plan.

@@ -1,0 +1,6 @@
+{
+  "_note": "Ma tren file tien do myBK -> ma trong chuong trinh dao tao cua web. Dung cho dieu kien tot nghiep (external_requirement cua engine ASP). Nguon: docs/01-boi-canh.md (ENG_GC tren web, myBK ghi ENG_GC_600).",
+  "aliases": {
+    "ENG_GC_600": "ENG_GC"
+  }
+}

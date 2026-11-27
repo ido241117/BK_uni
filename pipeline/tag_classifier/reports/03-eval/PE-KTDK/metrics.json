@@ -1,0 +1,193 @@
+{
+ "agreement": {
+  "alpha_mean": 0.4181679930343355,
+  "alpha_per_tag": {
+   "energy-management": 0.4787234042553191,
+   "engineering-problems": 0.4787234042553191,
+   "geology": 0.46883468834688347,
+   "ky-nang-bo-tro": -0.11538461538461542,
+   "petroleum": 1.0,
+   "petroleum-engineering-problems": 0.2674418604651163,
+   "petroleum-engineering-training": 0.34883720930232565
+  },
+  "pairwise_kappa": {
+   "bge-m3-zeroshot vs embedding": 0.6987951807228918,
+   "bge-m3-zeroshot vs embedding-vi": 0.5454545454545454,
+   "bge-m3-zeroshot vs keyword": 0.4140624999999994,
+   "bge-m3-zeroshot vs modernbert": 0.3965517241379306,
+   "embedding vs embedding-vi": 0.7335025380710659,
+   "embedding vs keyword": 0.24242424242424213,
+   "embedding vs modernbert": 0.4871794871794871,
+   "embedding-vi vs keyword": 0.24242424242424213,
+   "embedding-vi vs modernbert": 0.6153846153846153,
+   "keyword vs modernbert": 0.47368421052631604
+  },
+  "tags_reliable": 1,
+  "tags_with_alpha": 7
+ },
+ "courses": 10,
+ "curriculum": "PE-KTDK",
+ "models": [
+  "bge-m3-zeroshot",
+  "embedding",
+  "embedding-vi",
+  "keyword",
+  "modernbert"
+ ],
+ "runtime": {
+  "bge-m3-zeroshot": {
+   "pairs": 280,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  },
+  "embedding": {
+   "pairs": 280,
+   "scored": 236,
+   "seconds": 10.2,
+   "seconds_per_pair": 0.0434
+  },
+  "embedding-vi": {
+   "pairs": 280,
+   "scored": 232,
+   "seconds": 7.4,
+   "seconds_per_pair": 0.0317
+  },
+  "keyword": {
+   "pairs": 240,
+   "scored": 240,
+   "seconds": 0.1,
+   "seconds_per_pair": 0.0005
+  },
+  "modernbert": {
+   "pairs": 240,
+   "scored": 0,
+   "seconds": 0.0,
+   "seconds_per_pair": null
+  }
+ },
+ "section_consistency": {
+  "bge-m3-zeroshot": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.7666666666666667
+  },
+  "embedding": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.525
+  },
+  "embedding-vi": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.495
+  },
+  "keyword": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.9
+  },
+  "modernbert": {
+   "copied_summary_courses": 0,
+   "copied_summary_jaccard": NaN,
+   "courses": 10,
+   "jaccard": 0.7
+  }
+ },
+ "specialization_recall": {
+  "bge-m3-zeroshot": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "embedding-vi": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "keyword": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  },
+  "modernbert": {
+   "per_specialization": {},
+   "precision_lb": NaN,
+   "recall": NaN
+  }
+ },
+ "stability": {
+  "embedding vs embedding-vi": 0.5466666666666666
+ },
+ "tags_per_course": {
+  "bge-m3-zeroshot": [
+   2,
+   3,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "embedding": [
+   4,
+   3,
+   3,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "embedding-vi": [
+   5,
+   3,
+   2,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1
+  ],
+  "keyword": [
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "modernbert": [
+   3,
+   1,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}

@@ -1,0 +1,5 @@
+-r ../planner/requirements.txt   # clingo (ASP engine), planner modules
+numpy>=1.26
+pandas>=2.2
+SALib>=1.5          # step 5, method = "delta" only
+matplotlib>=3.8     # visualize.py
