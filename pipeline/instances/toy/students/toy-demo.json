@@ -1,0 +1,73 @@
+{
+  "schema_version": 3,
+  "students": [
+    {
+      "student_id": "toy-demo",
+      "curriculum_id": "TOY-2025",
+      "grading_policy": null,
+      "cohort": 2025,
+      "enrollment_term": "2025-1",
+      "current_term": "2026-1",
+      "declared_major": null,
+      "source": "simulated"
+    }
+  ],
+  "attempts": [
+    {
+      "student_id": "toy-demo",
+      "attempt_id": "toy-demo-01",
+      "course": "MA101",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "toy-demo",
+      "attempt_id": "toy-demo-02",
+      "course": "CS101",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "toy-demo",
+      "attempt_id": "toy-demo-03",
+      "course": "CS102",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "toy-demo",
+      "attempt_id": "toy-demo-04",
+      "course": "MA102",
+      "term": null,
+      "grade": null,
+      "result": "failed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "toy-demo",
+      "attempt_id": "toy-demo-05",
+      "course": "CS201",
+      "term": null,
+      "grade": null,
+      "result": "in_progress",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "toy-demo",
+      "attempt_id": "toy-demo-06",
+      "course": "CS202",
+      "term": null,
+      "grade": null,
+      "result": "in_progress",
+      "course_kind": "regular"
+    }
+  ],
+  "external_progress": [],
+  "expected": []
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "base",
+    "label": "Co so: gia dinh dau het mon dang hoc",
+    "curriculum_id": "TOY-2025",
+    "student_id": "toy-demo",
+    "in_progress_results": {
+      "CS201": "pass",
+      "CS202": "pass"
+    }
+  },
+  {
+    "id": "lock-electives",
+    "label": "Ky toi nhat dinh hoc EL303 va EL304",
+    "curriculum_id": "TOY-2025",
+    "student_id": "toy-demo",
+    "in_progress_results": {
+      "CS201": "pass",
+      "CS202": "pass"
+    },
+    "locked": [
+      {
+        "course_code": "EL303",
+        "term": "2026-2"
+      },
+      {
+        "course_code": "EL304",
+        "term": "2026-2"
+      }
+    ]
+  },
+  {
+    "id": "fail-cs201",
+    "label": "Rot CS201 dang hoc",
+    "curriculum_id": "TOY-2025",
+    "student_id": "toy-demo",
+    "in_progress_results": {
+      "CS201": "fail",
+      "CS202": "pass"
+    }
+  },
+  {
+    "id": "cs302-not-offered",
+    "label": "CS302 khong mo ky 262",
+    "curriculum_id": "TOY-2025",
+    "student_id": "toy-demo",
+    "in_progress_results": {
+      "CS201": "pass",
+      "CS202": "pass"
+    },
+    "not_offered": [
+      {
+        "course_code": "CS302",
+        "term": "2026-2"
+      }
+    ]
+  },
+  {
+    "id": "lock-impossible",
+    "label": "Doi hoc EL301 ngay ky toi (thieu tien quyet)",
+    "curriculum_id": "TOY-2025",
+    "student_id": "toy-demo",
+    "in_progress_results": {
+      "CS201": "pass",
+      "CS202": "pass"
+    },
+    "locked": [
+      {
+        "course_code": "EL301",
+        "term": "2026-2"
+      }
+    ]
+  }
+]

@@ -1,0 +1,307 @@
+{
+  "schema_version": 3,
+  "students": [
+    {
+      "student_id": "khmt2023-demo",
+      "curriculum_id": "CS-2023-KHMT",
+      "grading_policy": "policy_2020",
+      "cohort": 2023,
+      "enrollment_term": "2023-1",
+      "current_term": "2025-2",
+      "declared_major": null,
+      "source": "simulated"
+    }
+  ],
+  "attempts": [
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-01",
+      "course": "CO1005",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-02",
+      "course": "CO1023",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-03",
+      "course": "LA1003",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-04",
+      "course": "MT1003",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-05",
+      "course": "PE1003",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-06",
+      "course": "PH1003",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-07",
+      "course": "CO1007",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-08",
+      "course": "CO1027",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-09",
+      "course": "LA1005",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-10",
+      "course": "MI1003",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-11",
+      "course": "MT1005",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-12",
+      "course": "MT1007",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-13",
+      "course": "PE1005",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-14",
+      "course": "PH1007",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-15",
+      "course": "CO2003",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-16",
+      "course": "CO2007",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-17",
+      "course": "CO2011",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-18",
+      "course": "LA1007",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-19",
+      "course": "SP1031",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-20",
+      "course": "CO2017",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-21",
+      "course": "CO2039",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-22",
+      "course": "LA1009",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-23",
+      "course": "MT2013",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-24",
+      "course": "SP1033",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-25",
+      "course": "CH1003",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-26",
+      "course": "CO2013",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-27",
+      "course": "CO3001",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-28",
+      "course": "CO3093",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-29",
+      "course": "SP1035",
+      "term": null,
+      "grade": null,
+      "result": "passed",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-30",
+      "course": "CO2001",
+      "term": null,
+      "grade": null,
+      "result": "in_progress",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-31",
+      "course": "CO3005",
+      "term": null,
+      "grade": null,
+      "result": "in_progress",
+      "course_kind": "regular"
+    },
+    {
+      "student_id": "khmt2023-demo",
+      "attempt_id": "khmt2023-demo-32",
+      "course": "SP1039",
+      "term": null,
+      "grade": null,
+      "result": "in_progress",
+      "course_kind": "regular"
+    }
+  ],
+  "external_progress": [],
+  "expected": []
+}

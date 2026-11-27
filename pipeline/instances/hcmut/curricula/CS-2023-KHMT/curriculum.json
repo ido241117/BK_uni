@@ -1,0 +1,1489 @@
+{
+  "schema_version": 3,
+  "id": "CS-2023-KHMT",
+  "name": "Khoa học Máy tính (Computer Science) - khóa 2023",
+  "cohort": 2023,
+  "planning": {
+    "first_term": "2023-1",
+    "horizon": 18,
+    "summer_terms": true,
+    "duration_years": 4,
+    "min_load": 11,
+    "max_load": 25,
+    "summer_max_load": 12,
+    "preferred_load": [
+      15,
+      18
+    ],
+    "summer_preferred_load": [
+      6,
+      9
+    ],
+    "summer_always_allowed": [
+      "CO3335"
+    ],
+    "level_min_year": {
+      "1": 1,
+      "2": 2,
+      "3": 3
+    }
+  },
+  "courses": [
+    {
+      "id": "CH1003",
+      "name": "Hóa đại cương / General Chemistry",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 3,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO1005",
+      "name": "Nhập môn Điện toán / Introduction to Computing",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO1007",
+      "name": "Cấu trúc Rời rạc cho Khoa học Máy tính / Discrete Structures for Computing",
+      "credits": 4,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO1023",
+      "name": "Hệ thống số / Digital Systems",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO1027",
+      "name": "Kỹ thuật Lập trình / Programming Fundamentals",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO2001",
+      "name": "Kỹ năng Chuyên nghiệp cho Kỹ sư / Professional Skills for Engineers",
+      "credits": 3,
+      "level": 2,
+      "typical_year": 3,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO2003",
+      "name": "Cấu trúc Dữ liệu và Giải Thuật / Data Structures and AlgoriThms",
+      "credits": 4,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO2007",
+      "name": "Kiến trúc Máy tính / Computer Architecture",
+      "credits": 4,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO2011",
+      "name": "Mô hình hóa Toán học / MaThematical Modeling",
+      "credits": 3,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO2013",
+      "name": "Hệ cơ sở Dữ liệu / Database Systems",
+      "credits": 4,
+      "level": 2,
+      "typical_year": 3,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO2017",
+      "name": "Hệ điều hành / Operating Systems",
+      "credits": 3,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO2039",
+      "name": "Lập trình Nâng cao / Advanced Programming",
+      "credits": 3,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3001",
+      "name": "Công nghệ Phần mềm / Software Engineering",
+      "credits": 3,
+      "level": 3,
+      "typical_year": 3,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3005",
+      "name": "Nguyên lý Ngôn ngữ Lập trình / Principles of Programming Languages",
+      "credits": 4,
+      "level": 3,
+      "typical_year": 3,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3011",
+      "name": "Quản lý Dự án Phần mềm / Software Project Management",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3013",
+      "name": "Xây dựng Chương trình Dịch / Compiler Construction",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3015",
+      "name": "Kiểm tra Phần mềm / Software Testing",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3017",
+      "name": "Kiến trúc Phần mềm / Software Architecture",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3021",
+      "name": "Hệ Quản trị Cơ sở Dữ Liệu / Database Management Systems",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3023",
+      "name": "Cơ sở Dữ liệu Phân tán và Hướng đối tượng / Distributed and Object-Oriented Databases",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3027",
+      "name": "Thương mại Điện tử / Electronic Commerce",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3029",
+      "name": "Khai phá Dữ liệu / Data Mining",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3031",
+      "name": "Phân tích và Thiết kế Giải Thuật / AlgoriThms-Design and Analysis",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3033",
+      "name": "Bảo mật Hệ thống Thông tin / Information System Security",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3035",
+      "name": "Hệ thời gian thực / Real-Time Systems",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3037",
+      "name": "Phát triển Ứng dụng Internet of Things / Internet of Things Application Development",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3041",
+      "name": "Hệ thống Thông minh / Intelligent Systems",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3043",
+      "name": "Phát triển Ứng dụng trên Thiết bị Di động / Mobile Application Development",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3045",
+      "name": "Lập trình Game / Game Programming",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3047",
+      "name": "Mạng máy tính nâng cao / Advanced Computer Networks",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3049",
+      "name": "Lập trình Web / Web Programming",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3051",
+      "name": "Hệ thống thiết bị di động / Mobile Systems",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3057",
+      "name": "Xử lý Ảnh số và Thị giác Máy tính / Digital Image Processing and Computer Vision",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3059",
+      "name": "Đồ họa Máy tính / Computer Graphics",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3061",
+      "name": "Nhập môn Trí tuệ Nhân tạo / Introduction to Artificial Intelligence",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3065",
+      "name": "Công nghệ Phần mềm Nâng cao / Advanced Software Engineering",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3067",
+      "name": "Tính toán Song song / Parallel Computing",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3069",
+      "name": "Mật mã và An ninh mạng / Cryptography and Network Security",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3071",
+      "name": "Hệ phân bố / Distributed Systems",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3083",
+      "name": "Mật mã học và Mã hóa Thông tin / Advance Cryptography and Coding Theory",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3085",
+      "name": "Xử lý Ngôn ngữ Tự nhiên / Natural Language Processing",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3089",
+      "name": "Những Chủ đề Nâng cao trong Khoa học Máy tính / Selected Topics in High Performance Computing",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3093",
+      "name": "Mạng máy tính / Computer Networks",
+      "credits": 3,
+      "level": 3,
+      "typical_year": 3,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3101",
+      "name": "Đồ án Tổng hợp - Hướng Trí tuệ Nhân tạo / Programming Intergration Project",
+      "credits": 1,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3103",
+      "name": "Đồ án Tổng hợp - hướng Công nghệ Phần mềm / Programming Intergration Project",
+      "credits": 1,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3105",
+      "name": "Đồ án Tổng hợp - Hướng Hệ thống Thông tin / Programming Intergration Project",
+      "credits": 1,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3107",
+      "name": "Thực tập Đồ án môn học Đa ngành - Hướng Trí tuệ Nhân tạo / Multidisciplinary Project",
+      "credits": 1,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3109",
+      "name": "Thực tập Đồ án môn học Đa ngành - Hướng công Nghệ phần mềm / Multidisciplinary Project",
+      "credits": 1,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3111",
+      "name": "Thực tập Đồ án môn học Đa ngành - hướng Hệ thống Thông tin / Multidisciplinary Project",
+      "credits": 1,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3115",
+      "name": "Phân tích và Thiết kế Hệ thống / Systems Analysis and Design",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3117",
+      "name": "Học máy / Machine Learning",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3119",
+      "name": "Đồ án Mạng máy tính / Computer Networks Project",
+      "credits": 1,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3127",
+      "name": "Đồ án tổng hợp - hướng kỹ thuật dữ liệu / Programming Intergration Project - Data Engineering",
+      "credits": 1,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3129",
+      "name": "Bảo mật Phần mềm / Software Security",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": false
+    },
+    {
+      "id": "CO3131",
+      "name": "Công nghệ Phần mềm thế hệ mới / Next-gen Software Engineering",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": false
+    },
+    {
+      "id": "CO3133",
+      "name": "Học sâu và Ứng dụng / Deep Learning and Its Applications",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3135",
+      "name": "Lập trình cho Trí tuệ nhân tạo và Khoa học dữ liệu / Programming for Artificial Intelligence and Data Science (P4AI-DS)",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3137",
+      "name": "Dữ liệu lớn / Big Data",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO3139",
+      "name": "Chuyển đổi số / Digital transformation",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": false
+    },
+    {
+      "id": "CO3151",
+      "name": "Quản trị mạng / Network management",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": false
+    },
+    {
+      "id": "CO3153",
+      "name": "Đánh giá an toàn mạng máy tính / Computer Network Security Assessment",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": false
+    },
+    {
+      "id": "CO3335",
+      "name": "Thực tập Ngoài trường / Internship",
+      "credits": 2,
+      "level": 3,
+      "typical_year": 3,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO4025",
+      "name": "Mạng xã hội và Thông tin / Information and Social Networks",
+      "credits": 3,
+      "level": 4,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO4029",
+      "name": "Đồ án Chuyên ngành / Specialized Project",
+      "credits": 2,
+      "level": 4,
+      "typical_year": 4,
+      "typical_part": 1,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO4031",
+      "name": "Kho dữ Liệu và Hệ hỗ trợ Quyết định / Data Warehouses and Decision Support Systems",
+      "credits": 3,
+      "level": 4,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO4033",
+      "name": "Phân tích Dữ liệu lớn và Trí tuệ Kinh doanh / Big Data Analytics and Business Intelligence",
+      "credits": 3,
+      "level": 4,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO4035",
+      "name": "Hệ hoạch Định tài Nguyên tổ chức / Enterprise Resource Planning Systems",
+      "credits": 3,
+      "level": 4,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO4037",
+      "name": "Hệ thống thông tin quản lý / Management Information Systems",
+      "credits": 3,
+      "level": 4,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO4039",
+      "name": "Bảo mật sinh trắc / Biometric Security",
+      "credits": 3,
+      "level": 4,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "CO4337",
+      "name": "Đồ án Tốt nghiệp (Khoa học Máy tính) / Capstone Project",
+      "credits": 4,
+      "level": 4,
+      "typical_year": 4,
+      "typical_part": 2,
+      "allowed_terms": [
+        1,
+        2
+      ],
+      "offered_in_summer": true
+    },
+    {
+      "id": "ENG_GC",
+      "name": "Điều kiện tiếng Anh tốt nghiệp / English Requirement for Graduation",
+      "credits": 0,
+      "kind": "condition",
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": false
+    },
+    {
+      "id": "IM1013",
+      "name": "Kinh tế học Đại cương / Economics",
+      "credits": 3,
+      "level": 1,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "IM1023",
+      "name": "Quản lý Sản xuất cho Kỹ sư / Production and Operations Management for Engineers",
+      "credits": 3,
+      "level": 1,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "IM1025",
+      "name": "Quản lý Dự án cho Kỹ sư / Project Management for Engineers",
+      "credits": 3,
+      "level": 1,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "IM1027",
+      "name": "Kinh tế Kỹ thuật / Engineering Economics",
+      "credits": 3,
+      "level": 1,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "IM3001",
+      "name": "Quản trị Kinh doanh cho Kỹ sư / Business Administration for Engineers",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": true
+    },
+    {
+      "id": "LA1003",
+      "name": "Anh văn 1 / English 1",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "LA1005",
+      "name": "Anh văn 2 / English 2",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "LA1007",
+      "name": "Anh văn 3 / English 3",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 2,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "LA1009",
+      "name": "Anh văn 4 / English 4",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 2,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "MI1003",
+      "name": "Giáo dục Quốc phòng / Military Training",
+      "credits": 0,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "MT1003",
+      "name": "Giải tích 1 / Calculus 1",
+      "credits": 4,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "MT1005",
+      "name": "Giải tích 2 / Calculus 2",
+      "credits": 4,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "MT1007",
+      "name": "Đại số Tuyến tính / Linear Algebra",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "MT2013",
+      "name": "Xác suất và Thống kê / Probability and Statistics",
+      "credits": 4,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "PE1003",
+      "name": "Giáo dục thể chất 1 / Physical Education 1",
+      "credits": 0,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 1,
+      "offered_in_summer": false
+    },
+    {
+      "id": "PE1005",
+      "name": "Giáo dục thể chất 2 / Physical Education 2",
+      "credits": 0,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2,
+      "offered_in_summer": false
+    },
+    {
+      "id": "PH1003",
+      "name": "Vật lý 1 / General Physics 1",
+      "credits": 4,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "PH1007",
+      "name": "Thí nghiệm Vật lý / General Physics Labs",
+      "credits": 1,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "SA4001",
+      "name": "Hoạt động sinh viên / Student Activities",
+      "credits": 0,
+      "kind": "condition",
+      "level": 4,
+      "typical_year": null,
+      "typical_part": null,
+      "offered_in_summer": false
+    },
+    {
+      "id": "SP1007",
+      "name": "Pháp luật Việt Nam Đại cương / Introduction to VieTNamese Law",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 4,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "SP1031",
+      "name": "Triết học Mác - Lênin / Marxist - Leninist Philosophy",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 2,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "SP1033",
+      "name": "Kinh tế Chính trị Mác - Lênin / Marxist - Leninist Political Economy",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 2,
+      "typical_part": 2,
+      "offered_in_summer": true
+    },
+    {
+      "id": "SP1035",
+      "name": "Chủ nghĩa Xã hội Khoa học / Scientific Socialism",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 3,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "SP1037",
+      "name": "Tư tưởng Hồ Chí Minh / Ho Chi Minh Ideology",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 4,
+      "typical_part": 1,
+      "offered_in_summer": true
+    },
+    {
+      "id": "SP1039",
+      "name": "Lịch sử Đảng Cộng sản Việt Nam / History of VieTNamese Communist Party",
+      "credits": 2,
+      "level": 1,
+      "typical_year": 3,
+      "typical_part": 2,
+      "offered_in_summer": true
+    }
+  ],
+  "relations": [
+    {
+      "course": "CO2001",
+      "type": "prerequisite",
+      "any_of": [
+        "CO1005"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO2003",
+      "type": "recommended",
+      "any_of": [
+        "CO1007"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO2003",
+      "type": "recommended",
+      "any_of": [
+        "CO1027"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO2007",
+      "type": "recommended",
+      "any_of": [
+        "CO1005"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO2011",
+      "type": "recommended",
+      "any_of": [
+        "CO1007"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3001",
+      "type": "recommended",
+      "any_of": [
+        "CO1027"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3005",
+      "type": "prerequisite",
+      "any_of": [
+        "CO1027"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3015",
+      "type": "prerequisite",
+      "any_of": [
+        "CO1027"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3015",
+      "type": "recommended",
+      "any_of": [
+        "CO3001"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3021",
+      "type": "recommended",
+      "any_of": [
+        "CO2013"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3031",
+      "type": "prior",
+      "any_of": [
+        "CO2003"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3033",
+      "type": "recommended",
+      "any_of": [
+        "CO2013"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3041",
+      "type": "prerequisite",
+      "any_of": [
+        "CO3001"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3133",
+      "type": "recommended",
+      "any_of": [
+        "CO3061"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3135",
+      "type": "prerequisite",
+      "any_of": [
+        "CO1027"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3135",
+      "type": "prerequisite",
+      "any_of": [
+        "CO2003"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO3137",
+      "type": "recommended",
+      "any_of": [
+        "CO2017"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO4029",
+      "type": "corequisite",
+      "any_of": [
+        "CO3335"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO4031",
+      "type": "recommended",
+      "any_of": [
+        "CO2013"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO4035",
+      "type": "recommended",
+      "any_of": [
+        "CO2013"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO4337",
+      "type": "prerequisite",
+      "any_of": [
+        "CO3335"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "CO4337",
+      "type": "prerequisite",
+      "any_of": [
+        "CO4029"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "LA1005",
+      "type": "prerequisite",
+      "any_of": [
+        "LA1003"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "LA1007",
+      "type": "prerequisite",
+      "any_of": [
+        "LA1005"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "LA1009",
+      "type": "prerequisite",
+      "any_of": [
+        "LA1007"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "MT1005",
+      "type": "recommended",
+      "any_of": [
+        "MT1003"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "MT2013",
+      "type": "recommended",
+      "any_of": [
+        "MT1007"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "PE1005",
+      "type": "prior",
+      "any_of": [
+        "PE1003"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "SP1033",
+      "type": "recommended",
+      "any_of": [
+        "SP1031"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "SP1035",
+      "type": "recommended",
+      "any_of": [
+        "SP1033"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "SP1037",
+      "type": "recommended",
+      "any_of": [
+        "SP1039"
+      ],
+      "source": "curriculum"
+    },
+    {
+      "course": "SP1039",
+      "type": "recommended",
+      "any_of": [
+        "SP1035"
+      ],
+      "source": "curriculum"
+    }
+  ],
+  "groups": [
+    {
+      "id": "G1",
+      "name": "Bat buoc (suy ra)",
+      "type": "mandatory",
+      "course_ids": [
+        "CH1003",
+        "CO1005",
+        "CO1007",
+        "CO1023",
+        "CO1027",
+        "CO2001",
+        "CO2003",
+        "CO2007",
+        "CO2011",
+        "CO2013",
+        "CO2017",
+        "CO2039",
+        "CO3001",
+        "CO3005",
+        "CO3093",
+        "CO3335",
+        "CO4029",
+        "CO4337",
+        "LA1003",
+        "LA1005",
+        "LA1007",
+        "LA1009",
+        "MI1003",
+        "MT1003",
+        "MT1005",
+        "MT1007",
+        "MT2013",
+        "PE1003",
+        "PE1005",
+        "PH1003",
+        "PH1007",
+        "SP1007",
+        "SP1031",
+        "SP1033",
+        "SP1035",
+        "SP1037",
+        "SP1039"
+      ],
+      "min_courses": null,
+      "min_credits": null
+    },
+    {
+      "id": "G2",
+      "name": "Tự chọn nhóm A (học kỳ 5)",
+      "type": "elective",
+      "course_ids": [
+        "CO3101",
+        "CO3103",
+        "CO3105",
+        "CO3119",
+        "CO3127"
+      ],
+      "min_courses": 1,
+      "min_credits": 1
+    },
+    {
+      "id": "G3",
+      "name": "Tự chọn nhóm B (học kỳ 6)",
+      "type": "elective",
+      "course_ids": [
+        "CO3107",
+        "CO3109",
+        "CO3111"
+      ],
+      "min_courses": 1,
+      "min_credits": 1
+    },
+    {
+      "id": "G4",
+      "name": "Tự chọn nhóm C (học kỳ 7 và 8)",
+      "type": "elective",
+      "course_ids": [
+        "CO3011",
+        "CO3013",
+        "CO3015",
+        "CO3017",
+        "CO3021",
+        "CO3023",
+        "CO3027",
+        "CO3029",
+        "CO3031",
+        "CO3033",
+        "CO3035",
+        "CO3037",
+        "CO3041",
+        "CO3043",
+        "CO3045",
+        "CO3047",
+        "CO3049",
+        "CO3051",
+        "CO3057",
+        "CO3059",
+        "CO3061",
+        "CO3065",
+        "CO3067",
+        "CO3069",
+        "CO3071",
+        "CO3083",
+        "CO3085",
+        "CO3089",
+        "CO3115",
+        "CO3117",
+        "CO3129",
+        "CO3131",
+        "CO3133",
+        "CO3135",
+        "CO3137",
+        "CO3139",
+        "CO3151",
+        "CO3153",
+        "CO4025",
+        "CO4031",
+        "CO4033",
+        "CO4035",
+        "CO4037",
+        "CO4039"
+      ],
+      "min_courses": 5,
+      "min_credits": 15
+    },
+    {
+      "id": "G5",
+      "name": "Tự chọn nhóm D (học kỳ 7)",
+      "type": "elective",
+      "course_ids": [
+        "IM1013",
+        "IM1023",
+        "IM1025",
+        "IM1027",
+        "IM3001"
+      ],
+      "min_courses": 1,
+      "min_credits": 3
+    },
+    {
+      "id": "G6",
+      "name": "Tự chọn tự do",
+      "type": "elective",
+      "course_ids": [],
+      "min_courses": null,
+      "min_credits": 9,
+      "scope": "any",
+      "slot_credits": 3
+    }
+  ],
+  "majors": [
+    {
+      "id": "CNDL",
+      "name": "Tự chọn nhóm C - Công nghệ Dữ liệu Bảo mật và Trí tuệ Kinh doanh",
+      "refines_group": "G4",
+      "rule": {
+        "type": "required_courses",
+        "min_courses": 5,
+        "min_credits": 15,
+        "course_ids": [
+          "CO3021",
+          "CO3023",
+          "CO3027",
+          "CO3029",
+          "CO3033",
+          "CO3115",
+          "CO3129",
+          "CO3137",
+          "CO3139",
+          "CO4031",
+          "CO4033",
+          "CO4035",
+          "CO4039"
+        ]
+      }
+    },
+    {
+      "id": "CNPM",
+      "name": "Tự chọn nhóm C - Công nghệ Phần mềm",
+      "refines_group": "G4",
+      "rule": {
+        "type": "required_courses",
+        "min_courses": 5,
+        "min_credits": 15,
+        "course_ids": [
+          "CO3011",
+          "CO3013",
+          "CO3015",
+          "CO3017",
+          "CO3041",
+          "CO3065",
+          "CO3089",
+          "CO3115",
+          "CO3131"
+        ]
+      }
+    },
+    {
+      "id": "MMANM",
+      "name": "Tự chọn nhóm C - Mật mã và An ninh mạng",
+      "refines_group": "G4",
+      "rule": {
+        "type": "required_courses",
+        "min_courses": 5,
+        "min_credits": 15,
+        "course_ids": [
+          "CO3047",
+          "CO3049",
+          "CO3051",
+          "CO3069",
+          "CO3083",
+          "CO3089",
+          "CO3151",
+          "CO3153"
+        ]
+      }
+    },
+    {
+      "id": "TTNT",
+      "name": "Tự chọn nhóm C - Trí tuệ nhân tạo ứng dụng",
+      "refines_group": "G4",
+      "rule": {
+        "type": "required_courses",
+        "min_courses": 5,
+        "min_credits": 15,
+        "course_ids": [
+          "CO3029",
+          "CO3035",
+          "CO3037",
+          "CO3041",
+          "CO3043",
+          "CO3045",
+          "CO3049",
+          "CO3051",
+          "CO3061",
+          "CO3085",
+          "CO3089",
+          "CO3117",
+          "CO3133",
+          "CO3135",
+          "CO3137",
+          "CO4025"
+        ]
+      }
+    },
+    {
+      "id": "XLA",
+      "name": "Tự chọn nhóm C - Xử lý ảnh và Thị giác máy tính",
+      "refines_group": "G4",
+      "rule": {
+        "type": "required_courses",
+        "min_courses": 5,
+        "min_credits": 15,
+        "course_ids": [
+          "CO3043",
+          "CO3045",
+          "CO3049",
+          "CO3051",
+          "CO3057",
+          "CO3059",
+          "CO3089",
+          "CO3117"
+        ]
+      }
+    }
+  ],
+  "default_major": null,
+  "milestones": [
+    {
+      "course": "CO3335",
+      "kind": "internship",
+      "min_credit_percent": 65
+    },
+    {
+      "course": "CO4337",
+      "kind": "thesis",
+      "min_credit_percent": 85
+    },
+    {
+      "course": "CO4029",
+      "kind": "specialized_project",
+      "min_credit_percent": 70
+    }
+  ],
+  "offerings": {
+    "unknown_policy": "assume-open",
+    "records": []
+  },
+  "_provenance": {
+    "converted_from": "planner fixture",
+    "note": "Lay tu API doc cong khai ngay 2026-11-19. Sinh vien la BIA."
+  }
+}

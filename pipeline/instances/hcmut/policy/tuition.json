@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "id": "tuition_policy_2026",
+  "effective_for_cohorts": {
+    "from": 2023,
+    "to": null
+  },
+  "currency": "VND",
+  "money_unit": "million",
+  "precision": 3,
+  "calculation_basis": "per_semester",
+  "tuition_rules": [
+    {
+      "description": "Regular semesters of the Computer Science program and all its majors (piecewise load model; 'percentage' is the discount off the full-load flat fee)",
+      "programs": [
+        "Computer Science",
+        "DSE",
+        "ASE",
+        "CYB",
+        "AI",
+        "IPCV"
+      ],
+      "semester_types": [
+        "regular"
+      ],
+      "fee_model": {
+        "type": "piecewise",
+        "tiers": [
+          {
+            "condition": {
+              "min_credits": 0,
+              "max_credits": 6
+            },
+            "fee_type": "flat",
+            "discount": 0.45,
+            "flat_fee": 13.75
+          },
+          {
+            "condition": {
+              "min_credits": 7,
+              "max_credits": 9
+            },
+            "fee_type": "flat",
+            "discount": 0.3,
+            "flat_fee": 13.75
+          },
+          {
+            "condition": {
+              "min_credits": 10,
+              "max_credits": 12
+            },
+            "fee_type": "flat",
+            "discount": 0.15,
+            "flat_fee": 13.75
+          },
+          {
+            "condition": {
+              "min_credits": 13,
+              "max_credits": 18
+            },
+            "fee_type": "flat",
+            "percentage": 0.0,
+            "flat_fee": 13.75
+          },
+          {
+            "condition": {
+              "min_credits": 19
+            },
+            "fee_type": "per_credit",
+            "applies_to": "excess_over",
+            "excess_over": 18,
+            "base_fee": 13.75,
+            "rate_per_credit": 0.805
+          }
+        ]
+      }
+    },
+    {
+      "description": "Summer semesters for all programs (flat per-credit rate on every credit)",
+      "programs": [
+        "*"
+      ],
+      "semester_types": [
+        "summer"
+      ],
+      "fee_model": {
+        "type": "per_credit",
+        "rate_per_credit": 1.23
+      }
+    }
+  ]
+}

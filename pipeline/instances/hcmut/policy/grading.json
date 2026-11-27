@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "id": "policy_2020",
+  "effective_for_cohorts": {
+    "from": 2023,
+    "to": null
+  },
+  "grade_scale": [
+    {
+      "grade": "A+",
+      "min_score": 9.5,
+      "max_score": 10.0,
+      "points": "4.00",
+      "passing": true,
+      "in_gpa": true,
+      "earns_credit": true
+    },
+    {
+      "grade": "A",
+      "min_score": 8.5,
+      "max_score": 9.49,
+      "points": "4.00",
+      "passing": true,
+      "in_gpa": true,
+      "earns_credit": true
+    },
+    {
+      "grade": "B+",
+      "min_score": 8.0,
+      "max_score": 8.49,
+      "points": "3.50",
+      "passing": true,
+      "in_gpa": true,
+      "earns_credit": true
+    },
+    {
+      "grade": "B",
+      "min_score": 7.0,
+      "max_score": 7.99,
+      "points": "3.00",
+      "passing": true,
+      "in_gpa": true,
+      "earns_credit": true
+    },
+    {
+      "grade": "C+",
+      "min_score": 6.5,
+      "max_score": 6.99,
+      "points": "2.50",
+      "passing": true,
+      "in_gpa": true,
+      "earns_credit": true
+    },
+    {
+      "grade": "C",
+      "min_score": 5.5,
+      "max_score": 6.49,
+      "points": "2.00",
+      "passing": true,
+      "in_gpa": true,
+      "earns_credit": true
+    },
+    {
+      "grade": "D+",
+      "min_score": 5.0,
+      "max_score": 5.49,
+      "points": "1.50",
+      "passing": true,
+      "in_gpa": true,
+      "earns_credit": true
+    },
+    {
+      "grade": "D",
+      "min_score": 4.0,
+      "max_score": 4.99,
+      "points": "1.00",
+      "passing": true,
+      "in_gpa": true,
+      "earns_credit": true
+    },
+    {
+      "grade": "F",
+      "min_score": 0.0,
+      "max_score": 3.99,
+      "points": "0.00",
+      "passing": false,
+      "in_gpa": true,
+      "earns_credit": false
+    }
+  ],
+  "gpa": {
+    "formula": "credit_weighted_mean",
+    "included_course_kinds": [
+      "regular"
+    ],
+    "scale_max": "4.00",
+    "rounding": {
+      "mode": "half_up",
+      "decimals": 2,
+      "applied_to": "final_only"
+    }
+  },
+  "retake": {
+    "gpa_attempt_selection": "latest",
+    "grade_cap": {
+      "applies_to": "retakes",
+      "max_grade": "B"
+    },
+    "keep_old_attempts_on_transcript": true,
+    "equivalence": "use_course_equivalents"
+  },
+  "pipeline_order": [
+    "resolve_equivalents",
+    "select_attempts",
+    "sum_credits_and_gpa",
+    "round"
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "schema_version": 3,
+  "id": "TOY-2025",
+  "name": "Chuong trinh do choi",
+  "cohort": 2025,
+  "planning": {
+    "first_term": "2025-1",
+    "horizon": 6,
+    "summer_terms": false,
+    "duration_years": 3,
+    "min_load": 3,
+    "max_load": 12,
+    "summer_max_load": null,
+    "preferred_load": null,
+    "summer_preferred_load": null,
+    "summer_always_allowed": [],
+    "level_min_year": null
+  },
+  "courses": [
+    {
+      "id": "MA101",
+      "name": "Giai tich 1",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 1
+    },
+    {
+      "id": "MA102",
+      "name": "Giai tich 2",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2
+    },
+    {
+      "id": "MA201",
+      "name": "Xac suat thong ke",
+      "credits": 3,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 1
+    },
+    {
+      "id": "CS101",
+      "name": "Nhap mon lap trinh",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 1
+    },
+    {
+      "id": "CS102",
+      "name": "Ky thuat lap trinh",
+      "credits": 3,
+      "level": 1,
+      "typical_year": 1,
+      "typical_part": 2
+    },
+    {
+      "id": "CS201",
+      "name": "Cau truc du lieu va giai thuat",
+      "credits": 4,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 1
+    },
+    {
+      "id": "CS202",
+      "name": "Kien truc may tinh",
+      "credits": 3,
+      "level": 2,
+      "typical_year": 2,
+      "typical_part": 1
+    },
+    {
+      "id": "CS301",
+      "name": "He dieu hanh",
+      "credits": 3,
+      "level": 3,
+      "typical_year": 2,
+      "typical_part": 2
+    },
+    {
+      "id": "CS302",
+      "name": "Co so du lieu",
+      "credits": 3,
+      "level": 3,
+      "typical_year": 2,
+      "typical_part": 2
+    },
+    {
+      "id": "CS401",
+      "name": "Do an",
+      "credits": 2,
+      "level": 4,
+      "typical_year": 3,
+      "typical_part": 1
+    },
+    {
+      "id": "EL301",
+      "name": "Hoc may",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null
+    },
+    {
+      "id": "EL302",
+      "name": "Lap trinh web",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null
+    },
+    {
+      "id": "EL303",
+      "name": "Mang may tinh",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null
+    },
+    {
+      "id": "EL304",
+      "name": "Do hoa may tinh",
+      "credits": 3,
+      "level": 3,
+      "typical_year": null,
+      "typical_part": null
+    }
+  ],
+  "relations": [
+    {
+      "course": "CS102",
+      "type": "prerequisite",
+      "any_of": [
+        "CS101"
+      ]
+    },
+    {
+      "course": "MA102",
+      "type": "prior",
+      "any_of": [
+        "MA101"
+      ]
+    },
+    {
+      "course": "MA201",
+      "type": "prerequisite",
+      "any_of": [
+        "MA102"
+      ]
+    },
+    {
+      "course": "CS201",
+      "type": "prerequisite",
+      "any_of": [
+        "CS102"
+      ]
+    },
+    {
+      "course": "CS301",
+      "type": "prerequisite",
+      "any_of": [
+        "CS201"
+      ]
+    },
+    {
+      "course": "CS301",
+      "type": "corequisite",
+      "any_of": [
+        "CS202"
+      ]
+    },
+    {
+      "course": "CS302",
+      "type": "prerequisite",
+      "any_of": [
+        "CS201"
+      ]
+    },
+    {
+      "course": "CS401",
+      "type": "prerequisite",
+      "any_of": [
+        "CS301"
+      ]
+    },
+    {
+      "course": "CS401",
+      "type": "prerequisite",
+      "any_of": [
+        "CS302"
+      ]
+    },
+    {
+      "course": "EL301",
+      "type": "prerequisite",
+      "any_of": [
+        "MA201"
+      ]
+    },
+    {
+      "course": "EL301",
+      "type": "prerequisite",
+      "any_of": [
+        "CS201"
+      ]
+    },
+    {
+      "course": "EL302",
+      "type": "prerequisite",
+      "any_of": [
+        "CS302"
+      ]
+    },
+    {
+      "course": "EL303",
+      "type": "corequisite",
+      "any_of": [
+        "CS301"
+      ]
+    },
+    {
+      "course": "EL304",
+      "type": "recommended",
+      "any_of": [
+        "MA102"
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "G1",
+      "name": "Bat buoc",
+      "type": "mandatory",
+      "course_ids": [
+        "MA101",
+        "MA102",
+        "MA201",
+        "CS101",
+        "CS102",
+        "CS201",
+        "CS202",
+        "CS301",
+        "CS302",
+        "CS401"
+      ],
+      "min_courses": null,
+      "min_credits": null
+    },
+    {
+      "id": "G2",
+      "name": "Tu chon",
+      "type": "elective",
+      "course_ids": [
+        "EL301",
+        "EL302",
+        "EL303",
+        "EL304"
+      ],
+      "min_courses": null,
+      "min_credits": 6
+    }
+  ],
+  "majors": [],
+  "default_major": null,
+  "milestones": [],
+  "offerings": {
+    "unknown_policy": "assume-open",
+    "records": [
+      {
+        "course": "EL303",
+        "term": "2027-1",
+        "status": "not-offered"
+      }
+    ]
+  },
+  "_provenance": {
+    "converted_from": "planner fixture",
+    "note": "DU LIEU BIA de kiem thu. Ten truong dat theo entity cua web (courses, curricula, curriculum_courses, course_relations, course_groups, course_opened_semesters, student_courses, student_plan_courses); khoa ngoai dung ma mon thay cho uuid."
+  }
+}

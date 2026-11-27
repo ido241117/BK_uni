@@ -1,0 +1,13 @@
+[
+  {
+    "id": "base",
+    "label": "Sinh vien bia, dau het mon dang hoc",
+    "curriculum_id": "CS-2023-KHMT",
+    "student_id": "khmt2023-demo",
+    "in_progress_results": {
+      "CO2001": "pass",
+      "CO3005": "pass",
+      "SP1039": "pass"
+    }
+  }
+]

@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "curriculum_id": "cs_2023",
+  "status": "placeholder",
+  "description": "PLACEHOLDER. Historical number of students who took each elective. Every count is null until the real data is supplied; null counts are ignored, so this file currently has no effect on the planner.",
+  "unit": "students",
+  "source": null,
+  "period": null,
+  "courses": [
+    {
+      "course": "CO3101",
+      "count": null
+    },
+    {
+      "course": "CO3103",
+      "count": null
+    },
+    {
+      "course": "CO3105",
+      "count": null
+    },
+    {
+      "course": "CO3119",
+      "count": null
+    },
+    {
+      "course": "CO3127",
+      "count": null
+    },
+    {
+      "course": "CO3107",
+      "count": null
+    },
+    {
+      "course": "CO3109",
+      "count": null
+    },
+    {
+      "course": "CO3111",
+      "count": null
+    },
+    {
+      "course": "CO3023",
+      "count": null
+    },
+    {
+      "course": "CO3027",
+      "count": null
+    },
+    {
+      "course": "CO3029",
+      "count": null
+    },
+    {
+      "course": "CO3031",
+      "count": null
+    },
+    {
+      "course": "CO3033",
+      "count": null
+    },
+    {
+      "course": "CO3035",
+      "count": null
+    },
+    {
+      "course": "CO3037",
+      "count": null
+    },
+    {
+      "course": "CO3041",
+      "count": null
+    },
+    {
+      "course": "CO3043",
+      "count": null
+    },
+    {
+      "course": "CO3045",
+      "count": null
+    },
+    {
+      "course": "CO3047",
+      "count": null
+    },
+    {
+      "course": "CO3049",
+      "count": null
+    },
+    {
+      "course": "CO3051",
+      "count": null
+    },
+    {
+      "course": "CO3057",
+      "count": null
+    },
+    {
+      "course": "CO3059",
+      "count": null
+    },
+    {
+      "course": "CO3061",
+      "count": null
+    },
+    {
+      "course": "CO3065",
+      "count": null
+    },
+    {
+      "course": "CO3067",
+      "count": null
+    },
+    {
+      "course": "CO3069",
+      "count": null
+    },
+    {
+      "course": "CO3071",
+      "count": null
+    },
+    {
+      "course": "CO3083",
+      "count": null
+    },
+    {
+      "course": "CO3085",
+      "count": null
+    },
+    {
+      "course": "CO3089",
+      "count": null
+    },
+    {
+      "course": "CO3115",
+      "count": null
+    },
+    {
+      "course": "CO3117",
+      "count": null
+    },
+    {
+      "course": "CO4025",
+      "count": null
+    },
+    {
+      "course": "CO4031",
+      "count": null
+    },
+    {
+      "course": "CO4033",
+      "count": null
+    },
+    {
+      "course": "CO4035",
+      "count": null
+    },
+    {
+      "course": "CO4037",
+      "count": null
+    },
+    {
+      "course": "CO4039",
+      "count": null
+    },
+    {
+      "course": "CO3129",
+      "count": null
+    },
+    {
+      "course": "CO3137",
+      "count": null
+    },
+    {
+      "course": "CO3139",
+      "count": null
+    },
+    {
+      "course": "CO3131",
+      "count": null
+    },
+    {
+      "course": "CO3151",
+      "count": null
+    },
+    {
+      "course": "CO3153",
+      "count": null
+    },
+    {
+      "course": "CO3133",
+      "count": null
+    },
+    {
+      "course": "CO3135",
+      "count": null
+    },
+    {
+      "course": "CO3011",
+      "count": null
+    },
+    {
+      "course": "CO3013",
+      "count": null
+    },
+    {
+      "course": "CO3015",
+      "count": null
+    },
+    {
+      "course": "CO3017",
+      "count": null
+    },
+    {
+      "course": "CO3021",
+      "count": null
+    },
+    {
+      "course": "IM1013",
+      "count": null
+    },
+    {
+      "course": "IM1023",
+      "count": null
+    },
+    {
+      "course": "IM1025",
+      "count": null
+    },
+    {
+      "course": "IM1027",
+      "count": null
+    },
+    {
+      "course": "IM3001",
+      "count": null
+    }
+  ]
+}
