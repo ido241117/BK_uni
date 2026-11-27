@@ -8,10 +8,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from planner.facts import get_scenario, load_fixture  # noqa: E402
-from planner.normalize import normalize  # noqa: E402
-from planner.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
-from planner.solve_cpsat import solve_cpsat  # noqa: E402
+from planner.model.facts import get_scenario, load_fixture  # noqa: E402
+from planner.model.normalize import normalize  # noqa: E402
+from evaluation.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
+from planner.solvers.cpsat import solve_cpsat  # noqa: E402
 
 
 def toy_with_free_elective(completed: list[str], outside: list[tuple[str, int]] = ()):
@@ -125,7 +125,7 @@ def test_block_override_into_required_group_makes_course_required():
 # --- 22/11: validator va lich su mo lop he --------------------------------------------------
 
 def _summer_plan_errors(fx, course):
-    from planner.validate import validate_plan
+    from evaluation.validate import validate_plan
     fx["summer_history"] = []
     if "263" not in fx["semesters"]:
         fx["semesters"] = sorted([*fx["semesters"], "263"])

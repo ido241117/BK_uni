@@ -21,7 +21,7 @@ def toy_policy(monkeypatch, tmp_path):
     min_load = 0, max_load = 12, max_load_summer = 12 vao thu muc tam va tro adapter toi do.
     policy.lp that khong bi sua.
     """
-    import planner.solve_asp as adapter
+    import planner.solvers.asp.adapter as adapter
 
     text = (adapter.ASP_DIR / "policy.lp").read_text(encoding="utf-8")
     for name, value in (("min_load", 0), ("max_load", 12), ("max_load_summer", 12)):

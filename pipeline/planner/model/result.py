@@ -1,16 +1,16 @@
 """Ket qua chung cua moi bo giai (CP-SAT, ASP engine): dung JSON theo ky, so sanh lo trinh.
 
 Truoc day nam trong ``solve.py`` cua bo giai Clingo cu; tach ra khi thay bo giai do bang
-engine ASP (``pipeline/engine/asp/core``, xem ``ASP-ADAPTER.md``).
+engine ASP (``pipeline/planner/solvers/asp/core``, xem ``planner/solvers/asp/ADAPTER.md``).
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from planner.facts import assumptions, plan_semesters
-from planner.report import preferences_report, warnings
-from planner.student_requests import requests_report
+from planner.model.facts import assumptions, plan_semesters
+from planner.model.report import preferences_report, warnings
+from planner.model.student_requests import requests_report
 
 
 def make_result(

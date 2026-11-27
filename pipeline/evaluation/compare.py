@@ -1,13 +1,13 @@
 """So sanh engine ASP (Clingo) va CP-SAT: cung dau vao, doi chieu trang thai, muc tieu, thoi gian.
 
     cd pipeline
-    .venv/Scripts/python -m planner.compare                 # 5 kich ban cua toy.json
-    .venv/Scripts/python -m planner.compare --benchmark     # du lieu sinh ngau nhien
+    .venv/Scripts/python -m evaluation.compare                 # 5 kich ban cua toy.json
+    .venv/Scripts/python -m evaluation.compare --benchmark     # du lieu sinh ngau nhien
 
 Hai bo giai co the tra hai lo trinh KHAC nhau ma van dung, mien la cung gia tri
 muc tieu. Vi vay so sanh bo ba (ky cuoi, tong tin chi, so thay doi), khong so
 tung mon. Engine ASP dung quy dinh cua policy.lp va thu tu muc tieu rieng
-(ASP-ADAPTER.md), nen "LECH" la ket qua binh thuong: day chinh la diem can so sanh.
+(planner/solvers/asp/ADAPTER.md), nen "LECH" la ket qua binh thuong: day chinh la diem can so sanh.
 """
 
 from __future__ import annotations
@@ -17,13 +17,13 @@ import random
 import time
 from typing import Any
 
-from planner.facts import load_fixture
-from planner.report import objective as report_objective
-from planner.run_scenarios import DEFAULT_FIXTURE
-from planner.result import plan_map
-from planner.solve_asp import solve_asp
-from planner.solve_cpsat import solve_cpsat
-from planner.validate import validate_plan
+from planner.model.facts import load_fixture
+from planner.model.report import objective as report_objective
+from evaluation.run_scenarios import DEFAULT_FIXTURE
+from planner.model.result import plan_map
+from planner.solvers.asp.adapter import solve_asp
+from planner.solvers.cpsat import solve_cpsat
+from evaluation.validate import validate_plan
 
 
 def objective(fixture: dict, scenario: dict, result: dict, previous: dict[str, str] | None) -> tuple | None:

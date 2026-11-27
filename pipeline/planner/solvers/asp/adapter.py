@@ -1,10 +1,10 @@
-"""Adapter: planner JSON -> engine ASP (``pipeline/engine/asp``) -> ket qua chung.
+"""Adapter: planner JSON -> engine ASP (``pipeline/planner/solvers/asp``) -> ket qua chung.
 
 Day la cau noi DUY NHAT giua dau vao cua web (JSON do backend ghep tu database, xem
 ``Backend/src/planner/planner-input.ts``) va engine ASP. Engine khong biet JSON; adapter
-khong chua luat. Tai lieu day du: ``pipeline/planner/ASP-ADAPTER.md``.
+khong chua luat. Tai lieu day du: ``pipeline/planner/solvers/asp/ADAPTER.md``.
 
-    from planner.solve_asp import solve_asp
+    from planner.solvers.asp.adapter import solve_asp
     result = solve_asp(fixture, scenario, previous_plan=None, time_limit=30.0)
 
 Cung chu ky va cung dang ket qua voi ``solve_cpsat`` (qua ``result.make_result``), cong them
@@ -25,7 +25,7 @@ from typing import Any
 
 import clingo
 
-from planner.facts import (
+from planner.model.facts import (
     FixtureError,
     course_level,
     graduation_needs,
@@ -35,18 +35,18 @@ from planner.facts import (
     semester_year,
     validate_input,
 )
-from planner.normalize import normalize
-from planner.result import make_result
+from planner.model.normalize import normalize
+from planner.model.result import make_result
 
-ASP_DIR = Path(__file__).resolve().parents[1] / "engine" / "asp"
+ASP_DIR = Path(__file__).resolve().parent
+PIPELINE = ASP_DIR.parents[2]
 SOURCES_BEFORE = (ASP_DIR / "core" / "encoding.lp", ASP_DIR / "core" / "extension.lp", ASP_DIR / "policy.lp")
 SOURCES_AFTER = (ASP_DIR / "core" / "translate.lp", ASP_DIR / "core" / "optimize.lp")
-DATA_DIR = Path(__file__).with_name("data")
-TAGS_FILE = DATA_DIR / "course-tags.json"
-ALIASES_FILE = DATA_DIR / "mybk-code-aliases.json"
+TAGS_FILE = PIPELINE / "instances" / "hcmut" / "course-tags.json"
+ALIASES_FILE = PIPELINE / "instances" / "importers" / "hcmut" / "mybk-code-aliases.json"
 # So luong Clingo (portfolio cau hinh). Do 20/11/2026 tren du lieu that (KHMT, 21 ky): 1 luong het 30 s
 # chua chung minh toi uu va nghiem kem hon; 4 luong tim nghiem tot nhat trong 30 s o ca 3 lan chay,
-# chung minh toi uu 1/3 lan. ASP-ADAPTER.md muc 8.
+# chung minh toi uu 1/3 lan. planner/solvers/asp/ADAPTER.md muc 8.
 THREADS = 4
 
 SEMESTER = re.compile(r"^(\d\d)([123])$")
@@ -231,7 +231,7 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
             if spec["code"] == target:
                 out.append(f"student_major({major}).")
 
-    # Tags (pipeline/planner/data/course-tags.json, written by pipeline/tag_classifier): the list of the
+    # Tags (pipeline/instances/hcmut/course-tags.json, written by pipeline/tag_classifier): the list of the
     # student's program family (all cohorts of the program), else the merged list of every family.
     tag_file = _load_json(TAGS_FILE, {})
     family = (tag_file.get("families") or {}).get(fixture["curriculum"].get("code"))
@@ -511,7 +511,7 @@ def _assumptions(fixture: dict[str, Any], scenario: dict[str, Any], ctx: dict[st
              for code, r in sorted(scenario["in_progress_results"].items())]
     pol = _policy_constants()
     notes += [
-        "Bộ giải: engine ASP (pipeline/engine/asp/core) với quy định trong policy.lp",
+        "Bộ giải: engine ASP (pipeline/planner/solvers/asp/core) với quy định trong policy.lp",
         "Mọi môn xếp trong tương lai được giả định sẽ đậu",
         f"Tín chỉ mỗi kỳ chính {pol.get('min_load')}–{pol.get('max_load')} (trừ kỳ cuối có môn), "
         f"kỳ hè tối đa {pol.get('max_load_summer')} theo policy.lp",

@@ -2,9 +2,9 @@
 du lieu tien quyet co nhan nguon.
 
     cd pipeline
-    .venv/Scripts/python -m planner.relations snapshot planner/data/relations-snapshot.json
-    .venv/Scripts/python -m planner.relations report planner/data/relations-snapshot.json
-    .venv/Scripts/python -m planner.relations coverage planner/data/relations-snapshot.json planner/fixtures/khmt2023.json
+    .venv/Scripts/python -m instances.importers.hcmut.relations snapshot instances/hcmut/raw/relations-snapshot.json
+    .venv/Scripts/python -m instances.importers.hcmut.relations report instances/hcmut/raw/relations-snapshot.json
+    .venv/Scripts/python -m instances.importers.hcmut.relations coverage instances/hcmut/raw/relations-snapshot.json planner/fixtures/khmt2023.json
 
 Nguon cua mot quan he trong dau vao bo giai (``source``):
     curriculum  co trong chuong trinh cua sinh vien
@@ -31,7 +31,7 @@ INFER_MIN_SHARE = 0.5
 # --- T12: ban chup ---------------------------------------------------------------
 
 def take_snapshot() -> dict[str, Any]:
-    from planner.fetch_curriculum import pages
+    from instances.importers.hcmut.fetch_curriculum import pages
 
     curricula = pages("curricula")
     out = []

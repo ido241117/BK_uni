@@ -1,7 +1,7 @@
 """Dung fixture tu MOT chuong trinh that, qua API doc cong khai cua backend (chi GET).
 
     cd pipeline
-    .venv/Scripts/python -m planner.fetch_curriculum CS-2023-KHMT planner/fixtures/khmt2023.json
+    .venv/Scripts/python -m instances.importers.hcmut.fetch_curriculum CS-2023-KHMT planner/fixtures/khmt2023.json
 
 Khong co du lieu sinh vien: phan ``student`` la mot sinh vien BIA (khong ten,
 khong MSSV) da hoc xong cac mon co ky khuyen nghi truoc ky hien tai.
@@ -10,7 +10,7 @@ Quy tac doi tu database sang fixture (cung la quy tac backend se dung o T15):
 - Mon bat buoc = mon cua chuong trinh khong thuoc khoi tu chon goc nao (giong
   ``Frontend/src/pages/courses/analysis/analyze.ts``) va khong phai "dieu kien".
 - Khoi con co ``parent_group_id`` (chuyen nganh) giu lai kem ``parent``, ``specialization``.
-- Khoi ``pool_scope = any`` (tu chon tu do) giu nguyen; ``planner.normalize`` doi thanh o trong.
+- Khoi ``pool_scope = any`` (tu chon tu do) giu nguyen; ``planner.model.normalize`` doi thanh o trong.
 - Nhom "E. Dieu kien tot nghiep" -> ``conditions`` (khong xep vao ky).
 - Nhom "D. Hoc phan tot nghiep" -> ``graduation_courses`` theo ten mon.
 - ``summer_history``: mon tung mo o mot ky he (ma ky ket thuc bang 3) trong lich su.

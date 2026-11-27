@@ -1,6 +1,6 @@
 """Bo giai thu hai: OR-Tools CP-SAT.
 
-Cung dau vao (JSON + kich ban) va cung dang dau ra voi engine ASP (``solve_asp.py``),
+Cung dau vao (JSON + kich ban) va cung dang dau ra voi engine ASP (``planner/solvers/asp/adapter.py``),
 nhung viet doc lap: doc thang JSON, khong di qua facts hay engine ASP. Nho vay hai
 bo giai co the doi chieu cheo nhau. Chi dung chung phan kiem tra dau vao va
 cach doc kich ban (muc tin chi tung ky, thu tu uu tien) trong ``facts.py``.
@@ -14,7 +14,7 @@ from typing import Any
 
 from ortools.sat.python import cp_model
 
-from planner.facts import (
+from planner.model.facts import (
     assumed_fails,
     base_credit_limits,
     course_level,
@@ -39,8 +39,8 @@ from planner.facts import (
     validate_input,
     year_thresholds,
 )
-from planner.normalize import normalize
-from planner.result import make_result
+from planner.model.normalize import normalize
+from planner.model.result import make_result
 
 
 def solve_cpsat(

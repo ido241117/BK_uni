@@ -13,7 +13,7 @@ from data import load_bundle
 from engine import SolverOptions, plans_from_solutions, solve
 
 ASP_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 
 
 def _atoms(text: str) -> list[clingo.Symbol]:

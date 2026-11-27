@@ -1,9 +1,9 @@
 """Chay moi kich ban trong fixture, kiem tra bang validator, in khac biet.
 
     cd pipeline
-    .venv/Scripts/python -m planner.run_scenarios
-    .venv/Scripts/python -m planner.run_scenarios --json output/planner.json
-    .venv/Scripts/python -m planner.run_scenarios --facts base     # xem facts cua engine ASP
+    .venv/Scripts/python -m evaluation.run_scenarios
+    .venv/Scripts/python -m evaluation.run_scenarios --json output/planner.json
+    .venv/Scripts/python -m evaluation.run_scenarios --facts base     # xem facts cua engine ASP
 """
 
 from __future__ import annotations
@@ -12,19 +12,19 @@ import argparse
 import json
 from pathlib import Path
 
-from planner.facts import get_scenario, load_fixture, validate_input
-from planner.normalize import normalize
-from planner.result import diff, plan_map
-from planner.solve_asp import build_program, solve_asp
-from planner.validate import validate_plan
+from planner.model.facts import get_scenario, load_fixture, validate_input
+from planner.model.normalize import normalize
+from planner.model.result import diff, plan_map
+from planner.solvers.asp.adapter import build_program, solve_asp
+from evaluation.validate import validate_plan
 
-DEFAULT_FIXTURE = Path(__file__).with_name("fixtures") / "toy.json"
+DEFAULT_FIXTURE = Path(__file__).resolve().parents[1] / "planner" / "fixtures" / "toy.json"
 
 
 def run_all(fixture: dict, solver: str = "clingo") -> list[dict]:
     """Kich ban dau tien la co so; cac kich ban sau co gang giu lo trinh co so."""
     if solver == "cpsat":
-        from planner.solve_cpsat import solve_cpsat as solve_fn
+        from planner.solvers.cpsat import solve_cpsat as solve_fn
     else:
         solve_fn = solve_asp  # "clingo" = engine ASP
     results: list[dict] = []

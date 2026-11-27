@@ -8,7 +8,7 @@ Checks:
 * the elective slots cover each group's requirement (count and credits);
 * each semester's credits equal the PDF total, and the totals add to ``total_credits``;
 * for every specialization (first members of each group as electives), the whole plan
-  passes ``planner.validate`` from enrollment, completes the degree and respects the
+  passes ``evaluation.validate`` from enrollment, completes the degree and respects the
   internship's fills_next rule.
 """
 

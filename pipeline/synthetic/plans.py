@@ -225,7 +225,7 @@ def to_slots(cur: Curriculum, spec: str, plan: dict[str, list[str]], passed=()) 
 def plan_errors(cur: Curriculum, student, plan: dict[str, list[str]], passed=(), failed=(),
                 current: str | None = None) -> list[str]:
     """Validator errors (completeness ignored) + the internship fills_next rule."""
-    from planner.validate import validate_plan
+    from evaluation.validate import validate_plan
     spec = student.specialization
     current = current or cur.start
     opt_in = cur.summers_from(current) if student.summer_opt_in else []

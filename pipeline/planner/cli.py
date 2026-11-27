@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from planner.facts import (
+from planner.model.facts import (
     FixtureError,
     assumed_fails,
     base_credit_limits,
@@ -35,18 +35,18 @@ from planner.facts import (
     plan_semesters,
     summer_courses,
 )
-from planner.normalize import normalize
-from planner.relations import enrich
-from planner.report import warning_items
-from planner.relations import load as load_snapshot
-from planner.result import diff
-from planner.solve_asp import solve_asp
-from planner.solve_cpsat import solve_cpsat
-from planner.validate import validate_plan
+from planner.model.normalize import normalize
+from instances.importers.hcmut.relations import enrich
+from planner.model.report import warning_items
+from instances.importers.hcmut.relations import load as load_snapshot
+from planner.model.result import diff
+from planner.solvers.asp.adapter import solve_asp
+from planner.solvers.cpsat import solve_cpsat
+from evaluation.validate import validate_plan
 
-# "clingo" = engine ASP (pipeline/engine/asp/core) qua adapter solve_asp.py (ASP-ADAPTER.md).
+# "clingo" = engine ASP (pipeline/planner/solvers/asp/core) qua planner/solvers/asp/adapter.py (ADAPTER.md).
 SOLVERS = {"cpsat": solve_cpsat, "clingo": solve_asp}
-DEFAULT_SNAPSHOT = Path(__file__).with_name("data") / "relations-snapshot.json"
+DEFAULT_SNAPSHOT = Path(__file__).resolve().parents[1] / "instances" / "hcmut" / "raw" / "relations-snapshot.json"
 
 
 def _allocate_blocks(fixture: dict[str, Any], planned: list[str], chosen: set[str]) -> dict[str, str]:

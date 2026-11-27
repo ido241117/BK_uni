@@ -17,7 +17,7 @@ from translation import (
 )
 from support import TINY_CURRICULUM, tiny_policy
 
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 
 
 def _slots(program: str, course: str) -> list[int]:

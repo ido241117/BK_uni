@@ -20,7 +20,7 @@ from data import (
 )
 from support import TINY_CURRICULUM, TINY_GRADUATION
 
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 
 
 def test_loads_ground_truth_policy_and_graduation() -> None:

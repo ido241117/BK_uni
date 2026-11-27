@@ -15,11 +15,11 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from planner.cli import run  # noqa: E402
-from planner.facts import FixtureError, get_scenario, load_fixture, preference_order  # noqa: E402
-from planner.report import warning_items  # noqa: E402
-from planner.result import plan_map  # noqa: E402
-from planner.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
-from planner.solve_cpsat import solve_cpsat  # noqa: E402
+from planner.model.facts import FixtureError, get_scenario, load_fixture, preference_order  # noqa: E402
+from planner.model.report import warning_items  # noqa: E402
+from planner.model.result import plan_map  # noqa: E402
+from evaluation.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
+from planner.solvers.cpsat import solve_cpsat  # noqa: E402
 
 OK = ("OPTIMAL", "SAT_NOT_PROVEN_OPTIMAL")
 

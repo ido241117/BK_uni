@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from planner.facts import (
+from planner.model.facts import (
     DEFAULT_SUMMER_MAX,
     graduation_pairs,
     offered_pairs,
@@ -25,7 +25,7 @@ from planner.facts import (
     summer_preferred_load,
     summer_specialized,
 )
-from planner.normalize import normalize
+from planner.model.normalize import normalize
 
 
 def _passed(fixture: dict[str, Any], scenario: dict[str, Any]) -> set[str]:

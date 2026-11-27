@@ -477,7 +477,7 @@ except ImportError:  # script/test import
     )
 
 ASP_DIR = Path(__file__).resolve().parent
-DATA_DIR = ASP_DIR.parents[1] / "data"
+DATA_DIR = ASP_DIR.parents[2] / "data"
 DEFAULT_CURRICULUM = DATA_DIR / "curriculum.json"
 DEFAULT_GRADING_POLICY = DATA_DIR / "grading_policy.json"
 DEFAULT_GRADUATION = DATA_DIR / "graduation_requirements.json"

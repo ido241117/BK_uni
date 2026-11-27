@@ -15,11 +15,11 @@ from pathlib import Path
 
 import pytest
 
-from planner.facts import FixtureError, load_fixture
-from planner.result import plan_map
-from planner.solve_asp import Calendar, build_program, solve_asp
-from planner.normalize import normalize
-from planner.validate import validate_plan
+from planner.model.facts import FixtureError, load_fixture
+from planner.model.result import plan_map
+from planner.solvers.asp.adapter import Calendar, build_program, solve_asp
+from planner.model.normalize import normalize
+from evaluation.validate import validate_plan
 
 KHMT = Path(__file__).resolve().parents[1] / "fixtures" / "khmt2023.json"
 REQUIRED = ["RQ1001", "RQ1002", "RQ2003", "RQ2004"]
@@ -225,7 +225,7 @@ def test_pass_boundary_follows_letter_bands(score, retake):
 # GPA he 10 = (7.5 [diem giua B] + 3.0 + 2.5) * 7 / 21 = 4.33 (khong co tran: 4.83);
 # GPA he 4 = (3.0 + 0 + 0) / 3 = 1.00.
 def test_retake_cap_applies_to_score_scale(monkeypatch):
-    import planner.solve_asp as sa
+    import planner.solvers.asp.adapter as sa
     original = sa.build_program
 
     def with_retake(fixture, sc):
@@ -313,7 +313,7 @@ def test_condition_under_mybk_code_matches_the_file():
 # --- Tag ------------------------------------------------------------------------------------
 
 def test_tags_are_read_from_json(monkeypatch, tmp_path):
-    import planner.solve_asp as adapter
+    import planner.solvers.asp.adapter as adapter
 
     path = tmp_path / "tags.json"
     path.write_text(json.dumps({"tags": {"AI": ELECTIVES, "core": ["RQ1001"]}}), encoding="utf-8")
@@ -326,7 +326,7 @@ def test_tags_are_read_from_json(monkeypatch, tmp_path):
 
 def test_tags_come_from_the_students_program_family(monkeypatch, tmp_path):
     # SMALL belongs to family F1: its list is used, not another family's nor the merged fallback.
-    import planner.solve_asp as adapter
+    import planner.solvers.asp.adapter as adapter
 
     path = tmp_path / "tags.json"
     path.write_text(json.dumps({
@@ -347,7 +347,7 @@ def test_tags_come_from_the_students_program_family(monkeypatch, tmp_path):
 def test_interest_picks_the_elective_with_that_tag(monkeypatch, tmp_path, interest, chosen):
     # One 7-credit elective out of three is needed and nothing else tells them apart, so the
     # interest objective (taste) decides which one is planned.
-    import planner.solve_asp as adapter
+    import planner.solvers.asp.adapter as adapter
 
     path = tmp_path / "tags.json"
     path.write_text(json.dumps({"tags": {"AI": ["EL3002"], "web": ["EL3003"]}}), encoding="utf-8")
@@ -360,7 +360,7 @@ def test_interest_picks_the_elective_with_that_tag(monkeypatch, tmp_path, intere
 
 
 def test_interest_without_courses_in_the_program_is_warned(monkeypatch, tmp_path):
-    import planner.solve_asp as adapter
+    import planner.solvers.asp.adapter as adapter
 
     path = tmp_path / "tags.json"
     path.write_text(json.dumps({"tags": {"AI": ["EL3002"], "robotics": ["XX9999"]}}), encoding="utf-8")
@@ -379,7 +379,7 @@ def test_malformed_interests_are_an_input_error():
 # --- Hoc phi tuy chon --------------------------------------------------------------------------
 
 def test_policy_without_fee_rules_still_plans(monkeypatch, tmp_path):
-    import planner.solve_asp as adapter
+    import planner.solvers.asp.adapter as adapter
 
     text = (adapter.ASP_DIR / "policy.lp").read_text(encoding="utf-8")
     path = tmp_path / "policy-nofee.lp"
@@ -410,7 +410,7 @@ def khmt():
 
 def test_khmt_real_size_is_optimal_and_valid(khmt, monkeypatch):
     # 1 luong cho tat dinh: kiem tra toi uu va dung. Che do nhieu luong cua san pham: test duoi.
-    import planner.solve_asp as adapter
+    import planner.solvers.asp.adapter as adapter
 
     monkeypatch.setattr(adapter, "THREADS", 1)
     sc = copy.deepcopy(khmt["scenarios"][0])

@@ -1,6 +1,6 @@
 """Doc va kiem tra dau vao (fixture + kich ban), cac luat dung chung cho moi bo giai.
 
-Facts cho engine ASP do ``solve_asp.py`` sinh (xem ``ASP-ADAPTER.md``).
+Facts cho engine ASP do ``planner/solvers/asp/adapter.py`` sinh (xem ``planner/solvers/asp/ADAPTER.md``).
 Moi thu khong ho tro duoc bao loi ro rang thay vi am tham bo qua.
 """
 

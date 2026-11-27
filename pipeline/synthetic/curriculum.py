@@ -1,6 +1,6 @@
 """Curriculum, grade scale and tuition, read from the planner's own data.
 
-Registration legality and the graduation check reuse ``planner.validate`` so the
+Registration legality and the graduation check reuse ``evaluation.validate`` so the
 simulator does not re-encode curriculum rules.
 """
 
@@ -15,8 +15,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from planner.normalize import normalize
-from planner.validate import validate_plan
+from planner.model.normalize import normalize
+from evaluation.validate import validate_plan
 
 PIPELINE = Path(__file__).resolve().parent.parent
 CONFIG = Path(__file__).resolve().parent / "config.toml"
@@ -124,9 +124,9 @@ class Curriculum:
 
     @lru_cache(maxsize=None)
     def course_tags(self) -> dict[str, frozenset[str]]:
-        """Course -> tags (planner/data/course-tags.json), read as the planner reads them:
+        """Course -> tags (instances/hcmut/course-tags.json), read as the planner reads them:
         the program family's list, else the merged one."""
-        data = json.loads((PIPELINE / "planner" / "data" / "course-tags.json").read_text(encoding="utf-8"))
+        data = json.loads((PIPELINE / "instances" / "hcmut" / "course-tags.json").read_text(encoding="utf-8"))
         family = (data.get("families") or {}).get(self.curriculum_code)
         tags = (data.get("by_family") or {}).get(family) if family else None
         out: dict[str, set[str]] = {}

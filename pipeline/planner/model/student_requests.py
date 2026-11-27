@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from planner.facts import (
+from planner.model.facts import (
     assumed_fails,
     graduation_needs,
     is_summer,

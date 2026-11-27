@@ -20,7 +20,7 @@ from cli import (
 from engine import Plan, PlannedSemester, Solution, SolverOptions, solve
 from support import TINY_CURRICULUM, tiny_policy, write_programs
 
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 ASP_DIR = Path(__file__).resolve().parents[1]
 
 

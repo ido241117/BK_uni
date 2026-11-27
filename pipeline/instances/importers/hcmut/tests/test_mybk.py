@@ -9,9 +9,9 @@ from pathlib import Path
 import openpyxl
 import pytest
 
-from planner.mybk import MybkError, parse_bytes
+from instances.importers.hcmut.mybk import MybkError, parse_bytes
 
-PIPELINE = Path(__file__).resolve().parents[2]
+PIPELINE = Path(__file__).resolve().parents[4]
 HEADER = ["Stt", "Mã sinh viên", "Mã lớp", "Mã học kỳ", "Số TC CTĐT", "Số TCTL", "Khối kiến thức", "BB/TC",
           "Số TC Y/c", "Số MH Y/c", "Số TC Đạt", "Số MH Đạt", "Mã môn học", "Tên môn học", "Số tín chỉ",
           "Điểm số", "Điểm chữ", "Điểm đạt", "Xét TCTD", "Cập nhật cuối", "Ghi chú"]
@@ -115,7 +115,7 @@ PDF_LINES = [
 
 
 def test_pdf_lines_blocks_conditions_and_not_passed():
-    from planner.mybk import parse_pdf_lines
+    from instances.importers.hcmut.mybk import parse_pdf_lines
 
     out = parse_pdf_lines(PDF_LINES)
     assert out["format"] == "pdf" and out["lists_only_passed"] is False
@@ -146,7 +146,7 @@ def test_pdf_lines_blocks_conditions_and_not_passed():
 
 def test_pdf_note_skips_group_headings():
     """Tieu de nhom khoi nam giua hai khoi khong bi coi la ghi chu cua mon dung truoc (gap o file that)."""
-    from planner.mybk import parse_pdf_lines
+    from instances.importers.hcmut.mybk import parse_pdf_lines
 
     k = PDF_LINES.index("Tự chọn (Nhóm C)")
     lines = PDF_LINES[:k] + ["Khối kiến thức Ngành", "Môn học ngoài Chương trình đào tạo"] + PDF_LINES[k:]
@@ -156,7 +156,7 @@ def test_pdf_note_skips_group_headings():
 
 
 def test_pdf_lines_rejects_other_pdf():
-    from planner.mybk import parse_pdf_lines
+    from instances.importers.hcmut.mybk import parse_pdf_lines
 
     with pytest.raises(MybkError, match="Không phải file PDF tiến độ myBK"):
         parse_pdf_lines(["Quy định học vụ", "Điều 1", "Phạm vi"])
@@ -228,9 +228,9 @@ def test_pdf_without_text_layer_says_how_to_fix():
 
 
 def test_cli_stdin_stdout():
-    proc = subprocess.run([sys.executable, "-m", "planner.mybk"], input=xlsx(), capture_output=True,
+    proc = subprocess.run([sys.executable, "-m", "instances.importers.hcmut.mybk"], input=xlsx(), capture_output=True,
                           cwd=PIPELINE, check=True)
     assert json.loads(proc.stdout.decode("utf-8"))["status"] == "OK"
-    bad = subprocess.run([sys.executable, "-m", "planner.mybk"], input=b"nope", capture_output=True,
+    bad = subprocess.run([sys.executable, "-m", "instances.importers.hcmut.mybk"], input=b"nope", capture_output=True,
                          cwd=PIPELINE, check=True)
     assert json.loads(bad.stdout.decode("utf-8"))["status"] == "INPUT_ERROR"

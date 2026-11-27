@@ -8,7 +8,7 @@ first-attempt scores for every (student, course) pair, with the year taken from 
 course's recommended semester. No policy is involved.
 
 ``pool``: on a stored pool,
-* every registration of every record is legal (``planner.validate``, replayed from the
+* every registration of every record is legal (``evaluation.validate``, replayed from the
   record's own states) and the term after an internship holds no course (fills_next);
 * graduation status agrees with the validator's completeness check;
 * first-attempt scores in step 4 equal the record's scores (common random numbers);

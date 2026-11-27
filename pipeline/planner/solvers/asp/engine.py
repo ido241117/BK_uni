@@ -760,7 +760,7 @@ def solve(
     # Pass source text instead of file paths: clingo's native loader can fail
     # on Windows paths containing non-ASCII characters.
     #
-    # Layer order mirrors pipeline/engine/asp/README.md: the generic core,
+    # Layer order mirrors pipeline/planner/solvers/asp/README.md: the generic core,
     # then the generated policy/curriculum, then the student input through
     # translate.lp, and finally the preferences/output in optimize.lp.
     sources = [

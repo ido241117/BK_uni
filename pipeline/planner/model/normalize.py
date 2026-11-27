@@ -22,7 +22,7 @@ import copy
 import math
 from typing import Any
 
-from planner.facts import FixtureError
+from planner.model.facts import FixtureError
 
 DEFAULT_FREE_SLOT_CREDITS = 3
 

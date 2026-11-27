@@ -4,7 +4,7 @@ The pipeline talks to a solver through four calls:
 
     adapter.settings(cfg_solver)   -> dict      settings from [solver.<name>] (part of the cache key)
     adapter.fingerprint()          -> str       hash of the solver's sources (part of the cache key)
-    adapter.solve(fx, sc, settings) -> dict     a planner result (``planner.result.make_result``)
+    adapter.solve(fx, sc, settings) -> dict     a planner result (``planner.model.result.make_result``)
     adapter.stopped_by(result, settings) -> str "proven" | "time_limit" | "solve_limit" | ...
 
 Input is the planner JSON contract (fixture + scenario), shared by every planner solver.
@@ -17,7 +17,7 @@ Output is reduced to one common record (``common_result``) with a common status:
 | INFEASIBLE | proven: no plan exists |
 | NO_PLAN | no plan and no proof (a limit stopped the search first) |
 
-Built in: ``asp`` (``planner.solve_asp``) and ``cpsat`` (``planner.solve_cpsat``). Another
+Built in: ``asp`` (``planner.solvers.asp.adapter``) and ``cpsat`` (``planner.solvers.cpsat``). Another
 solver plugs in with ``[solver] name = "package.module:factory"``, where ``factory()``
 returns an object with the four calls above and a ``name`` attribute. Changing a solver's
 sources changes its fingerprint, so cached results of the old version are not reused.
@@ -42,7 +42,7 @@ def hash_files(paths) -> str:
 
 
 class AspSolver:
-    """``planner.solve_asp`` (engine in ``pipeline/engine/asp``).
+    """``planner.solvers.asp.adapter`` (engine in ``pipeline/planner/solvers/asp``).
 
     [solver.asp] mode = "conflicts": 1 thread, stop after ``solve_limit`` conflicts
     (reproducible; ``time_limit`` is a safety net). mode = "time": ``threads`` threads,
@@ -59,11 +59,11 @@ class AspSolver:
         raise ValueError(f"unknown [solver.asp] mode {s['mode']!r}")
 
     def fingerprint(self) -> str:
-        from planner import solve_asp as S
+        from planner.solvers.asp import adapter as S
         return hash_files((*S.SOURCES_BEFORE, *S.SOURCES_AFTER, S.__file__, S.TAGS_FILE))
 
     def solve(self, fx: dict, sc: dict, st: dict) -> dict:
-        from planner.solve_asp import solve_asp
+        from planner.solvers.asp.adapter import solve_asp
         return solve_asp(fx, sc, None, st["time_limit"], threads=st["threads"],
                          solve_limit=st["solve_limit"])
 
@@ -72,7 +72,7 @@ class AspSolver:
 
 
 class CpSatSolver:
-    """``planner.solve_cpsat`` (OR-Tools CP-SAT, 1 worker). [solver.cpsat] time_limit in
+    """``planner.solvers.cpsat`` (OR-Tools CP-SAT, 1 worker). [solver.cpsat] time_limit in
     seconds; the wall-clock limit makes unproven results machine-dependent."""
 
     name = "cpsat"
@@ -81,11 +81,12 @@ class CpSatSolver:
         return {"time_limit": float(s["time_limit"])}
 
     def fingerprint(self) -> str:
-        from planner import facts, normalize, solve_cpsat
-        return hash_files((solve_cpsat.__file__, facts.__file__, normalize.__file__))
+        from planner.model import facts, normalize
+        from planner.solvers import cpsat
+        return hash_files((cpsat.__file__, facts.__file__, normalize.__file__))
 
     def solve(self, fx: dict, sc: dict, st: dict) -> dict:
-        from planner.solve_cpsat import solve_cpsat
+        from planner.solvers.cpsat import solve_cpsat
         return solve_cpsat(fx, sc, None, st["time_limit"])
 
     def stopped_by(self, r: dict, st: dict) -> str:

@@ -14,8 +14,8 @@ import math
 import re
 from typing import Any
 
-from planner.facts import graduation_pairs
-from planner.normalize import normalize
+from planner.model.facts import graduation_pairs
+from planner.model.normalize import normalize
 
 
 def validate_plan(

@@ -14,12 +14,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from planner.facts import get_scenario, load_fixture  # noqa: E402
-from planner.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
-from planner.result import plan_map  # noqa: E402
-from planner.solve_asp import solve_asp  # noqa: E402
-from planner.solve_cpsat import solve_cpsat  # noqa: E402
-from planner.validate import validate_plan  # noqa: E402
+from planner.model.facts import get_scenario, load_fixture  # noqa: E402
+from evaluation.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
+from planner.model.result import plan_map  # noqa: E402
+from planner.solvers.asp.adapter import solve_asp  # noqa: E402
+from planner.solvers.cpsat import solve_cpsat  # noqa: E402
+from evaluation.validate import validate_plan  # noqa: E402
 
 SOLVERS = {"clingo": solve_asp, "cpsat": solve_cpsat}  # "clingo" = engine ASP
 
@@ -28,7 +28,7 @@ def asp_differs(reason: str) -> list:
     """Hai bo giai, voi engine ASP danh dau xfail: engine ASP chua co muc tieu/luat nay.
 
     Khong strict: engine chay nhieu luong (solve_asp.THREADS) nen giua cac nghiem ngang nhau co the
-    tinh co chon dung dap an cua test. Danh sach khac biet: ASP-ADAPTER.md, muc 7.
+    tinh co chon dung dap an cua test. Danh sach khac biet: planner/solvers/asp/ADAPTER.md, muc 7.
     """
     return ["cpsat", pytest.param("clingo", marks=pytest.mark.xfail(strict=False, reason=reason))]
 
@@ -261,7 +261,7 @@ def test_k8_validator_rejects_course_in_summer_not_opted(toy):
     (6, 8),
 ])
 def test_s8_both_solvers_agree(toy, band):
-    from planner.report import objective
+    from planner.model.report import objective
 
     scenario = base(toy)
     scenario["preferences"] = {"preferred_load": list(band)}

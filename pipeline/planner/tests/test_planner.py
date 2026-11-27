@@ -14,10 +14,10 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from planner.facts import FixtureError, get_scenario, load_fixture, validate_input  # noqa: E402
-from planner.normalize import normalize  # noqa: E402
-from planner.run_scenarios import DEFAULT_FIXTURE, run_all  # noqa: E402
-from planner.validate import validate_plan  # noqa: E402
+from planner.model.facts import FixtureError, get_scenario, load_fixture, validate_input  # noqa: E402
+from planner.model.normalize import normalize  # noqa: E402
+from evaluation.run_scenarios import DEFAULT_FIXTURE, run_all  # noqa: E402
+from evaluation.validate import validate_plan  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -135,7 +135,7 @@ def test_validator_uses_scenario_assumptions(fixture):
 # o day chi kiem tra so sanh chay duoc va CP-SAT van hop le theo validator.
 
 def test_compare_runs_both_solvers_on_toy(fixture):
-    from planner.compare import agree, run_pair
+    from evaluation.compare import agree, run_pair
 
     for scenario in fixture["scenarios"]:
         rows = run_pair(fixture, scenario, None, 30.0)
@@ -146,7 +146,7 @@ def test_compare_runs_both_solvers_on_toy(fixture):
 
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_compare_runs_both_solvers_on_synthetic(seed):
-    from planner.compare import agree, run_pair, synthetic
+    from evaluation.compare import agree, run_pair, synthetic
 
     data = synthetic(20, 8, seed)
     rows = run_pair(data, data["scenarios"][0], None, 30.0)

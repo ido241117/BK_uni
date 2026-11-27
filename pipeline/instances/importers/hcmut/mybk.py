@@ -1,7 +1,7 @@
 """Doc file tien do myBK (PDF "Tien do hoan thanh CTDT" hoac Excel "Mon hoc CTDT") thanh du lieu chuan hoa
 (muc 4.4 cua ke hoach, T19).
 
-Dung:  python -m planner.mybk < file.pdf|file.xlsx   (bytes qua stdin, JSON qua stdout)
+Dung:  python -m instances.importers.hcmut.mybk < file.pdf|file.xlsx   (bytes qua stdin, JSON qua stdout)
 
 Dinh dang Excel da xem (mot sinh vien KHMT 2023, 19/11/2026): sheet dau, dong 1 la tieu de, moi dong
 la **mot mon da dat**. Cot dung: "Khoi kien thuc", "BB/TC", "So TC Y/c", "So TC Dat", "Ma mon hoc",

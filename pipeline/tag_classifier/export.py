@@ -1,4 +1,4 @@
-"""Step 6b: reviewed workbooks -> the planner's tag file (pipeline/planner/data/course-tags.json)
+"""Step 6b: reviewed workbooks -> the planner's tag file (pipeline/instances/hcmut/course-tags.json)
 
     cd pipeline
     tag_classifier/.venv/Scripts/python -m tag_classifier.export --dry-run     # check, print, write nothing

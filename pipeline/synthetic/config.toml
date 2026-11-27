@@ -4,7 +4,7 @@
 
 [run]
 fixture = "planner/fixtures/khmt2023.json"   # relative to pipeline/
-policy = "engine/asp/policy.lp"              # grade scale and tuition
+policy = "planner/solvers/asp/policy.lp"              # grade scale and tuition
 official_plan = "synthetic/official_plan.json"
 semester_before_start = "223"                # "current semester" for a new student
 

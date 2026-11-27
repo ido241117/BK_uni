@@ -229,4 +229,4 @@ stability_pairs = [["embedding", "embedding-vi"]]
 out_dir = "review"
 # Model whose course assignments fill the `courses` column: the first one present in the scores.
 primary_models = ["modernbert", "bge-m3-zeroshot", "embedding"]
-export_file = "../planner/data/course-tags.json"
+export_file = "../instances/hcmut/course-tags.json"

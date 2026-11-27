@@ -6,12 +6,13 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+PIPELINE = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(PIPELINE))
 
-from planner.relations import consistency, enrich, load  # noqa: E402
+from instances.importers.hcmut.relations import consistency, enrich, load  # noqa: E402
 
-SNAPSHOT = Path(__file__).resolve().parents[1] / "data" / "relations-snapshot.json"
-KHMT = Path(__file__).resolve().parents[1] / "fixtures" / "khmt2023.json"
+SNAPSHOT = PIPELINE / "instances" / "hcmut" / "raw" / "relations-snapshot.json"
+KHMT = PIPELINE / "planner" / "fixtures" / "khmt2023.json"
 
 
 def snap(*curricula):

@@ -1,7 +1,0 @@
-{
-  "description": "Mã chương trình myBK (in trên PDF tiến độ) -> mã chương trình của nhóm (bảng curricula). Lưu ở repo, không ở database (T20). Thêm cặp mới khi đã kiểm tra bằng file tiến độ thật.",
-  "updated": "2026-11-19",
-  "programs": {
-    "DH_CQ_MT_KHM_2023": "CS-2023-KHMT"
-  }
-}
