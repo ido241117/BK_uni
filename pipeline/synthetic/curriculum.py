@@ -15,6 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from planner.model.input import to_planner_fixture
 from planner.model.normalize import normalize
 from evaluation.validate import validate_plan
 
@@ -76,7 +77,11 @@ def parse_policy(path: Path) -> tuple[Scale, list[tuple[str, int, int, float, fl
 class Curriculum:
     def __init__(self, cfg: dict[str, Any]):
         run = cfg["run"]
-        self.raw = json.loads((PIPELINE / run["fixture"]).read_text(encoding="utf-8"))
+        canonical = json.loads((PIPELINE / run["curriculum"]).read_text(encoding="utf-8"))
+        # The planner input for this curriculum; _fixture() replaces the student each time.
+        nobody = {"students": [{"student_id": "synthetic", "current_term": canonical["planning"]["first_term"]}],
+                  "attempts": []}
+        self.raw = to_planner_fixture(canonical, nobody, "synthetic")
         self.scale, self.fee_rules = parse_policy(PIPELINE / run["policy"])
         self.start = run["semester_before_start"]
         self.semesters = [self.start] + list(self.raw["semesters"])

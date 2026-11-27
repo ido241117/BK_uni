@@ -3,7 +3,7 @@
 # The values are modelling assumptions, not estimates from data; see README.md.
 
 [run]
-fixture = "planner/fixtures/khmt2023.json"   # relative to pipeline/
+curriculum = "instances/hcmut/curricula/CS-2023-KHMT/curriculum.json"   # relative to pipeline/
 policy = "planner/solvers/asp/policy.lp"              # grade scale and tuition
 official_plan = "synthetic/official_plan.json"
 semester_before_start = "223"                # "current semester" for a new student
