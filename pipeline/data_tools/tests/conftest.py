@@ -14,7 +14,8 @@ if str(PROJECT_ROOT) not in sys.path:
 from data_tools.loader import load_data  # noqa: E402
 from data_tools.stats import build_report  # noqa: E402
 
-DATA_DIR = PROJECT_ROOT / "data"
+DATA_DIR = PROJECT_ROOT / "instances" / "hcmut" / "curricula" / "cs_2023"
+STUDENTS = PROJECT_ROOT / "instances" / "hcmut" / "students" / "cs_2023-oracle.json"
 
 
 @pytest.fixture(scope="session")
@@ -24,7 +25,7 @@ def data_dir():
 
 @pytest.fixture(scope="session")
 def bundle():
-    return load_data(DATA_DIR)
+    return load_data(DATA_DIR, STUDENTS)
 
 
 @pytest.fixture(scope="session")

@@ -113,17 +113,6 @@ def _string_list(value: Any, context: str) -> tuple[str, ...]:
     return tuple(_str(item, f"{context}[{index}]") for index, item in enumerate(items))
 
 
-def _string_matrix(value: Any, context: str) -> tuple[tuple[str, ...], ...]:
-    items = _list(value, context)
-    return tuple(
-        tuple(
-            _str(course_id, f"{context}[{row_index}][{column_index}]")
-            for column_index, course_id in enumerate(_list(row, f"{context}[{row_index}]"))
-        )
-        for row_index, row in enumerate(items)
-    )
-
-
 def _int_list(value: Any, context: str) -> tuple[int, ...]:
     items = _list(value, context)
     return tuple(_int(item, f"{context}[{index}]") for index, item in enumerate(items))
@@ -146,6 +135,11 @@ def _parse_curriculum(raw: dict[str, Any]) -> Curriculum:
     name = _str(_need(raw, "name", context), f"{context}.name")
     total_credits = _int(_need(raw, "total_credits", context), f"{context}.total_credits")
 
+    relations = _list(_need(raw, "relations", context), f"{context}.relations")
+
+    def requisites(course_id: str, kind: str) -> tuple[tuple[str, ...], ...]:
+        return tuple(tuple(r["any_of"]) for r in relations if r["course"] == course_id and r["type"] == kind)
+
     courses: dict[str, Course] = {}
     for index, item in enumerate(_list(_need(raw, "courses", context), f"{context}.courses")):
         item_context = f"{context}.courses[{index}]"
@@ -153,15 +147,9 @@ def _parse_curriculum(raw: dict[str, Any]) -> Curriculum:
             id=_str(_need(item, "id", item_context), f"{item_context}.id"),
             name=_str(_need(item, "name", item_context), f"{item_context}.name"),
             credits=_int(_need(item, "credits", item_context), f"{item_context}.credits"),
-            prerequisites=_string_matrix(
-                _need(item, "prerequisites", item_context), f"{item_context}.prerequisites"
-            ),
-            corequisites=_string_matrix(
-                _need(item, "corequisites", item_context), f"{item_context}.corequisites"
-            ),
-            offered_terms=_int_list(
-                _need(item, "offered_terms", item_context), f"{item_context}.offered_terms"
-            ),
+            prerequisites=requisites(item.get("id"), "prerequisite"),
+            corequisites=requisites(item.get("id"), "corequisite"),
+            offered_terms=_int_list(item.get("offered_terms") or [], f"{item_context}.offered_terms"),
         )
         if course.id in courses:
             _fail(item_context, f"duplicate course id {course.id!r}")
@@ -798,14 +786,18 @@ def _validate_cross_references(
         raise DataValidationError(errors)
 
 
-def load_data(data_dir: str | Path = "data") -> DataBundle:
-    """Read the four dataset files, validate them and return a typed bundle."""
+def load_data(curriculum_dir: str | Path, students_path: str | Path) -> DataBundle:
+    """Read one curriculum of an instance folder (instances/SCHEMA.md) and a student file.
 
-    root = Path(data_dir).resolve()
+    ``curriculum_dir`` is ``instances/<university>/curricula/<id>``; the grading policy is
+    the university's ``policy/grading.json``.
+    """
+
+    root = Path(curriculum_dir).resolve()
     curriculum = _parse_curriculum(_read_json(root / "curriculum.json"))
-    policy = _parse_policy(_read_json(root / "grading_policy.json"))
-    graduation = _parse_graduation(_read_json(root / "graduation_requirements.json"))
-    students = _parse_students(_read_json(root / "student_history.json"), policy)
+    policy = _parse_policy(_read_json(root.parents[1] / "policy" / "grading.json"))
+    graduation = _parse_graduation(_read_json(root / "graduation.json"))
+    students = _parse_students(_read_json(Path(students_path)), policy)
     _validate_cross_references(curriculum, policy, graduation, students)
     return DataBundle(
         data_dir=root,

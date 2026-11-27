@@ -17,7 +17,8 @@ from data_tools.policy import audit_all, expected_summary
 from data_tools.stats import build_report
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DATA = PROJECT_ROOT / "data"
+DEFAULT_DATA = PROJECT_ROOT / "instances" / "hcmut" / "curricula" / "cs_2023"
+DEFAULT_STUDENTS = PROJECT_ROOT / "instances" / "hcmut" / "students" / "cs_2023-oracle.json"
 DEFAULT_OUTPUT = PROJECT_ROOT / "output"
 ALL_FORMATS = {"csv", "tables", "charts", "html"}
 
@@ -46,7 +47,7 @@ def _display(path: Path) -> str:
 
 def command_validate(args: argparse.Namespace) -> int:
     try:
-        bundle = load_data(args.data)
+        bundle = load_data(args.data, args.students)
         audits = audit_all(bundle)
     except DataValidationError as exc:
         print("Validation failed:", file=sys.stderr)
@@ -75,7 +76,7 @@ def command_validate(args: argparse.Namespace) -> int:
 def command_report(args: argparse.Namespace) -> int:
     try:
         formats = _parse_formats(args.formats)
-        bundle = load_data(args.data)
+        bundle = load_data(args.data, args.students)
         report = build_report(bundle)
     except (DataValidationError, ValueError) as exc:
         if isinstance(exc, DataValidationError):
@@ -133,7 +134,12 @@ def build_parser() -> argparse.ArgumentParser:
     validate_parser.add_argument(
         "--data",
         default=str(DEFAULT_DATA),
-        help=f"dataset directory (default: {DEFAULT_DATA})",
+        help=f"curriculum folder of an instance (default: {DEFAULT_DATA})",
+    )
+    validate_parser.add_argument(
+        "--students",
+        default=str(DEFAULT_STUDENTS),
+        help=f"student history file (default: {DEFAULT_STUDENTS})",
     )
     validate_parser.set_defaults(func=command_validate)
 
@@ -145,7 +151,12 @@ def build_parser() -> argparse.ArgumentParser:
     report_parser.add_argument(
         "--data",
         default=str(DEFAULT_DATA),
-        help=f"dataset directory (default: {DEFAULT_DATA})",
+        help=f"curriculum folder of an instance (default: {DEFAULT_DATA})",
+    )
+    report_parser.add_argument(
+        "--students",
+        default=str(DEFAULT_STUDENTS),
+        help=f"student history file (default: {DEFAULT_STUDENTS})",
     )
     report_parser.add_argument(
         "--out",

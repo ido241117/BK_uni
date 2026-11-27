@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -10,9 +9,9 @@ PIPELINE = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(PIPELINE))
 
 from instances.importers.hcmut.relations import consistency, enrich, load  # noqa: E402
+from planner.model.input import KHMT, load_fixture  # noqa: E402
 
 SNAPSHOT = PIPELINE / "instances" / "hcmut" / "raw" / "relations-snapshot.json"
-KHMT = PIPELINE / "planner" / "fixtures" / "khmt2023.json"
 
 
 def snap(*curricula):
@@ -66,5 +65,5 @@ def test_real_snapshot_shape_and_khmt_needs_no_inference():
     s = load(SNAPSHOT)
     assert s["curricula_count"] == 96 and s["relations_count"] == len(
         [r for c in s["curricula"] for r in c["relations"]])
-    out = enrich(json.loads(KHMT.read_text(encoding="utf-8")), s)
+    out = enrich(load_fixture(KHMT), s)
     assert [r for r in out["course_relations"] if r["source"] == "inferred"] == []

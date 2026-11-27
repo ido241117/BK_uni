@@ -5,7 +5,6 @@ from __future__ import annotations
 import copy
 import json
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -19,15 +18,15 @@ from data import (
     validate_curriculum,
 )
 from support import TINY_CURRICULUM, TINY_GRADUATION
+from cli import DEFAULT_CURRICULUM, DEFAULT_GRADING_POLICY, DEFAULT_GRADUATION, DEFAULT_TUITION_POLICY
 
-DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 
 
 def test_loads_ground_truth_policy_and_graduation() -> None:
     bundle = load_bundle(
-        DATA_DIR / "curriculum.json",
-        DATA_DIR / "grading_policy.json",
-        DATA_DIR / "graduation_requirements.json",
+        DEFAULT_CURRICULUM,
+        DEFAULT_GRADING_POLICY,
+        DEFAULT_GRADUATION,
     )
     policy = bundle.policy
     assert policy.policy_id == "policy_2020"
@@ -74,7 +73,7 @@ def test_score_band_midpoint_is_rounded_to_scale_precision() -> None:
 
 
 def test_loads_ground_truth_tuition_policy() -> None:
-    tuition = load_tuition(DATA_DIR / "tuition_policy.json")
+    tuition = load_tuition(DEFAULT_TUITION_POLICY)
     assert tuition.policy_id == "tuition_policy_2026"
     assert tuition.currency == "VND"
     assert tuition.money_unit == "million"
@@ -153,9 +152,9 @@ def test_validate_curriculum_rejects_unknown_prerequisite() -> None:
 
 
 def test_highest_selection_alias_is_normalized_to_best() -> None:
-    grading = json.loads((DATA_DIR / "grading_policy.json").read_text(encoding="utf-8"))
+    grading = json.loads((DEFAULT_GRADING_POLICY).read_text(encoding="utf-8"))
     graduation = json.loads(
-        (DATA_DIR / "graduation_requirements.json").read_text(encoding="utf-8")
+        (DEFAULT_GRADUATION).read_text(encoding="utf-8")
     )
     grading["retake"]["gpa_attempt_selection"] = "highest"
     policy = parse_policy(grading, graduation)

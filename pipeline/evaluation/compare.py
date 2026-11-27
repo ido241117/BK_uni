@@ -17,7 +17,7 @@ import random
 import time
 from typing import Any
 
-from planner.model.facts import load_fixture
+from planner.model.input import load_fixture
 from planner.model.report import objective as report_objective
 from evaluation.run_scenarios import DEFAULT_FIXTURE
 from planner.model.result import plan_map

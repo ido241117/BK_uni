@@ -477,12 +477,13 @@ except ImportError:  # script/test import
     )
 
 ASP_DIR = Path(__file__).resolve().parent
-DATA_DIR = ASP_DIR.parents[2] / "data"
-DEFAULT_CURRICULUM = DATA_DIR / "curriculum.json"
-DEFAULT_GRADING_POLICY = DATA_DIR / "grading_policy.json"
-DEFAULT_GRADUATION = DATA_DIR / "graduation_requirements.json"
-DEFAULT_TUITION_POLICY = DATA_DIR / "tuition_policy.json"
-DEFAULT_POPULARITY = DATA_DIR / "elective_popularity.json"
+UNIVERSITY_DIR = ASP_DIR.parents[2] / "instances" / "hcmut"
+CURRICULUM_DIR = UNIVERSITY_DIR / "curricula" / "cs_2023"
+DEFAULT_CURRICULUM = CURRICULUM_DIR / "curriculum.json"
+DEFAULT_GRADING_POLICY = UNIVERSITY_DIR / "policy" / "grading.json"
+DEFAULT_GRADUATION = CURRICULUM_DIR / "graduation.json"
+DEFAULT_TUITION_POLICY = UNIVERSITY_DIR / "policy" / "tuition.json"
+DEFAULT_POPULARITY = CURRICULUM_DIR / "popularity.json"
 DEFAULT_POLICY_OUTPUT = ASP_DIR / "policy.lp"
 
 

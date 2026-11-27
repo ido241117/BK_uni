@@ -16,7 +16,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from planner.model.facts import FixtureError, get_scenario, is_summer, load_fixture  # noqa: E402
+from planner.model.facts import FixtureError, get_scenario, is_summer  # noqa: E402
+from planner.model.input import KHMT, load_fixture  # noqa: E402
 from planner.model.normalize import normalize  # noqa: E402
 from evaluation.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
 from planner.model.result import plan_map  # noqa: E402
@@ -24,7 +25,6 @@ from planner.solvers.asp.adapter import solve_asp  # noqa: E402
 from planner.solvers.cpsat import solve_cpsat  # noqa: E402
 from evaluation.validate import validate_plan  # noqa: E402
 
-KHMT = Path(__file__).resolve().parents[1] / "fixtures" / "khmt2023.json"
 
 
 @pytest.fixture()

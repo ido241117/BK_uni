@@ -39,13 +39,13 @@ def test_attempt_courses_exist_in_curriculum(bundle):
 
 
 def test_invalid_course_reference_is_rejected(tmp_path, data_dir):
-    data_copy = tmp_path / "data"
-    shutil.copytree(data_dir, data_copy)
+    university = tmp_path / "hcmut"
+    shutil.copytree(data_dir.parents[1], university)
 
-    history_path = data_copy / "student_history.json"
+    history_path = university / "students" / "cs_2023-oracle.json"
     history = json.loads(history_path.read_text(encoding="utf-8"))
     history["attempts"][0]["course"] = "NOT_A_COURSE"
     history_path.write_text(json.dumps(history, indent=2), encoding="utf-8")
 
     with pytest.raises(DataValidationError, match="unknown course"):
-        load_data(data_copy)
+        load_data(university / "curricula" / "cs_2023", history_path)

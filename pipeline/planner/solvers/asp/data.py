@@ -923,12 +923,49 @@ class Bundle:
         return int(self.curriculum["total_credits"])
 
 
+def from_instance_curriculum(cur: dict[str, Any]) -> dict[str, Any]:
+    """Canonical curriculum (instances/SCHEMA.md, schema 3) -> the shape this engine reads.
+
+    Differences: per-course ``prerequisites`` / ``corequisites`` lists of OR-groups instead
+    of ``relations`` rows (recommended/prior relations are dropped: the engine has no rule
+    for them), and ``typical_regular_term`` (regular-term index) instead of
+    ``typical_year`` / ``typical_part``.
+    """
+    out = {k: v for k, v in cur.items() if k != "relations"}
+    out["schema_version"] = 1
+    out["courses"] = []
+    for course in cur["courses"]:
+        rest = dict(course)
+        cid = rest.pop("id")
+        year, part = rest.pop("typical_year", None), rest.pop("typical_part", None)
+        rebuilt = {
+            "id": cid,
+            "name": rest.pop("name"),
+            "credits": rest.pop("credits"),
+            "prerequisites": [list(r["any_of"]) for r in cur["relations"]
+                              if r["course"] == cid and r["type"] == "prerequisite"],
+            "corequisites": [list(r["any_of"]) for r in cur["relations"]
+                             if r["course"] == cid and r["type"] == "corequisite"],
+        }
+        rebuilt.update(rest)
+        if year is not None:
+            rebuilt["typical_regular_term"] = (year - 1) * 2 + part
+        out["courses"].append(rebuilt)
+    return out
+
+
+def load_curriculum(path: Path) -> dict[str, Any]:
+    """Read a curriculum file; canonical (schema 3) files are converted on the way in."""
+    raw = load_json(path)
+    return from_instance_curriculum(raw) if raw.get("schema_version") == 3 else raw
+
+
 def load_bundle(
     curriculum_path: Path,
     grading_path: Path,
     graduation_path: Path,
 ) -> Bundle:
-    curriculum = load_json(curriculum_path)
+    curriculum = load_curriculum(curriculum_path)
     validate_curriculum(curriculum)
     grading = load_json(grading_path)
     graduation = load_json(graduation_path)

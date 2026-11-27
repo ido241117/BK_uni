@@ -14,7 +14,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from planner.model.facts import FixtureError, get_scenario, load_fixture, validate_input  # noqa: E402
+from planner.model.facts import FixtureError, get_scenario, validate_input  # noqa: E402
+from planner.model.input import load_fixture  # noqa: E402
 from planner.model.normalize import normalize  # noqa: E402
 from evaluation.run_scenarios import DEFAULT_FIXTURE, run_all  # noqa: E402
 from evaluation.validate import validate_plan  # noqa: E402

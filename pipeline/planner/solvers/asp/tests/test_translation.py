@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import copy
 import json
-from pathlib import Path
 
 import pytest
 
@@ -16,8 +15,8 @@ from translation import (
     curriculum_file_stem,
 )
 from support import TINY_CURRICULUM, tiny_policy
+from cli import DEFAULT_TUITION_POLICY
 
-DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 
 
 def _slots(program: str, course: str) -> list[int]:
@@ -146,7 +145,7 @@ def test_curriculum_requires_min_courses_for_majors() -> None:
 
 
 def test_tuition_facts_use_fixed_point_and_surcharge_tier() -> None:
-    raw = json.loads((DATA_DIR / "tuition_policy.json").read_text(encoding="utf-8"))
+    raw = json.loads((DEFAULT_TUITION_POLICY).read_text(encoding="utf-8"))
     program = build_tuition(raw, "Computer Science")
     assert "money_scale(1000)." in program
     assert "money_currency(vnd)." in program
@@ -160,7 +159,7 @@ def test_tuition_facts_use_fixed_point_and_surcharge_tier() -> None:
 
 
 def test_tuition_selects_rules_by_program() -> None:
-    raw = json.loads((DATA_DIR / "tuition_policy.json").read_text(encoding="utf-8"))
+    raw = json.loads((DEFAULT_TUITION_POLICY).read_text(encoding="utf-8"))
     assert "fee_rule(regular, 13, 18, 13750, 0, 0)." in build_tuition(raw, "DSE")
     with pytest.raises(TuitionError, match="no rule for semester type 'regular'"):
         build_tuition(raw, "Unknown program")

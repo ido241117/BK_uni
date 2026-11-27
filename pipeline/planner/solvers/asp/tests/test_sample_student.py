@@ -11,9 +11,9 @@ import pytest
 
 from data import load_bundle
 from engine import SolverOptions, plans_from_solutions, solve
+from cli import DEFAULT_CURRICULUM, DEFAULT_GRADING_POLICY, DEFAULT_GRADUATION
 
 ASP_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 
 
 def _atoms(text: str) -> list[clingo.Symbol]:
@@ -92,9 +92,9 @@ def test_showcase_scenario_is_deterministic() -> None:
 )
 def test_showcase_tight_budget_is_optimal() -> None:
     bundle = load_bundle(
-        DATA_DIR / "curriculum.json",
-        DATA_DIR / "grading_policy.json",
-        DATA_DIR / "graduation_requirements.json",
+        DEFAULT_CURRICULUM,
+        DEFAULT_GRADING_POLICY,
+        DEFAULT_GRADUATION,
     )
     solutions = solve(
         ASP_DIR / "cs-2023.lp",

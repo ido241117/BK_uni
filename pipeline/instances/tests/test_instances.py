@@ -13,14 +13,13 @@ import pytest
 PIPELINE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PIPELINE))
 
-from instances.importers.legacy import (  # noqa: E402
+from instances.importers.legacy import from_data_curriculum, from_planner_fixture  # noqa: E402
+from planner.solvers.asp.data import from_instance_curriculum as to_data_curriculum  # noqa: E402
+from planner.model.input import (  # noqa: E402
     ConversionError,
-    from_data_curriculum,
-    from_planner_fixture,
     hcmut_to_term,
     term_sequence,
     term_to_hcmut,
-    to_data_curriculum,
     to_planner_fixture,
 )
 from instances.loader import InstanceError, load_university  # noqa: E402

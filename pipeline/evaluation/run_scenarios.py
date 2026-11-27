@@ -12,13 +12,14 @@ import argparse
 import json
 from pathlib import Path
 
-from planner.model.facts import get_scenario, load_fixture, validate_input
+from planner.model.facts import get_scenario, validate_input
+from planner.model.input import TOY, load_fixture
 from planner.model.normalize import normalize
 from planner.model.result import diff, plan_map
 from planner.solvers.asp.adapter import build_program, solve_asp
 from evaluation.validate import validate_plan
 
-DEFAULT_FIXTURE = Path(__file__).resolve().parents[1] / "planner" / "fixtures" / "toy.json"
+DEFAULT_FIXTURE = TOY
 
 
 def run_all(fixture: dict, solver: str = "clingo") -> list[dict]:

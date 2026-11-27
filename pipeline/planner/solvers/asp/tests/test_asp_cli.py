@@ -8,6 +8,10 @@ from pathlib import Path
 import pytest
 
 from cli import (
+    DEFAULT_CURRICULUM,
+    DEFAULT_GRADING_POLICY,
+    DEFAULT_GRADUATION,
+    DEFAULT_TUITION_POLICY,
     _diagnostic_rows,
     _format_plan_text,
     _hard_timeout_grace,
@@ -20,7 +24,6 @@ from cli import (
 from engine import Plan, PlannedSemester, Solution, SolverOptions, solve
 from support import TINY_CURRICULUM, tiny_policy, write_programs
 
-DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 ASP_DIR = Path(__file__).resolve().parents[1]
 
 
@@ -30,11 +33,11 @@ def test_cli_writes_curriculum_and_policy_facts(tmp_path: Path) -> None:
     code = main(
         [
             "--curriculum",
-            str(DATA_DIR / "curriculum.json"),
+            str(DEFAULT_CURRICULUM),
             "--grading-policy",
-            str(DATA_DIR / "grading_policy.json"),
+            str(DEFAULT_GRADING_POLICY),
             "--graduation",
-            str(DATA_DIR / "graduation_requirements.json"),
+            str(DEFAULT_GRADUATION),
             "--output",
             str(curriculum_output),
             "--policy-output",
@@ -84,13 +87,13 @@ def test_checked_in_generated_files_match_cli_output(tmp_path: Path) -> None:
     code = main(
         [
             "--curriculum",
-            str(DATA_DIR / "curriculum.json"),
+            str(DEFAULT_CURRICULUM),
             "--grading-policy",
-            str(DATA_DIR / "grading_policy.json"),
+            str(DEFAULT_GRADING_POLICY),
             "--graduation",
-            str(DATA_DIR / "graduation_requirements.json"),
+            str(DEFAULT_GRADUATION),
             "--tuition-policy",
-            str(DATA_DIR / "tuition_policy.json"),
+            str(DEFAULT_TUITION_POLICY),
             "--output",
             str(curriculum_output),
             "--policy-output",

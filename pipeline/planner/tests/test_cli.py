@@ -10,7 +10,9 @@ from pathlib import Path
 import pytest
 
 PIPELINE = Path(__file__).resolve().parents[2]
-TOY = PIPELINE / "planner" / "fixtures" / "toy.json"
+sys.path.insert(0, str(PIPELINE))
+
+from planner.model.input import TOY, load_fixture  # noqa: E402
 
 
 def call(payload: str | dict, solver: str = "cpsat") -> dict:
@@ -24,7 +26,7 @@ def call(payload: str | dict, solver: str = "cpsat") -> dict:
 
 
 def request(**scenario) -> dict:
-    fixture = json.loads(TOY.read_text(encoding="utf-8"))
+    fixture = load_fixture(TOY)
     fixture.pop("scenarios")
     scenario.setdefault("in_progress_results", {"CS201": "pass", "CS202": "pass"})
     return {**fixture, "scenario": scenario}

@@ -11,17 +11,16 @@ from __future__ import annotations
 import copy
 import json
 import time
-from pathlib import Path
 
 import pytest
 
-from planner.model.facts import FixtureError, load_fixture
+from planner.model.facts import FixtureError
+from planner.model.input import KHMT, load_fixture
 from planner.model.result import plan_map
 from planner.solvers.asp.adapter import Calendar, build_program, solve_asp
 from planner.model.normalize import normalize
 from evaluation.validate import validate_plan
 
-KHMT = Path(__file__).resolve().parents[1] / "fixtures" / "khmt2023.json"
 REQUIRED = ["RQ1001", "RQ1002", "RQ2003", "RQ2004"]
 ELECTIVES = ["EL3001", "EL3002", "EL3003"]
 

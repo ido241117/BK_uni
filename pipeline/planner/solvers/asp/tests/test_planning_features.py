@@ -445,9 +445,11 @@ def test_parse_popularity_skips_placeholders_and_validates() -> None:
 def test_checked_in_popularity_placeholder_has_no_effect() -> None:
     import json
 
-    data_dir = Path(__file__).resolve().parents[4] / "data"
-    curriculum = json.loads((data_dir / "curriculum.json").read_text("utf-8"))
-    raw = json.loads((data_dir / "elective_popularity.json").read_text("utf-8"))
+    from cli import DEFAULT_CURRICULUM, DEFAULT_POPULARITY
+    from data import load_curriculum
+
+    curriculum = load_curriculum(DEFAULT_CURRICULUM)
+    raw = json.loads(DEFAULT_POPULARITY.read_text("utf-8"))
     assert parse_popularity(raw, curriculum) == {}
     electives = {
         cid

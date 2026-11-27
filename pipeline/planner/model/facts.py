@@ -6,10 +6,8 @@ Moi thu khong ho tro duoc bao loi ro rang thay vi am tham bo qua.
 
 from __future__ import annotations
 
-import json
 import math
 import re
-from pathlib import Path
 from typing import Any
 
 # Rang buoc cung. "prior" (hoc truoc) bi BO theo quyet dinh 18/11: chap nhan
@@ -39,11 +37,6 @@ DEFAULT_ON = ("S2", "S8")
 
 class FixtureError(ValueError):
     """Du lieu dau vao sai hoac dung tinh nang chua ho tro."""
-
-
-def load_fixture(path: str | Path) -> dict[str, Any]:
-    with open(path, encoding="utf-8") as fh:
-        return json.load(fh)
 
 
 def get_scenario(fixture: dict[str, Any], scenario_id: str) -> dict[str, Any]:
