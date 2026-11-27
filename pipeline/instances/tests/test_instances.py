@@ -1,4 +1,4 @@
-"""Canonical instance format: loader/validator and the legacy converters."""
+"""Canonical instance format: loader/validator, the HCMUT converter and the solver adapters."""
 
 from __future__ import annotations
 
@@ -13,8 +13,9 @@ import pytest
 PIPELINE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PIPELINE))
 
-from instances.importers.legacy import from_data_curriculum, from_planner_fixture  # noqa: E402
-from planner.solvers.asp.data import from_instance_curriculum as to_data_curriculum  # noqa: E402
+from instances.importers.hcmut import fetch_curriculum  # noqa: E402
+from instances.importers.hcmut.convert import from_planner_fixture  # noqa: E402
+from planner.solvers.asp.data import from_instance_curriculum  # noqa: E402
 from planner.model.input import (  # noqa: E402
     ConversionError,
     hcmut_to_term,
@@ -25,7 +26,8 @@ from planner.model.input import (  # noqa: E402
 from instances.loader import InstanceError, load_university  # noqa: E402
 
 INSTANCES = PIPELINE / "instances"
-FIXTURES = PIPELINE / "planner" / "fixtures"
+TOY = ("toy", "TOY-2025", "toy-demo")
+KHMT = ("hcmut", "CS-2023-KHMT", "khmt2023-demo")
 
 
 def _read(path: Path):
@@ -60,16 +62,6 @@ def test_hcmut_term_codes_round_trip():
 def test_committed_instances_validate(university):
     uni = load_university(INSTANCES / university)
     assert uni.curricula
-
-
-def test_committed_instances_match_their_legacy_sources():
-    """Until the legacy files are deleted, the instances must stay generated from them."""
-    assert _read(INSTANCES / "hcmut/curricula/cs_2023/curriculum.json") == from_data_curriculum(
-        _read(PIPELINE / "data/curriculum.json"))
-    conv = from_planner_fixture(_read(FIXTURES / "khmt2023.json"), "khmt2023-demo", "policy_2020")
-    assert _read(INSTANCES / "hcmut/curricula/CS-2023-KHMT/curriculum.json") == conv["curriculum"]
-    assert _read(INSTANCES / "hcmut/students/khmt2023-demo.json") == conv["students"]
-    assert _read(INSTANCES / "hcmut/requests/khmt2023-demo.json") == conv["requests"]
 
 
 def test_khmt_instance_counts():
@@ -128,50 +120,51 @@ def test_validator_rejects_broken_student_and_request(toy_copy):
 # --- converters --------------------------------------------------------------
 
 
-def test_data_curriculum_round_trip_is_exact():
-    raw = _read(PIPELINE / "data/curriculum.json")
-    assert to_data_curriculum(from_data_curriculum(raw)) == raw
+def _instance(university: str, curriculum_id: str, name: str):
+    root = INSTANCES / university
+    return (_read(root / "curricula" / curriculum_id / "curriculum.json"),
+            _read(root / "students" / f"{name}.json"), _read(root / "requests" / f"{name}.json"))
 
 
-def test_data_curriculum_keeps_or_prerequisites():
-    raw = _read(PIPELINE / "data/curriculum.json")
-    raw["courses"][5]["prerequisites"] = [["CO1005", "CO1007"], ["MT1003"]]
-    cur = from_data_curriculum(raw)
-    mine = [r["any_of"] for r in cur["relations"] if r["course"] == raw["courses"][5]["id"]]
-    assert ["CO1005", "CO1007"] in mine and ["MT1003"] in mine
-    assert to_data_curriculum(cur) == raw
+@pytest.mark.parametrize("case", [TOY, KHMT], ids=["toy", "khmt"])
+def test_hcmut_layout_round_trip_reproduces_the_instance(case):
+    """Instance -> planner input (HCMUT web layout) -> instance gives back the committed files."""
+    curriculum, students, requests = _instance(*case)
+    student_id = students["students"][0]["student_id"]
+    fx = to_planner_fixture(curriculum, students, student_id, requests)
+    conv = from_planner_fixture(fx, student_id, students["students"][0]["grading_policy"])
+    conv["curriculum"]["_provenance"] = curriculum["_provenance"]
+    assert conv == {"curriculum": curriculum, "students": students, "requests": requests}
 
 
-@pytest.mark.parametrize("fixture", ["toy.json", "khmt2023.json"])
-def test_planner_fixture_conversion_is_a_fixed_point(fixture):
-    fx = _read(FIXTURES / fixture)
-    conv = from_planner_fixture(fx, "s")
-    back = to_planner_fixture(conv["curriculum"], conv["students"], "s", conv["requests"])
-    again = from_planner_fixture(back, "s")
-    again["curriculum"]["_provenance"] = conv["curriculum"]["_provenance"]
-    assert again == conv
-
-
-def test_planner_fixture_rejects_gaps_in_semesters():
-    fx = copy.deepcopy(_read(FIXTURES / "toy.json"))
+def test_hcmut_layout_rejects_gaps_in_semesters():
+    curriculum, students, requests = _instance(*TOY)
+    fx = to_planner_fixture(curriculum, students, "toy-demo", requests)
     fx["semesters"].remove("261")
     with pytest.raises(ConversionError, match="not consecutive"):
-        from_planner_fixture(fx, "s")
+        from_planner_fixture(fx, "toy-demo")
 
 
-def test_cpsat_gives_the_same_result_on_converted_toy():
-    pytest.importorskip("ortools")
-    from planner.cli import run
+def test_fetch_curriculum_writes_a_loadable_instance(tmp_path, monkeypatch):
+    curriculum, students, requests = _instance(*KHMT)
+    fx = to_planner_fixture(curriculum, students, "khmt2023-demo", requests)
+    fx["_note"] = curriculum["_provenance"]["note"]
+    monkeypatch.setattr(fetch_curriculum, "build", lambda code: copy.deepcopy(fx))
+    shutil.copytree(INSTANCES / "hcmut" / "policy", tmp_path / "hcmut" / "policy")
+    fetch_curriculum.main(["CS-2023-KHMT", str(tmp_path / "hcmut"), "khmt2023-demo"])
+    uni = load_university(tmp_path / "hcmut")
+    assert uni.curricula["CS-2023-KHMT"]["curriculum"] == curriculum
+    assert uni.requests["khmt2023-demo"] == requests
 
-    fx = _read(FIXTURES / "toy.json")
-    conv = from_planner_fixture(fx, "s")
-    back = to_planner_fixture(conv["curriculum"], conv["students"], "s", conv["requests"])
 
-    def solve(f, scenario):
-        payload = {k: v for k, v in f.items() if k != "scenarios"} | {"scenario": scenario}
-        result = run(payload, "cpsat", 30.0, snapshot=None)
-        result.pop("solve_ms", None)
-        return result
-
-    for original, converted in zip(fx["scenarios"], back["scenarios"]):
-        assert solve(fx, original) == solve(back, converted), original["id"]
+def test_asp_adapter_turns_relations_into_or_groups():
+    cur = _read(INSTANCES / "hcmut/curricula/cs_2023/curriculum.json")
+    target = cur["courses"][5]["id"]
+    cur["relations"] = [r for r in cur["relations"] if r["course"] != target] + [
+        {"course": target, "type": "prerequisite", "any_of": ["CO1005", "CO1007"], "source": "curriculum"},
+        {"course": target, "type": "prerequisite", "any_of": ["MT1003"]},
+        {"course": target, "type": "recommended", "any_of": ["CH1003"]},
+    ]
+    course = next(c for c in from_instance_curriculum(cur)["courses"] if c["id"] == target)
+    assert course["prerequisites"] == [["CO1005", "CO1007"], ["MT1003"]]
+    assert course["corequisites"] == []

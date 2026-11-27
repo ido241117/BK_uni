@@ -1,7 +1,10 @@
 """Dung fixture tu MOT chuong trinh that, qua API doc cong khai cua backend (chi GET).
 
     cd pipeline
-    .venv/Scripts/python -m instances.importers.hcmut.fetch_curriculum CS-2023-KHMT planner/fixtures/khmt2023.json
+    .venv/Scripts/python -m instances.importers.hcmut.fetch_curriculum CS-2023-KHMT instances/hcmut khmt2023-demo
+
+Writes curricula/<code>/curriculum.json, students/<name>.json and requests/<name>.json
+(instances/SCHEMA.md) through ``convert.from_planner_fixture``.
 
 Khong co du lieu sinh vien: phan ``student`` la mot sinh vien BIA (khong ten,
 khong MSSV) da hoc xong cac mon co ky khuyen nghi truoc ky hien tai.
@@ -28,6 +31,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
+
+from instances.importers.hcmut.convert import from_planner_fixture, write_instance
 
 API = "http://localhost:3210/api/"
 
@@ -170,12 +175,11 @@ def build(code: str) -> dict[str, Any]:
     }
 
 
-def main() -> None:
-    code, out = sys.argv[1], Path(sys.argv[2])
+def main(argv: list[str] | None = None) -> None:
+    code, university, name = argv if argv is not None else sys.argv[1:4]
     data = build(code)
-    out.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"da ghi {out}: {len(data['curriculum_courses'])} mon, {len(data['course_relations'])} quan he, "
-          f"{len(data['course_groups'])} khoi")
+    for path in write_instance(Path(university), from_planner_fixture(data, name), name):
+        print(f"wrote {path}")
 
 
 if __name__ == "__main__":

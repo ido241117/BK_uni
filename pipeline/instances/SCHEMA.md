@@ -17,8 +17,8 @@ instances/<university>/
 Validate with `python -m instances.loader instances/<university>`.
 
 `policy/*.json`, `graduation.json`, `popularity.json` and the student tables keep the
-field definitions of the former `data/` format (`data/README.md`); the changes are
-listed in their sections below.
+field definitions of the former `data/` format ([FIELDS-V1.md](FIELDS-V1.md)); the changes
+are listed in their sections below. Its `curriculum.json` section is replaced by this file.
 
 ## Conventions
 

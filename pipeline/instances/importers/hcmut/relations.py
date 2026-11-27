@@ -4,7 +4,7 @@ du lieu tien quyet co nhan nguon.
     cd pipeline
     .venv/Scripts/python -m instances.importers.hcmut.relations snapshot instances/hcmut/raw/relations-snapshot.json
     .venv/Scripts/python -m instances.importers.hcmut.relations report instances/hcmut/raw/relations-snapshot.json
-    .venv/Scripts/python -m instances.importers.hcmut.relations coverage instances/hcmut/raw/relations-snapshot.json planner/fixtures/khmt2023.json
+    .venv/Scripts/python -m instances.importers.hcmut.relations coverage instances/hcmut/raw/relations-snapshot.json instances/hcmut/requests/khmt2023-demo.json
 
 Nguon cua mot quan he trong dau vao bo giai (``source``):
     curriculum  co trong chuong trinh cua sinh vien
@@ -158,7 +158,9 @@ def main() -> None:
         for c, variants in list(rep["differ_detail"].items())[: int(sys.argv[3]) if len(sys.argv) > 3 else 15]:
             print(c, variants)
     elif cmd == "coverage":
-        fx = enrich(load(sys.argv[3]), load(sys.argv[2]))
+        from planner.model.input import load_fixture
+
+        fx = enrich(load_fixture(sys.argv[3]), load(sys.argv[2]))
         print(json.dumps(coverage(fx), ensure_ascii=False, indent=1))
         for r in fx["course_relations"]:
             if r["source"] == "inferred":

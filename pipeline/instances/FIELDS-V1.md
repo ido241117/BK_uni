@@ -1,3 +1,7 @@
+> Former `pipeline/data/` format (schema 1/2). Still the field reference for `policy/grading.json`,
+> `policy/tuition.json`, `graduation.json`, `popularity.json` and `students/*.json`; the
+> `curriculum.json` section is superseded by [SCHEMA.md](SCHEMA.md).
+
 # Academic Advising Dataset
 
 Language-neutral JSON data for testing academic advising and degree-audit

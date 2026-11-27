@@ -1,4 +1,4 @@
-"""Bo giai tren chuong trinh that KHMT 2023 (fixtures/khmt2023.json, lay qua API doc
+"""Bo giai tren chuong trinh that KHMT 2023 (instances/hcmut, CS-2023-KHMT, lay qua API doc
 cong khai ngay 18/11/2026). Sinh vien trong fixture la BIA.
 
 Chi chay CP-SAT o day: Clingo khong chung minh xong toi uu trong 30 giay o co nay

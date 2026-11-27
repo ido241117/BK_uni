@@ -1,6 +1,6 @@
 """Sprint 11 (22/11): yeu cau cua sinh vien duoc tuan theo, khong dap ung thi phai noi ro.
 
-Chay tren ``fixtures/toy.json`` (cac ky con lai 262, 271, 272; CS401 can CS301 va CS302 truoc).
+Chay tren ``instances/toy`` (TOY-2025) (cac ky con lai 262, 271, 272; CS401 can CS301 va CS302 truoc).
 Chi CP-SAT: engine ASP tam tat tren giao dien (Q13).
 """
 

@@ -3,7 +3,7 @@
     cd pipeline
     .venv/Scripts/python -m planner.cli --solver cpsat < input.json
 
-Dau vao: mot fixture (dinh dang ``fixtures/toy.json``, khong can ``scenarios``)
+Dau vao: dict dau vao cua planner (``planner.model.input.load_fixture``, khong can ``scenarios``)
 cong them:
     "scenario":      kich ban (in_progress_results, locked, not_offered,
                      max_credits, semester_limits, graduate_by, preferences)

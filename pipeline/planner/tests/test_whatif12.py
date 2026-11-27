@@ -1,6 +1,6 @@
 """Giai doan 12 (23/11): what-if theo dac ta muc 12 cua docs/02-ke-hoach.md.
 
-Chay tren ``fixtures/toy.json`` (cac ky con lai 262, 271, 272; CS401 can CS301 va CS302 truoc;
+Chay tren ``instances/toy`` (TOY-2025) (cac ky con lai 262, 271, 272; CS401 can CS301 va CS302 truoc;
 EL303 song hanh CS301). Chi CP-SAT.
 """
 

@@ -1,23 +1,17 @@
-"""Convert the two legacy input formats to the canonical instance format and back.
+"""HCMUT web-database layout -> canonical instance (instances/SCHEMA.md).
 
-Legacy formats:
-    data/            engine-native JSON read by the ASP engine and data_tools
-    planner fixture  web-entity JSON (planner/fixtures/*.json) read by CP-SAT, the
-                     validator and synthetic/
-
-The reverse direction (canonical -> legacy) exists so that modules can be moved onto
-the canonical format one at a time while their tests keep passing.
-
-    cd pipeline
-    python -m instances.importers.legacy build      # writes instances/<university>/...
+The HCMUT importers (``fetch_curriculum``) first assemble one program in the layout of
+the web database (``curriculum``, ``rules``, ``semesters``, ``courses``,
+``curriculum_courses``, ``course_relations``, ``course_groups``, ``conditions``,
+``summer_history``, ``summer_excluded``, ``graduation_courses``, ``offerings``,
+``student``, ``scenarios``; semester codes ``YYP``). ``from_planner_fixture`` turns that
+into a curriculum, a student table and requests; ``write_instance`` writes them.
 """
 
 from __future__ import annotations
 
-import copy
 import json
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -32,13 +26,6 @@ from planner.model.input import (
 # HCMUT rule (QD 285 art. 15.4) used when the fixture sets ``rules.course_level``.
 HCMUT_LEVEL_RULE = {"1": 1, "2": 2, "3": 3}
 _LEVEL = re.compile(r"^[A-Za-z]+(\d)")
-
-PIPELINE = Path(__file__).resolve().parents[2]
-INSTANCES = PIPELINE / "instances"
-
-# ---------------------------------------------------------------------------
-# Planner fixture <-> canonical
-# ---------------------------------------------------------------------------
 
 
 def from_planner_fixture(fx: dict[str, Any], student_id: str,
@@ -196,84 +183,15 @@ def from_planner_fixture(fx: dict[str, Any], student_id: str,
     return {"curriculum": curriculum, "students": students, "requests": requests}
 
 
-# ---------------------------------------------------------------------------
-# data/ <-> canonical
-# ---------------------------------------------------------------------------
-
-
-def from_data_curriculum(raw: dict[str, Any]) -> dict[str, Any]:
-    """data/curriculum.json (schema 1) -> canonical curriculum (schema 3)."""
-    out = copy.deepcopy(raw)
-    out["schema_version"] = 3
-    courses, relations = [], []
-    for c in out.pop("courses"):
-        for kind, key in (("prerequisite", "prerequisites"), ("corequisite", "corequisites")):
-            for alternatives in c.pop(key):
-                relations.append({"course": c["id"], "type": kind, "any_of": list(alternatives),
-                                  "source": "curriculum"})
-        if "typical_regular_term" in c:
-            i = c.pop("typical_regular_term")
-            c["typical_year"], c["typical_part"] = (i + 1) // 2, 2 - i % 2
-        courses.append(c)
-    out["courses"] = courses
-    out["relations"] = relations
-    return out
-
-
-# ---------------------------------------------------------------------------
-# Build the instance folders
-# ---------------------------------------------------------------------------
-
-
-def _write(path: Path, obj: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
-
-def _read(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def build() -> None:
-    data = PIPELINE / "data"
-    fixtures = PIPELINE / "planner" / "fixtures"
-    hcmut = INSTANCES / "hcmut"
-
-    # Shared university policy (data/ format, unchanged).
-    _write(hcmut / "policy" / "grading.json", _read(data / "grading_policy.json"))
-    _write(hcmut / "policy" / "tuition.json", _read(data / "tuition_policy.json"))
-
-    # cs_2023: the hand-curated example dataset with oracle students.
-    raw = _read(data / "curriculum.json")
-    cur = from_data_curriculum(raw)
-    cur_dir = hcmut / "curricula" / cur["id"]
-    _write(cur_dir / "curriculum.json", cur)
-    _write(cur_dir / "graduation.json", _read(data / "graduation_requirements.json"))
-    _write(cur_dir / "popularity.json", _read(data / "elective_popularity.json"))
-    _write(hcmut / "students" / "cs_2023-oracle.json", _read(data / "student_history.json"))
-
-    # CS-2023-KHMT: built from the database (via the planner fixture).
-    grading_id = _read(data / "grading_policy.json")["id"]
-    conv = from_planner_fixture(_read(fixtures / "khmt2023.json"), "khmt2023-demo", grading_id)
-    cur_dir = hcmut / "curricula" / conv["curriculum"]["id"]
-    _write(cur_dir / "curriculum.json", conv["curriculum"])
-    # Same program as cs_2023; the ASP adapter already applied cs_2023's graduation rules to it.
-    graduation = _read(data / "graduation_requirements.json")
-    graduation["curriculum_id"] = conv["curriculum"]["id"]
-    graduation["_provenance"] = "copied from cs_2023 (same program, CS 2023); not checked against the database"
-    _write(cur_dir / "graduation.json", graduation)
-    _write(hcmut / "students" / "khmt2023-demo.json", conv["students"])
-    _write(hcmut / "requests" / "khmt2023-demo.json", conv["requests"])
-
-    # toy: invented 14-course program for tests.
-    conv = from_planner_fixture(_read(fixtures / "toy.json"), "toy-demo")
-    toy = INSTANCES / "toy"
-    _write(toy / "curricula" / conv["curriculum"]["id"] / "curriculum.json", conv["curriculum"])
-    _write(toy / "students" / "toy-demo.json", conv["students"])
-    _write(toy / "requests" / "toy-demo.json", conv["requests"])
-
-
-if __name__ == "__main__":
-    if sys.argv[1:] != ["build"]:
-        sys.exit(__doc__)
-    build()
+def write_instance(university: Path, converted: dict[str, Any], name: str) -> list[Path]:
+    """Write ``from_planner_fixture`` output under ``instances/<university>/``."""
+    cid = converted["curriculum"]["id"]
+    targets = {
+        university / "curricula" / cid / "curriculum.json": converted["curriculum"],
+        university / "students" / f"{name}.json": converted["students"],
+        university / "requests" / f"{name}.json": converted["requests"],
+    }
+    for path, obj in targets.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return list(targets)
