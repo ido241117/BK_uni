@@ -1,0 +1,104 @@
+% Shared style for every use case diagram (TikZ). Each diagram lives in its own file in this folder
+% and is drawn at natural size (no \resizebox), so fonts and shapes are identical across diagrams.
+\usetikzlibrary{arrows.meta,fit,shapes.geometric,positioning,backgrounds}
+
+\tikzset{
+  uc/.style={ellipse, draw, fill=gray!8, align=center, font=\footnotesize,
+             minimum width=3.8cm, minimum height=0.85cm, inner sep=1pt},
+  ucwide/.style={uc, minimum width=4.6cm},
+  assoc/.style={draw, -{Stealth[length=2.2mm]}},
+  inc/.style={draw, dashed, -{Stealth[length=2.2mm]}},
+  gen/.style={draw, -{Triangle[open, length=2.6mm, width=2.4mm]}},
+  rel/.style={font=\scriptsize, fill=white, inner sep=1pt},
+  ucnote/.style={draw, fill=yellow!10, font=\scriptsize, align=left, text width=#1, inner sep=3pt},
+  ucnote/.default=4cm,
+  system/.style={draw, inner sep=0.45cm},
+  systitle/.style={anchor=north, font=\small\bfseries, inner sep=4pt},
+  actor/.pic={
+    \draw (0,0.62) circle (0.17);
+    \draw (0,0.45) -- (0,-0.05);
+    \draw (-0.32,0.28) -- (0.32,0.28);
+    \draw (0,-0.05) -- (-0.26,-0.5);
+    \draw (0,-0.05) -- (0.26,-0.5);
+  },
+}
+
+% \ucactor{node name}{position}{label}: stick figure with a label and an invisible node for edges.
+\newcommand{\ucactor}[3]{%
+  \pic at (#2) {actor};
+  \node[font=\small, align=center, anchor=north] at ($(#2)+(0,-0.55)$) {#3};
+  \node[minimum width=0.8cm, minimum height=1.3cm, inner sep=0] (#1) at ($(#2)+(0,0.1)$) {};
+}
+% \ucsystem{list of nodes to enclose}{title}
+\newcommand{\ucsystem}[2]{%
+  \begin{scope}[on background layer]
+    \node[system, fit=#1] (sysbox) {};
+  \end{scope}
+  \node[systitle] at (sysbox.north) {#2};
+}
+\newcommand{\incl}{\guillemotleft include\guillemotright}
+\newcommand{\extd}{\guillemotleft extend\guillemotright}
+
+% ---------------------------------------------------------------- sequence diagrams
+% Participants sit on numeric x positions; messages are drawn at explicit y positions (top = 0, downwards).
+\tikzset{
+  seqobj/.style={draw, fill=gray!8, font=\footnotesize, align=center, minimum height=0.6cm,
+                 inner sep=3pt, text width=2.6cm},
+  lifeline/.style={draw, dashed, gray!70},
+  seqmsg/.style={draw, -{Stealth[length=2mm]}},
+  seqret/.style={draw, dashed, -{Stealth[length=2mm]}},
+  msglbl/.style={font=\scriptsize, above, inner sep=1.5pt, align=center},
+  fragbox/.style={draw, gray!60!black},
+  fraglbl/.style={draw, fill=white, font=\scriptsize\bfseries, inner sep=2pt},
+  guardlbl/.style={font=\scriptsize\itshape, inner sep=2pt},
+}
+% \seqobj{x}{label}: object box; \seqactor{x}{label}: stick figure.
+\newcommand{\seqobj}[2]{\node[seqobj] at (#1,-0.35) {#2};}
+\newcommand{\seqactor}[2]{\pic[scale=0.8] at (#1,0.05) {actor};
+  \node[font=\footnotesize, fill=white, inner sep=1pt] at (#1,-0.5) {#2};}
+% \seqlines{x1,x2,...}{bottom y}
+\newcommand{\seqlines}[2]{\begin{scope}[on background layer]
+  \foreach \x in {#1} \draw[lifeline] (\x,-0.65) -- (\x,#2);\end{scope}}
+% \msg{from x}{to x}{y}{label}, \rmsg = dashed reply, \selfmsg{x}{y}{label} takes 0.45 of height.
+\newcommand{\msg}[4]{\draw[seqmsg] (#1,#3) -- node[msglbl] {#4} (#2,#3);}
+\newcommand{\rmsg}[4]{\draw[seqret] (#1,#3) -- node[msglbl] {#4} (#2,#3);}
+\newcommand{\selfmsg}[3]{\draw[seqmsg] (#1,#2) -- ++(0.45,0) -- ++(0,-0.35) -- ++(-0.45,0);
+  \node[font=\scriptsize, anchor=west, align=left] at ({#1+0.5},{#2-0.17}) {#3};}
+% \frag{x1}{x2}{y top}{y bottom}{kind}{guard}, \fragelse{x1}{x2}{y}{guard}
+\newcommand{\frag}[6]{\draw[fragbox] (#1,#3) rectangle (#2,#4);
+  \node[fraglbl, anchor=north west] (fl) at (#1,#3) {#5};
+  \node[guardlbl, anchor=north west] at (fl.north east) {[#6]};}
+\newcommand{\fragelse}[4]{\draw[fragbox, dashed] (#1,#3) -- (#2,#3);
+  \node[guardlbl, anchor=north west] at (#1,#3) {[#4]};}
+% Running y position: \seqstart sets it; every command moves down by its gap before drawing.
+%   \Msg[gap]{from}{to}{label}  \Ret[gap]{from}{to}{label}  \Self[gap]{x}{label}
+%   \Fbegin{id} ... \Felse{x1}{x2}{guard} ... \Fend{id}{x1}{x2}{kind}{guard}   \Lifelines{x list}
+\newcommand{\seqstart}{\def\sqy{-0.75}}
+\newcommand{\down}[1]{\pgfmathsetmacro{\sqy}{\sqy-#1}}
+\newcommand{\Msg}[4][0.55]{\down{#1}\msg{#2}{#3}{\sqy}{#4}}
+\newcommand{\Ret}[4][0.55]{\down{#1}\rmsg{#2}{#3}{\sqy}{#4}}
+\newcommand{\Self}[3][0.55]{\down{#1}\selfmsg{#2}{\sqy}{#3}\down{0.35}}
+\newcommand{\Fbegin}[1]{\down{0.3}\expandafter\edef\csname seqfr#1\endcsname{\sqy}}
+\newcommand{\Felse}[3]{\down{0.35}\fragelse{#1}{#2}{\sqy}{#3}}
+\newcommand{\Fend}[5]{\down{0.35}\frag{#2}{#3}{\csname seqfr#1\endcsname}{\sqy}{#4}{#5}}
+\newcommand{\Lifelines}[1]{\down{0.35}\seqlines{#1}{\sqy}}
+
+% ---------------------------------------------------------------- activity diagrams
+\tikzset{
+  act/.style={draw, rectangle, rounded corners=5pt, fill=gray!8, font=\footnotesize, align=center,
+              execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000},
+              text width=#1, inner sep=3pt, minimum height=0.75cm},
+  act/.default=3.2cm,
+  dec/.style={draw, diamond, fill=white, minimum size=0.55cm, inner sep=0},
+  start/.style={circle, fill=black, minimum size=0.32cm, inner sep=0},
+  stop/.style={circle, draw, minimum size=0.38cm, inner sep=0,
+               path picture={\fill (path picture bounding box.center) circle (0.11);}},
+  flow/.style={draw, -{Stealth[length=2mm]}},
+  guard/.style={font=\scriptsize, inner sep=1.5pt, fill=white},
+  lanetitle/.style={font=\footnotesize\bfseries},
+}
+% \swimlanes{Title 1,Title 2,...}{lane width}{bottom y}: lanes start at x = 0, header row 0 to -0.6.
+\newcommand{\swimlanes}[3]{\foreach \t [count=\i] in {#1} {
+    \draw ({(\i-1)*#2},0) rectangle ({\i*#2},#3);
+    \draw ({(\i-1)*#2},-0.6) -- ({\i*#2},-0.6);
+    \node[lanetitle] at ({(\i-0.5)*#2},-0.3) {\t};}}

@@ -1,0 +1,37 @@
+\begin{tikzpicture}
+  \seqactor{0}{Student}
+  \seqobj{4}{Frontend}
+  \seqobj{8.5}{Backend}
+  \seqobj{13}{Database}
+  \seqstart
+
+  \Msg{0}{4}{Open profile page}
+  \Msg{4}{8.5}{GET /student-profiles/me}
+  \Self{8.5}{Verify JWT; user id from token}
+  \Msg[0.6]{8.5}{13}{Find profile by user id}
+  \Ret{13}{8.5}{Profile or none}
+  \Ret{8.5}{4}{Profile}
+  \Msg{4}{8.5}{GET /curricula}
+  \Msg{8.5}{13}{Query curricula}
+  \Ret{13}{8.5}{Curricula}
+  \Ret{8.5}{4}{Curriculum list}
+  \Ret{4}{0}{Profile and curriculum picker}
+
+  \Fbegin{opt}
+  \Msg[0.75]{0}{4}{Edit, select curriculum, Save}
+  \Msg{4}{8.5}{PATCH /student-profiles/me}
+  \Self{8.5}{Validate input; specialization\\belongs to the curriculum}
+  \Msg[0.8]{8.5}{13}{Create or update profile}
+  \Fbegin{alt}
+  \Ret[0.75]{13}{8.5}{Saved profile}
+  \Ret{8.5}{4}{200 profile}
+  \Ret{4}{0}{Updated profile}
+  \Felse{-0.4}{13.4}{student number taken or curriculum unknown}
+  \Ret[0.75]{13}{8.5}{Unique or foreign-key violation}
+  \Ret{8.5}{4}{409 / 400 with reason}
+  \Ret{4}{0}{Error; form stays open}
+  \Fend{alt}{-0.4}{13.4}{alt}{saved}
+  \Fend{opt}{-0.7}{13.7}{opt}{Student edits the profile}
+
+  \Lifelines{0,4,8.5,13}
+\end{tikzpicture}

@@ -1,0 +1,44 @@
+\begin{tikzpicture}
+  \seqactor{0}{Student}
+  \seqobj{3.6}{Frontend}
+  \seqobj{7.2}{Backend}
+  \seqobj{10.8}{Database}
+  \seqobj{14.4}{Solver\\(Python CP-SAT)}
+  \seqstart
+
+  \Msg{0}{3.6}{Open roadmap page}
+  \Msg{3.6}{7.2}{GET /plans/settings}
+  \Msg{7.2}{10.8}{Read data.web.planner}
+  \Ret{10.8}{7.2}{Saved settings}
+  \Ret{7.2}{3.6}{Settings}
+  \Ret{3.6}{0}{Restored scenario}
+
+  \Fbegin{loop}
+  \Msg[0.75]{0}{3.6}{Change scenario}
+  \Msg{3.6}{7.2}{PUT /plans/settings}
+  \Msg{7.2}{10.8}{Save data.web.planner}
+  \Fend{loop}{-0.7}{15.1}{loop}{each change, without solving}
+
+  \Msg[0.6]{0}{3.6}{Solve}
+  \Msg{3.6}{7.2}{POST /plans/solve}
+  \Msg[0.85]{7.2}{10.8}{Load curriculum and\\student data}
+  \Ret{10.8}{7.2}{Rows}
+  \Self{7.2}{Check free-choice codes;\\build solver input}
+  \Msg[0.8]{7.2}{14.4}{planner.cli --solver cpsat --time-limit 20}
+  \Self{14.4}{Solve, validate,\\diff with baseline}
+  \Fbegin{alt}
+  \Ret[0.85]{14.4}{7.2}{Roadmap, reasons, warnings, diff}
+  \Ret{7.2}{3.6}{Roadmap}
+  \Ret{3.6}{0}{Roadmap by semester}
+  \Felse{-0.4}{14.9}{infeasible}
+  \Ret[0.75]{14.4}{7.2}{Blocking settings and fixes}
+  \Ret{7.2}{3.6}{Infeasible result}
+  \Ret{3.6}{0}{Reason and fixes}
+  \Felse{-0.4}{14.9}{no output within 60 s}
+  \Self[0.75]{7.2}{Kill process}
+  \Ret[0.6]{7.2}{3.6}{status TIMEOUT}
+  \Ret{3.6}{0}{Timeout notice}
+  \Fend{alt}{-0.4}{14.9}{alt}{roadmap found}
+
+  \Lifelines{0,3.6,7.2,10.8,14.4}
+\end{tikzpicture}

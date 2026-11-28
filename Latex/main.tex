@@ -1,0 +1,120 @@
+\documentclass[a4paper]{article}
+
+%\documentclass{article}
+\usepackage[fontsize=14]{scrextend}
+\usepackage{tgtermes}
+\usepackage{tocloft}
+%\usepackage{indentfirst}
+%\usepackage{tabularx}
+%\usepackage[utf8]{vietnam}
+\usepackage[vietnamese]{babel}
+%\usepackage{amsmath,amssymb}
+%\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,calc,decorations.pathreplacing}
+%\usepackage{listings}
+%\usepackage{hyperref}
+%\usepackage{geometry}
+%\usepackage{fancyhdr}
+%\usepackage{tocloft}
+%\usepackage{enumitem}
+\usepackage{xltabular}
+%\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+%\usepackage{xcolor}
+\usepackage{stmaryrd}
+\usepackage{mathtools}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{proof}
+%\usepackage{subcaption}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+%\usepackage{tcolorbox}
+\usepackage{float}
+%\usepackage{indentfirst}
+\usepackage{booktabs}
+\usepackage{lib}
+\input{contents/usecase/style}
+\usepackage{xurl}
+%\usepackage{longtable}
+%--------End_libary--------
+\usepackage{graphicx}     % nếu lib.sty chưa nạp
+\usepackage{pdflscape}    % trang landscape cho ERD
+\usepackage{tabularray}   % nếu lib.sty chưa nạp
+\renewcommand{\ttdefault}{lmtt}  % chỉ thêm nếu còn cảnh báo thiếu phông đơn cách với chữ có dấu
+%Khoảng cách đánh số với ndung
+\setlength{\cftsecnumwidth}{1.5em}
+\setlength{\cftsubsecnumwidth}{2.2em}
+\setlength{\cftsubsubsecnumwidth}{3em}
+
+%Khoảng cách chiều dọc
+\setlength{\cftbeforesecskip}{6pt}
+\setlength{\cftbeforesubsecskip}{6pt}
+\setlength{\cftbeforesubsubsecskip}{6pt}
+\providecommand{\stereo}[1]{\ensuremath{\ll}#1\ensuremath{\gg}}
+%Tạo cấp 
+\setcounter{secnumdepth}{5}
+\setcounter{tocdepth}{3}
+
+% Không ngắt chữ bằng gạch nối (avail-able): cả chữ xuống dòng, vẫn căn đều hai bên.
+% emergencystretch cho phép giãn khoảng trắng thêm để dòng không bị tràn lề.
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\setlength{\emergencystretch}{3em}
+\tolerance=2000
+\makeatletter
+%Cấp 4
+\newcounter {subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{4}{7.0em}{4.1em}}
+%Cấp 5
+\renewcommand\theparagraph{\@alph\c@paragraph)} 
+\renewcommand\paragraph{\@startsection{paragraph}{5}{\z@}%
+                                    {-2.25ex \@plus -1ex \@minus -.2ex}%
+                                    {1ex \@plus .2ex}%
+                                    {\normalfont\normalsize\bfseries}}
+\renewcommand*\l@paragraph{\@dottedtocline{5}{10.0em}{5.1em}}
+\makeatother
+
+\begin{document}
+
+\input{bia+header/bia1}
+\newpage
+
+\input{bia+header/bia2}
+\newpage
+
+\renewcommand{\contentsname}{Contents}
+\tableofcontents
+%\newpage
+
+\input{bia+header/h_and_d}
+\newpage
+
+% ===== NỘI DUNG =====
+\include{contents/1-Introduction.tex}
+\include{contents/2-System-Analysis.tex}
+\include{contents/3-System-Design.tex}
+% Hai mục tiếp theo của chương 3 (3.5 CSP Formulation, 3.6 ASP Encoding), nối tiếp mục RAG
+\input{contents/Formulation.tex}
+\input{contents/ASP-Encoding.tex}
+
+
+%\phantomsection % Tạo bookmark cho PDF
+%\addcontentsline{toc}{section}{Tài liệu tham khảo} % Thêm vào Mục lục
+
+%\bibliographystyle{ieeetr} 
+%\renewcommand{\refname}{Tài liệu tham khảo}
+%\bibliography{references} 
+%\nocite{*}
+
+% ===== KẾT THÚC =====
+
+
+\end{document}

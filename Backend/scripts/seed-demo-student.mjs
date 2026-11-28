@@ -147,7 +147,7 @@ const client = new pg.Client({
   user: env.DB_USERNAME,
   password: env.DB_PASSWORD,
   database: env.DB_NAME,
-  ssl: sslMode && sslMode !== 'disable' ? { rejectUnauthorized: false } : undefined,
+  ssl: sslMode === 'require' ? { rejectUnauthorized: false } : false,
 });
 
 await client.connect();

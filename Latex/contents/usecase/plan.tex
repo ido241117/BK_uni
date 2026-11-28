@@ -1,0 +1,25 @@
+\begin{tikzpicture}
+  \ucactor{student}{0,0.4}{Student}
+
+  \node[uc] (edit)  at (5.6,1.4)  {Edit Personal Plan};
+  \node[uc] (warn)  at (5.6,-2.2) {View Plan Warnings};
+
+  \node[uc] (set)   at (11.8,3.6)  {Set Planned Semester};
+  \node[uc] (rm)    at (11.8,2.4)  {Remove Course\\from Plan};
+  \node[uc] (save)  at (11.8,0.9)  {Review and Save Draft};
+  \node[uc] (disc)  at (11.8,-0.4) {Discard Draft};
+  \node[uc] (ana)   at (11.8,-2.2) {View Progress\\and Analysis};
+  \coordinate (top) at (8,4.7);
+  \ucsystem{(top)(edit)(set)(ana)(warn)}{Student Personal Plan (FR-6)}
+
+  \draw[assoc] (student) -- (edit.west);
+  \draw[assoc] (student) -- (warn.west);
+  \draw[gen] (set.west) -- (edit);
+  \draw[gen] (rm.west)  -- (edit);
+  \draw[inc] (edit) -- node[rel, below, sloped] {\incl} (save.west);
+  \draw[inc] (disc.west) -- node[rel, below, sloped] {\extd} (edit);
+  \draw[inc] (ana.west) -- node[rel, above] {\extd} (warn.east);
+
+  \node[ucnote=9cm, anchor=north east] at ($(sysbox.south east)+(0,-0.25)$)
+    {One plan per curriculum, edited on the course board. Changes never modify the standard curriculum (FR-6.1, FR-6.3).};
+\end{tikzpicture}

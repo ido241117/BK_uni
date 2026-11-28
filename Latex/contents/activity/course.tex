@@ -1,0 +1,33 @@
+\begin{tikzpicture}[y=1.35cm]
+  \swimlanes{Student,Frontend,Backend}{5.2}{-8.6}
+  \node[start] (s) at (2.6,-1.1) {};
+  \node[act=4.0cm] (a1) at (2.6,-2.0) {Open course board};
+  \node[act=4.0cm] (a2) at (7.8,-2.0) {Load curriculum and own data};
+  \node[act=4.0cm] (a3) at (13,-2.0) {Verify session; read courses and statuses};
+  \node[act=4.0cm] (a4) at (7.8,-3.2) {Show course board};
+  \node[act=4.0cm] (a5) at (2.6,-3.2) {Change statuses or import an Excel / CSV file (kept as draft)};
+  \node[dec] (d1) at (2.6,-4.6) {};
+  \node[stop] (e1) at (2.6,-5.6) {};
+  \node[act=4.0cm] (a6) at (7.8,-4.6) {Send all changes in one request};
+  \node[act=4.0cm] (a7) at (13,-4.6) {Validate; transaction: delete removed, upsert, sync PE courses};
+  \node[dec] (d2) at (13,-5.9) {};
+  \node[act=4.0cm] (a8) at (7.8,-5.9) {Show error; keep draft};
+  \node[stop] (e2) at (5.45,-5.9) {};
+  \node[act=4.0cm] (a9) at (7.8,-7.1) {Update cache; show saved board};
+  \node[stop] (e3) at (7.8,-8.1) {};
+
+  \draw[flow] (s) -- (a1);
+  \draw[flow] (a1) -- (a2);
+  \draw[flow] (a2) -- (a3);
+  \draw[flow] (a3) |- (a4);
+  \draw[flow] (a4) -- (a5);
+  \draw[flow] (a5) -- (d1);
+  \draw[flow] (d1) -- node[guard, right] {discard} (e1);
+  \draw[flow] (d1) -- node[guard, above] {save} (a6);
+  \draw[flow] (a6) -- (a7);
+  \draw[flow] (a7) -- (d2);
+  \draw[flow] (d2) -- node[guard, above] {error} (a8);
+  \draw[flow] (a8) -- (e2);
+  \draw[flow] (d2) |- node[guard, near start, right] {committed} (a9);
+  \draw[flow] (a9) -- (e3);
+\end{tikzpicture}

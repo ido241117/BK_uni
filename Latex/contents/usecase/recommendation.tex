@@ -1,0 +1,35 @@
+\begin{tikzpicture}
+  \ucactor{student}{0,0.2}{Student}
+
+  \node[uc] (conf)  at (5.6,4.4)  {Configure Scenario};
+  \node[uc] (solve) at (5.6,-0.4) {Solve Study Roadmap};
+  \node[uc] (saved) at (5.6,-5.4) {Manage Saved Roadmaps};
+
+  \node[uc] (pref)  at (11.8,7.0)  {Set Preferences};
+  \node[uc] (pin)   at (11.8,5.7)  {Pin Course /\\Freeze Semester};
+  \node[uc] (free)  at (11.8,4.2)  {Add Free-choice Course};
+  \node[uc] (what)  at (11.8,2.9)  {Explore What-if\\Assumptions};
+  \node[uc] (input) at (11.8,1.3)  {Build Input from\\Progress and Curriculum};
+  \node[uc] (check) at (11.8,-0.2) {Verify Roadmap\\against Rules};
+  \node[uc] (fail)  at (11.8,-1.7) {Report Infeasibility\\or Timeout};
+  \node[uc] (fix)   at (11.8,-3.2) {Apply Suggested Fix};
+  \node[uc] (grad)  at (11.8,-4.5) {Confirm Graduation\\Condition};
+  \node[uc] (cmp)   at (11.8,-6.0) {Compare with Baseline};
+  \coordinate (top) at (8,8.0);
+  \ucsystem{(top)(conf)(pref)(cmp)(saved)}{Course Recommendation (FR-5)}
+
+  \foreach \u in {conf,solve,saved} \draw[assoc] (student) -- (\u.west);
+  \draw[inc] (pref.west)  -- node[rel, above, sloped] {\extd} (conf);
+  \draw[inc] (pin.west)   -- node[rel, above, sloped] {\extd} (conf);
+  \draw[inc] (free.west)  -- node[rel, above] {\extd} (conf.east);
+  \draw[inc] (what.west)  -- node[rel, below, sloped] {\extd} (conf);
+  \draw[inc] (solve) -- node[rel, above, sloped] {\incl} (input.west);
+  \draw[inc] (solve) -- node[rel, above] {\incl} (check.west);
+  \draw[inc] (fail.west)  -- node[rel, below, sloped] {\extd} (solve);
+  \draw[inc] (grad.west)  -- node[rel, below, sloped] {\extd} (solve);
+  \draw[inc] (fix) -- node[rel, right] {\extd} (fail);
+  \draw[inc] (cmp.west)   -- node[rel, below, sloped] {\extd} (saved);
+
+  \node[ucnote=9cm, anchor=north east] at ($(sysbox.south east)+(0,-0.25)$)
+    {A roadmap is computed only when the Student presses Solve. It is advisory and is not an official registration (FR-5.1, FR-5.13).};
+\end{tikzpicture}

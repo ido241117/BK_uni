@@ -1,0 +1,48 @@
+\begin{tikzpicture}[y=1.35cm]
+  \swimlanes{Student,Frontend,Backend,Solver}{3.9}{-10.0}
+  \node[start] (s) at (1.95,-1.1) {};
+  \node[act=3.3cm] (a1) at (1.95,-2.0) {Open roadmap page};
+  \node[act=3.3cm] (a2) at (5.85,-2.0) {Load saved scenario};
+  \node[act=3.3cm] (b1) at (9.75,-2.0) {Read saved settings};
+  \node[act=3.3cm] (a3) at (5.85,-3.2) {Show scenario and last roadmap};
+  \node[act=3.3cm] (a4) at (1.95,-3.2) {Adjust preferences, pins, what-if};
+  \node[act=3.3cm] (a5) at (1.95,-4.5) {Press Solve};
+  \node[act=3.3cm] (a6) at (5.85,-4.5) {Send scenario and baseline};
+  \node[act=3.3cm] (b2) at (9.75,-4.5) {Check free-choice codes; build input};
+  \node[act=3.3cm] (c1) at (13.65,-4.5) {Solve with CP-SAT; validate; diff with baseline};
+  \node[dec] (d1) at (9.75,-5.9) {};
+  \node[act=3.3cm] (a7) at (5.85,-5.9) {Show reason and suggested fixes};
+  \node[act=3.3cm] (a8) at (1.95,-5.9) {Apply a fix};
+  \node[dec] (d2) at (9.75,-7.1) {};
+  \node[act=3.3cm] (a9) at (5.85,-7.1) {Show roadmap with reasons and warnings};
+  \node[dec] (d3) at (1.95,-7.1) {};
+  \node[stop] (e1) at (0.55,-7.1) {};
+  \node[act=3.3cm] (a10) at (1.95,-8.4) {Save roadmap or mark it as baseline};
+  \node[stop] (e2) at (1.95,-9.4) {};
+  \node[act=3.3cm] (b3) at (9.75,-8.4) {Stop solver; status TIMEOUT};
+  \node[act=3.3cm] (a11) at (5.85,-8.4) {Show timeout notice};
+  \node[stop] (e3) at (5.85,-9.4) {};
+
+  \draw[flow] (s) -- (a1);
+  \draw[flow] (a1) -- (a2);
+  \draw[flow] (a2) -- (b1);
+  \draw[flow] (b1) |- (a3);
+  \draw[flow] (a3) -- (a4);
+  \draw[flow] (a4) -- (a5);
+  \draw[flow] (a5) -- (a6);
+  \draw[flow] (a6) -- (b2);
+  \draw[flow] (b2) -- (c1);
+  \draw[flow] (c1) |- (d1);
+  \draw[flow] (d1) -- node[guard, above] {infeasible} (a7);
+  \draw[flow] (a7) -- (a8);
+  \draw[flow] (a8) -- (a5);
+  \draw[flow] (d1) -- (d2);
+  \draw[flow] (d2) -- node[guard, above] {roadmap} (a9);
+  \draw[flow] (a9) -- (d3);
+  \draw[flow] (d3) -- node[guard, above] {done} (e1);
+  \draw[flow] (d3) -- node[guard, right] {keep} (a10);
+  \draw[flow] (a10) -- (e2);
+  \draw[flow] (d2) -- node[guard, right] {timeout} (b3);
+  \draw[flow] (b3) -- (a11);
+  \draw[flow] (a11) -- (e3);
+\end{tikzpicture}

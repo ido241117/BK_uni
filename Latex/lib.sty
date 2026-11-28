@@ -1,0 +1,111 @@
+% -------------------- CẤU HÌNH TRANG & FONT -------------------
+%cho in 2 mặt twoside,
+\usepackage[a4paper, left=2.5cm, right=2cm, top=2cm, bottom=2cm,includehead, includefoot]{geometry}   % Thiết lập khổ giấy A4, lề 
+\usepackage[utf8]{inputenc} 
+%\usepackage{indentfirst}                    % Thụt đầu dòng đoạn đầu tiên
+
+% -------------------- MÀU SẮC & KHUNG --------------------
+\usepackage{xcolor}                         % Định nghĩa màu sắc
+\usepackage{color}                          % Màu cơ bản
+\usepackage{mdframed}                       % Tạo khung bao quanh nội dung
+\usepackage{tcolorbox}                      % Hộp màu nâng cao
+\usepackage{colortbl}                       % Tô màu bảng
+\newmdenv[
+  linecolor=black,
+  backgroundcolor=gray!10,
+  fontcolor=blue
+]{mybox}                                    % Khung tùy chỉnh
+
+% -------------------- TIÊU ĐỀ & ĐỊNH DẠNG --------------------
+\usepackage{titlesec}    
+% Tùy chỉnh tiêu đề section
+\setcounter{secnumdepth}{4} 
+\setcounter{tocdepth}{3} %mục lục cấp 4
+\titleformat{\paragraph}
+  {\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+\DeclareUnicodeCharacter{2212}{-}           % Fix ký tự dấu trừ
+
+% Định dạng hiển thị tiêu đề
+\titleformat{\section}{\bfseries\Large}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\bfseries\large}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\bfseries\normalsize}{\thesubsubsection.}{0.5em}{}
+
+
+% -------------------- TOÁN HỌC --------------------
+\usepackage{amsmath,amssymb}                % Công thức toán học
+\usepackage[overload]{empheq}               % Hộp công thức
+\usepackage[thinc]{esdiff}                  % Ký hiệu đạo hàm
+\usepackage{systeme}                        % Hệ phương trình
+% -------------------- BẢNG & BỐ CỤC --------------------
+\usepackage{array,tabularx,tabularray,longtable,multirow,multicol,ragged2e}
+\newcolumntype{J}{>{\justifying\arraybackslash}X} % Cột căn đều
+\renewcommand{\arraystretch}{1.5}           % Giãn dòng trong bảng
+\usepackage{rotating}                       % Xoay bảng/hình
+\usepackage{hhline}                         % Đường kẻ bảng nâng cao
+
+% -------------------- HÌNH ẢNH & ĐỒ HỌA --------------------
+\usepackage{graphicx,graphics,epsfig}       % Chèn hình ảnh
+\usepackage{tikz}                           % Vẽ hình bằng TikZ
+\usetikzlibrary{shapes.geometric,arrows,positioning,snakes,backgrounds}
+
+% -------------------- CODE & THUẬT TOÁN --------------------
+\usepackage{listings}                       % Hiển thị code
+\usepackage{minted}                         % Hiển thị code với highlight (Python,…)
+\lstset{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+% Định nghĩa màu cho code
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single
+}
+\lstset{style=mystyle}
+
+\usepackage[lined,boxed,commentsnumbered]{algorithm2e} % Thuật toán
+
+% -------------------- LIÊN KẾT & HEADER --------------------
+\usepackage{hyperref}                       % Liên kết, URL
+\hypersetup{urlcolor=black,linkcolor=black,citecolor=black,colorlinks=true}
+\usepackage{fancyhdr}                       % Header/Footer
+\usepackage{lastpage}                       % Số trang cuối
+
+% -------------------- KHÁC --------------------
+\usepackage{setspace}                       % Giãn dòng
+\usepackage{courier}                        % Font Courier
+\usepackage{longfbox}                       % Khung dài
+\usepackage{xparse}

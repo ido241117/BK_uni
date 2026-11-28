@@ -1,0 +1,32 @@
+\begin{tikzpicture}[y=1.35cm]
+  \swimlanes{Student,Frontend,Backend}{5.2}{-8.7}
+  \node[start] (s) at (2.6,-1.1) {};
+  \node[act=4.0cm] (a1) at (2.6,-2.0) {Open profile page};
+  \node[act=4.0cm] (a2) at (7.8,-2.0) {Request profile and curriculum list};
+  \node[act=4.0cm] (a3) at (13,-2.0) {Verify session; read profile and curricula};
+  \node[act=4.0cm] (a4) at (7.8,-3.3) {Show profile and curriculum picker};
+  \node[dec] (d1) at (2.6,-3.3) {};
+  \node[stop] (e1) at (0.7,-3.3) {};
+  \node[act=4.0cm] (a5) at (2.6,-4.6) {Edit fields, select curriculum, press Save};
+  \node[act=4.0cm] (a6) at (7.8,-4.6) {Send PATCH request};
+  \node[act=4.0cm] (a7) at (13,-4.6) {Validate input; create or update profile};
+  \node[dec] (d2) at (13,-5.9) {};
+  \node[act=4.0cm] (a8) at (7.8,-5.9) {Show error; keep form open};
+  \node[act=4.0cm] (a9) at (7.8,-7.2) {Show updated profile};
+  \node[stop] (e2) at (7.8,-8.2) {};
+
+  \draw[flow] (s) -- (a1);
+  \draw[flow] (a1) -- (a2);
+  \draw[flow] (a2) -- (a3);
+  \draw[flow] (a3) |- (a4);
+  \draw[flow] (a4) -- (d1);
+  \draw[flow] (d1) -- node[guard, above] {view only} (e1);
+  \draw[flow] (d1) -- node[guard, right] {edit} (a5);
+  \draw[flow] (a5) -- (a6);
+  \draw[flow] (a6) -- (a7);
+  \draw[flow] (a7) -- (d2);
+  \draw[flow] (d2) -- node[guard, above] {invalid or duplicate} (a8);
+  \draw[flow] (a8.west) -| (a5.south);
+  \draw[flow] (d2) |- node[guard, near start, right] {saved} (a9);
+  \draw[flow] (a9) -- (e2);
+\end{tikzpicture}

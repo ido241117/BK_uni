@@ -1,0 +1,32 @@
+\begin{tikzpicture}
+  \seqactor{0}{Admin}
+  \seqobj{4}{Frontend}
+  \seqobj{8.5}{Backend}
+  \seqobj{13}{Database}
+  \seqstart
+
+  \Msg{0}{4}{Open a curriculum}
+  \Msg{4}{8.5}{GET /curricula/\{id\} and its tabs}
+  \Self{8.5}{Verify JWT}
+  \Msg[0.6]{8.5}{13}{Query curriculum content}
+  \Ret{13}{8.5}{Rows}
+  \Ret{8.5}{4}{Curriculum data}
+  \Ret{4}{0}{Curriculum tabs}
+
+  \Fbegin{opt}
+  \Msg[0.75]{0}{4}{Create, edit, or delete an item}
+  \Msg[0.85]{4}{8.5}{POST, PATCH, PUT or DELETE\\/curricula/\{id\}/...}
+  \Self{8.5}{JwtAuthGuard + RolesGuard (ADMIN);\\validate DTO}
+  \Fbegin{alt}
+  \Ret[0.95]{8.5}{4}{403 Forbidden}
+  \Ret{4}{0}{Access denied}
+  \Felse{-0.4}{13.4}{Admin and valid data}
+  \Msg[0.75]{8.5}{13}{Write change (audit trigger logs it)}
+  \Ret{13}{8.5}{OK}
+  \Ret{8.5}{4}{Updated item}
+  \Ret{4}{0}{Updated tab}
+  \Fend{alt}{-0.4}{13.4}{alt}{not an Admin}
+  \Fend{opt}{-0.7}{13.7}{opt}{Admin edits}
+
+  \Lifelines{0,4,8.5,13}
+\end{tikzpicture}

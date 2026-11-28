@@ -1,0 +1,986 @@
+% Content fragment for Overleaf. Requires \usepackage{longtable,graphicx,float,svg}.
+\section{System Analysis}
+\label{sec:sys-analysis}
+\subsection{Stakeholders}
+
+BK Uni's stakeholders include Students and Administrators. Students use the system to track their progress and plan their studies; Administrators maintain curriculum data and academic rules. Academic advisors understand Students' curricula but do not operate BK Uni.
+
+\subsubsection{Students}
+Students are BK Uni's primary users and direct beneficiaries. They need to track their academic progress, understand curriculum requirements, and prepare plans for upcoming semesters.
+
+\textbf{Needs and goals:}
+\begin{itemize}
+    \item Review courses that can count toward completing a curriculum (required courses, major elective groups, and free electives), together with the relationships and constraints governing course registration, selection, and completion (including, but not limited to, prerequisites and credit requirements where applicable).
+    \item Record the academic status of each course and its planned semester to keep their personal progress up to date.
+    \item Identify outstanding required courses, elective requirements, or educational regulations, and check eligibility for subsequent courses.
+    \item Receive course recommendations for a planned semester, with explanations of recommended and deferred courses and applicable credit limits.
+    \item Chat with an AI assistant for further advice on course selection, electives, and specializations.
+\end{itemize}
+
+\textbf{Roles and responsibilities:}
+\begin{itemize}
+    \item Create and manage a personal profile and select the correct curriculum.
+    \item Accurately update the status of their courses.
+    \item Check their input data and compare recommendations with official university information before making enrollment decisions.
+\end{itemize}
+
+BK Uni helps Students plan their studies and understand rules based on the available data. Its results do not confirm official enrollment eligibility or replace academic advising.
+
+\subsubsection{Administrators}
+Administrators maintain the foundational data BK Uni uses to analyze academic progress and generate course recommendations. The accuracy, completeness, and consistency of this data directly affect the quality of results for Students.
+
+\textbf{Needs and goals:}
+\begin{itemize}
+    \item Manage the course catalog and curricula together with related data such as curriculum courses, recommended semesters, and elective groups.
+    \item Define and update academic rules, including prerequisites and minimum credit requirements.
+    \item Ensure data and rules are associated with the correct curriculum and do not affect other curricula.
+    \item Maintain sufficiently clear data so that analyses and recommendations can be explained.
+\end{itemize}
+
+\textbf{Roles and responsibilities:}
+\begin{itemize}
+    \item Create, edit, and manage course and curriculum data within the scope of their administrative permissions.
+    \item Check the accuracy and consistency of curriculum data.
+    \item Update data when changes occur and make clear that results depend on the available data.
+\end{itemize}
+
+Administrators manage data in BK Uni but do not replace academic units in issuing or confirming official academic regulations.
+
+\subsubsection{Academic Advisors}
+Academic advisors help Students make informed decisions and review study plans against official curriculum regulations. They are indirect stakeholders: they do not sign in to, access, or operate BK Uni; advising takes place outside the system. When Students consult them in person, advisors need clear information about the Students' progress, outstanding academic requirements, and proposed plans.
+
+\textbf{Stakeholder summary:}
+\begin{longtable}{|p{0.20\textwidth}|p{0.28\textwidth}|p{0.42\textwidth}|}
+\hline
+\textbf{Stakeholder} & \textbf{Involvement} & \textbf{Primary concern} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Stakeholder} & \textbf{Involvement} & \textbf{Primary concern} \\
+\hline
+\endhead
+Student & Direct, primary user & Tracking progress, checking eligibility, and planning semesters \\
+\hline
+Administrator & Direct, data manager & Maintaining the course catalog, curricula, and course rules \\
+\hline
+Academic advisor & Indirect, does not operate the system & Helping Students review plans against official regulations \\
+\hline
+\end{longtable}
+
+\subsection{Actors \& Roles}
+
+An actor is an individual, group, or external system that interacts with BK Uni. A role defines the scope of functions and data each actor is permitted to use. The system's primary actors are Student and Admin; the AI Service is a secondary actor (an external system).
+
+\subsubsection{Student}
+Students are users signed in with student accounts and are the primary actors using BK Uni's study-planning functions.
+
+\textbf{Roles and permissions:}
+\begin{itemize}
+    \item Create and update their own academic profiles and select a curriculum.
+    \item Record course statuses, planned semesters, and the status of educational regulations, and view their personal progress.
+    \item Analyze course eligibility, review outstanding requirements, and receive explained semester recommendations.
+    \item Chat with the AI assistant and review their own conversations.
+    \item View or modify only profiles and personal data they own; they cannot modify standard curriculum data.
+\end{itemize}
+
+\subsubsection{Admin}
+Admins are responsible for managing course data, curricula, and the academic rules used by the system.
+
+\textbf{Roles and permissions:}
+\begin{itemize}
+    \item Manage the course catalog and the list of semesters in which each course has been offered.
+    \item Create, update, and manage standard curricula.
+    \item Manage curriculum courses, recommended semesters, elective groups, course rules, and educational regulations.
+    \item View the course catalog and course details in the same way as Students.
+    \item Ensure data is associated with the correct curriculum and is sufficiently accurate for analysis.
+    \item They cannot access Students' personal profiles or study plans.
+\end{itemize}
+
+Admin privileges are granted under controlled authorization so that only people responsible for administration can modify standard data.
+
+\subsubsection{AI Service (secondary actor)}
+The AI Service is an external language model that BK Uni calls to answer Students' advising questions. It does not sign in and does not access the database directly; it only receives the data the system sends and retrieves additional information through tools provided by the system.
+
+\textbf{Access-control summary:}
+\begin{longtable}{|p{0.16\textwidth}|p{0.36\textwidth}|p{0.38\textwidth}|}
+\hline
+\textbf{Actor} & \textbf{Access} & \textbf{Primary permissions} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Actor} & \textbf{Access} & \textbf{Primary permissions} \\
+\hline
+\endhead
+Student & Their own profile and academic data & Manage profile, update progress, view analyses, plan studies, and consult the AI assistant \\
+\hline
+Admin & Course data and standard curriculum data & Manage courses, curricula, recommended semesters, elective groups, rules, and regulations; view the course catalog \\
+\hline
+AI Service & Only the data the system sends within each conversation & Generate advising answers for Students \\
+\hline
+\end{longtable}
+
+\subsection{Functional Requirements}
+
+Functional requirements describe the services BK Uni must provide to its actors. Each requirement is expressed as desired system behavior and can serve as a basis for design, use-case development, and acceptance testing.
+
+\subsubsection{FR-1. Accounts and Access}
+\begin{longtable}{|p{0.10\textwidth}|p{0.15\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endhead
+FR-1.1 & User / System & The system allows users to create an account using an email address and password; new accounts are assigned the Student role. \\
+\hline
+FR-1.2 & User & The system allows users to sign in to and sign out of their accounts. \\
+\hline
+FR-1.3 & System & The system allows only authenticated users to access functions and data that require an account. \\
+\hline
+FR-1.4 & System & The system restricts access according to role and data ownership; Students may only view or modify their own personal data, which the server identifies from the signed-in account rather than from identifiers sent by the client. \\
+\hline
+FR-1.5 & Admin / System & The system grants Admin privileges only to authorized accounts; Admin accounts are created by the system operator, cannot be registered through the user interface, and users cannot elevate their own privileges. \\
+\hline
+\end{longtable}
+
+\subsubsection{FR-2. Student Profiles and Academic Progress}
+\begin{longtable}{|p{0.10\textwidth}|p{0.15\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endhead
+FR-2.1 & Student & A Student can create, view, and update their personal academic profile. \\
+\hline
+FR-2.2 & Student & A Student can select an appropriate curriculum from the list of available curricula. \\
+\hline
+FR-2.3 & Student & A Student can view, search, and filter the courses in their selected curriculum or in the entire course catalog. \\
+\hline
+FR-2.4 & Student & A Student can record each course's status as not started, in progress, completed, or failed. Changes are kept as a draft and saved together in one operation; unsaved changes can be discarded. \\
+\hline
+FR-2.5 & System & The system displays academic progress based on the selected curriculum and the course statuses provided by the Student. \\
+\hline
+FR-2.6 & Student & A Student can view the details of a course, including its general information, syllabus, and the semesters in which it has been offered. \\
+\hline
+FR-2.7 & Student / System & Graduation conditions that are not regular courses, such as the English-language graduation standard or the physical-education certificate, are loaded from the graduation-conditions section of the imported myBK report (FR-2.8) together with the course statuses; the Student does not mark them on a separate page. When a recommended roadmap schedules the graduation thesis while a required condition is not yet met, the system shows a reminder at that semester, and the Student can confirm there that the condition has been met; the confirmation is saved to the Student's progress. \\
+\hline
+FR-2.8 & Student / System & A Student can import their academic progress from the university's myBK progress report, either as a PDF file or as pasted text. Before anything is saved, the system shows a review that compares the report with the curriculum data and lists unknown course codes and differences. After the Student confirms, the system replaces the Student's course statuses with those in the report and stores the imported progress; the original file is not stored. \\
+\hline
+FR-2.9 & Student & After importing, a Student can adjust the imported progress, such as adding a note to a course or choosing which elective group a completed course counts toward. \\
+\hline
+\end{longtable}
+
+\subsubsection{FR-3. Admin Course and Curriculum Management}
+\begin{longtable}{|p{0.10\textwidth}|p{0.15\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endhead
+FR-3.1 & Admin & An Admin can create, view, update, and delete curricula, including each curriculum's minimum and maximum credits per semester. \\
+\hline
+FR-3.2 & Admin & An Admin can add, edit, and delete courses in the course catalog, and add courses to or remove courses from a curriculum. \\
+\hline
+FR-3.3 & Admin & An Admin can manage the courses of each semester in a curriculum by setting a recommended academic year and semester for each course, and can manage credits and course classification (course categories). \\
+\hline
+FR-3.4 & Admin & An Admin can create and manage elective groups, their member courses, and each group's completion requirement (a number of courses or a number of credits). \\
+\hline
+FR-3.5 & Admin & An Admin can define, update, and remove relations between courses of a curriculum. Four relation types are supported: prerequisite (the related course must be passed), prior course (the related course must have been taken, even if failed), corequisite (the related course must be taken earlier or in the same semester), and recommended (advisory only). \\
+\hline
+FR-3.6 & System & The system associates courses and rules with the correct curriculum so that data for different curricula is managed independently. \\
+\hline
+FR-3.7 & Admin & An Admin can add, edit, and delete educational and academic regulations. These are curriculum-related requirements that are not specific to individual courses, such as English-language certification, computer-skills certification, or social-work requirements. \\
+\hline
+FR-3.8 & Admin & An Admin can manage the list of semesters in which each course has been offered. The system uses this history to estimate whether a course is likely to be offered in a future semester; the estimate produces warnings and preferences, not hard rules. \\
+\hline
+FR-3.9 & System & The system stores the specializations of each curriculum and the elective groups that belong to each specialization. This data is loaded together with the curriculum and can be maintained through the administration API. \\
+\hline
+FR-3.10 & Admin & An Admin can import course syllabi from a structured file through the administration API. An import only adds or updates syllabi, identified by course code and version, and never deletes syllabi or changes courses and course relations. \\
+\hline
+FR-3.11 & System & The system operator can load the structure of a curriculum (courses, recommended semesters, elective groups, and relations) from the university's published curriculum data instead of entering it by hand. \\
+\hline
+\end{longtable}
+
+\subsubsection{FR-4. Eligibility and Curriculum Requirement Analysis}
+\begin{longtable}{|p{0.10\textwidth}|p{0.15\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endhead
+FR-4.1 & Student & A Student can view an analysis of their progress and course eligibility based on their personal profile and selected curriculum. \\
+\hline
+FR-4.2 & System & The system determines whether the Student is eligible to take a course, based on data entered by Admins (courses, course relations, and curriculum rules) and data entered by the Student (courses completed, in progress, and failed). \\
+\hline
+FR-4.3 & System & The system identifies the courses, elective-group requirements, and educational regulations that the Student still needs to complete. \\
+\hline
+FR-4.4 & System & The system explains its results by identifying relevant conditions, such as an uncompleted prerequisite or an unmet credit requirement. \\
+\hline
+FR-4.5 & System & Analysis results are recomputed from current data each time the Student views them, so they always reflect the latest academic status and curriculum data; the system does not store a history of analyses. \\
+\hline
+\end{longtable}
+
+\subsubsection{FR-5. Course Recommendations}
+\begin{longtable}{|p{0.10\textwidth}|p{0.15\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endhead
+FR-5.1 & Student & A Student can request a recommended study roadmap. The system computes a roadmap only when the Student explicitly requests it; changing settings alone does not start a computation. \\
+\hline
+FR-5.2 & System & The system builds the input for a roadmap from the selected curriculum, the Student's course statuses and imported progress, course relations, offering history, and the credit limits of each semester. \\
+\hline
+FR-5.3 & System & The system generates the roadmap with a constraint solver so that every hard constraint is satisfied: course relations, credit limits per semester, completion requirements of required courses and elective groups, and the settings the Student has fixed. Each recommended course comes with the reason it was placed in its semester. \\
+\hline
+FR-5.4 & System & The system does not make recommendations that conflict with curriculum constraints or the academic information provided by the Student; every generated roadmap is checked again against the curriculum rules, and any violation is reported. \\
+\hline
+FR-5.5 & System & The system presents the roadmap semester by semester with its courses, credits, the expected graduation semester, the assumptions used, and warnings, such as a course that has rarely been offered in the planned semester. \\
+\hline
+FR-5.6 & System & If no roadmap satisfies the constraints, the system reports this, identifies which of the Student's settings make the problem infeasible, and proposes fixes (for example, removing a pinned course or allowing a summer semester) that the Student can apply and solve again. The system never bypasses curriculum rules to produce a result. If the solver does not finish within its time limit, the system reports a timeout instead of an unverified result. \\
+\hline
+FR-5.7 & Student & A Student can view recommended courses for each semester from the next semester through graduation, rather than only for the next semester. \\
+\hline
+FR-5.8 & Student & A Student can state study preferences: a maximum or target number of credits for each semester, a graduation deadline, courses they want to take, the priority order of these goals, summer semesters they want to study, and semesters they will skip. \\
+\hline
+FR-5.9 & Student & A Student can pin a course to a specific semester, freeze a semester so that only its pinned courses are kept, and add a free-choice course by entering its course code; an unknown course code is rejected before solving. \\
+\hline
+FR-5.10 & Student & A Student can explore what-if scenarios: assume an in-progress course will be passed or failed, assume a planned course will be failed, or declare that a course is or is not offered in a given semester. \\
+\hline
+FR-5.11 & Student / System & A Student can save several named roadmaps and mark one as the baseline. When a new roadmap is generated, the system compares it with the baseline and shows the courses that moved, were added, or were removed. \\
+\hline
+FR-5.12 & System & The Student's settings and saved roadmaps are stored in their account and restored on the next sign-in. Saving them requires the Student to have imported their progress (FR-2.8). \\
+\hline
+FR-5.13 & System & A recommended roadmap is advisory only: generating it does not change the Student's course statuses, personal plan, or the curriculum, and it is not an official course registration. \\
+\hline
+FR-5.14 & System & Besides the default constraint solver used by the Student interface, the system provides an alternative answer-set programming engine through its API for comparison; this engine can also take the Student's interest tags into account. \\
+\hline
+\end{longtable}
+
+\subsubsection{FR-6. Student Personal Plans}
+\begin{longtable}{|p{0.10\textwidth}|p{0.15\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endhead
+FR-6.1 & System & A personal plan assigns a planned semester to courses of a curriculum. Each Student has one personal plan for each curriculum, tied to their account; the plan shown is the one for the curriculum selected in the profile. \\
+\hline
+FR-6.2 & Student & A Student can add or remove courses from their personal plan and schedule courses in planned semesters without changing the standard curriculum. \\
+\hline
+FR-6.3 & Student / System & Course statuses, planned semesters, and notes entered by the Student are stored as the Student's own data, separate from the curriculum data managed by Admins; the Student's changes never modify the curriculum. \\
+\hline
+FR-6.4 & Student / System & When a course in the plan is changed, the system presents the course's current status and planned semester for the Student to review; changes are saved only when the Student confirms them. \\
+\hline
+FR-6.5 & System & When presenting personal-plan analysis results, the system must clearly distinguish content based on information provided by the Student (completed, in-progress, and planned courses) from content based on curriculum requirements. \\
+\hline
+FR-6.6 & System & If the course pathway declared by the Student does not satisfy curriculum requirements, the system reports each problem and its reason: a course planned before its prerequisites, a course planned in a semester that has already passed, a course that has not been offered in that term before, or a semester exceeding the maximum credits. \\
+\hline
+\end{longtable}
+
+\subsubsection{FR-7. AI Academic Advising}
+\begin{longtable}{|p{0.10\textwidth}|p{0.15\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
+\hline
+\endhead
+FR-7.1 & Student & A Student can chat with the AI assistant to ask about course selection, electives, specializations, and study plans. \\
+\hline
+FR-7.2 & System & The AI assistant answers based on the Student's academic data and the curriculum data in the system; it does not produce course codes, course names, or conditions that are not in the data, and the system checks the course codes in each answer before showing it. \\
+\hline
+FR-7.3 & System & When information is missing or several options exist, the AI assistant asks the Student follow-up questions with choices instead of deciding on the Student's behalf. \\
+\hline
+FR-7.4 & System & The AI assistant can suggest courses with reasons; its results are for reference only and do not confirm official enrollment. \\
+\hline
+FR-7.5 & Student & A Student can review, continue, or delete their own conversations. \\
+\hline
+FR-7.6 & System & When the AI service fails or is unavailable, the system clearly reports this and does not display a fabricated answer. \\
+\hline
+\end{longtable}
+
+\subsection{Non-functional Requirements}
+
+Non-functional requirements define BK Uni's quality and operational criteria. Quantitative criteria are evaluated in an agreed test environment using data representative of expected usage.
+
+\subsubsection{NFR-1. Security}
+\begin{longtable}{|p{0.12\textwidth}|p{0.78\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endhead
+NFR-1.1 & The system must authenticate users before allowing access to private functions or data; authorization must be checked on the server for every request. \\
+\hline
+NFR-1.2 & Passwords must be stored as hashes using a dedicated password-hashing algorithm; plaintext passwords, session tokens, and system secrets must not be logged or returned to users. \\
+\hline
+NFR-1.3 & Login sessions must be protected using secure cookie mechanisms; data-changing operations must be protected against request forgery, and request origins must be validated. \\
+\hline
+NFR-1.4 & Data transmitted between clients and the server must be encrypted; database connection information and secret keys must be managed outside the source code. \\
+\hline
+NFR-1.5 & The system must reject invalid or unauthorized requests without disclosing another account's data or sensitive internal information. \\
+\hline
+\end{longtable}
+
+\subsubsection{NFR-2. Performance}
+\begin{longtable}{|p{0.12\textwidth}|p{0.78\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endhead
+NFR-2.1 & Under expected usage load and with representative data, at least 95\% of routine operations (reading profiles, listing curricula, and updating statuses) must complete within 2 seconds. \\
+\hline
+NFR-2.2 & Under the same test conditions, at least 95\% of course analysis or recommendation requests must complete within 5 seconds. \\
+\hline
+NFR-2.3 & List pages must support appropriate search, filtering, or pagination so that response time does not increase linearly with the total number of records. \\
+\hline
+NFR-2.4 & Performance tests must record the 95th-percentile response time, error rate, and load configuration; results must be compared with the thresholds in NFR-2.1 and NFR-2.2. \\
+\hline
+\end{longtable}
+
+\subsubsection{NFR-3. Reliability}
+\begin{longtable}{|p{0.12\textwidth}|p{0.78\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endhead
+NFR-3.1 & The system must achieve at least 95\% monthly availability, excluding scheduled maintenance announced in advance. \\
+\hline
+NFR-3.2 & A save operation must be atomic: if an error occurs partway through, the system must not leave data partially updated. \\
+\hline
+NFR-3.3 & Data must be backed up regularly; the recovery time objective (RTO) must not exceed 4 hours, and the recovery point objective (RPO) must not exceed 24 hours. \\
+\hline
+NFR-3.4 & When a dependent service fails, the system must clearly report that the operation was not completed and must not present a false success result or speculative data as an official result. \\
+\hline
+\end{longtable}
+
+\subsubsection{NFR-4. Maintainability}
+\begin{longtable}{|p{0.12\textwidth}|p{0.78\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endhead
+NFR-4.1 & UI, business logic, authentication, and storage components must be organized by clearly defined responsibilities so that they can be changed independently where appropriate. \\
+\hline
+NFR-4.2 & Academic and business rules must be described consistently in design, implementation, and test documentation; changes to rules must be reflected in the relevant documentation. \\
+\hline
+NFR-4.3 & Core functions for access control, curriculum data, analysis, and recommendations must have automated tests covering valid, invalid, and important edge cases. \\
+\hline
+NFR-4.4 & Data structure changes must include migration instructions and error-handling procedures to prevent loss or corruption of existing data. \\
+\hline
+\end{longtable}
+
+\subsubsection{NFR-5. Scalability}
+\begin{longtable}{|p{0.12\textwidth}|p{0.78\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endhead
+NFR-5.1 & The system must support growth in the number of users, curricula, courses, and academic data without changing the correctness of access control or business results. \\
+\hline
+NFR-5.2 & Queries for large data sets must be able to limit results through pagination or an equivalent mechanism; loading all data at once must not be required. \\
+\hline
+NFR-5.3 & Adding new types of academic rules or new features should not require rewriting unrelated authentication, profile, or administration flows. \\
+\hline
+NFR-5.4 & As load increases, processing capacity must be scalable by adding resources to appropriate components without requiring changes to the Student or Admin user interface. \\
+\hline
+\end{longtable}
+
+\subsubsection{NFR-6. Usability}
+\begin{longtable}{|p{0.12\textwidth}|p{0.78\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endhead
+NFR-6.1 & The user interface, instructions, and user notifications must use clear and consistent Vietnamese; technical terms should be explained when necessary. \\
+\hline
+NFR-6.2 & Students must be able to complete the main flows---updating their profile, recording course statuses, viewing analysis, and generating recommendations---without technical knowledge. \\
+\hline
+NFR-6.3 & Every screen must clearly indicate loading, success, empty, and error states; notifications should explain the next steps where possible. \\
+\hline
+NFR-6.4 & Analysis results and recommendations must clearly present met and unmet conditions, outstanding requirements, total credits, and the reasons courses were recommended or deferred. \\
+\hline
+NFR-6.5 & Actions with significant effects on data, such as deletion or confirmation of plan changes, must clearly explain their consequences and require user confirmation. \\
+\hline
+NFR-6.6 & The interface must be usable on common desktop and mobile devices, with readable content, consistent navigation, and error messages associated with the relevant action. \\
+\hline
+NFR-6.7 & After signing in, Students must be able to open the system's main features (Academic Analysis, Course Recommendations, and AI Advising) within no more than two navigation actions from the main menu. \\
+\hline
+\end{longtable}
+
+\subsubsection{NFR-7. Auditability}
+\begin{longtable}{|p{0.12\textwidth}|p{0.78\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Requirement} \\
+\hline
+\endhead
+NFR-7.1 & The system must record important changes to curricula, courses, elective groups, and rules, including the person responsible, time, affected item, and change details. \\
+\hline
+NFR-7.2 & The system must record account and access-related events, such as sign-ins, sign-outs, permission changes, and denied access attempts, to the extent necessary for investigation. \\
+\hline
+\end{longtable}
+
+\subsection{Usecase Diagram}
+
+The following use case diagrams illustrate the main interactions between Guests, Students, Admins, the AI Service, and BK Uni. The overview summarizes the system's scope; each of the following diagrams details one group of functional requirements. All diagrams use the same notation: a solid arrow links an actor to a use case it starts, a dashed arrow labeled \incl{} or \extd{} shows inclusion or extension, and a hollow triangle shows generalization.
+
+\subsubsection{System Overview}
+\begin{figure}[H]
+    \centering
+    \input{contents/usecase/overview}
+    \caption{BK Uni use case overview}
+\end{figure}
+Guests can only register an account. Students manage their profile and course progress, import their progress from myBK, edit a personal plan, view their progress analysis, request study-roadmap recommendations, and chat with the AI advisor, which relies on the AI Service as a secondary actor. Admins maintain the course catalog and the curricula. Both Students and Admins sign in and sign out.
+
+\subsubsection{Account and Access}
+\begin{figure}[H]
+    \centering
+    \input{contents/usecase/account}
+    \caption{Account and access use cases}
+\end{figure}
+Guests can register an account and sign in. Registration always includes providing an email address and a password and creates a Student account; Admin accounts are created by the system operator. Both Students and Admins can sign out.
+
+\subsubsection{Student Profile and Progress}
+\begin{figure}[H]
+    \centering
+    \input{contents/usecase/profile}
+    \caption{Student profile and progress use cases}
+\end{figure}
+Students view and update their profile, select a curriculum, browse courses (optionally searching and filtering), and view course details. Course statuses are edited as a draft that is reviewed and saved in one operation; statuses can also be exported to and imported from an Excel or CSV file. Importing the myBK progress report always shows a review of the report before anything is saved, and the imported progress can be adjusted afterwards.
+
+\subsubsection{Progress and Eligibility Analysis}
+\begin{figure}[H]
+    \centering
+    \input{contents/usecase/analysis}
+    \caption{Progress and eligibility analysis use cases}
+\end{figure}
+Viewing the analysis always computes credit progress by knowledge block, checks the eligibility of each course, identifies the courses, elective-group requirements, and regulations still outstanding, and checks the personal plan. The Student can additionally view why a condition is not met. The analysis is recomputed from current data each time and is never stored.
+
+\subsubsection{Course Recommendations}
+\begin{figure}[H]
+    \centering
+    \input{contents/usecase/recommendation}
+    \caption{Course recommendation use cases}
+\end{figure}
+Students first configure a scenario: they may set preferences, pin courses or freeze semesters, add free-choice courses, and explore what-if assumptions. Solving the roadmap always builds the solver input from the Student's progress and the curriculum, and always verifies the result against the curriculum rules. When no roadmap exists or the solver runs out of time, the system reports it and may propose fixes that the Student can apply; when the roadmap schedules the graduation thesis before a graduation condition is met, the Student can confirm that condition. Students can also save roadmaps and compare a new roadmap with the saved baseline.
+
+\subsubsection{AI Academic Advising}
+\begin{figure}[H]
+    \centering
+    \input{contents/usecase/advisor}
+    \caption{AI academic-advising use cases}
+\end{figure}
+Students chat with the AI Advisor, which always includes sending an analysis snapshot and querying system data through read-only tools; the AI Service is a secondary actor. The chat can be extended with answering choice questions, viewing suggested courses with reasons, and a notice when the AI Service is unavailable. Students can also manage their conversations by viewing the history, deleting a conversation, or continuing one, which includes chatting with the AI Advisor.
+
+\subsubsection{Student Personal Plan}
+\begin{figure}[H]
+    \centering
+    \input{contents/usecase/plan}
+    \caption{Student personal-plan use cases}
+\end{figure}
+Students edit their personal plan on the course board by setting the planned semester of a course or removing a course from the plan. Every edit is kept as a draft that the Student reviews and saves, or discards. Warnings about the plan, such as a course planned before its prerequisites, are shown as part of the progress analysis.
+
+\subsubsection{Admin Course and Curriculum Management}
+\begin{figure}[H]
+    \centering
+    \input{contents/usecase/admin}
+    \caption{Admin course and curriculum management use cases}
+\end{figure}
+Admins add, edit, and delete courses in the shared catalog, maintain the semesters in which each course has been offered, and import course syllabi. For each curriculum they create, update, or delete the curriculum itself and manage its courses with recommended years and semesters, course relations, elective groups with their completion requirements, course categories, and regulations.
+
+\subsection{Use Case Descriptions}
+
+This section describes the main interaction goals of Students and Admins with BK Uni. A use case may cover several related functional requirements; the listed FR identifiers are provided for traceability and do not imply that each FR corresponds to a separate use case.
+
+\textbf{General access rule:} Use cases that require an account are available only to signed-in users. The system checks roles and ownership on the server; Students may only view or modify their own personal data, and Admins may only operate on course and curriculum data within their granted permissions. Users cannot grant themselves or elevate to Admin privileges. This rule applies to all use cases below (FR-1.3--FR-1.5).
+
+\subsubsection{UC-01 --- Register Account}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Register Account \\
+\hline
+\textbf{Related req.} & FR-1.1 \\
+\hline
+\textbf{Actor} & Guest (user without an account) \\
+\hline
+\textbf{Description} & Allows a user to create a BK Uni account using an email address and password; the new account is assigned the Student role. \\
+\hline
+\textbf{Pre-conditions} & The user does not already have an account with the registration details provided. \\
+\hline
+\textbf{Post-conditions} & A Student account is created if the registration information is valid.\newline The user can sign in using the newly created account. \\
+\hline
+\textbf{Normal flow} & 1. The user opens the registration function.\newline 2. The user enters an email address and password.\newline 3. The system validates the information and confirms that the email address is not already in use.\newline 4. The system creates an account with the Student role.\newline 5. The system reports that registration was successful and redirects the user to the sign-in page. \\
+\hline
+\textbf{Alternate flow} & 3a. The email address is already registered: the system reports that the account already exists and does not create a duplicate account. \\
+\hline
+\textbf{Exception} & E1. Invalid information: the system identifies the fields that need correction and does not create an account.\newline E2. Save error: the system reports that the operation was not completed and does not indicate that registration succeeded. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-02 --- Sign In}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Sign In \\
+\hline
+\textbf{Related req.} & FR-1.2, FR-1.3, FR-1.5 \\
+\hline
+\textbf{Actor} & Student, Admin \\
+\hline
+\textbf{Description} & Allows a user to authenticate and access the functions and data permitted for their account and role. \\
+\hline
+\textbf{Pre-conditions} & The user has a BK Uni account. \\
+\hline
+\textbf{Post-conditions} & The user is authenticated and can access functions appropriate to their assigned role. \\
+\hline
+\textbf{Normal flow} & 1. The user opens the sign-in function.\newline 2. The user enters an email address and password.\newline 3. The system authenticates the sign-in information.\newline 4. The system identifies the role assigned to the account.\newline 5. The system opens an access session and displays the functions appropriate to the role. \\
+\hline
+\textbf{Alternate flow} & 1a. The user still has a valid session: the system restores the session and redirects directly to the home page for their role. \\
+\hline
+\textbf{Exception} & E1. Incorrect sign-in information: the system denies sign-in and displays an appropriate error.\newline E2. The session has expired or is invalid: the system asks the user to sign in again.\newline E3. Too many sign-in requests in a short period: the system temporarily rejects the requests. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-03 --- Sign Out}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Sign Out \\
+\hline
+\textbf{Related req.} & FR-1.2, FR-1.3 \\
+\hline
+\textbf{Actor} & Student, Admin \\
+\hline
+\textbf{Description} & Allows a user to end the current access session. \\
+\hline
+\textbf{Pre-conditions} & The user is signed in. \\
+\hline
+\textbf{Post-conditions} & The current session has ended; the user must sign in again to access functions that require an account. \\
+\hline
+\textbf{Normal flow} & 1. The user selects the sign-out function.\newline 2. The system ends the current session.\newline 3. The system confirms successful sign-out and redirects the user to an area that does not require sign-in. \\
+\hline
+\textbf{Alternate flow} & None. \\
+\hline
+\textbf{Exception} & E1. The session has already expired: the system clears the current access state and informs the user that they need to sign in again. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-04 --- Manage Profile and Select Curriculum}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Manage Profile and Select Curriculum \\
+\hline
+\textbf{Related req.} & FR-2.1, FR-2.2 \\
+\hline
+\textbf{Actor} & Student \\
+\hline
+\textbf{Description} & Allows a Student to create, view, and update their personal academic profile and select an appropriate curriculum. \\
+\hline
+\textbf{Pre-conditions} & The Student is signed in.\newline The system provides a list of curricula available for selection. \\
+\hline
+\textbf{Post-conditions} & The personal academic profile is created or updated according to the confirmed action.\newline The selected curriculum is recorded in the Student's profile. \\
+\hline
+\textbf{Normal flow} & 1. The Student opens the academic profile area.\newline 2. The system displays the current profile or a form for creating one.\newline 3. The Student enters or updates profile information and selects a curriculum.\newline 4. The Student confirms the save.\newline 5. The system validates the information and the selected curriculum.\newline 6. The system saves the changes and displays the updated profile. \\
+\hline
+\textbf{Alternate flow} & 3a. The Student only views the profile: the system displays the existing information without changing it.\newline 3b. The Student cancels before saving: the system retains the previously saved profile. \\
+\hline
+\textbf{Exception} & E1. Invalid data: the system identifies the fields that need correction and does not save.\newline E2. The student ID is already used by another account: the system reports the duplicate and does not save.\newline E3. The Student attempts to access another user's profile: the system denies access and discloses no data.\newline E4. Profile save error: the system reports that the operation was not completed and retains the previously saved data. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-05 --- Browse and View Course Details}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Browse and View Course Details \\
+\hline
+\textbf{Related req.} & FR-2.3, FR-2.6 \\
+\hline
+\textbf{Actor} & Student, Admin \\
+\hline
+\textbf{Description} & Allows a user to view, search, and filter courses in the selected curriculum or in the entire catalog, and to view the details of a course. \\
+\hline
+\textbf{Pre-conditions} & The user is signed in. \\
+\hline
+\textbf{Post-conditions} & Course information is displayed; no data is changed. \\
+\hline
+\textbf{Normal flow} & 1. The user opens the course list.\newline 2. The system displays the courses in the Student's selected curriculum (or the entire catalog if no curriculum has been selected or the user is an Admin).\newline 3. The user searches by course code or name, or filters the list if needed.\newline 4. The user selects a course to view its details.\newline 5. The system displays the course information, syllabus, the semesters in which the course has been offered, and the Student's academic status for that course. \\
+\hline
+\textbf{Alternate flow} & 2a. The Student switches to the entire catalog: the system also displays courses outside the curriculum, with pagination.\newline 2b. The user is an Admin: the system displays only the course catalog, without status filters in step 3 and without personal academic information in step 5.\newline 5a. The course has no syllabus: the system reports that no syllabus is available and still displays the remaining information. \\
+\hline
+\textbf{Exception} & E1. Course not found: the system reports this and allows the user to return to the list.\newline E2. Data cannot be loaded: the system reports an error. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-06 --- Update Course Status and Planned Semester}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Update Course Status and Planned Semester \\
+\hline
+\textbf{Related req.} & FR-2.4, FR-6.1--FR-6.4 \\
+\hline
+\textbf{Actor} & Student \\
+\hline
+\textbf{Description} & Allows a Student to record the academic status and planned semester of each course to build their personal plan, or to update the statuses of many courses at once by uploading a file. \\
+\hline
+\textbf{Pre-conditions} & The Student is signed in.\newline To schedule courses in the plan, the Student must have selected a curriculum. \\
+\hline
+\textbf{Post-conditions} & The course's status and planned semester are saved to the Student's personal data if the operation succeeds.\newline The standard curriculum is unchanged. \\
+\hline
+\textbf{Normal flow} & 1. The Student opens the course board and chooses to edit a course.\newline 2. The system displays the course's current status and planned semester.\newline 3. The Student selects a status (not started, in progress, completed, or failed) and/or enters a planned semester; the change is kept as a draft, and the Student may change further courses.\newline 4. The Student confirms the save.\newline 5. The system validates the data and saves the changed fields.\newline 6. The system displays the new status and updates the total credits for each planned semester. \\
+\hline
+\textbf{Alternate flow} & 1a. The Student updates via file:\newline \quad 1. The Student downloads a template file (Excel or CSV) pre-filled with current statuses.\newline \quad 2. The Student fills in statuses and uploads the file.\newline \quad 3. The system reads the file and displays a preview of the changes together with any invalid rows.\newline \quad 4. The Student confirms; the system saves valid rows and skips invalid ones.\newline 1b. The Student imports the myBK progress report instead: see UC-07.\newline 3a. The Student leaves the status or semester empty: the system clears the declared status or removes the course from the plan.\newline 4a. The Student cancels before saving: the saved data is unchanged. \\
+\hline
+\textbf{Exception} & E1. The planned semester is incorrectly formatted or the course does not exist: the system rejects the change and explains why.\newline E2. The Student has not selected a curriculum: the planned-semester field is locked with a reminder to select a curriculum in the profile; the Student can still update course statuses.\newline E3. The file is incorrectly formatted or contains no valid rows: the system reports an error and does not save.\newline E4. Save error: the system reports that the update did not succeed and retains the previous data. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-07 --- Import myBK Progress}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Import myBK Progress \\
+\hline
+\textbf{Related req.} & FR-2.7, FR-2.8, FR-2.9 \\
+\hline
+\textbf{Actor} & Student \\
+\hline
+\textbf{Description} & Allows a Student to load their course statuses and graduation conditions from the progress report of the university's myBK system instead of entering them by hand, and to adjust the imported progress afterwards. \\
+\hline
+\textbf{Pre-conditions} & The Student is signed in and has downloaded the ``curriculum completion progress'' report from myBK. \\
+\hline
+\textbf{Post-conditions} & The imported progress is stored and the course statuses match the report.\newline The original file is not stored, and the standard curriculum is unchanged. \\
+\hline
+\textbf{Normal flow} & 1. On the course page, the Student chooses to import progress from myBK and uploads the PDF report or pastes its text.\newline 2. The system reads the report: courses, grades, completion marks, and the graduation-conditions section.\newline 3. The system displays a review without saving anything: the matching curriculum (by its myBK program code), the courses whose status will change, unknown course codes, and differences from the curriculum data.\newline 4. The Student confirms the import.\newline 5. In one transaction, the system stores the imported progress and replaces the Student's course statuses with those in the report, including graduation conditions such as the English-language standard; course statuses not in the report are reset.\newline 6. The system displays the imported progress and the number of courses written. \\
+\hline
+\textbf{Alternate flow} & 3a. The report belongs to a curriculum other than the one in the profile: the review shows both, and the Student can choose to switch the profile to the report's curriculum while importing.\newline 3b. The Student cancels the review: nothing is saved.\newline 6a. Adjust imported progress: the Student adds a note to a course, chooses the elective group a completed course counts toward, or confirms a graduation condition; the system saves the adjustment without changing the imported report. \\
+\hline
+\textbf{Exception} & E1. The file is not a myBK progress report or cannot be read: the system explains why and saves nothing.\newline E2. The Student asks to switch curriculum but no curriculum has the report's program code: the system rejects the import.\newline E3. Save error: the transaction is rolled back and the previous progress is kept. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-08 --- View Progress and Academic Analysis}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & View Progress and Academic Analysis \\
+\hline
+\textbf{Related req.} & FR-2.5, FR-4.1--FR-4.5, FR-6.5, FR-6.6 \\
+\hline
+\textbf{Actor} & Student \\
+\hline
+\textbf{Description} & Allows a Student to view their progress, course eligibility, outstanding requirements, and issues in their personal plan, computed from current data. \\
+\hline
+\textbf{Pre-conditions} & The Student is signed in.\newline The Student has an academic profile and has selected a curriculum. \\
+\hline
+\textbf{Post-conditions} & The analysis result is displayed.\newline The profile, course statuses, and plan are not changed by the analysis. \\
+\hline
+\textbf{Normal flow} & 1. The Student selects the academic analysis function.\newline 2. The system retrieves the profile, curriculum, course statuses, plan, regulations, and relevant rules.\newline 3. The system compiles credit progress overall and by knowledge block.\newline 4. The system evaluates each course's eligibility and identifies the courses and educational regulations the Student still needs to complete.\newline 5. The system checks the personal plan against curriculum conditions and issues warnings with reasons.\newline 6. The system presents the results, clearly distinguishing content based on curriculum data from content based on Student-declared information. \\
+\hline
+\textbf{Alternate flow} & 2a. The profile has no course statuses: the system analyzes the available data and reminds the Student to provide the missing information. \\
+\hline
+\textbf{Exception} & E1. No curriculum has been selected: the system asks the Student to select one before analysis.\newline E2. Data cannot be loaded: the system reports an error and does not present a result. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-09 --- Generate and Compare Study Roadmaps}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Generate and Compare Study Roadmaps \\
+\hline
+\textbf{Related req.} & FR-2.7, FR-5.1--FR-5.14 \\
+\hline
+\textbf{Actor} & Student \\
+\hline
+\textbf{Description} & Allows a Student to describe a planning scenario, have the constraint solver generate a study roadmap from the next semester to graduation, explore alternatives, and compare saved roadmaps. \\
+\hline
+\textbf{Pre-conditions} & The Student is signed in and has selected a curriculum.\newline To save scenarios and roadmaps, the Student must have imported their myBK progress (UC-07). \\
+\hline
+\textbf{Post-conditions} & A roadmap, or the reason why none exists, is displayed.\newline The scenario and saved roadmaps are stored in the Student's account.\newline Course statuses, the personal plan, and the curriculum are not changed. \\
+\hline
+\textbf{Normal flow} & 1. The Student opens the course-recommendation page; the system restores the saved scenario and roadmaps.\newline 2. The Student adjusts the scenario: preferences (credits per semester, graduation deadline, wanted courses, priority order, summer and skipped semesters), pinned courses, frozen semesters, free-choice courses, and what-if assumptions. Changes are saved to the account but do not start a computation.\newline 3. The Student presses Solve.\newline 4. The system builds the solver input from the curriculum, the Student's course statuses and imported progress, course relations, offering history, and the scenario.\newline 5. The constraint solver generates a roadmap that satisfies every hard constraint, and the system checks it again against the curriculum rules.\newline 6. The system presents the roadmap semester by semester with credits, the expected graduation semester, the reason for each course, assumptions, and warnings, and lists the differences from the baseline roadmap if one is set.\newline 7. The Student reviews the result; it is not an official registration. \\
+\hline
+\textbf{Alternate flow} & 6a. The roadmap schedules the graduation thesis while a graduation condition, such as the English-language standard, is not yet met: the system shows a reminder at that semester; the Student can confirm the condition and solve again.\newline 6b. A course is placed in a semester in which it has rarely been offered: the system warns, and the Student can declare that it is offered and solve again.\newline 7a. The Student saves the roadmap under a name, or marks a saved roadmap as the baseline for later comparisons.\newline 7b. The Student pins a course or changes an assumption directly on the roadmap and solves again (back to step 3). \\
+\hline
+\textbf{Exception} & E1. No roadmap satisfies the constraints: the system reports this, names the Student settings that make the problem infeasible, and proposes fixes (for example, removing a pin or allowing a summer semester); applying a fix updates the scenario and solves again. Curriculum rules are never bypassed.\newline E2. The solver does not finish within its time limit: the system reports a timeout instead of an unverified result.\newline E3. A free-choice course code does not exist: the system rejects the request before solving.\newline E4. No curriculum has been selected, or the solver cannot be run: the system reports the error and presents no result. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-10 --- AI Academic Advising}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & AI Academic Advising \\
+\hline
+\textbf{Related req.} & FR-7.1--FR-7.6 \\
+\hline
+\textbf{Actor} & Student (primary), AI Service (secondary) \\
+\hline
+\textbf{Description} & Allows a Student to ask the AI assistant about course selection, electives, and specializations; the assistant answers based on the Student's academic data and the curriculum data. \\
+\hline
+\textbf{Pre-conditions} & The Student is signed in and has selected a curriculum. \\
+\hline
+\textbf{Post-conditions} & The question and answer are saved in the Student's conversation.\newline Academic and curriculum data are not changed. \\
+\hline
+\textbf{Normal flow} & 1. The Student opens the AI Advising function.\newline 2. The Student enters a question.\newline 3. The system sends the question together with a summary of the Student's academic analysis to the AI Service.\newline 4. The AI Service retrieves any additional information it needs through tools provided by the system (course details, offering likelihood, syllabi, specializations).\newline 5. The system displays the answer, suggested courses with reasons, and suggested follow-up questions.\newline 6. The Student continues asking in the same conversation if needed. \\
+\hline
+\textbf{Alternate flow} & 1a. The Student reopens a previous conversation: the system displays its full content and allows the Student to continue.\newline 1b. The Student deletes a conversation: the system asks for confirmation and then deletes it.\newline 5a. The assistant needs more information: the system displays choices for the Student to answer, then continues advising based on the selected choice. \\
+\hline
+\textbf{Exception} & E1. No curriculum has been selected: the system asks the Student to select one in the profile.\newline E2. The AI Service fails or is not configured: the system reports that the AI cannot answer and does not display a fabricated answer.\newline E3. Too many questions in a short period: the system temporarily rejects the requests.\newline E4. The Student attempts to view another user's conversation: the system denies access. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-11 --- Manage Courses}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Manage Courses \\
+\hline
+\textbf{Related req.} & FR-3.2, FR-3.8, FR-3.10 \\
+\hline
+\textbf{Actor} & Admin \\
+\hline
+\textbf{Description} & Allows an Admin to manage the course catalog shared by all curricula and the list of semesters in which each course has been offered. \\
+\hline
+\textbf{Pre-conditions} & The Admin is signed in and authorized to manage data. \\
+\hline
+\textbf{Post-conditions} & The course or its list of offered semesters is updated if the data is valid. \\
+\hline
+\textbf{Normal flow} & 1. The Admin opens the course-management function.\newline 2. The system displays the course catalog with search and pagination.\newline 3. The Admin chooses to add, edit, or delete a course, or to update the list of semesters in which the course has been offered.\newline 4. The Admin enters the information to be changed.\newline 5. The Admin confirms the save.\newline 6. The system validates the data and the Admin's authorization.\newline 7. The system saves the changes and displays the result. \\
+\hline
+\textbf{Alternate flow} & 3a. The Admin only views the data: the system does not change it.\newline 3b. The Admin deletes a course: the system states that the course will be removed from every curriculum, together with its offered semesters, group memberships, related course relationships, and Students' course statuses and plan entries; the action cannot be undone and requires Admin confirmation.\newline 5a. The Admin cancels before saving: the data is unchanged. \\
+\hline
+\textbf{Exception} & E1. The course code already exists or the data is invalid: the system explains the reason and does not save.\newline E2. The user does not have Admin privileges: the system rejects the action.\newline E3. Save error: the system reports that the operation was not completed. \\
+\hline
+\end{longtable}
+
+\subsubsection{UC-12 --- Manage Curricula}
+\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
+\hline
+\textbf{Name} & Manage Curricula \\
+\hline
+\textbf{Related req.} & FR-3.1--FR-3.7, FR-3.9, FR-3.11 \\
+\hline
+\textbf{Actor} & Admin \\
+\hline
+\textbf{Description} & Allows an Admin to manage standard curricula and all of their content: curriculum courses with recommended semesters, elective groups, course rules, and educational regulations. \\
+\hline
+\textbf{Pre-conditions} & The Admin is signed in and authorized to manage curricula. \\
+\hline
+\textbf{Post-conditions} & The curriculum and its content are updated within that curriculum.\newline Data for other curricula is unchanged. \\
+\hline
+\textbf{Normal flow} & 1. The Admin opens the curriculum-management function.\newline 2. The system displays the curriculum list.\newline 3. The Admin creates a new curriculum or selects one to view or edit.\newline 4. The Admin updates the curriculum's general information or selects a content area to manage:\newline \quad -- Add or remove curriculum courses and set the recommended year and semester for each course.\newline \quad -- Create, edit, or delete course groups used to classify courses.\newline \quad -- Create, edit, or delete elective groups and their completion requirements.\newline \quad -- Define, update, or remove rules between courses.\newline \quad -- Add, edit, or delete educational and academic regulations.\newline 5. The Admin confirms the save.\newline 6. The system validates the data and its curriculum scope.\newline 7. The system saves the changes and displays the result. \\
+\hline
+\textbf{Alternate flow} & 3a. The Admin only views a curriculum: the system displays its information without changing it.\newline 3b. The Admin deletes a curriculum: the system states that all of its content will be deleted as well and asks for confirmation.\newline 4a. The Admin removes a course from the curriculum: the system states that the course will be removed from the related groups, course relationships, and Students' plans, then asks for confirmation.\newline 5a. The Admin cancels before saving: the data is unchanged. \\
+\hline
+\textbf{Exception} & E1. The curriculum code already exists, or a rule or requirement is invalid: the system explains the reason and does not save.\newline E2. The item belongs to another curriculum or the user does not have Admin privileges: the system rejects the action.\newline E3. Save error: the system reports that the operation was not completed and does not display a false success message. \\
+\hline
+\end{longtable}
+
+\subsection{Sequence Diagram}
+
+The following sequence diagrams show how the actors, the frontend, the backend, the database, and the external components (the myBK reader, the constraint solver, and the AI Service) exchange messages in the main BK Uni workflows. Solid arrows are requests, dashed arrows are replies, and \texttt{alt}, \texttt{opt}, and \texttt{loop} frames mark alternatives, optional parts, and repetition. Every request that needs an account carries the session cookie; the backend identifies the user from the token, never from an identifier sent by the client.
+
+\subsubsection{Student Profile and Curriculum}
+\begin{figure}[H]
+    \centering
+    \input{contents/sequence/profile}
+    \caption{Student profile and curriculum sequence}
+\end{figure}
+Opening the profile page loads the Student's profile and the list of curricula for the picker. When the Student saves, the backend validates the input, checks that a chosen specialization belongs to the selected curriculum, and creates or updates the profile. A duplicate student number or an unknown curriculum is rejected by a database constraint and reported to the Student while the form stays open.
+
+\subsubsection{View and Update Course Status}
+\begin{figure}[H]
+    \centering
+    \input{contents/sequence/course}
+    \caption{Course viewing and status-update sequence}
+\end{figure}
+The course board loads the curriculum content and the Student's own statuses through parallel requests. Status changes are kept as a draft in the browser until the Student saves. Saving sends all changes in one request; the backend validates them and, in one transaction, deletes removed statuses, upserts the others, and synchronizes the physical-education courses. On failure the transaction is rolled back and the draft is kept.
+
+\subsubsection{Student Progress Analysis}
+\begin{figure}[H]
+    \centering
+    \input{contents/sequence/analysis}
+    \caption{Student progress-analysis sequence}
+\end{figure}
+The analysis is computed in the frontend. After checking that a curriculum is selected, the page loads the curriculum data and the Student's own data in parallel and runs the analysis function, which computes credit progress, course eligibility, outstanding requirements, and personal-plan warnings. The backend only serves data; no analysis result is stored.
+
+\subsubsection{Import myBK Progress}
+\begin{figure}[H]
+    \centering
+    \input{contents/sequence/mybk}
+    \caption{myBK progress-import sequence}
+\end{figure}
+The uploaded report is first sent for review: the backend passes its bytes to the Python myBK reader, matches the curriculum by its myBK program code, and compares the report with the Student's current statuses without writing anything. If the Student confirms, the report is read again and, in one transaction, the backend stores the imported progress, replaces the course statuses, and, when asked, switches the profile to the report's curriculum. The original file is never stored.
+
+\subsubsection{Course Recommendations}
+\begin{figure}[H]
+    \centering
+    \input{contents/sequence/recommendation}
+    \caption{Course-recommendation sequence}
+\end{figure}
+The page restores the saved scenario, and every change to the scenario is saved without starting a computation. When the Student presses Solve, the backend loads the curriculum and Student data, checks the free-choice course codes, builds the solver input, and runs the Python CP-SAT solver as a separate process with a 20-second search limit. The solver validates the roadmap and compares it with the baseline. If no roadmap exists, the reply names the blocking settings and proposes fixes; if the process produces no output within 60 seconds, the backend stops it and returns a timeout.
+
+\subsubsection{AI Academic Advising}
+\begin{figure}[H]
+    \centering
+    \input{contents/sequence/advisor}
+    \caption{AI academic-advising sequence}
+\end{figure}
+When the Student asks a question, the frontend builds an analysis snapshot and sends it with the message over a server-sent-event stream. The backend checks that the AI Service is configured, that a curriculum is selected, and that the conversation is not already answering, then stores the user step. In at most eight rounds, the AI Service either calls a read-only tool, whose result the backend computes from the database, or submits an answer. Every step is stored and streamed to the frontend. The backend checks the course codes in the answer before sending it; if the AI Service fails, the Student sees an error instead of an answer.
+
+\subsubsection{Student Personal Plan}
+\begin{figure}[H]
+    \centering
+    \input{contents/sequence/plan}
+    \caption{Student personal-plan sequence}
+\end{figure}
+The personal plan is the set of planned semesters of the selected curriculum. The Student changes planned semesters on the course board as a draft. Saving sends all changes in one request; the backend validates the semester codes and the existence of the curriculum and courses, then deletes removed courses and upserts the others in one transaction and returns the whole plan. The frontend writes it to its cache so that the analysis shows up-to-date plan warnings. Discarding drops the draft without contacting the backend.
+
+\subsubsection{Admin Curriculum Management}
+\begin{figure}[H]
+    \centering
+    \input{contents/sequence/admin}
+    \caption{Admin curriculum-management sequence}
+\end{figure}
+The Admin opens a curriculum, and the frontend loads its content tab by tab. A create, update, or delete request passes two guards: the session guard and the role guard, which rejects non-Admin users with 403. Valid changes are written to the database, where an audit trigger records them in the same transaction.
+
+\subsection{Activity Diagrams}
+
+The following activity diagrams describe the same workflows from the point of view of their steps and decisions. Each swimlane groups the actions performed by one participant.
+
+\subsubsection{Manage Profile and Select Curriculum}
+\begin{figure}[H]
+    \centering
+    \input{contents/activity/profile}
+    \caption{Student profile and curriculum activity diagram}
+\end{figure}
+After the profile and the curriculum picker are shown, the Student either only views them or edits the fields and saves. The backend validates the input and saves the profile; an invalid input or a duplicate student number returns the Student to the form with an error, while a successful save shows the updated profile.
+
+\subsubsection{View Courses and Update Course Status}
+\begin{figure}[H]
+    \centering
+    \input{contents/activity/course}
+    \caption{Course viewing and status-update activity diagram}
+\end{figure}
+The Student changes statuses on the board or imports them from an Excel or CSV file; the changes stay in a draft. Discarding ends the activity without saving. Saving sends all changes at once; the backend validates them and applies them in one transaction. An error keeps the draft; a committed save updates the board.
+
+\subsubsection{Analyze Progress and Course Eligibility}
+\begin{figure}[H]
+    \centering
+    \input{contents/activity/analysis}
+    \caption{Student progress-analysis activity diagram}
+\end{figure}
+Without a selected curriculum, the Student is asked to select one first. Otherwise the frontend loads the data, computes credit progress, eligibility, outstanding requirements, and plan warnings in the browser, and presents them with their reasons. Nothing is stored.
+
+\subsubsection{Import myBK Progress}
+\begin{figure}[H]
+    \centering
+    \input{contents/activity/mybk}
+    \caption{myBK progress-import activity diagram}
+\end{figure}
+The reader parses the uploaded report; an unreadable file ends the activity with a reason. A readable report is matched with a curriculum and compared with the current statuses, and the review is shown. The Student cancels or confirms; on confirmation the report is parsed again and stored, the course statuses are replaced in one transaction, and the imported progress is shown.
+
+\subsubsection{Course Recommendations}
+\begin{figure}[H]
+    \centering
+    \input{contents/activity/recommendation}
+    \caption{Course-recommendation activity diagram}
+\end{figure}
+The Student adjusts the restored scenario and presses Solve. The backend builds the input and the solver searches for a roadmap. An infeasible scenario returns a reason and suggested fixes; applying a fix leads back to solving. A found roadmap is shown with its reasons and warnings and can be saved or marked as the baseline. If the solver runs out of time, the backend stops it and the Student sees a timeout notice.
+
+\subsubsection{AI Academic Advising}
+\begin{figure}[H]
+    \centering
+    \input{contents/activity/advisor}
+    \caption{AI academic-advising activity diagram}
+\end{figure}
+The Student asks a question in a new or previous conversation, and the frontend sends it with an analysis snapshot. The AI Service reads the question, the context, and the history; while it needs more data, the backend runs a read-only tool and stores the step. When the AI Service submits an answer, the backend checks its course codes and stores it, and the frontend shows the answer, suggested courses, and choices. The Student may answer a choice or ask more, which starts a new turn.
+
+\subsubsection{Edit the Personal Plan}
+\begin{figure}[H]
+    \centering
+    \input{contents/activity/plan}
+    \caption{Personal-plan activity diagram}
+\end{figure}
+The Student sets or clears planned semesters; the frontend keeps them as a draft and recomputes the credits of each semester. Discarding ends the activity. Saving sends all changes at once; an invalid request keeps the draft with an error, and a committed save updates the cache so that the plan warnings in the analysis are refreshed.
+
+\subsubsection{Manage Curriculum Data}
+\begin{figure}[H]
+    \centering
+    \input{contents/activity/admin}
+    \caption{Admin curriculum-management activity diagram}
+\end{figure}
+The Admin creates, edits, or deletes an item of a curriculum. The backend first checks the session and the Admin role, then validates the data and its links to the curriculum. A non-Admin user is denied, invalid data returns the Admin to editing, and a valid change is saved and logged by the audit trigger. The Admin may then make another change or finish.
+
+\subsection{Class Diagram}
+
+The class diagrams on the following pages present BK Uni's domain model, independent of the database schema and implementation framework. The first diagram gives an overview of the main classes---users and students, curricula with their specializations, course groups, categories and regulations, courses, and each student's progress, plans, and AI advising sessions---together with their associations. The second diagram expands the \texttt{CourseOutline} class into its components, including study hours, credit breakdown, grade weights, examinations, learning outcomes, assessment activities, and the teaching schedule.
+
+% Class diagram on its own landscape page, without header and footer
+\newgeometry{margin=1.2cm}
+\begin{landscape}
+    \thispagestyle{empty}
+    \begin{figure}[p]
+        \centering
+        \includegraphics[width=\linewidth,height=0.9\textheight,keepaspectratio]{image/class-diagram.pdf}
+        \caption{System overview class diagram}
+        \label{fig:class-diagram}
+    \end{figure}
+\end{landscape}
+\restoregeometry
+\setlength{\headheight}{40pt} % restoregeometry resets the header height set in h_and_d.tex
+
+% Class diagram on its own landscape page, without header and footer
+\newgeometry{margin=1.2cm}
+\begin{landscape}
+    \thispagestyle{empty}
+    \begin{figure}[p]
+        \centering
+        \includegraphics[width=\linewidth,height=0.9\textheight,keepaspectratio]{image/class-diagram-course-outline.pdf}
+        \caption{Course outline class diagram}
+        \label{fig:class-diagram-course-outline}
+    \end{figure}
+\end{landscape}
+\restoregeometry
+\setlength{\headheight}{40pt} % restoregeometry resets the header height set in h_and_d.tex

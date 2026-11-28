@@ -1,0 +1,35 @@
+\begin{tikzpicture}[y=1.35cm]
+  \swimlanes{Student,Frontend,Backend}{5.2}{-10.9}
+  \node[start] (s) at (2.6,-1.1) {};
+  \node[act=4.0cm] (a1) at (2.6,-2.0) {Open course board};
+  \node[act=4.0cm] (a2) at (7.8,-2.0) {Load the plan of the selected curriculum};
+  \node[act=4.0cm] (a3) at (13,-2.0) {Verify session; read own plan rows};
+  \node[act=4.0cm] (a4) at (7.8,-3.3) {Show planned semesters and credits};
+  \node[act=4.0cm] (a5) at (2.6,-3.3) {Set or clear planned semesters};
+  \node[act=4.0cm] (a6) at (7.8,-4.6) {Keep changes in draft; recompute credits per semester};
+  \node[dec] (d1) at (2.6,-5.9) {};
+  \node[stop] (e1) at (0.7,-5.9) {};
+  \node[act=4.0cm] (a7) at (7.8,-7.1) {Send plan changes in one request};
+  \node[act=4.0cm] (a8) at (13,-7.1) {Validate; transaction: delete removed, upsert};
+  \node[dec] (d2) at (13,-8.4) {};
+  \node[act=4.0cm] (a9) at (7.8,-8.4) {Show error; keep draft};
+  \node[stop] (e2) at (5.45,-8.4) {};
+  \node[act=4.0cm] (a10) at (7.8,-9.6) {Update cache; refresh plan warnings};
+  \node[stop] (e3) at (7.8,-10.4) {};
+
+  \draw[flow] (s) -- (a1);
+  \draw[flow] (a1) -- (a2);
+  \draw[flow] (a2) -- (a3);
+  \draw[flow] (a3) |- (a4);
+  \draw[flow] (a4) -- (a5);
+  \draw[flow] (a5) |- (a6);
+  \draw[flow] (a6) |- (d1);
+  \draw[flow] (d1) -- node[guard, above] {discard} (e1);
+  \draw[flow] (d1) |- node[guard, near start, right] {save} (a7);
+  \draw[flow] (a7) -- (a8);
+  \draw[flow] (a8) -- (d2);
+  \draw[flow] (d2) -- node[guard, above] {invalid} (a9);
+  \draw[flow] (a9) -- (e2);
+  \draw[flow] (d2) |- node[guard, near start, right] {committed} (a10);
+  \draw[flow] (a10) -- (e3);
+\end{tikzpicture}

@@ -1,0 +1,33 @@
+\begin{tikzpicture}
+  \ucactor{admin}{0,0.2}{Admin}
+
+  \node[uc] (cat)    at (5.6,6.6)  {Manage Course Catalog};
+  \node[uc] (off)    at (5.6,5.1)  {Manage Offered Semesters};
+  \node[uc] (syl)    at (5.6,3.6)  {Import Course Syllabi};
+  \node[uc] (cur)    at (5.6,1.6)  {Manage Curricula};
+  \node[uc] (items)  at (5.6,-0.6) {Manage Curriculum\\Courses};
+  \node[uc] (rel)    at (5.6,-2.1) {Manage Course Relations};
+  \node[uc] (grp)    at (5.6,-3.5) {Manage Elective Groups};
+  \node[uc] (cats)   at (5.6,-4.9) {Manage Course Categories};
+  \node[uc] (reg)    at (5.6,-6.3) {Manage Regulations};
+
+  \node[uc] (add)    at (11.8,7.6)  {Add Course};
+  \node[uc] (edc)    at (11.8,6.5)  {Edit Course};
+  \node[uc] (delc)   at (11.8,5.4)  {Delete Course};
+  \node[uc] (ccr)    at (11.8,3.0)  {Create Curriculum};
+  \node[uc] (cup)    at (11.8,1.9)  {Update Curriculum};
+  \node[uc] (cdel)   at (11.8,0.8)  {Delete Curriculum};
+  \node[uc] (sem)    at (11.8,-0.6) {Set Recommended\\Year and Semester};
+  \node[uc] (req)    at (11.8,-3.5) {Define Completion\\Requirement};
+  \coordinate (top) at (8,8.6);
+  \ucsystem{(top)(add)(cat)(reg)(req)}{Course and Curriculum Management (FR-3)}
+
+  \foreach \u in {cat,off,syl,cur,items,rel,grp,cats,reg} \draw[assoc] (admin) -- (\u.west);
+  \foreach \u in {add,edc,delc} \draw[gen] (\u.west) -- (cat);
+  \foreach \u in {ccr,cup,cdel} \draw[gen] (\u.west) -- (cur);
+  \draw[inc] (items) -- node[rel, above] {\incl} (sem.west);
+  \draw[inc] (grp) -- node[rel, above] {\incl} (req.west);
+
+  \node[ucnote=9cm, anchor=north east] at ($(sysbox.south east)+(0,-0.25)$)
+    {Relation types: prerequisite, prior course, corequisite, recommended (FR-3.5). Syllabi are imported through the administration API (FR-3.10).};
+\end{tikzpicture}

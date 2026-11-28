@@ -1,0 +1,53 @@
+\setlength{\parindent}{0.5cm}
+\begin{titlepage}
+\thispagestyle{empty}
+
+\begin{tikzpicture}[remember picture,overlay,inner sep=0,outer sep=0]
+     \draw[blue!70!black,line width=4pt] ([xshift=-1.5cm,yshift=-2cm]current page.north east) coordinate (A)--([xshift=2.4cm,yshift=-2cm]current page.north west) coordinate(B)--([xshift=2.4cm,yshift=2cm]current page.south west) coordinate (C)--([xshift=-1.5cm,yshift=2cm]current page.south east) coordinate(D)--cycle;
+
+     \draw ([yshift=0.5cm,xshift=-0.5cm]A)-- ([yshift=0.5cm,xshift=0.5cm]B)--
+     ([yshift=-0.5cm,xshift=0.5cm]B) --([yshift=-0.5cm,xshift=-0.5cm]B)--([yshift=0.5cm,xshift=-0.5cm]C)--([yshift=0.5cm,xshift=0.5cm]C)--([yshift=-0.5cm,xshift=0.5cm]C)-- ([yshift=-0.5cm,xshift=-0.5cm]D)--([yshift=0.5cm,xshift=-0.5cm]D)--([yshift=0.5cm,xshift=0.5cm]D)--([yshift=-0.5cm,xshift=0.5cm]A)--([yshift=-0.5cm,xshift=-0.5cm]A)--([yshift=0.5cm,xshift=-0.5cm]A);
+
+     \draw ([yshift=-0.3cm,xshift=0.3cm]A)-- ([yshift=-0.3cm,xshift=-0.3cm]B)--
+     ([yshift=0.3cm,xshift=-0.3cm]B) --([yshift=0.3cm,xshift=0.3cm]B)--
+     ([yshift=-0.3cm,xshift=0.3cm]C)--([yshift=-0.3cm,xshift=-0.3cm]C)--([yshift=0.3cm,xshift=-0.3cm]C)-- ([yshift=0.3cm,xshift=0.3cm]D)--([yshift=-0.3cm,xshift=0.3cm]D)--([yshift=-0.3cm,xshift=-0.3cm]D)--([yshift=0.3cm,xshift=-0.3cm]A)--([yshift=0.3cm,xshift=0.3cm]A)--([yshift=-0.3cm,xshift=0.3cm]A);
+\end{tikzpicture}
+
+\begin{center}
+\vspace*{1em}
+    {\fontsize{14pt}{17pt}\selectfont\bfseries HO CHI MINH CITY NATIONAL UNIVERSITY}\\[1ex]
+    {\fontsize{14pt}{17pt}\selectfont\bfseries UNIVERSITY OF TECHNOLOGY}\\[1ex]
+    {\fontsize{14pt}{17pt}\selectfont\bfseries FACULTY OF COMPUTER SCIENCE \& ENGINEERING}
+
+    \vspace{0.8cm}
+    \includegraphics[width=3cm]{image/hcmut.png}
+    \vspace{0.8cm}
+
+    {\fontsize{18pt}{22pt}\selectfont\bfseries Specialized Project - CO3335}\\[0.3cm]
+
+    \vspace{0.6cm}
+    \rule{13cm}{0.8pt}
+
+    \vspace{0.5cm}
+    \parbox{13cm}{\centering\fontsize{17pt}{21pt}\selectfont\bfseries Explainable Rule-Based Course Registration Recommendation System}
+
+    \vspace{0.5cm}
+    \rule{13cm}{0.8pt}
+
+    \vspace{0.7cm}
+    \renewcommand{\arraystretch}{1.3}
+    \textbf{Instructor:} ThS Vũ Ngọc Tú \\
+
+    \vspace{0.6cm}
+    \fontsize{12pt}{15pt}\selectfont
+
+\end{center}
+
+\vfill
+
+\begin{center}
+    {\fontsize{14pt}{17pt}\selectfont Ho Chi Minh city\\
+    2026}
+\end{center}
+
+\end{titlepage}

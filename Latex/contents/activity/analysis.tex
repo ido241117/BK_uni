@@ -1,0 +1,29 @@
+\begin{tikzpicture}[y=1.35cm]
+  \swimlanes{Student,Frontend,Backend}{5.2}{-10.0}
+  \node[start] (s) at (2.6,-1.1) {};
+  \node[act=4.0cm] (a1) at (2.6,-2.0) {Open analysis page};
+  \node[act=4.0cm] (a2) at (7.8,-2.0) {Load profile};
+  \node[dec] (d1) at (7.8,-3.2) {};
+  \node[act=4.0cm] (a3) at (2.6,-3.2) {Select a curriculum in the profile first};
+  \node[stop] (e1) at (2.6,-4.3) {};
+  \node[act=4.0cm] (a4) at (7.8,-4.6) {Request curriculum data and own data in parallel};
+  \node[act=4.0cm] (a5) at (13,-4.6) {Verify session; read rows};
+  \node[act=4.0cm] (a6) at (7.8,-6.4) {Compute credit progress by knowledge block and course eligibility};
+  \node[act=4.0cm] (a7) at (7.8,-8.1) {Identify outstanding requirements; check the personal plan};
+  \node[act=4.0cm] (a8) at (2.6,-8.1) {Read results, reasons, and plan warnings};
+  \node[stop] (e2) at (2.6,-9.3) {};
+  \node[ucnote=4.2cm] (n1) at (13,-8.1) {Computed in the browser each time; nothing is stored \mbox{(FR-4.5)}.};
+
+  \draw[flow] (s) -- (a1);
+  \draw[flow] (a1) -- (a2);
+  \draw[flow] (a2) -- (d1);
+  \draw[flow] (d1) -- node[guard, above] {no curriculum} (a3);
+  \draw[flow] (a3) -- (e1);
+  \draw[flow] (d1) -- node[guard, right] {curriculum selected} (a4);
+  \draw[flow] (a4) -- (a5);
+  \draw[flow] (a5) |- (a6);
+  \draw[flow] (a6) -- (a7);
+  \draw[flow] (a7) -- (a8);
+  \draw[flow] (a8) -- (e2);
+  \draw[dashed] (n1) -- (a7);
+\end{tikzpicture}

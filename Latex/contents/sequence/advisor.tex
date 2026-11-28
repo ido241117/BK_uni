@@ -1,0 +1,42 @@
+\begin{tikzpicture}
+  \seqactor{0}{Student}
+  \seqobj{3.6}{Frontend}
+  \seqobj{7.2}{Backend}
+  \seqobj{10.8}{Database}
+  \seqobj{14.4}{AI Service\\(DeepSeek)}
+  \seqstart
+
+  \Msg{0}{3.6}{Open advisor page}
+  \Msg{3.6}{7.2}{GET /advisor/sessions}
+  \Msg{7.2}{10.8}{Own conversations}
+  \Ret{10.8}{7.2}{Rows}
+  \Ret{7.2}{3.6}{Conversations}
+  \Ret{3.6}{0}{Conversation list}
+
+  \Msg[0.65]{0}{3.6}{Ask a question}
+  \Self{3.6}{Build analysis snapshot}
+  \Msg[0.85]{3.6}{7.2}{POST /advisor/\\messages/stream}
+  \Self{7.2}{Check API key, curriculum,\\conversation lock}
+  \Msg[0.8]{7.2}{10.8}{Save user step}
+
+  \Fbegin{loop}
+  \Msg[0.75]{7.2}{14.4}{chat(messages, tools)}
+  \Ret{14.4}{7.2}{Tool calls}
+  \Msg{7.2}{10.8}{Read-only tool query}
+  \Ret{10.8}{7.2}{Data}
+  \Msg{7.2}{10.8}{Save step}
+  \Ret{7.2}{3.6}{SSE: step}
+  \Fend{loop}{1.9}{14.9}{loop}{at most 8 rounds, until submit\_answer}
+
+  \Fbegin{alt}
+  \Self[0.75]{7.2}{Check course codes in answer}
+  \Msg[0.6]{7.2}{10.8}{Save answer step}
+  \Ret{7.2}{3.6}{SSE: answer}
+  \Ret{3.6}{0}{Answer and choices}
+  \Felse{-0.4}{14.9}{AI Service fails or not configured}
+  \Ret[0.75]{7.2}{3.6}{Error event}
+  \Ret{3.6}{0}{AI unavailable notice}
+  \Fend{alt}{-0.4}{14.9}{alt}{answer accepted}
+
+  \Lifelines{0,3.6,7.2,10.8,14.4}
+\end{tikzpicture}

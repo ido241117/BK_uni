@@ -1,0 +1,377 @@
+\lstdefinelanguage{clingo}{
+  morecomment=[l]{\%},
+  morekeywords={not},
+  sensitive=true
+}
+\lstdefinestyle{clingostyle}{
+  language=clingo,
+  basicstyle=\ttfamily\footnotesize,
+  commentstyle=\color{gray}\itshape,
+  keywordstyle=\color{blue!60!black},
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{black!30},
+  xleftmargin=2pt,
+  xrightmargin=2pt,
+  aboveskip=0.8em,
+  belowskip=0.6em
+}
+\lstset{style=clingostyle}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+% TAKE THIS SECTION AS AN EXAMPLE TO ASP ENCODING, THE REAL ASP PROGRAM IS STILL BEING TESTED.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ASP Encoding}
+\label{sec:encoding}
+% =====================================================================
+ 
+\subsubsection{Design}
+ 
+The formulation is encoded in the answer set programming language of
+\texttt{clingo}. We use ASP, rather than a generic CSP library, because
+sums, counting, optimization with priorities and conditional (``exists a
+clause member'') reasoning are built into the language.
+The program has the usual \emph{generate and test} shape:
+a choice rule generates the free cells $x_{c,s}$, and the constraints reject
+plans.
+ 
+Three design decisions are worth stating.
+\begin{enumerate}
+  \item \textbf{Constraints are violation atoms.}
+        Instead of writing each constraint as an integrity constraint, we
+        derive an atom \texttt{viol(kind,C,S)} when it is broken, and add a
+        single integrity constraint forbidding all violations. If the
+        external atom \texttt{check\_mode} is true, the integrity constraint
+        is switched off and the program reports the violations. This gives
+        the check mode without a second program.
+  \item \textbf{One program, three modes.} Generate mode needs no draft.
+        Repair mode adds the draft as facts \texttt{prop(C,S)}, and the
+        distance to it is the highest-priority objective. Check mode adds
+        \texttt{check\_mode} and forces distance $0$.
+  \item \textbf{Integers only.} \texttt{clingo} has no floating-point
+        numbers, so grades are stored in points $\times 100$
+        ($3.00\to300$) and the GPA test is written by cross-multiplication:
+        $\sum \mathrm{cr}\cdot\gamma \ge \theta \sum \mathrm{cr}$.
+\end{enumerate}
+ 
+The encoding is split into three files: \texttt{core.lp} (the formulation),
+\texttt{data.lp} (the curriculum) and \texttt{student.lp} (history, expected
+grades, budget). Table~\ref{tab:mapping} shows where each part of the
+formulation lives.
+ 
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{4.2cm}>{\raggedright\arraybackslash}p{8.8cm}@{}}
+\toprule
+\textbf{Formulation} & \textbf{Encoding} \\
+\midrule
+Variable $x_{c,s}$ & choice rule \texttt{take(C,S)} for $s>s_0$; history in \texttt{hist(C,S,G)} \\
+Pass, $P^{<}$, $P^{\le}$ & \texttt{pass}, \texttt{passed\_before}, \texttt{passed\_upto} \\
+Load $L_s$, earned $E_s$, level & \texttt{load}, \texttt{earned}, \texttt{earned\_before}, \texttt{lam} \\
+C1--C7 & atoms \texttt{viol(offering,\dots)}, \texttt{viol(retake,\dots)}, \texttt{viol(prereq,\dots)}, \texttt{viol(coreq,\dots)}, \texttt{viol(maxload,\dots)}, \texttt{viol(minload,\dots)}, \texttt{viol(fee,\dots)}, \texttt{viol(level,\dots)} \\
+G1--G3, $T$ & \texttt{gradok}, \texttt{first\_grad}; \texttt{viol(no\_grad,\dots)} \\
+G4 (GPA) & \texttt{best}, \texttt{gpa\_pts}, \texttt{gpa\_cr}, \texttt{short} \\
+Objectives & \texttt{\#minimize} statements with priorities \\
+\bottomrule
+\end{tabular}
+\caption{Mapping from the formulation to the encoding.}
+\label{tab:mapping}
+\end{table}
+ 
+\subsubsection{Core Program}
+ 
+\paragraph{Parameters and variables}
+Parameters are constants that can be overridden from the command line.
+The fee function is a table from load to money.
+\begin{lstlisting}
+% ===== Parameters (overridable with -c name=value) =====
+#const now       = 1.     % last completed semester
+#const tmax      = 5.     % planning horizon
+#const lmin      = 6.     % minimum load (credits)
+#const lmax      = 9.     % maximum load (credits)
+#const lcap      = 30.    % size of the fee table
+#const passmark  = 100.   % passing grade, in points x 100
+#const credreq   = 24.    % credits required to graduate
+#const gpamin    = 250.   % required cumulative GPA (2.50 x 100)
+#const feeunit   = 1000.  % fee per credit (example fee function)
+#external check_mode.     % true => only report violations
+#defined ext_req/1. #defined ext_ok/1. #defined improve/1.
+#defined fixed/2. #defined banned/2. #defined prop/2.
+ 
+sem(1..tmax).
+fee(L, feeunit*L) :- L = 0..lcap.      % fee function: load -> money
+\end{lstlisting}
+\begin{lstlisting}
+% ===== Variable: planned cells take(C,S) in {0,1} =====
+{ take(C,S) : course(C), sem(S), S > now }.
+\end{lstlisting}
+ 
+\paragraph{Attempts, passes and credits}
+A planned attempt passes by assumption A1 (\texttt{pass(C,S) :- take(C,S)}),
+and only the first pass of a course is earned.
+\begin{lstlisting}
+% ===== Attempts, grades, passes =====
+att(C,S)      :- hist(C,S,_).
+att(C,S)      :- take(C,S).
+grade(C,S,G)  :- hist(C,S,G).
+grade(C,S,G)  :- take(C,S), exp(C,G).
+pass(C,S)     :- hist(C,S,G), G >= passmark.
+pass(C,S)     :- take(C,S).                       % optimistic pass
+ 
+passed_before(C,S) :- pass(C,S0), sem(S), S0 < S.
+passed_upto(C,S)   :- pass(C,S0), sem(S), S0 <= S.
+hist_passed(C)     :- hist(C,S,G), G >= passmark.
+plan_passed_before(C,S) :- take(C,S0), S0 > now, sem(S), S0 < S.
+attempt_before(C,S)     :- att(C,S0), sem(S), S0 < S.
+\end{lstlisting}
+\begin{lstlisting}
+% ===== Load, earned credits, level =====
+load(S,L)  :- sem(S), L = #sum{ Cr,C : att(C,S), credits(C,Cr) }.
+earned(C,S) :- pass(C,S), not passed_before(C,S).  % first pass only
+earned_before(S,E) :- sem(S),
+    E = #sum{ Cr,C : earned(C,S0), S0 < S, credits(C,Cr) }.
+earned_upto(S,E)   :- sem(S),
+    E = #sum{ Cr,C : earned(C,S0), S0 <= S, credits(C,Cr) }.
+lam(S,L) :- earned_before(S,E), lvl_range(L,Lo,Hi), Lo <= E, E < Hi.
+\end{lstlisting}
+ 
+\paragraph{Graduation and GPA}
+\texttt{first\_grad(T)} is the graduation semester. The retake policy
+``highest grade counts'' is written with \texttt{better} and \texttt{best};
+the policy ``latest grade counts'' only changes these two rules.
+\begin{lstlisting}
+% ===== Graduation =====
+miss_comp(S) :- sem(S), comp(C), not passed_upto(C,S).
+miss_grp(S)  :- sem(S), reqgrp(G,R),
+    #sum{ Cr,C : earned(C,S0), S0 <= S, ingroup(C,G), credits(C,Cr) } < R.
+ext_fail     :- ext_req(X), not ext_ok(X).
+gradok(S)    :- earned_upto(S,E), E >= credreq,
+                not miss_comp(S), not miss_grp(S), not ext_fail.
+first_grad(T) :- gradok(T), not gradok(S) : sem(S), S < T.
+\end{lstlisting}
+\begin{lstlisting}
+% ===== GPA (retake policy: highest grade counts) =====
+better(C,G) :- grade(C,_,G), grade(C,_,G2), G2 > G.
+best(C,G)  :- grade(C,_,G), not better(C,G).
+gpa_pts(P) :- P = #sum{ G*Cr,C : best(C,G), credits(C,Cr) }.
+gpa_cr(Q)  :- Q = #sum{ Cr,C : best(C,_), credits(C,Cr) }.
+short(D)   :- gpa_pts(P), gpa_cr(Q), D = gpamin*Q - P, D > 0.
+\end{lstlisting}
+ 
+\paragraph{Constraints}
+Prerequisites and corequisites are given in CNF as facts
+\texttt{pre(C,K,A)}: course \texttt{C} has clause \texttt{K} containing
+alternative \texttt{A}. A clause is satisfied when some alternative is
+passed in time (\texttt{presat}, \texttt{cosat}).
+\begin{lstlisting}
+% ===== Constraints, written as violation atoms =====
+presat(C,K,S) :- pre(C,K,A), passed_before(A,S).
+cosat(C,K,S)  :- co(C,K,A),  passed_upto(A,S).
+ 
+viol(offering,  C,S) :- take(C,S), not offered(C,S).
+viol(retake,    C,S) :- take(C,S), plan_passed_before(C,S).
+viol(retake,    C,S) :- take(C,S), hist_passed(C), not improve(C).
+viol(prereq,    C,S) :- take(C,S), pre(C,K,_), not presat(C,K,S).
+viol(coreq,     C,S) :- take(C,S), co(C,K,_),  not cosat(C,K,S).
+viol(level,     C,S) :- take(C,S), level(C,V), lam(S,L), V > L.
+viol(maxload,   0,S) :- load(S,L), S > now, L > lmax.
+viol(minload,   0,S) :- load(S,L), S > now, first_grad(T), S < T, L < lmin.
+viol(fee,       0,S) :- load(S,L), S > now, fee(L,F), budget(S,B), F > B.
+viol(after_grad,C,S) :- take(C,S), first_grad(T), S > T.
+viol(no_grad,   0,0) :- #count{ T : first_grad(T) } = 0.
+ 
+:- viol(_,_,_), not check_mode.
+\end{lstlisting}
+\begin{lstlisting}
+% ===== Student decisions =====
+:- fixed(C,S), not take(C,S).
+:- banned(C,S), take(C,S).
+\end{lstlisting}
+ 
+\paragraph{Repair distance and objectives}
+In \texttt{clingo}, a larger priority number is more important, so the
+distance to the draft has the highest priority (6) and the load balance the
+lowest (2).
+\begin{lstlisting}
+% ===== Distance to a proposed plan (repair mode) =====
+has_prop :- prop(_,_).
+changed(C,S) :- prop(C,S), not take(C,S).
+changed(C,S) :- take(C,S), not prop(C,S), has_prop.
+:- changed(_,_), check_mode.
+\end{lstlisting}
+\begin{lstlisting}
+% ===== Objectives (higher priority number = more important) =====
+maxload(M) :- M = #max{ L : load(S,L), S > now }.
+#minimize{ 1@6,C,S : changed(C,S) }.
+#minimize{ T@5     : first_grad(T) }.
+#minimize{ D@4     : short(D) }.
+#minimize{ 1@3,C,S : take(C,S), attempt_before(C,S) }.
+#minimize{ M@2     : maxload(M) }.
+\end{lstlisting}
+ 
+\subsubsection{Interaction}
+ 
+The three modes are selected only by the input files:
+\begin{lstlisting}[language={},basicstyle=\ttfamily\footnotesize]
+clingo core.lp data.lp student.lp                         # generate
+clingo core.lp data.lp student.lp draft.lp check.lp       # check
+clingo core.lp data.lp student.lp draft.lp                # repair
+\end{lstlisting}
+where \texttt{draft.lp} lists the student's draft as \texttt{prop(C,S)} facts
+and \texttt{check.lp} contains the single fact \texttt{check\_mode.}
+Pins and bans are facts \texttt{fixed(C,S)} and \texttt{banned(C,S)}.
+For a dialogue with the student, the same program can be driven from the
+\texttt{clingo} Python API, which can toggle such facts as external atoms and
+re-solve without grounding everything again.
+ 
+% ===================================================================== The below section is NOT VERIFIED YET
+% \subsection{Worked Example}
+% \label{sec:example}
+% % =====================================================================
+ 
+% We run the encoding on a toy curriculum small enough to verify by hand.
+% All results below were produced with \texttt{clingo} 5.8 and agree with the
+% manual analysis.
+ 
+% \subsubsection{Setting}
+ 
+% \paragraph{Curriculum}
+% Table~\ref{tab:toycourses} lists nine courses of $3$ credits each.
+% The parameters are: $L_{\min}=6$, $L_{\max}=9$, $\mathrm{Cr}_{\min}=24$,
+% $\theta=2.50$, $T_{\max}=5$, and $\mathrm{fee}(L)=1000\cdot L$.
+% The level function is $\lambda(E)=1$ for $E<6$, $2$ for $6\le E<12$ and $3$
+% for $E\ge 12$. At least $6$ credits must come from the elective group
+% \{EL1, EL2, EL3\}. External requirements are assumed satisfied.
+ 
+% \begin{table}[ht]
+% \centering
+% \small
+% \begin{tabular}{@{}lccp{3.2cm}>{\raggedright\arraybackslash}p{4.4cm}@{}}
+% \toprule
+% \textbf{Course} & \textbf{Level} & \textbf{Compulsory} & \textbf{Offered} & \textbf{Relations} \\
+% \midrule
+% MA101 & 1 & yes & every semester & --- \\
+% MA102 & 1 & no  & odd semesters  & pre: MA101 \\
+% CS101 & 1 & yes & every semester & --- \\
+% CS102 & 2 & yes & every semester & pre: CS101 $\wedge$ (MA101 $\vee$ MA102) \\
+% CS201 & 2 & yes & every semester & pre: CS101; co: CS102 \\
+% CS301 & 3 & yes & even semesters & pre: CS201 \\
+% EL1, EL2 & 1 & no & every semester & --- \\
+% EL3 & 2 & no & every semester & --- \\
+% \bottomrule
+% \end{tabular}
+% \caption{Toy curriculum (all courses have 3 credits).}
+% \label{tab:toycourses}
+% \end{table}
+ 
+% \paragraph{Student}
+% The student has finished semester $1$ ($s_0=1$): MA101 passed with a B
+% ($3.00$) and CS101 \emph{failed}, so CS101 must be retaken. The load of
+% semester $1$ is $6$ credits but only $3$ credits are earned. Every planned
+% course is expected to get a B.
+ 
+% \subsubsection{Scenario 1: generating a plan}
+ 
+% With a budget of $9000$ per semester (so the fee allows the full $9$
+% credits), the solver returns the plan in Table~\ref{tab:plan1}, found as
+% optimal with $T=4$. Several plans share the same optimal values; the
+% solver returns one of them.
+ 
+% \begin{table}[ht]
+% \centering
+% \small
+% \begin{tabular}{@{}lccccc@{}}
+% \toprule
+% \textbf{Course} & \textbf{S1 (history)} & \textbf{S2} & \textbf{S3} & \textbf{S4} & \textbf{S5} \\
+% \midrule
+% MA101 & passed &        &        &        &  \\
+% CS101 & failed & $\bullet$ &        &        &  \\
+% EL1   &        & $\bullet$ &        &        &  \\
+% MA102 &        &        & $\bullet$ &        &  \\
+% CS102 &        &        & $\bullet$ &        &  \\
+% CS201 &        &        & $\bullet$ &        &  \\
+% CS301 &        &        &        & $\bullet$ &  \\
+% EL2   &        &        &        & $\bullet$ &  \\
+% \midrule
+% \textbf{Load} & 6 & 6 & 9 & 6 & 0 \\
+% \bottomrule
+% \end{tabular}
+% \caption{Optimal plan with budget $9000$ ($\bullet$ = planned attempt).}
+% \label{tab:plan1}
+% \end{table}
+ 
+% The plan follows the constraints as expected. CS101 is retaken first
+% because CS102 and CS201 depend on it. CS102 and CS201 share semester $3$,
+% which is allowed because CS102 is a corequisite of CS201. CS301 is placed in
+% semester $4$, the first even semester in which its prerequisite is passed.
+% The earned credits are $3+21=24=\mathrm{Cr}_{\min}$, the elective group
+% gets $6$ credits, one planned retake is used and the projected GPA is
+% $3.00\ge 2.50$. The minimum load is waived in the graduation semester,
+% and semester $5$ is empty.
+ 
+% \subsubsection{Scenario 2: a tighter budget}
+ 
+% If the budget drops to $6000$ per semester, the fee function limits the load
+% to $6$ credits ($\mathrm{fee}(9)=9000>6000$). The chain CS101 $\to$ CS102/CS201
+% $\to$ CS301 is unchanged, but the remaining $21$ credits no longer fit in
+% three semesters, so the optimal plan graduates in semester $5$:
+% S2 = \{CS101, EL1\}, S3 = \{CS102, CS201\}, S4 = \{CS301, EL2\} and
+% S5 = \{MA102\}. MA102 is placed in semester $5$ because it is offered only
+% in odd semesters, and its load of $3$ is below $L_{\min}$, which is allowed
+% in the graduation semester.
+ 
+% \subsubsection{Scenario 3: checking and repairing a draft}
+ 
+% Suppose the student proposes, with the budget of $9000$:
+% \[
+%   \text{S2} = \{\text{CS101},\ \text{CS102},\ \text{EL1}\}, \qquad
+%   \text{S3} = \{\text{CS201},\ \text{CS301},\ \text{EL2}\}.
+% \]
+ 
+% \paragraph{Check}
+% The program reports the violations in Table~\ref{tab:viol}.
+ 
+% \begin{table}[ht]
+% \centering
+% \small
+% \begin{tabular}{@{}lp{9.5cm}@{}}
+% \toprule
+% \textbf{Violation} & \textbf{Reason} \\
+% \midrule
+% \texttt{prereq(cs102,2)} & CS101 is not yet passed before semester 2 (it was failed and is retaken in the same semester) \\
+% \texttt{level(cs102,2)} & CS102 has level 2, but the student has earned only $3$ credits before semester 2 (level 1) \\
+% \texttt{offering(cs301,3)} & CS301 is not offered in odd semesters \\
+% \texttt{prereq(cs301,3)} & CS201 is planned in the same semester, not an earlier one \\
+% \texttt{no\_grad} & the draft earns only $3+18=21<24$ credits and does not graduate within the horizon \\
+% \bottomrule
+% \end{tabular}
+% \caption{Violations reported by the check mode.}
+% \label{tab:viol}
+% \end{table}
+ 
+% \paragraph{Repair}
+% The repair mode returns the feasible plan with the fewest changed cells:
+% S2 = \{CS101, EL1\}, S3 = \{CS102, CS201, EL2\}, S4 = \{CS301, EL3\}, with
+% $T=4$. Compared with the draft it changes $5$ cells:
+% \begin{itemize}
+%   \item move CS102 from semester 2 to semester 3 (2 cells);
+%   \item move CS301 from semester 3 to semester 4 (2 cells);
+%   \item add EL3 in semester 4 (1 cell), to reach the required credits.
+% \end{itemize}
+% These changes are the explanation given to the student. EL3 is chosen
+% rather than MA102 because MA102 is offered only in odd semesters and
+% semester $3$ is already full. If the budget of $6000$ of Scenario~2 applies to the
+% same draft, the minimum repair needs $7$ changed cells and graduation moves
+% to semester~$5$.
+ 
+% \subsubsection{Summary}
+ 
+% The example shows each part of the formulation at work: the retake counted
+% in the load but not in the earned credits, CNF prerequisites, a corequisite
+% in the same semester, the level and offering restrictions, the fee limiting
+% the load, and the check and repair modes producing an explanation instead
+% of a bare ``no plan''.

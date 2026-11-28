@@ -1,0 +1,348 @@
+\subsection{CSP Formulation}\label{sec:formulation}
+\subsubsection{Motivation: Why a CSP?}\label{sec:motivation}
+Both validating and recommending an academic plan need a representation of the curriculum rules. Two representations are common in the literature. We explain why neither fits our setting, and why we formulate the problem as a constraint satisfaction problem (CSP) instead.
+
+\paragraph{Course prerequisite graph (CPG)}
+A CPG has one node per course and one edge per prerequisite relation. From it, a planner can derive a valid order of courses, find the longest chain of dependent courses and suggest the next courses along a path. The value of a CPG therefore depends on the \emph{density} of its edges: when most courses are linked to others, the graph carries a lot of information about which course should come when. In our target university, only a few courses have prerequisite or
+corequisite relations (assumption A2). The graph is then sparse, made of a few short chains and many isolated courses, and it says little about when most courses should be taken. Moreover, most of the rules we must check (credit load, level, offerings, credit totals, categories, GPA) are not
+relations between two courses, so they cannot be edges at all.
+
+\paragraph{Graph of sub-requirements}
+Parameswaran, Venetis and Garcia-Molina~\cite{parameswaran-2011} express degree requirements as a structured set of \emph{sub-requirements} over courses (for example, ``at least two courses from this list'') and recommend plans that satisfy them. This representation is expressive and handles complex rules well. Its cost is the modelling effort: curriculum experts must write the sub-requirements of each programme and verify that they match the regulations, and must redo this when the curriculum changes. We do not want the system to depend on such expert-made structures. It should be set up from information that already exists in the curriculum documents.
+
+\paragraph{Constraint satisfaction}
+A CSP takes the opposite route. We do not describe the structure of a good plan. We only state \emph{variables} (which course is taken when), \emph{domains} (whether the fact that a certain course is taken is true or not) and \emph{constraints} (the rules), and a solver searches for plans that satisfy them. The data needed are those already found in the regulations: the course list, credits, prerequisite lists and thresholds (Section~\ref{sec:inputs}). This gives us the following advantages.
+\begin{itemize}
+      \item \textbf{No density requirement.} A prerequisite is one constraint among others. The model works the same with few or many relations.
+      \item \textbf{No expert-made structure.} The constraints are written once in a general form, and each curriculum only supplies data.
+      \item \textbf{One model, several uses.} The same constraints support generating a plan, checking a student's draft and repairing it (Section~\ref{sec:scope}), which is what a mixed-initiative system needs~\cite{wu-thesis}.
+      \item \textbf{Easy to extend.} A new rule, such as equivalent courses, is a new constraint and does not change the structure of the model.
+      \item \textbf{Hard and soft requirements are separated.} Rules that must hold are constraints, while goals and preferences are objectives.
+\end{itemize}
+
+\paragraph{Disadvantages in our choice}
+A CSP finds plans that \emph{satisfy the rules}. It does not by itself know which plan is educationally good, which a well-connected graph or an expert-made structure may hint at. We address this through the objectives (Section~\ref{sec:objectives}). Solving a general CSP is hard in the worst
+case, but the instances here (tens to hundreds of courses and a handful of semesters) are small by solver standards.
+
+
+\subsubsection{Overview and Scope}\label{sec:scope}
+The task is to recommend, for every remaining semester, which courses a student should take so that all curriculum rules are respected and the student graduates. We formulate it as a CSP, following the mixed-initiative view of an academic plan~\cite{wu-thesis}: the student may pre-fill part of
+a course--semester matrix, and the system completes, checks or repairs the rest. In Section~\ref{sec:encoding} the CSP is \emph{encoded} as an answer set program and solved with \texttt{clingo}.
+
+The formulation supports three modes:
+\begin{description}
+      \item[Generate.] Given the history and the student's pins and bans, find the best feasible plan.
+      \item[Check.] Given a complete draft plan, do not search. Report every violated constraint together with the course and semester involved.
+      \item[Repair.] Given a draft plan that violates some constraints, find a feasible plan that differs from the draft in as few cells as possible. The difference between the two matrices tells the student \emph{how to resolve} the problem.
+\end{description}
+
+\paragraph{Planning scope}
+The plan is computed for the \emph{whole remaining horizon at once}, not one semester after another. Graduation is a global condition: a semester-by-semester planner may choose a course early that later makes a prerequisite chain, an offering or the credit target unreachable, and a repair may need to change a semester far from the violation. The system is still used in a rolling way: after each real semester, the
+actual grades are added to the history and the remaining horizon is planned again. The recommendation for the next semester is the first planned column of the matrix, and showing only that column gives the semester-level view.
+
+\paragraph{What needs to be formulated}
+\begin{itemize}
+      \item \textbf{Curriculum constraints.} One core function of the system is validation, so the rules of the curriculum must be modelled robustly. They include course-level rules (prerequisites, corequisites, credits of a course) and programme-level rules (load limits, level, and the requirements for graduation such as total credits, compulsory courses and English level). We distinguish \emph{semester constraints}, which hold in every planned semester, and \emph{graduation conditions}, which hold for the plan as a whole.
+      \item \textbf{Curriculum data.} The facts that describe the curriculum. They are supplied once per programme and are the same for every student.
+      \item \textbf{Student data.} The facts and decisions of one student: the course history, which is represented as a course--semester matrix, and the student's own choices.
+\end{itemize}
+Section~\ref{sec:inputs} defines these data precisely.
+
+\paragraph{Notable characteristics of the problem}
+\begin{itemize}
+      \item \textbf{Hard and soft requirements.} Prerequisites, corequisites, credit limits and compulsory courses are strict yes/no conditions (feasibility conditions). Depending on the curriculum, more hard constraints can be added. In contrast, student preferences, the target GPA and the wish to graduate early are optimization objectives used to rank the admissible plans. No recommended plan therefore violates an academic rule, and the remaining freedom is used for the student's benefit.
+      \item \textbf{Horizon.} The model plans the whole remaining horizon, and the next-semester recommendation is a view of that plan (see the planning scope above).
+      \item \textbf{Uncertainty in future GPA.} Grades cannot be known before a course is completed. Pass/fail is therefore treated deterministically for structural rules (an attempt is assumed passed, assumption A1), while grade-dependent targets, such as the cumulative GPA, use expected grades and are soft.
+      \item \textbf{Retake policy.} Institutions usually count the grade of a retaken course in one of two ways: the \emph{highest} grade counts or the \emph{latest} grade counts. The policy is a parameter of the curriculum. A retake costs load and money in its semester, but its credits are earned only once.
+      \item \textbf{External requirements.} Requirements that do not depend on courses (English level, volunteering days, etc.) are treated as given facts and checked only at graduation (Section~\ref{sec:graduation}).
+\end{itemize}
+
+% The constraints fall into three groups:
+% \begin{itemize}
+%   \item \textbf{semester constraints} (C1--C7), which must hold in every planned semester;
+%   \item \textbf{graduation conditions} (G1--G4), which must hold for the plan as a whole;
+%   \item \textbf{objectives}, which choose the best plan among the feasible
+%         ones.
+% \end{itemize}
+
+\paragraph{Hard and soft requirements}
+Table~\ref{tab:classes} classifies all requirements. Only the student's own decisions may be relaxed when a plan has to be repaired.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{3.3cm}p{5.2cm}p{4.6cm}@{}}
+\toprule
+\textbf{Class} & \textbf{Content} & \textbf{Treatment} \\
+\midrule
+Curriculum rules & C1, C2, C3, C4, C5 (load), C7 & always hard \\
+Student decisions & pinned/banned cells, budget (C6), $T_{\max}$, retake permissions & hard when solving; may be relaxed in repair \\
+Graduation goals & G1, G2, G3, external requirements & hard \\
+Soft goal & G4 (GPA) & penalized \\
+\bottomrule
+\end{tabular}
+\caption{Classification of the requirements.}
+\label{tab:classes}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Assumptions}
+
+\begin{description}
+      \item[A1. Optimistic pass.] Every planned attempt is assumed to be passed, with a grade given by the student or by an external grade-prediction component. When planning semester $s$, the courses planned in earlier planned semesters are therefore treated as ``temporarily passed''. The prediction model itself is outside the scope of the formulation.
+      \item[A2. Acyclic, sparse relations.] The prerequisite graph and the corequisite graph are acyclic, and each course has only a few direct relations. Both are therefore checked directly on each course, without computing transitive closures.
+      \item[A3. Unique course identity.] Equivalent courses are either absent or resolved in preprocessing.
+      \item[A4. History is data.] The grades of completed semesters are read-only input.
+      \item[A5. Fixed horizon.] The student gives a maximum number of semesters $T_{\max}$ within which graduation must be reached.
+\end{description}
+
+\subsubsection{Input Data and Data Treatment}\label{sec:inputs}
+
+The formulation works with three kinds of data. They differ in where they come from and how often they change.
+\begin{description}
+  \item[Index sets (defined by the system).] The sets that give the problem its size and shape: the set of courses and the set of semesters. They are not typed in. The system builds them from the other two kinds of data (Table~\ref{tab:index}).
+  \item[Curriculum data (supplied by the institution).] Describes the programme. It is entered once, is the same for all students of the programme, and is never changed by the solver (Table~\ref{tab:curriculum}).
+  \item[Student data (supplied per student).] Describes one student: the history, the student's decisions and constraints. It changes between sessions, and the history grows after every real semester (Table~\ref{tab:student}).
+\end{description}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{5.2cm}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} & \textbf{Built from} \\
+\midrule
+$C$ & set of courses & all courses in the curriculum data \\
+$S=\{1,\dots,T_{\max}\}$ & set of semesters & horizon $T_{\max}$ given by the student \\
+$s_0$ & last completed semester & number of semesters in the history matrix $H$ \\
+$S_H=\{1,\dots,s_0\}$ & history semesters & $s_0$ \\
+$S_P=\{s_0+1,\dots,T_{\max}\}$ & planned semesters & $s_0$ and $T_{\max}$ \\
+\bottomrule
+\end{tabular}
+\caption{Index sets (defined by the system).}
+\label{tab:index}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{3.1cm}>{\raggedright\arraybackslash}p{10.2cm}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Course data (one entry per course)}} \\
+$\mathrm{cr}(c)$ & credits of course $c$ \\
+$\mathrm{lv}(c)$ & level of course $c$ ($1$--$4$) \\
+$\mathrm{off}(c,s)$ & course $c$ is offered in semester $s$ \\
+$\mathrm{pre}(c)$, $\mathrm{co}(c)$ & prerequisites and corequisites of $c$, each a conjunction of
+clauses, a clause being a disjunction of courses (CNF) \\
+$C_{\mathrm{comp}}$ & compulsory courses \\
+$G_j$ & category (group) $j$: the set of courses that belong to it \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Programme regulations}} \\
+$g_{\mathrm{pass}}$ & lowest passing grade \\
+$L_{\min}, L_{\max}$ & minimum and maximum load per semester (credits) \\
+$\mathrm{Cr}_{\min}$, $\theta$ & credits and cumulative GPA required to graduate \\
+$r_j$ & credits required from category $G_j$ \\
+$\mathrm{fee}(L)$ & tuition fee of a semester with load $L$ credits \\
+$\lambda(E)$ & student level given $E$ earned credits \\
+$\rho$ & retake policy: \emph{highest} or \emph{latest} grade counts \\
+$K_{\mathrm{ext}}$ & list of external graduation requirements (their status is student data) \\
+\bottomrule
+\end{tabular}
+\caption{Curriculum data (supplied by the institution).}
+\label{tab:curriculum}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{3.1cm}>{\raggedright\arraybackslash}p{10.2cm}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+$H$ & course history as a course--semester matrix; $h(c,s)$ is the grade of $c$ in completed semester $s$ (empty if not attempted) \\
+$\hat g(c)$ & expected grade for a planned attempt of $c$, given by the student or by a grade-prediction component \\
+$T_{\max}$ & last semester in which the student may still study (horizon) \\
+$b_s$ & tuition budget of the student for semester $s$ \\
+$\mathrm{Pin}$, $\mathrm{Ban}$ & planned cells that the student insists on, or forbids \\
+$\mathrm{Imp}$ & completed courses that the student allows to retake to improve the grade \\
+$\mathrm{Ext}_k$ & true/false status of each external requirement $k\in K_{\mathrm{ext}}$ \\
+$D$ & draft plan: the cells the student proposes (check and repair modes only) \\
+\bottomrule
+\end{tabular}
+\caption{Student data (supplied per student).}
+\label{tab:student}
+\end{table}
+
+\paragraph{Curriculum data as tables of facts}
+Every item in Table~\ref{tab:curriculum} is entered as a table of facts: one row per course for credits and level, one row per course and semester for the offerings, and one row per (course, clause, alternative) for prerequisites and corequisites in CNF. The functions $\mathrm{fee}$, $\lambda$ and $\rho$ are deliberately abstract. For example, $\mathrm{fee}$ may be linear in the load, a flat rate with bands, or a table; only the interface ``load of a semester $\to$ money'' is fixed. The curriculum data are assumed to be
+correct and complete. They come from the official curriculum documents, and checking their quality is outside the scope of this work.
+
+\paragraph{Student history as a course--semester matrix}
+The history is stored as a matrix $H$ whose rows are courses and whose columns are the completed semesters. The entry $h(c,s)$ is the grade the student obtained when taking $c$ in semester $s$, and is empty if the student did not take it. Failed attempts are kept (their grade is below
+$g_{\mathrm{pass}}$), because they count for the load of that semester and may be retaken. A course taken in several semesters simply has several non-empty entries in its row. The matrix is never edited by the solver. It is only extended with the real grades after each semester.
+
+\paragraph{History and plan form one matrix}
+The plan is the same matrix extended to the planned semesters. The left block (history) is fixed by $H$. The right block (plan) is what the solver completes, except that pinned cells are fixed to ``taken'' and banned cells to ``not taken''. Table~\ref{tab:matrix} shows an example. In check mode the draft $D$ is placed in the right block and only verified. In repair mode the draft is the reference from which the solution must differ as little as possible.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lcc@{\hspace{1.5em}}cc@{}}
+\toprule
+ & \multicolumn{2}{c}{History $S_H$ (fixed)} & \multicolumn{2}{c}{Plan $S_P$ (to complete)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{Course} & S1 & S2 & S3 & S4 \\
+\midrule
+MA101 & 3.0 & -- & ? & ? \\
+CS101 & 0.0 & -- & ? & ? \\
+CS102 & --  & -- & ? & ? \\
+EL2   & --  & -- & 1 & 0 \\
+\bottomrule
+\end{tabular}
+\caption{Example matrix with $s_0=2$ and $T_{\max}=4$. History entries are grades (``--'' means not attempted). In the plan block, ``?'' is a free cell decided by the solver, ``1'' a pinned cell and ``0'' a banned cell. Here the student passed MA101 and failed CS101 in semester 1.}
+\label{tab:matrix}
+\end{table}
+
+
+
+\subsubsection{Variables and Domain}
+
+The plan is the course--semester matrix described above: rows are courses and columns are semesters. Each cell is a variable
+\[
+  x_{c,s} \in \{0,1\}, \qquad c \in C,\ s \in S,
+\]
+where $x_{c,s}=1$ means that course $c$ is attempted in semester $s$.
+Cells in the history ($s \in S_H$) are fixed by the student's record:
+$x_{c,s}=1$ exactly when $h(c,s)$ is not empty.
+Cells in the planned semesters ($s \in S_P$) are free, except that the
+student may \emph{pin} a cell to $1$ (``I want this course here'') or
+\emph{ban} it (``not this semester'').
+Because several cells of the same row may equal $1$, retaking a course
+needs no special modelling.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Derived Quantities}
+
+The following quantities are functions of the matrix $x$.
+
+\begin{itemize}
+  \item \textbf{Pass.} $p_{c,s}=1$ if the course is passed in semester $s$:
+        in the history when $h(c,s) \ge g_{\mathrm{pass}}$, and in a planned
+        semester whenever $x_{c,s}=1$ (assumption A1).
+  \item \textbf{Passed before / by.} $P^{<}_{c,s}=\bigvee_{s'<s} p_{c,s'}$ and
+        $P^{\le}_{c,s}=\bigvee_{s'\le s} p_{c,s'}$.
+  \item \textbf{Load.} $L_s=\sum_{c} \mathrm{cr}(c)\,x_{c,s}$.
+        Every attempt counts, including retakes.
+  \item \textbf{Earned credits.} A course earns its credits only on its
+        first pass: $e_{c,s}=p_{c,s}\wedge\neg P^{<}_{c,s}$.
+        The credits earned before semester $s$ are
+        $E_s=\sum_{s'<s}\sum_c \mathrm{cr}(c)\,e_{c,s'}$.
+  \item \textbf{Level.} The level of the student in semester $s$ is
+        $\lambda(E_s)$. It uses credits earned \emph{before} $s$, which avoids
+        a circular definition.
+  \item \textbf{GPA.} For each attempted course, the counted grade
+        $\gamma(c)$ follows the retake policy $\rho$ (using $h(c,s)$ for
+        completed attempts and $\hat g(c)$ for planned ones). The cumulative GPA is
+        $\sum_c \mathrm{cr}(c)\gamma(c)\big/\sum_c \mathrm{cr}(c)$, summed over attempted
+        courses, each counted once.
+\end{itemize}
+
+The distinction between $L_s$ and $E_s$ implements the retake rule of the
+curriculum: a retake costs load and money in its semester, but it adds
+nothing to the credits needed for the level and for graduation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Semester Constraints}
+
+For every planned semester $s \in S_P$ and every course $c$ with $x_{c,s}=1$:
+
+\begin{description}
+  \item[C1. Offering.] $\mathrm{off}(c,s)$ must hold.
+  \item[C2. Retaking.] Under the optimistic pass, repeating a course that
+        is already passed in the plan is pointless, so a planned attempt of
+        $c$ is allowed only if
+        (a) $c$ was not attempted earlier in the plan, and
+        (b) if $c$ was already passed in the history, the student has
+        explicitly allowed a grade-improvement retake ($c\in\mathrm{Imp}$).
+        A failed course in the history can be retaken freely.
+  \item[C3. Prerequisites.] For every clause $K$ of $\mathrm{pre}(c)$, at least
+        one course $a\in K$ has $P^{<}_{a,s}$, i.e.\ it was passed in
+        \emph{any earlier} semester.
+  \item[C4. Corequisites.] For every clause $K$ of $\mathrm{co}(c)$, at least
+        one course $a\in K$ has $P^{\le}_{a,s}$, i.e.\ it was passed in an
+        earlier \emph{or the same} semester.
+  \item[C7. Level.] $\mathrm{lv}(c) \le \lambda(E_s)$.
+\end{description}
+For the semester as a whole:
+\begin{description}
+  \item[C5. Load.] $L_{\min}\le L_s\le L_{\max}$. The minimum is waived in
+        the graduation semester $T$ (Section~\ref{sec:graduation}), and no
+        course may be planned after $T$.
+  \item[C6. Fee.] $\mathrm{fee}(L_s)\le b_s$.
+\end{description}
+(Constraint numbers follow the original list; the constraint on equivalent
+courses was removed, see A3, and C1 was added.)
+
+The CNF form allows both ``and'' and ``or'' relations. For example, a course
+with $\mathrm{pre}=\text{CS101}\wedge(\text{MA101}\vee\text{MA102})$ needs
+CS101 and at least one of the two mathematics courses.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Graduation Conditions}
+\label{sec:graduation}
+
+The \emph{graduation semester} $T$ is the first semester in which the
+conditions G1--G3 and the external requirements all hold, counting everything
+passed up to and including $T$. The plan must satisfy $T\le T_{\max}$.
+
+\begin{description}
+  \item[G1. Compulsory courses.] $P^{\le}_{c,T}$ holds for every $c\in C_{\mathrm{comp}}$.
+  \item[G2. Total credits.] The credits earned up to $T$ are at least $\mathrm{Cr}_{\min}$.
+  \item[G3. Categories.] For each group $G_j$, the credits earned from its
+        courses up to $T$ are at least $r_j$.
+  \item[G4. Cumulative GPA.] The cumulative GPA is at least $\theta$.
+        This is a \emph{soft} condition because planned grades are only
+        expected grades (see below).
+\end{description}
+
+\paragraph{External requirements}
+Requirements that do not depend on the courses (English level, volunteering
+days, \dots) are \emph{not} variables or constraints of the CSP. They enter
+as true/false input facts $\mathrm{Ext}_k$, and graduation requires all of
+them to be true. This keeps the CSP clean while keeping the whole program
+runnable end to end.
+
+\paragraph{GPA as a soft condition}
+Planned courses have no real grades yet. The formulation therefore uses the
+expected grades $\hat g(c)$ and measures the GPA \emph{shortfall}, i.e.\ by how
+much the projected GPA is below $\theta$. The shortfall is penalized in the
+objective and reported to the student as a warning. A prediction model that
+supplies $\hat g(c)$ is a separate component and can be replaced without
+changing the formulation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Objectives}\label{sec:objectives}
+
+Among all feasible plans, the system returns the best one under a
+lexicographic order of objectives (Table~\ref{tab:objectives}). The student
+may reorder or reweight them, which is itself a form of interaction.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}cp{11.5cm}@{}}
+\toprule
+\textbf{Rank} & \textbf{Objective (minimize)} \\
+\midrule
+1 & number of cells changed with respect to the student's draft (repair mode only) \\
+2 & graduation semester $T$ \\
+3 & GPA shortfall \\
+4 & number of planned retakes \\
+5 & largest semester load (load balance) \\
+\bottomrule
+\end{tabular}
+\caption{Default objective order.}
+\label{tab:objectives}
+\end{table}

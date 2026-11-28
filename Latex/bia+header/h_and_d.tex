@@ -1,0 +1,31 @@
+%----------HEADER & FOOTER-------------
+
+%\usepackage{fancyhdr}
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyhead[L]{
+ \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+    \put(0,-8){\includegraphics[width=8mm, height=8mm]{image/hcmut.png}}
+    %\put(0,-8){\epsfig{width=10mm,figure=hcmut.eps}}
+   \end{picture}&
+	
+	\begin{tabular}{l}
+		\textbf{\normalsize{Trường Đại học Bách Khoa}}\\[-1.5mm]
+		\textbf{\normalsize{Khoa Khoa học và Kỹ thuật Máy tính}}
+	\end{tabular} 	
+ \end{tabular}
+}
+
+\fancyfoot{} % clear all footer fields
+\fancyfoot[L]{\scriptsize Specialized Project
+ - CO4029}
+\fancyfoot[R]{\scriptsize Page {\thepage}/\pageref{LastPage}}
+
+%Kẻ dòng head & foot
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+
+%------------------END H&F---------------

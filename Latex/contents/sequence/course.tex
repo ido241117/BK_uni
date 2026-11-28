@@ -1,0 +1,36 @@
+\begin{tikzpicture}
+  \seqactor{0}{Student}
+  \seqobj{4}{Frontend}
+  \seqobj{8.5}{Backend}
+  \seqobj{13}{Database}
+  \seqstart
+
+  \Msg{0}{4}{Open course board}
+  \Msg{4}{8.5}{GET /curricula/\{id\}/... (parallel)}
+  \Msg{4}{8.5}{GET /student-courses/me}
+  \Msg{8.5}{13}{Query curriculum and own rows}
+  \Ret{13}{8.5}{Rows}
+  \Ret{8.5}{4}{Courses and statuses}
+  \Ret{4}{0}{Course board}
+
+  \Fbegin{loop}
+  \Msg[0.75]{0}{4}{Set status of a course}
+  \Self{4}{Keep change in draft}
+  \Fend{loop}{-0.7}{13.7}{loop}{each change}
+
+  \Msg[0.6]{0}{4}{Save}
+  \Msg{4}{8.5}{PUT /student-courses/me}
+  \Self{8.5}{Validate statuses;\\courses exist}
+  \Msg[1.2]{8.5}{13}{Transaction: delete removed, upsert,\\sync physical-education courses}
+  \Fbegin{alt}
+  \Ret[0.75]{13}{8.5}{Committed}
+  \Ret{8.5}{4}{All course statuses}
+  \Self{4}{Write cache; clear draft}
+  \Ret[0.6]{4}{0}{Saved board}
+  \Felse{-0.4}{13.4}{invalid data or database error}
+  \Ret[0.75]{8.5}{4}{400 with reason; rolled back}
+  \Ret{4}{0}{Error; draft is kept}
+  \Fend{alt}{-0.4}{13.4}{alt}{committed}
+
+  \Lifelines{0,4,8.5,13}
+\end{tikzpicture}

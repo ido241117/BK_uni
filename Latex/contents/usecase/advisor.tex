@@ -1,0 +1,32 @@
+\begin{tikzpicture}
+  \ucactor{student}{0,1.8}{Student}
+  \ucactor{ai}{0,-3.4}{AI Service\\\scriptsize\guillemotleft system\guillemotright}
+
+  \node[uc] (manage) at (5.6,4.4)  {Manage Conversations};
+  \node[uc] (cont)   at (5.6,2.4)  {Continue Conversation};
+  \node[uc] (chat)   at (5.6,0.0)  {Chat with AI Advisor};
+  \node[uc] (tools)  at (5.6,-3.0) {Query System Data\\via Tools};
+
+  \node[uc] (hist)   at (11.8,5.0)  {View Conversation\\History};
+  \node[uc] (del)    at (11.8,3.6)  {Delete Conversation};
+  \node[uc] (snap)   at (11.8,1.8)  {Send Analysis Snapshot};
+  \node[uc] (choice) at (11.8,0.5)  {Answer Choice Questions};
+  \node[uc] (sugg)   at (11.8,-0.9) {View Suggested Courses\\and Reasons};
+  \node[uc] (err)    at (11.8,-2.4) {Notify AI Unavailable};
+  \coordinate (top) at (8,6.1);
+  \ucsystem{(top)(manage)(hist)(tools)(err)}{AI Academic Advising (FR-7)}
+
+  \draw[assoc] (student) -- (manage.west);
+  \draw[assoc] (student) -- (chat.west);
+  \draw[assoc] (chat.south west) -- (ai);
+  \draw[assoc] (tools.west) -- (ai);
+  \draw[inc] (hist.west)   -- node[rel, above, sloped] {\extd} (manage);
+  \draw[inc] (del.west)    -- node[rel, below, sloped] {\extd} (manage);
+  \draw[inc] (cont) -- node[rel, right] {\extd} (manage);
+  \draw[inc] (cont) -- node[rel, right] {\incl} (chat);
+  \draw[inc] (chat) -- node[rel, above, sloped] {\incl} (snap.west);
+  \draw[inc] (chat) -- node[rel, right] {\incl} (tools);
+  \draw[inc] (choice.west) -- node[rel, above] {\extd} (chat.east);
+  \draw[inc] (sugg.west)   -- node[rel, below, sloped] {\extd} (chat);
+  \draw[inc] (err.west)    -- node[rel, below, sloped] {\extd} (chat);
+\end{tikzpicture}

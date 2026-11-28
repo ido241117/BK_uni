@@ -1,0 +1,22 @@
+\begin{tikzpicture}
+  \ucactor{student}{0,0.6}{Student}
+
+  \node[uc] (ana)  at (5.6,0.6)  {View Progress\\and Analysis};
+  \node[uc] (cred) at (11.8,3.6)  {Compute Credit Progress\\by Knowledge Block};
+  \node[uc] (elig) at (11.8,2.1)  {Check Course Eligibility};
+  \node[uc] (miss) at (11.8,0.6)  {Identify Outstanding\\Requirements};
+  \node[uc] (plan) at (11.8,-0.9) {Check Personal Plan};
+  \node[uc] (expl) at (11.8,-2.4) {Explain Unmet\\Conditions};
+  \coordinate (top) at (8,4.9);
+  \ucsystem{(top)(ana)(cred)(expl)}{Progress and Eligibility Analysis (FR-4)}
+
+  \draw[assoc] (student) -- (ana.west);
+  \draw[inc] (ana) -- node[rel, above, sloped] {\incl} (cred.west);
+  \draw[inc] (ana) -- node[rel, above, sloped] {\incl} (elig.west);
+  \draw[inc] (ana) -- node[rel, above] {\incl} (miss.west);
+  \draw[inc] (ana) -- node[rel, below, sloped] {\incl} (plan.west);
+  \draw[inc] (expl.west) -- node[rel, below, sloped] {\extd} (ana);
+
+  \node[ucnote=9cm, anchor=north east] at ($(sysbox.south east)+(0,-0.25)$)
+    {Results are recomputed from current data every time they are viewed; no analysis history is stored (FR-4.5).};
+\end{tikzpicture}

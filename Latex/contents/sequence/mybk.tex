@@ -1,0 +1,36 @@
+\begin{tikzpicture}
+  \seqactor{0}{Student}
+  \seqobj{3.6}{Frontend}
+  \seqobj{7.2}{Backend}
+  \seqobj{10.8}{myBK reader\\(Python)}
+  \seqobj{14.4}{Database}
+  \seqstart
+
+  \Msg{0}{3.6}{Upload or paste report}
+  \Msg[0.85]{3.6}{7.2}{POST /plans/mybk/\\review}
+  \Msg{7.2}{10.8}{Report bytes (stdin)}
+  \Ret{10.8}{7.2}{Parsed report}
+  \Fbegin{alt}
+  \Ret[0.75]{7.2}{3.6}{400: unreadable}
+  \Ret{3.6}{0}{Reason; nothing saved}
+  \Felse{-0.4}{14.9}{report read}
+  \Msg[0.75]{7.2}{14.4}{Curriculum by myBK code, catalog, own statuses}
+  \Ret{14.4}{7.2}{Rows}
+  \Self{7.2}{Build review (no write)}
+  \Ret[0.6]{7.2}{3.6}{Review}
+  \Ret{3.6}{0}{Review dialog}
+  \Fend{alt}{-0.4}{14.9}{alt}{cannot read}
+
+  \Fbegin{opt}
+  \Msg[0.75]{0}{3.6}{Confirm import}
+  \Msg[0.85]{3.6}{7.2}{POST /plans/mybk/\\import}
+  \Msg{7.2}{10.8}{Report bytes (stdin)}
+  \Ret{10.8}{7.2}{Parsed report}
+  \Msg[0.85]{7.2}{14.4}{Transaction: upsert progress, upsert statuses,\\reset others, switch profile curriculum if asked}
+  \Ret{14.4}{7.2}{Committed}
+  \Ret{7.2}{3.6}{Imported progress}
+  \Ret{3.6}{0}{Progress shown}
+  \Fend{opt}{-0.7}{15.1}{opt}{Student confirms}
+
+  \Lifelines{0,3.6,7.2,10.8,14.4}
+\end{tikzpicture}

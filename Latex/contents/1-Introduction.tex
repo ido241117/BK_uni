@@ -1,0 +1,85 @@
+\section{Introduction}
+\label{sec:intro}
+    \subsection{Context}
+\hspace{\parindent}Most Vietnamese universities run a credit-based training system where each semester students choose courses from a program curriculum, subject to prerequisite chains, credit-load limits, course offerings and class timetables.
+
+The flexibility is valuable, but it shifts a heavy decision-making burden onto students. For each semester they must decide which courses to take, in what order, how many credits to carry, and how to fit the chosen classes into a conflict-free weekly schedule. Poor choices have long-term consequences, such as missing a prerequisite for a course offered only once a year, falling behind the expected study plan, or delaying graduation. Academic advisors are meant to guide students through these decisions, but they often advise large numbers of students, and many advising sessions concentrate in a short window around registration.
+
+Course registration is therefore not a single transaction but a recurring planning problem that connects short-term choices (this semester's courses and timetable) with a long-term goal (completing the degree on time). Software that supports these decisions in a transparent, trustworthy way can directly improve academic advising.
+
+To succeed within a credit-based academic framework, a comprehensive academic advising and registration ecosystem typically address a combination of these core functional pillars:
+\begin{itemize}
+    \item \textbf{Course Recommendation:} Assisting students in selecting optimal electives and specialized courses aligned with their academic tracks.
+    \item \textbf{Schedule Optimization and Conflict Resolution:} Generating non-conflicting weekly timetables and managing section choices to navigate high-pressure registration windows.
+    \item \textbf{Long-Term Degree Planning:} Creating multi-semester roadmaps that map out paths toward timely graduation.
+    \item \textbf{Degree Auditing:} Tracking real-time student progress, earned credits, and grade point averages against graduation criteria.
+    \item \textbf{Rule and Regulation Validation:} Ensuring strict compliance with institutional bylaws, credit limits, and prerequisite dependency chains.
+\end{itemize}
+
+    \subsection{Existing Systems}
+
+\begin{itemize}
+    \item \textbf{Oracle PeopleSoft Campus Solutions (Academic Advisement Module):} Developed by Oracle, this is an enterprise Student Information System (SIS/ERP) powered by a deterministic rule engine (SQR / PL-SQL) requiring high manual IT setup. In academic advising, it handles degree auditing, academic standing tracking, prerequisite validation, enrollment hold management, and course transfer articulation.
+    \item \textbf{uAchieve: Developed by CollegeNET}, this is a dedicated degree audit and academic planning suite driven by a deterministic rule engine (encoding-based requirement solver) requiring high manual administrative configuration. In academic advising, it handles degree auditing, multi-term degree planning, "What-If" major analysis, transfer credit articulation, and exception tracking.
+    \item \textbf{Workday Student:} Developed by Workday, this is a cloud enterprise ERP and student platform utilizing a configurable business process and rule engine with low-to-medium manual setup. In academic advising, it handles degree auditing, degree planning, course eligibility verification, academic progress tracking, and advisor approval workflows.
+    \item \textbf{llucian Degree Works:} Developed by Ellucian, this is a comprehensive academic advising and degree audit solution powered by a multi-stage rule engine (Scribe parser/auditor) requiring high manual maintenance by institutional scribers. In academic advising, it handles degree auditing, degree planning, prerequisite audits, "What-If" major analysis, and student-advisor substitution tracking.
+\end{itemize}
+
+In Vietnam, dedicated academic planning and advising platforms remain scarce. To the best of our knowledge, the main exception is the \textbf{UEF Advisor Platform}, developed at the University of Economics and Finance (UEF) [cite here]. However, it is built for UEF's own curricula, regulations and data, and is not available to other institutions. Most Vietnamese universities therefore still rely on registration portals that only validate choices, together with manual advising, leaving a clear gap for a platform that can be adapted to different programs and that explains its recommendations.
+
+% Representative examples include \textbf{HCMUT's MyBK}, \textbf{UIT's Student Portal} and \textbf{HCMUS's Student Portal} among Vietnamese universities, and \textbf{Ellucian Degree Works} and \textbf{Stellic} among international degree audit and planning tools.
+
+    \subsection{Problem Statement}
+
+\hspace{\parindent}The central problem addressed in this report is the absence of a transparent, rule-compliant, integrated decision-support system, which limits support for students in course selection and degree planning. Specifically,
+\begin{itemize}
+    \item Students and advisors need to evaluate course recommendations and compare alternative academic plans against curriculum requirements and academic constraints.
+
+    \item Existing systems may lack transparency in explanation when academic constraints are violated; e.g., not identifying the violated constraints, their dependencies, or how they affect plan feasibility. This may leave students confused. Therefore, recommendations should be explainable and verifiable, including the reasons for course selection, exclusion of alternatives, and plan feasibility.
+
+    \item High student-to-advisor ratios increase advisors' workloads and limit the availability of individualized guidance.
+\end{itemize}
+
+As a result, a decision-support system is needed to generate feasible academic plans, explain its recommendations, and facilitate collaboration between students and advisors, ultimately improving advising efficiency and supporting timely graduation.
+
+    \subsection{Objectives}
+The overall aim is to design and implement an explainable, rule-based course registration recommendation system that supports academic advising at Vietnamese universities. The specific objectives are:
+\begin{itemize}
+    \item Formalize academic regulations as rules: Represent curriculum structure, prerequisites and corequisites, credit requirements, semester offerings and registration constraints in a machine-readable rule base that reflects the credit-based system used in Vietnam.
+
+    \item Recommend courses for the upcoming semester: Generate a ranked set of eligible courses for each student, based on their academic record, remaining requirements and rule-based priorities such as prerequisite bottlenecks and graduation progress.
+
+    \item Support long-term degree planning: Produce a multi-semester plan from the student's current position to graduation, and check that it satisfies all program requirements.
+    
+    \item Support course scheduling: Build conflict-free timetables from the available class sections, taking student constraints into account.
+
+    \item Provide explanations: For every recommendation, plan or rejection, give a human-readable justification that traces back to the specific rules applied.
+
+    \item Evaluate the system: Assess correctness (compliance with rules), usefulness (quality of the recommendations and plans) and the clarity of the explanations, using test cases and feedback from students and advisors where possible.
+\end{itemize}
+
+
+    \subsection{Scope}
+\begin{itemize}
+    \item Functions: course recommendation, long-term degree planning toward graduation.
+    \item Method: a rule-based approach in which recommendations are derived from explicit, inspectable rules.
+    \item Context: the credit-based training system as practiced in Vietnamese universities, validated on the curriculum and regulations of Ho Chi Minh University of Technology (HCMUT).
+    \item Users: students as the main users, and academic advisors as reviewers of the system's suggestions.
+
+    % Explain how "explainable" means and "explanable" towards who, to which extent the system is "verifyable"? (all stages in the system flow?)
+    \item Explanability: towards intepretability of model's parameters and outputs, as well as explanation of violated constraints for the system's results.
+\end{itemize}
+
+    \subsection{Report Structure}
+\begin{itemize}
+    \item \textbf{Section~\ref{sec:intro}---Introduction:} This section introduces the context for our work, reviews existing related systems, and outlines the problem statement, objectives, and scope of the study.
+    \item \textbf{Section~\ref{sec:sys-analysis}---System Analysis:} This section presents stakeholders, actors, functional and non-functional requirements, as well as the diagrams of our system: use case diagrams, sequence diagrams, activity diagrams and class diagrams.
+    \item \textbf{Section~\ref{}---System Design:} This section presents system architecture, database design and user-interface design.
+    \item \textbf{Section~\ref{}---Technology Choices:} This section presents the system's choices on frameworks, databases, hosting services to build the platform.
+    \item \textbf{Section~\ref{}---Formulation:} This section presents the problem formulation and its corresponding encoding methods.
+    \item \textbf{Section~\ref{}---Methods:} This section presents how the proposed methods are designed and implemented
+    \item \textbf{Section~\ref{}---System Implementation:} This section describes the frontend and backend implementation, as well as the deployment of our system.
+    \item \textbf{Section~\ref{}---Testing:} This section describes testing methods and results for the system. % including frontend, backend, and the core engine
+    \item \textbf{Section~\ref{}---Discussion:} This section further discusses the system's results as well as its limitations.
+    \item \textbf{Section~\ref{}---Summary:} This section concludes what has been delivered and discussed.
+\end{itemize}

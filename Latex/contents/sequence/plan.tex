@@ -1,0 +1,35 @@
+\begin{tikzpicture}
+  \seqactor{0}{Student}
+  \seqobj{4}{Frontend}
+  \seqobj{8.5}{Backend}
+  \seqobj{13}{Database}
+  \seqstart
+
+  \Msg{0}{4}{Open course board}
+  \Msg{4}{8.5}{GET /student-plan-courses/me}
+  \Msg{8.5}{13}{Own plan rows of the curriculum}
+  \Ret{13}{8.5}{Rows}
+  \Ret{8.5}{4}{Planned semesters}
+  \Ret{4}{0}{Board with planned semesters}
+
+  \Fbegin{loop}
+  \Msg[0.75]{0}{4}{Set planned semester}
+  \Self{4}{Keep change in draft}
+  \Fend{loop}{-0.7}{13.7}{loop}{each change}
+
+  \Fbegin{alt}
+  \Msg[0.75]{0}{4}{Save}
+  \Msg[0.85]{4}{8.5}{PUT /student-plan-courses/\\me/\{curriculumId\}}
+  \Self{8.5}{Validate semester codes;\\curriculum and courses exist}
+  \Msg[1.2]{8.5}{13}{Transaction: delete removed,\\upsert ON CONFLICT}
+  \Ret{13}{8.5}{Whole plan}
+  \Ret{8.5}{4}{Whole plan}
+  \Self{4}{Write cache; refresh analysis}
+  \Ret[0.6]{4}{0}{Saved plan}
+  \Felse{-0.4}{13.4}{Student discards}
+  \Self[0.75]{4}{Drop draft}
+  \Ret[0.6]{4}{0}{Saved plan unchanged}
+  \Fend{alt}{-0.4}{13.4}{alt}{Student saves}
+
+  \Lifelines{0,4,8.5,13}
+\end{tikzpicture}

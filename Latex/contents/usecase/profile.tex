@@ -1,0 +1,32 @@
+\begin{tikzpicture}
+  \ucactor{student}{0,0.4}{Student}
+
+  \node[uc] (prof)   at (5.6,5.4)  {Manage Profile};
+  \node[uc] (cur)    at (5.6,3.6)  {Select Curriculum};
+  \node[uc] (browse) at (5.6,2.0)  {Browse Courses};
+  \node[uc] (detail) at (5.6,0.6)  {View Course Details};
+  \node[uc] (status) at (5.6,-1.4) {Update Course Statuses};
+  \node[uc] (mybk)   at (5.6,-4.4) {Import myBK Progress};
+
+  \node[uc] (view)   at (11.8,6.0)  {View Profile};
+  \node[uc] (upd)    at (11.8,4.7)  {Update Profile};
+  \node[uc] (search) at (11.8,2.0)  {Search and\\Filter Courses};
+  \node[uc] (draft)  at (11.8,-0.6) {Review and Save Draft};
+  \node[uc] (file)   at (11.8,-2.1) {Import / Export Statuses\\(Excel or CSV)};
+  \node[uc] (review) at (11.8,-3.7) {Review Report\\before Saving};
+  \node[uc] (adj)    at (11.8,-5.2) {Adjust Imported\\Progress};
+  \coordinate (top) at (5.6,6.9);
+  \ucsystem{(top)(prof)(view)(adj)(mybk)}{Student Profile and Progress (FR-2)}
+
+  \foreach \u in {prof,cur,browse,detail,status,mybk} \draw[assoc] (student) -- (\u.west);
+  \draw[gen] (view.west) -- (prof);
+  \draw[gen] (upd.west) -- (prof);
+  \draw[inc] (search.west) -- node[rel, above] {\extd} (browse.east);
+  \draw[inc] (status) -- node[rel, above, sloped] {\incl} (draft.west);
+  \draw[inc] (file.west) -- node[rel, below, sloped] {\extd} (status);
+  \draw[inc] (mybk) -- node[rel, above, sloped] {\incl} (review.west);
+  \draw[inc] (adj.west) -- node[rel, below, sloped] {\extd} (mybk);
+
+  \node[ucnote=9cm, anchor=north east] at ($(sysbox.south east)+(0,-0.25)$)
+    {Importing replaces the course statuses and loads graduation conditions such as the English standard (FR-2.7, FR-2.8).};
+\end{tikzpicture}

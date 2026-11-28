@@ -1,0 +1,37 @@
+\begin{tikzpicture}[y=1.35cm]
+  \swimlanes{Student,Frontend,Backend,myBK reader}{3.9}{-9.6}
+  \node[start] (s) at (1.95,-1.1) {};
+  \node[act=3.3cm] (a1) at (1.95,-2.0) {Upload PDF or paste report text};
+  \node[act=3.3cm] (a2) at (5.85,-2.0) {Send for review};
+  \node[act=3.3cm] (b1) at (9.75,-2.0) {Pass report to reader};
+  \node[act=3.3cm] (r1) at (13.65,-2.0) {Parse courses and graduation conditions};
+  \node[dec] (d1) at (13.65,-3.2) {};
+  \node[act=3.3cm] (a3) at (5.85,-3.2) {Show reason};
+  \node[stop] (e1) at (3.6,-3.2) {};
+  \node[act=3.3cm] (b2) at (9.75,-4.4) {Match curriculum by myBK code; compare statuses (no write)};
+  \node[act=3.3cm] (a4) at (5.85,-4.4) {Show review};
+  \node[dec] (d2) at (1.95,-4.4) {};
+  \node[stop] (e2) at (0.55,-4.4) {};
+  \node[act=3.3cm] (a5) at (5.85,-5.7) {Send import request};
+  \node[act=3.3cm] (r2) at (13.65,-5.7) {Parse report again};
+  \node[act=3.3cm] (b3) at (9.75,-7.1) {Transaction: store progress, replace statuses, update profile};
+  \node[act=3.3cm] (a6) at (5.85,-8.4) {Show imported progress};
+  \node[stop] (e3) at (5.85,-9.2) {};
+
+  \draw[flow] (s) -- (a1);
+  \draw[flow] (a1) -- (a2);
+  \draw[flow] (a2) -- (b1);
+  \draw[flow] (b1) -- (r1);
+  \draw[flow] (r1) -- (d1);
+  \draw[flow] (d1) -- node[guard, above, pos=0.2] {unreadable} (a3);
+  \draw[flow] (a3) -- (e1);
+  \draw[flow] (d1) |- node[guard, near start, right] {read} (b2);
+  \draw[flow] (b2) -- (a4);
+  \draw[flow] (a4) -- (d2);
+  \draw[flow] (d2) -- node[guard, above] {cancel} (e2);
+  \draw[flow] (d2) |- node[guard, near start, right] {confirm} (a5);
+  \draw[flow] (a5) -- (r2);
+  \draw[flow] (r2) |- (b3);
+  \draw[flow] (b3) |- (a6);
+  \draw[flow] (a6) -- (e3);
+\end{tikzpicture}

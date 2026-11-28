@@ -1,0 +1,21 @@
+\begin{tikzpicture}
+  \ucactor{guest}{0,1.2}{Guest}
+  \ucactor{student}{0,-1.6}{Student}
+  \ucactor{admin}{0,-4.0}{Admin}
+
+  \node[uc] (reg)  at (5.4,1.6)  {Register Account};
+  \node[uc] (info) at (11.2,1.6) {Provide Email\\and Password};
+  \node[uc] (in)   at (5.4,0.0)  {Sign In};
+  \node[uc] (out)  at (5.4,-2.6) {Sign Out};
+  \coordinate (top) at (5.4,2.5);
+  \ucsystem{(top)(reg)(info)(out)}{Account and Access (FR-1)}
+
+  \draw[assoc] (guest) -- (reg.west);
+  \draw[assoc] (guest) -- (in.west);
+  \draw[assoc] (student) -- (out.west);
+  \draw[assoc] (admin) -- (out.west);
+  \draw[inc] (reg) -- node[rel, above] {\incl} (info);
+
+  \node[ucnote=9cm, anchor=north east] at ($(sysbox.south east)+(0,-0.25)$)
+    {Registration creates Student accounts only. Admin accounts are created by the system operator (FR-1.5).};
+\end{tikzpicture}

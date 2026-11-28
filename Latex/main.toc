@@ -1,0 +1,131 @@
+\babel@toc {vietnamese}{}\relax 
+\contentsline {section}{\numberline {1}Introduction}{6}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Context}{6}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Existing Systems}{7}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Problem Statement}{7}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Objectives}{8}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Scope}{9}{subsection.1.5}%
+\contentsline {subsection}{\numberline {1.6}Report Structure}{9}{subsection.1.6}%
+\contentsline {section}{\numberline {2}System Analysis}{11}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Stakeholders}{11}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}Students}{11}{subsubsection.2.1.1}%
+\contentsline {subsubsection}{\numberline {2.1.2}Administrators}{12}{subsubsection.2.1.2}%
+\contentsline {subsubsection}{\numberline {2.1.3}Academic Advisors}{12}{subsubsection.2.1.3}%
+\contentsline {subsection}{\numberline {2.2}Actors \& Roles}{13}{subsection.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.1}Student}{13}{subsubsection.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.2}Admin}{13}{subsubsection.2.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.3}AI Service (secondary actor)}{14}{subsubsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.3}Functional Requirements}{15}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}FR-1. Accounts and Access}{15}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}FR-2. Student Profiles and Academic Progress}{15}{subsubsection.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.3.3}FR-3. Admin Course and Curriculum Management}{17}{subsubsection.2.3.3}%
+\contentsline {subsubsection}{\numberline {2.3.4}FR-4. Eligibility and Curriculum Requirement Analysis}{18}{subsubsection.2.3.4}%
+\contentsline {subsubsection}{\numberline {2.3.5}FR-5. Course Recommendations}{19}{subsubsection.2.3.5}%
+\contentsline {subsubsection}{\numberline {2.3.6}FR-6. Student Personal Plans}{21}{subsubsection.2.3.6}%
+\contentsline {subsubsection}{\numberline {2.3.7}FR-7. AI Academic Advising}{22}{subsubsection.2.3.7}%
+\contentsline {subsection}{\numberline {2.4}Non-functional Requirements}{23}{subsection.2.4}%
+\contentsline {subsubsection}{\numberline {2.4.1}NFR-1. Security}{23}{subsubsection.2.4.1}%
+\contentsline {subsubsection}{\numberline {2.4.2}NFR-2. Performance}{24}{subsubsection.2.4.2}%
+\contentsline {subsubsection}{\numberline {2.4.3}NFR-3. Reliability}{24}{subsubsection.2.4.3}%
+\contentsline {subsubsection}{\numberline {2.4.4}NFR-4. Maintainability}{25}{subsubsection.2.4.4}%
+\contentsline {subsubsection}{\numberline {2.4.5}NFR-5. Scalability}{25}{subsubsection.2.4.5}%
+\contentsline {subsubsection}{\numberline {2.4.6}NFR-6. Usability}{26}{subsubsection.2.4.6}%
+\contentsline {subsubsection}{\numberline {2.4.7}NFR-7. Auditability}{27}{subsubsection.2.4.7}%
+\contentsline {subsection}{\numberline {2.5}Usecase Diagram}{27}{subsection.2.5}%
+\contentsline {subsubsection}{\numberline {2.5.1}System Overview}{28}{subsubsection.2.5.1}%
+\contentsline {subsubsection}{\numberline {2.5.2}Account and Access}{29}{subsubsection.2.5.2}%
+\contentsline {subsubsection}{\numberline {2.5.3}Student Profile and Progress}{30}{subsubsection.2.5.3}%
+\contentsline {subsubsection}{\numberline {2.5.4}Progress and Eligibility Analysis}{31}{subsubsection.2.5.4}%
+\contentsline {subsubsection}{\numberline {2.5.5}Course Recommendations}{32}{subsubsection.2.5.5}%
+\contentsline {subsubsection}{\numberline {2.5.6}AI Academic Advising}{33}{subsubsection.2.5.6}%
+\contentsline {subsubsection}{\numberline {2.5.7}Student Personal Plan}{34}{subsubsection.2.5.7}%
+\contentsline {subsubsection}{\numberline {2.5.8}Admin Course and Curriculum Management}{35}{subsubsection.2.5.8}%
+\contentsline {subsection}{\numberline {2.6}Use Case Descriptions}{36}{subsection.2.6}%
+\contentsline {subsubsection}{\numberline {2.6.1}UC-01 --- Register Account}{36}{subsubsection.2.6.1}%
+\contentsline {subsubsection}{\numberline {2.6.2}UC-02 --- Sign In}{37}{subsubsection.2.6.2}%
+\contentsline {subsubsection}{\numberline {2.6.3}UC-03 --- Sign Out}{38}{subsubsection.2.6.3}%
+\contentsline {subsubsection}{\numberline {2.6.4}UC-04 --- Manage Profile and Select Curriculum}{38}{subsubsection.2.6.4}%
+\contentsline {subsubsection}{\numberline {2.6.5}UC-05 --- Browse and View Course Details}{39}{subsubsection.2.6.5}%
+\contentsline {subsubsection}{\numberline {2.6.6}UC-06 --- Update Course Status and Planned Semester}{40}{subsubsection.2.6.6}%
+\contentsline {subsubsection}{\numberline {2.6.7}UC-07 --- Import myBK Progress}{42}{subsubsection.2.6.7}%
+\contentsline {subsubsection}{\numberline {2.6.8}UC-08 --- View Progress and Academic Analysis}{43}{subsubsection.2.6.8}%
+\contentsline {subsubsection}{\numberline {2.6.9}UC-09 --- Generate and Compare Study Roadmaps}{45}{subsubsection.2.6.9}%
+\contentsline {subsubsection}{\numberline {2.6.10}UC-10 --- AI Academic Advising}{47}{subsubsection.2.6.10}%
+\contentsline {subsubsection}{\numberline {2.6.11}UC-11 --- Manage Courses}{48}{subsubsection.2.6.11}%
+\contentsline {subsubsection}{\numberline {2.6.12}UC-12 --- Manage Curricula}{49}{subsubsection.2.6.12}%
+\contentsline {subsection}{\numberline {2.7}Sequence Diagram}{51}{subsection.2.7}%
+\contentsline {subsubsection}{\numberline {2.7.1}Student Profile and Curriculum}{52}{subsubsection.2.7.1}%
+\contentsline {subsubsection}{\numberline {2.7.2}View and Update Course Status}{53}{subsubsection.2.7.2}%
+\contentsline {subsubsection}{\numberline {2.7.3}Student Progress Analysis}{54}{subsubsection.2.7.3}%
+\contentsline {subsubsection}{\numberline {2.7.4}Import myBK Progress}{55}{subsubsection.2.7.4}%
+\contentsline {subsubsection}{\numberline {2.7.5}Course Recommendations}{56}{subsubsection.2.7.5}%
+\contentsline {subsubsection}{\numberline {2.7.6}AI Academic Advising}{58}{subsubsection.2.7.6}%
+\contentsline {subsubsection}{\numberline {2.7.7}Student Personal Plan}{59}{subsubsection.2.7.7}%
+\contentsline {subsubsection}{\numberline {2.7.8}Admin Curriculum Management}{60}{subsubsection.2.7.8}%
+\contentsline {subsection}{\numberline {2.8}Activity Diagrams}{61}{subsection.2.8}%
+\contentsline {subsubsection}{\numberline {2.8.1}Manage Profile and Select Curriculum}{61}{subsubsection.2.8.1}%
+\contentsline {subsubsection}{\numberline {2.8.2}View Courses and Update Course Status}{62}{subsubsection.2.8.2}%
+\contentsline {subsubsection}{\numberline {2.8.3}Analyze Progress and Course Eligibility}{63}{subsubsection.2.8.3}%
+\contentsline {subsubsection}{\numberline {2.8.4}Import myBK Progress}{64}{subsubsection.2.8.4}%
+\contentsline {subsubsection}{\numberline {2.8.5}Course Recommendations}{65}{subsubsection.2.8.5}%
+\contentsline {subsubsection}{\numberline {2.8.6}AI Academic Advising}{66}{subsubsection.2.8.6}%
+\contentsline {subsubsection}{\numberline {2.8.7}Edit the Personal Plan}{67}{subsubsection.2.8.7}%
+\contentsline {subsubsection}{\numberline {2.8.8}Manage Curriculum Data}{68}{subsubsection.2.8.8}%
+\contentsline {subsection}{\numberline {2.9}Class Diagram}{68}{subsection.2.9}%
+\contentsline {section}{\numberline {3}System Design}{72}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Architecture Designs}{72}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}Software Architectures}{72}{subsubsection.3.1.1}%
+\contentsline {subsubsection}{\numberline {3.1.2}Common Architectural Styles}{73}{subsubsection.3.1.2}%
+\contentsline {subsubsection}{\numberline {3.1.3}Strategic Decision}{75}{subsubsection.3.1.3}%
+\contentsline {subsubsection}{\numberline {3.1.4}Architecture Design}{76}{subsubsection.3.1.4}%
+\contentsline {subsection}{\numberline {3.2}Database Design}{79}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Entity}{80}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Index}{82}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}Relationship}{85}{subsubsection.3.2.3}%
+\contentsline {subsubsection}{\numberline {3.2.4}ERD}{87}{subsubsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.3}User Interface Designs}{90}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}Flow Summary}{90}{subsubsection.3.3.1}%
+\contentsline {subsubsection}{\numberline {3.3.2}Course List Page}{92}{subsubsection.3.3.2}%
+\contentsline {subsubsection}{\numberline {3.3.3}Course Detail Page}{93}{subsubsection.3.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.4}Learning Analysis Page}{98}{subsubsection.3.3.4}%
+\contentsline {subsubsection}{\numberline {3.3.5}AI Advisor Page}{102}{subsubsection.3.3.5}%
+\contentsline {subsubsection}{\numberline {3.3.6}Personal Profile Page}{105}{subsubsection.3.3.6}%
+\contentsline {subsection}{\numberline {3.4}AI Advisor: Retrieval-Augmented Generation}{106}{subsection.3.4}%
+\contentsline {subsubsection}{\numberline {3.4.1}Motivation and Design Principles}{107}{subsubsection.3.4.1}%
+\contentsline {subsubsection}{\numberline {3.4.2}Retrieval Sources}{107}{subsubsection.3.4.2}%
+\contentsline {subsubsection}{\numberline {3.4.3}Agent Trajectory}{111}{subsubsection.3.4.3}%
+\contentsline {subsubsection}{\numberline {3.4.4}Answer Validation and Enrichment}{113}{subsubsection.3.4.4}%
+\contentsline {subsubsection}{\numberline {3.4.5}Trajectory Persistence and Replay}{113}{subsubsection.3.4.5}%
+\contentsline {subsubsection}{\numberline {3.4.6}Mixed-Initiative Interaction}{114}{subsubsection.3.4.6}%
+\contentsline {subsection}{\numberline {3.5}CSP Formulation}{115}{subsection.3.5}%
+\contentsline {subsubsection}{\numberline {3.5.1}Motivation: Why a CSP?}{115}{subsubsection.3.5.1}%
+\contentsline {paragraph}{\numberline {a)}Course prerequisite graph (CPG)}{115}{paragraph.3.5.1.1}%
+\contentsline {paragraph}{\numberline {b)}Graph of sub-requirements}{115}{paragraph.3.5.1.2}%
+\contentsline {paragraph}{\numberline {c)}Constraint satisfaction}{115}{paragraph.3.5.1.3}%
+\contentsline {paragraph}{\numberline {d)}Disadvantages in our choice}{116}{paragraph.3.5.1.4}%
+\contentsline {subsubsection}{\numberline {3.5.2}Overview and Scope}{116}{subsubsection.3.5.2}%
+\contentsline {paragraph}{\numberline {a)}Planning scope}{117}{paragraph.3.5.2.1}%
+\contentsline {paragraph}{\numberline {b)}What needs to be formulated}{117}{paragraph.3.5.2.2}%
+\contentsline {paragraph}{\numberline {c)}Notable characteristics of the problem}{117}{paragraph.3.5.2.3}%
+\contentsline {paragraph}{\numberline {d)}Hard and soft requirements}{118}{paragraph.3.5.2.4}%
+\contentsline {subsubsection}{\numberline {3.5.3}Assumptions}{118}{subsubsection.3.5.3}%
+\contentsline {subsubsection}{\numberline {3.5.4}Input Data and Data Treatment}{119}{subsubsection.3.5.4}%
+\contentsline {paragraph}{\numberline {a)}Curriculum data as tables of facts}{120}{paragraph.3.5.4.1}%
+\contentsline {paragraph}{\numberline {b)}Student history as a course--semester matrix}{120}{paragraph.3.5.4.2}%
+\contentsline {paragraph}{\numberline {c)}History and plan form one matrix}{120}{paragraph.3.5.4.3}%
+\contentsline {subsubsection}{\numberline {3.5.5}Variables and Domain}{120}{subsubsection.3.5.5}%
+\contentsline {subsubsection}{\numberline {3.5.6}Derived Quantities}{121}{subsubsection.3.5.6}%
+\contentsline {subsubsection}{\numberline {3.5.7}Semester Constraints}{121}{subsubsection.3.5.7}%
+\contentsline {subsubsection}{\numberline {3.5.8}Graduation Conditions}{122}{subsubsection.3.5.8}%
+\contentsline {paragraph}{\numberline {a)}External requirements}{122}{paragraph.3.5.8.1}%
+\contentsline {paragraph}{\numberline {b)}GPA as a soft condition}{122}{paragraph.3.5.8.2}%
+\contentsline {subsubsection}{\numberline {3.5.9}Objectives}{123}{subsubsection.3.5.9}%
+\contentsline {subsection}{\numberline {3.6}ASP Encoding}{123}{subsection.3.6}%
+\contentsline {subsubsection}{\numberline {3.6.1}Design}{123}{subsubsection.3.6.1}%
+\contentsline {subsubsection}{\numberline {3.6.2}Core Program}{123}{subsubsection.3.6.2}%
+\contentsline {paragraph}{\numberline {a)}Parameters and variables}{123}{paragraph.3.6.2.1}%
+\contentsline {paragraph}{\numberline {b)}Attempts, passes and credits}{124}{paragraph.3.6.2.2}%
+\contentsline {paragraph}{\numberline {c)}Graduation and GPA}{125}{paragraph.3.6.2.3}%
+\contentsline {paragraph}{\numberline {d)}Constraints}{125}{paragraph.3.6.2.4}%
+\contentsline {paragraph}{\numberline {e)}Repair distance and objectives}{126}{paragraph.3.6.2.5}%
+\contentsline {subsubsection}{\numberline {3.6.3}Interaction}{126}{subsubsection.3.6.3}%

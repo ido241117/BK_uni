@@ -1,0 +1,41 @@
+\begin{tikzpicture}[y=1.35cm]
+  \swimlanes{Admin,Frontend,Backend}{5.2}{-10.8}
+  \node[start] (s) at (2.6,-1.1) {};
+  \node[act=4.0cm] (a1) at (2.6,-2.0) {Open a curriculum};
+  \node[act=4.0cm] (a2) at (7.8,-2.0) {Request curriculum and its tabs};
+  \node[act=4.0cm] (a3) at (13,-2.0) {Verify session; read curriculum content};
+  \node[act=4.0cm] (a4) at (7.8,-3.2) {Show courses, groups, relations, categories, regulations};
+  \node[act=4.0cm] (a5) at (2.6,-3.2) {Create, edit, or delete an item};
+  \node[act=4.0cm] (a6) at (7.8,-4.5) {Send write request};
+  \node[act=4.0cm] (b1) at (13,-4.5) {Check session and Admin role};
+  \node[dec] (d1) at (13,-5.7) {};
+  \node[act=4.0cm] (a7) at (7.8,-5.7) {Show access denied};
+  \node[stop] (e1) at (5.45,-5.7) {};
+  \node[act=4.0cm] (b2) at (13,-6.9) {Validate data and curriculum links};
+  \node[dec] (d2) at (13,-8.1) {};
+  \node[act=4.0cm] (a8) at (7.8,-8.1) {Show validation errors};
+  \node[act=4.0cm] (b3) at (13,-9.3) {Save change; audit trigger logs it};
+  \node[act=4.0cm] (a9) at (7.8,-9.3) {Show updated data};
+  \node[dec] (d3) at (2.6,-9.3) {};
+  \node[stop] (e2) at (2.6,-10.3) {};
+
+  \draw[flow] (s) -- (a1);
+  \draw[flow] (a1) -- (a2);
+  \draw[flow] (a2) -- (a3);
+  \draw[flow] (a3) |- (a4);
+  \draw[flow] (a4) -- (a5);
+  \draw[flow] (a5) |- (a6);
+  \draw[flow] (a6) -- (b1);
+  \draw[flow] (b1) -- (d1);
+  \draw[flow] (d1) -- node[guard, above] {not Admin} (a7);
+  \draw[flow] (a7) -- (e1);
+  \draw[flow] (d1) -- node[guard, right] {Admin} (b2);
+  \draw[flow] (b2) -- (d2);
+  \draw[flow] (d2) -- node[guard, above] {invalid} (a8);
+  \draw[flow] (a8.west) -- (0.45,-8.1) |- (a5.west);
+  \draw[flow] (d2) -- node[guard, right] {valid} (b3);
+  \draw[flow] (b3) -- (a9);
+  \draw[flow] (a9) -- (d3);
+  \draw[flow] (d3) -- node[guard, right] {finish} (e2);
+  \draw[flow] (d3.west) -- (0.45,-9.3) |- node[guard, near start, right] {another change} (a5.west);
+\end{tikzpicture}

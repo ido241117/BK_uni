@@ -1,0 +1,23 @@
+\begin{tikzpicture}
+  \seqactor{0}{Student}
+  \seqobj{4}{Frontend}
+  \seqobj{8.5}{Backend}
+  \seqobj{13}{Database}
+  \seqstart
+
+  \Msg{0}{4}{Open analysis page}
+  \Msg{4}{8.5}{GET /student-profiles/me}
+  \Ret{8.5}{4}{Profile}
+  \Fbegin{alt}
+  \Ret[0.75]{4}{0}{Ask to select a curriculum}
+  \Felse{-0.4}{13.4}{curriculum selected}
+  \Msg[0.95]{4}{8.5}{GET curriculum data and\\own data (parallel)}
+  \Msg{8.5}{13}{Query rows}
+  \Ret{13}{8.5}{Rows}
+  \Ret{8.5}{4}{Data}
+  \Self{4}{analyze(): credit progress, eligibility,\\outstanding requirements, plan warnings}
+  \Ret[0.8]{4}{0}{Analysis with reasons}
+  \Fend{alt}{-0.4}{13.4}{alt}{no curriculum selected}
+
+  \Lifelines{0,4,8.5,13}
+\end{tikzpicture}
