@@ -1,147 +1,295 @@
 # Constraints
 
-This file lists every rule the ASP planner (`pipeline/engine/asp`) enforces
-(**hard constraints**) and every preference it optimizes (**soft
-constraints**). Values quoted are those of the current dataset
-(`pipeline/data`, curriculum `cs_2023`); they come from the JSON files, not
-from the ASP code, so changing the JSON changes them.
+Every rule the planner enforces (**hard constraints**), every preference it ranks plans by
+(**soft goals**), the assumptions behind a plan, and what it only reports. The rules are the
+planner's, not one solver's: CP-SAT (`planner/solvers/cpsat.py`) and the ASP engine
+(`planner/solvers/asp/`) implement the same list, and the validator (`evaluation/validate.py`)
+re-checks the hard ones independently. Where a solver does not implement a rule, the table
+says so; the details and the plan to close each gap are in
+[PLANNER-PARITY.md](PLANNER-PARITY.md).
 
-- **Hard constraint**: a plan that breaks it is never returned. If no plan
-  satisfies all of them, the result is `UNSATISFIABLE` (CLI exit code 2).
-- **Soft constraint**: a cost the solver minimizes. Soft constraints are
-  ranked lexicographically: a higher priority is never traded for any amount
-  of a lower one.
-- **Report**: something the planner computes and shows but does not enforce.
+Rule values (credit bounds, thresholds, bands) come from the input, not from solver code:
+the curriculum (`instances/<uni>/curricula/<id>/curriculum.json`), the policy files and the
+request ([USER-INPUT.md](USER-INPUT.md)). Values quoted below are those of HCMUT, CS-2023-KHMT.
+Shared rule code lives in `planner/model/facts.py` (input checks, credit limits, summer rule,
+goal order) and `planner/model/normalize.py` (reshaping, no rules).
 
-Where a rule is written: `extension.lp` (semantics), `optimize.lp`
-(objectives), `translate.lp` (student history), `encoding.lp` (generic set
-constraints). Section numbers (`§`) refer to `core/extension.lp`.
+- **Hard constraint**: a plan that breaks it is never returned. If no plan satisfies them all,
+  the status is `UNSAT` and the planner explains what blocks it (FEATURES.md F-07).
+- **Soft goal**: a quantity the solver minimizes. Goals are ranked lexicographically: a higher
+  goal is never traded for any amount of a lower one.
+- **Report**: computed and shown, not enforced.
+
+Principle (reviewer, 18/11/2026): **what the student says "must" is hard, what the student
+"wants" is soft**, and every soft goal is reported back as met or not.
+
+Sources: "QĐ 285" is the university's consolidated academic regulation (*Quy định về học vụ
+và đào tạo, phiên bản hợp nhất*, 58 pages, read in full on 18/11/2026); article (Đ) and page
+numbers are those printed on the page. Section 5 summarises its planning rules. "Team" marks a
+rule the team set where the regulation is silent or was overridden on purpose.
 
 ---
 
 ## 1. Hard constraints
 
-### 1.1 Calendar and terms
+IDs H1–H15 are used in code, tests and warnings. ✓ = implemented.
 
-| ID | Constraint | Applies to | Data / parameter | Where |
-|---|---|---|---|---|
-| H1 | History is fixed: attempts in terms `1..t` are input, never moved. A `taken/2` fact after term `t` makes the instance unsatisfiable. | All history attempts | `t` = studied terms (`--t`, inferred) | `translate.lp` |
-| H2 | An attempt is scheduled in at most one term. | Every course and retake | — | §1 |
-| H3 | Extra terms (summer) stay empty unless summer planning is turned on. | Future summer terms | `extra_semester_type(summer)`; `--summer` sets `extra_sem=1` | §1 |
-| H4 | Regular (core) terms form one contiguous block: a regular term cannot be skipped and then resumed. Summers may be skipped. | Future regular terms | `term_part_type/2` | §9 |
-| H5 | Every planned term stays within its maximum load. | Every future term | regular ≤ 21, summer ≤ 12 credits (`curriculum.planning`, `--max-load`) | §9 |
-| H6 | Every used term before the last one meets its minimum load. The last term may be lighter. | Every used future term except the last | regular ≥ 14, summer ≥ 0 credits (`--min-load`) | §9 |
-| H7 | A term **reserved** by a fills-next course stays empty: if course E has `fills_next_term` and is registered in term I, term I+1 gets no course. E's credits and fee stay in term I. A history attempt in term `t` reserves term `t+1`. | Courses with `fills_next_term: true` (currently CO3335 Internship) | `fills_next/1` | §17 |
+| ID | Constraint | Source | CP-SAT | ASP | Validator |
+|---|---|---|---|---|---|
+| H1 | Each course is planned in at most one term | Obvious | ✓ | ✓ | ✓ |
+| H2 | Every mandatory course is completed (passed, in progress and assumed passed, or planned) | Curriculum | ✓ | ✓ | ✓ |
+| H3 | Each elective group reaches its credits and/or course count | Curriculum | ✓ | ✓ | ✓ |
+| H4 | Prerequisite: the related course is **passed** in an earlier term. An in-progress course assumed passed counts; a failed one does not | QĐ 285 Đ2.1, p.2 | ✓ | ✓ | ✓ |
+| H5 | Corequisite: the related course is passed earlier **or** taken in the same term. Same term is allowed with a warning: the course is only credited once the corequisite passes (reviewer, 19/11) | QĐ 285 Đ2.1, p.2 | ✓ | ✓ | ✓ |
+| H6 | Prior relation (học trước): an obsolete name of a prerequisite, enforced as H4 (`normalize` turns `prior` into `prerequisite`). The database has 50 such relations over 96 programs, 2 in KHMT 2023 (CO3031 after CO2003; PE1005 after PE1003, which no longer matters since PE courses are condition courses). Before 28/11 it was ignored (reviewer, 18/11) | Team, 28/11 | ✓ | ✓ | ✓ |
+| H7 | Credits per term within bounds (details in 1.1) | Team (11–25), QĐ 285 Đ15.3 says 14–21 | ✓ | ✓ | ✓ |
+| H8 | A course is not planned in a term where it is not offered (`offerings` records, request `not_offered`) | Request | ✓ | ✓ | ✓ |
+| H9 | A locked course is in its locked term (request `locked`) | Request | ✓ | ✓ | ✓ |
+| H10 | Everything is finished by a given term (request `graduate_by`) | Request | ✓ | ✓ (horizon) | ✓ |
+| H11 | Course level: level 1 for everyone, level 2 from study year 2, level 3 and above from study year 3. The level is the first digit of the course code. The study year is the cohort year (term `YYS` is year `YY − cohort mod 100 + 1`), or, with `planning.year_credit_thresholds`, the year reached by credits accumulated before the term (e.g. 28/56/84 for years 2/3/4). Active only with `planning.level_min_year` | QĐ 285 Đ15.4, p.12; PL1, p.27; Đ24, p.17 | ✓ | ✓ | ✓ |
+| H12 | Graduation courses: internship ≥ 65 %, specialized project ≥ 70 %, thesis ≥ 85 % of the program's total credits, counted **through the course's own term, the course itself excluded** (decided 23/11, applied to every solver 28/11). In-progress courses count as passed | QĐ 285 Đ15.5, p.12; PL7, p.36; PL9, p.40 | ✓ | ✓ | ✓ |
+| H13 | The free-elective block is planned as empty slots `FREE_k` of `slot_credits` (3) each, with no prerequisites | Curriculum | ✓ | ✓ | ✓ |
+| H14 | Summer terms (details in 1.2) | QĐ 285 Đ14.1, p.10; Đ5.2, p.4; team | ✓ | ✓ | ✓ |
+| H15 | Specialization: when the student declares a target major, electives of the parent group (e.g. elective group C) must come from that major's list; without a declared major the child lists are ignored | Curriculum (KHMT 2023 majors) | ✓ | ✓ | (normalize) |
+| HC | Condition courses are never planned: `kind: condition` and **every 0-credit course** (ENG_GC, SA4001, PE1003, PE1005, MI1003 in KHMT) are external requirements (section 4) | Team, 21/11 and 28/11 | ✓ | ✓ | — (synthetic records include PE and military classes) |
+| HS | Skipped terms (request `skip_semesters`) stay empty. Two consecutive skipped regular terms give a warning (leave of absence needs a request to the training office; at most 4 terms, QĐ 285 Đ32.1) | Request | ✓ | ✓ | — |
+| HF | Frozen terms (request `frozen_semesters`): no course except pinned ones | Request | ✓ | not implemented | — |
+| HA | Assumed failure (request `assumed_fail`): the course is taken in that term (its credits count in the term's load) but not passed, and must be retaken later; courses that need it move with it | Request (W1, 23/11) | ✓ | not implemented | — |
+| HP | Absolute pins (`rules.pins_absolute`, web only): a pinned course stays in its term even where it breaks another school rule (the validator and the request report flag it). Pinning an already passed course plans an improvement retake: it counts in the term's load, not in accumulated credits (Q20, 22/11) | Request (sprint 11) | ✓ | not implemented | — |
+| HM | A student-set minimum for a term (`semester_limits[term].min`) is hard | Request | ✓ | ✓ | ✓ |
 
-Because H4 forbids skipping a regular term, H7 has a side effect. A fills-next
-course registered in a **fall** term reserves the following **spring**, so the
-plan cannot use any later regular term. In practice the internship is
-registered in the term before a summer (spring), as at the school. The
-exception is a plan that can finish in the summer right after that spring;
-see [FEATURES.md](FEATURES.md#f-12).
+### 1.1 Credits per term (H7)
 
-### 1.2 Degree requirements
+The solver plans **all remaining terms at once**, not one after the other. When one term is
+limited, its credits move to the other terms as long as no term exceeds its maximum. Example:
+4 terms and 60 credits left, the student caps term 262 at 11: the other three carry 49
+(16.3 on average, under 25), so graduation is on time. If they cannot, or prerequisites force a
+sequence, graduation moves later and the result says so.
 
-| ID | Constraint | Applies to | Data / parameter | Where |
-|---|---|---|---|---|
-| H8 | Every course of a mandatory group ends up credited (passed in history, in progress, or planned). | Groups A1–A5, B3.1, D, E | `groups[].type = "mandatory"` | §2 |
-| H9 | Each group's counted credits are within its bounds. | Every group | e.g. B3.4 ≥ 15, C ≥ 9, B3.5 = 3 credits | §4 |
-| H10 | Each group's counted course count is within its bounds (when not already implied by credits). | Groups with `min_courses`/`max_courses` | B3.2, B3.3: exactly 1 course | §4 |
-| H11 | Total counted credits equal the degree requirement (lower = upper bound). | Whole degree | 128 credits (`min_total_credits`) | §4 |
-| H12 | An elective counts toward at most one elective group (bucket). | Courses in several elective groups (B3.4 and C share 44 courses) | `elective_group/1` | §4 |
-| H13 | A planned course must count toward some group: no "extra" courses beyond the 128 counted credits. | Every planned first attempt | — | §4 |
-| H14 | A declared major must be earned: at least K courses from the major list are credited. | Students with `major` | K = 5 for AI, ASE, CYB, DSE, IPCV | §5 |
+| Situation | Bound | Decided by |
+|---|---|---|
+| Default regular term | **11–25** (`planning.min_load`, `max_load`) | Reviewer, 18/11. QĐ 285 Đ15.3 says 14–21; 11 and 25 are conditional exceptions there |
+| Regular term below 11, not the last | **Allowed**, never padded with extra courses; soft goal S11 tries to reach 11, below S2 (no surplus); a warning advises talking to the training office | Reviewer, 19/11 |
+| Last term below 11 | **Allowed without a warning**: the university lets a student take few credits in the last term | Team, 28/11 |
+| Summer term | ≤ **12** (`summer_max_load`), no minimum | Reviewer, 19/11 (QĐ 285 sets no summer limit) |
+| Student wants less | `max_credits` (every term) or `semester_limits[term].max` | Student |
+| Student sets a minimum for a term | `semester_limits[term].min`, hard | Student |
+| Student wants N credits in a term (`semester_targets`, goal ST) | Load may deviate ±2; the target may exceed 25 / 12, with a warning (CP-SAT only) | Student (sprint 11, fix 23/11) |
 
-### 1.3 Course order and availability
+Shown to the student: "The 11–25 range is wider than QĐ 285 (14–21). 11 and 25 are only
+allowed under the conditions of article 15.3."
 
-| ID | Constraint | Applies to | Data / parameter | Where |
-|---|---|---|---|---|
-| H15 | Prerequisites are credited in an **earlier** term. OR-groups need one option. | Courses with `prerequisites` | e.g. CO4337 needs CO3335, CO4029 and ENG_GC | §6 |
-| H16 | Co-requisites are credited in the **same or an earlier** term. | Courses with `corequisites` | CO4029 with CO3335 | §6 |
-| H17 | A course is only scheduled in a term where it is available: offered in that term part (`offered_terms`), or forced by `offer`, or by `pin`, and not `closed`. | Every planned course | `offered_slot/2`, `offer/2`, `closed/2`, `pin/2` | §7, §16 |
-| H18 | Milestone: the credits accumulated **strictly before** the milestone course's term reach its threshold. | CO3335, CO4029, CO4337 | 65 % → 84, 70 % → 90, 85 % → 109 credits | §8 |
+### 1.2 Summer terms (H14)
 
-### 1.4 Retakes
+- A summer term is used only if the student opted into it (`summer_opt_in`, a list of terms;
+  reviewer, 19/11). Before 19/11 only the external internship could go in summer.
+- In an opted-in summer, only courses that ran in a summer before (`offered_in_summer`
+  history), unless the history is soft (`rules.offering_soft`, Q9, 22/11) or the student
+  reports the course as offered that summer (`offered`, W2, CP-SAT only).
+- The external internship (`summer_always_allowed`, CO3335) may always go in summer.
+- Projects never go in summer (`allowed_terms` without 3; courses with "đồ án" in the name:
+  CO3101–CO3111, CO3119, CO3127, CO4029, CO4337; reviewer, 19/11).
+- At most 12 regular terms from enrollment (QĐ 285 Đ5.2): the planning horizon. A skip that
+  pushes past it gives UNSAT with the fix "do not skip term X"; a dedicated message is not done.
 
-| ID | Constraint | Applies to | Data / parameter | Where |
-|---|---|---|---|---|
-| H19 | A failed compulsory course without earned credit must be retaken. | Mandatory-group courses whose latest attempt failed | grades from `grading_policy.json` | §2 |
-| H20 | A requested retake must be scheduled. | Courses in `request` | `request/1` | §2 |
-| H21 | Retakes are only generated with a reason (failed latest attempt, or a request), and at most one future retake per course is modelled. | All courses | — | §2 |
+---
 
-H19–H21 fix the *set* of mandatory retakes and put no limit on how many
-retakes a student takes. When the mandatory retakes happen, and whether
-optional retakes are taken, is decided by soft priority 6 (`retakes`).
+## 2. Soft goals
 
-### 1.5 Cost
+Goal ids are shared by every solver (`facts.py`). Definitions are those of `cpsat.py`; the ASP
+engine implements the same definitions in `core/optimize.lp`.
 
-| ID | Constraint | Applies to | Data / parameter | Where |
-|---|---|---|---|---|
-| H22 | Every billed term matches exactly one fee rule, so no term is silently free. | Future terms with load | `fee_rule/6` from `tuition_policy.json` | §13 |
-| H23 | Total future tuition does not exceed the budget. | Students with `budget` or `--max-budget` | money units (million VND) | §13 |
+| ID | Minimizes | Active | Reported back as | CP-SAT | ASP |
+|---|---|---|---|---|---|
+| ST | Deviation from the credits the student wants per term (`semester_targets`) | When targets are set; always first | Credits per term vs target | ✓ | — |
+| S1 | Index of the last used term (earliest graduation) | Always | Expected graduation term | ✓ | ✓ |
+| S6 | Number of recommended relations (`recommended`, KN) broken: the course is planned while the recommended course is neither passed nor planned earlier | Always | Broken pairs, "this plan does not follow recommendation X before Y" | ✓ | ✓ |
+| S4 | Wanted courses (`preferences.wanted_courses`, not passed) left out | When wanted courses are given | Met / not met per course | ✓ | ✓ |
+| S9 | Credits of level-3+ courses (not the internship) planned in summer: summer prefers general and foundation courses | With a summer opt-in | Level-3+ courses placed in summer | ✓ | ✓ |
+| S7 | Per summer with study: credits outside the 6–9 band (`summer_preferred_load`; internship excluded) | With a summer opt-in | Credits of each summer and the deviation | ✓ | ✓ |
+| S2 | Total planned credits (no surplus electives) | Always (may be disabled) | Total credits | ✓ | ✓ |
+| S11 | Shortfall below 11 credits in regular terms before the last used one (an empty term counts fully) | Always | Total missing credits vs 11 | ✓ | ✓ |
+| S8 | Regular-term credits above 15–18 (`preferred_load`), and below it except in the last term | When the curriculum or request has a band (may be disabled) | Total deviation | ✓ | ✓ |
+| S5 | Load of the heaviest term (balanced load) | `preferences.balanced_load` | Heaviest and lightest term | ✓ | ✓ |
+| S3 | Courses moved compared with the previous plan (`previous_plan`) | In what-if runs | Moved courses | ✓ | ✓ |
+| S10 | Summer credits (internship excluded): regular terms before summers | With a summer opt-in | Total summer credits | ✓ | ✓ |
+| OH | Placements in a term part where the course has not run in the recorded history (`offered_terms`), except pinned or reported-offered pairs | Only with `rules.offering_soft` | Warning per placement, with an "it is offered" confirm button | ✓ | ✓ |
+| RT | Retakes of failed courses as early as possible; no unneeded retakes | Always | — | — | ✓ |
+| FEE | Total future tuition | When the tuition policy is in the input | Fee per term | — | ✓ |
+| LO | Term index of planned level-1/2 courses (lower levels first) | Always | — | — | ✓ |
+| TA | Minus the interest score of planned electives (`interests`, course tags) | When interests are given | Planned courses per interest | — | ✓ |
 
-### 1.6 Student-stated rules
+### 2.1 Order
 
-| ID | Constraint | Applies to | Data / parameter | Where |
-|---|---|---|---|---|
-| H24 | **Pin**: course E is scheduled in term I (first attempt or retake). A pin also makes E available in I; `closed(E, I)` still wins, so pinning a closed term is unsatisfiable. | Courses in `pin` | `pin/2` (term must be after `as_of_term`) | §16 |
-| H25 | **Ban**: `ban(E)`: course E is not scheduled in any future term; banning a course the degree needs is unsatisfiable. `ban(E, I)`: E is not scheduled in future term I (same effect as `closed(E, I)`, but stated by the student); banning a pinned term is unsatisfiable. | Courses in `ban` | `ban/1`, `ban/2` (term must be after `as_of_term`) | §16 |
+- **Default** (reviewer 18/11, S7–S11 added 19/11, S9 above S7 on 19/11):
+  S1 > S6 > S4 > S9 > S7 > S2 > S11 > S8 > S5 > S3 > S10. Graduate earliest first; among
+  those plans, break the fewest recommendations. With `rules.offering_soft`, OH sits just above S2.
+- **Recommendations first** (`preferences.recommendations_first: true`): S6 > S1 > … The
+  solver accepts a later graduation to keep recommendations; the result states the graduation
+  term before and after ("keeping every recommendation finishes in 272, one term later").
+- **Student order** (`preferences.order`, sprint 11 and stage 12): the student ranks the goals of
+  `USER_PRIORITIES` (S1, S6, S4, S5, S10, OH, S3, S2, S8); the internal goals S9, S7, S2, S11, S8
+  keep a fixed place after them; S2 and S8 are on by default and can be turned off with
+  `preferences.disabled`. ST is always first when targets are set. The web page shows three
+  goals (S1 graduate early, S8 15–18 credits, S2 no surplus), then sends the hidden ones in a fixed
+  order (S6, S4, OH, S3, then S9, S7, S11); their final order (W12) is not decided.
+- **Solver-specific goals** RT, FEE, LO, TA come after every shared goal, in that order; a request
+  may move or disable them too.
+- Each result lists the goals that ranked the plan ("Goals used by …, highest priority first").
 
-### 1.7 Redundant constraints (speed only, never change the best plan)
+Earlier orders, for the record: S1 > S4 > S2 > S5 > S3 (proposal, 18/11); S1 > S6 > S4 > S7 >
+S9 > S2 > S8 > S5 > S3 (proposal, 19/11).
 
-| ID | Constraint | Purpose | Where |
+The reviewer's view on recommendations (18/11): a recommendation is advice; when no plan keeps
+it, break it, but tell the student which pair and offer "keep recommendations first". KHMT 2023
+has 18 recommended relations.
+
+---
+
+## 3. Assumptions shown with every plan
+
+- Every course planned in the future is assumed passed.
+- An in-progress course is assumed passed unless the request says it fails (matches QĐ 285
+  Đ15.1).
+- A course without offering information is assumed offered.
+- The prior relation (HT) is a prerequisite; recommendations (KN) are wishes, not rules.
+- Recommended terms in the curriculum are not binding.
+- Regular terms try to reach 11 credits but are never padded; a term below 11 gets a note.
+- With course levels on: the study year is the cohort year (or accumulated credits, H11); the
+  level is the first digit of the course code. Levels 3, 4 and 5 are allowed from year 3
+  (Đ15.4, followed where PL1 says level 4 from year 4; team, 28/11).
+- Summers: only opted-in summers, only courses with a summer history, no projects, at most 12
+  credits; without an opt-in, no regular course goes in summer.
+- Language standard, MOS, military and physical education not declared by the student are
+  assumed met for warnings (the thesis warnings use `student.flags`).
+- The last regular term may hold fewer credits than the minimum (university practice; team,
+  28/11), although QĐ 285 states no such exception (Đ15.3, Đ37.2).
+
+---
+
+## 4. Reports (computed, not enforced)
+
+| Report | Content | Solver |
+|---|---|---|
+| External requirements | Requirements of `policy/external.json` (language standards, physical and military education, social work, MOS, basic IT, student activities) against the student's progress: missed past deadlines, pending ones, blocking at graduation | ASP |
+| GPA | Credit-weighted GPA of the selected attempts (retake grade cap B), best reachable GPA, average needed for 2.50 | ASP |
+| Tuition | Fee per planned term from `policy/tuition.json` | ASP |
+| Majors | Majors the plan qualifies for (≥ 5 courses of a major list) | ASP |
+| Warnings | `warning_items`, each with a rule reference (FEATURES.md F-08) | Both |
+| Request report | Each student request met / warning / partial / unmet, with the reason | Both |
+| Infeasibility | Which student choice or school rule blocks a plan, with one-click fixes | Both (explained with CP-SAT) |
+
+---
+
+## 5. Regulation reference: QĐ 285 rules that affect planning
+
+### 5.1 Course relations
+
+| Rule | Article, page | Planner |
+|---|---|---|
+| **Prerequisite** A of B: A must be accumulated before registering B; may require a minimum grade in A | Đ2.1, p.2 | H4 |
+| **Corequisite** A of B: A accumulated earlier, **or** both in the same term; B is credited only once A is accumulated | Đ2.1, p.2 | H5; a failed A does not satisfy it |
+| **Recommended**: advice only, does not block registration | Đ2.1, p.2 | S6 (reviewer, 18/11) |
+| **Prior** (học trước): not defined by Đ2; "học phần trước" appears only in the special grade table (VP, HT grades count as "not passed, prior-course condition met") | PL14, p.55 | An obsolete name of a prerequisite: H6 = H4 (team, 28/11) |
+| Equivalent or replacement course: taking it exempts the original course and earns its credits | Đ2.1, p.2; Đ19.1, p.14 | Not supported |
+| English 1–4 form a prerequisite chain: basic English, then English 1, 2, 3 | PL7, p.35 | In the relation data when the program lists it |
+
+### 5.2 Failing a course
+
+| Rule | Article, page | Planner |
+|---|---|---|
+| A failed mandatory course must be retaken, or replaced by an equivalent when no longer taught | Đ3, p.3 | Hard: still planned |
+| A failed elective may be retaken **or replaced by another elective** | Đ3, p.3 | Not forced back; the group only needs its threshold |
+| Pass is grade D (4.0) or above; graduation courses need C (5.5) | Đ17.2, p.13; Đ18.3, p.14 | Outside the solver (pass/fail only) |
+| Electives beyond a group's requirement count only up to the requirement | Đ20.1, p.15 | S2 (no surplus) |
+
+### 5.3 Terms and duration
+
+| Rule | Article, page | Planner |
+|---|---|---|
+| Two regular terms (15 weeks of classes, 2–3 of exams) and one summer term (6–13 weeks) a year | Đ6.1, p.5 | Input: term list |
+| Term code `HKYYS`: 211, 212 are terms 1, 2 of 2021–2022; 213 is its summer | Đ6.1, p.5 | Input |
+| Regular classes run in regular terms; the **external internship usually runs in summer**; summer classes are mostly audit classes | Đ14.1, p.10; Đ29.1, p.19; PL13, p.52 | H14 |
+| Full-time: 8 planned terms, **at most 12 regular terms**; PFIEV 10 (max 14); part-time max 16 | Đ5.2, p.4 | Horizon |
+| One extra term for priority students or by special decision | Đ5.3, pp.4–5 | Outside |
+| Leave of absence: at most 4 terms, counted in the study time | Đ32.1, p.21 | Skip terms; warning for 2 consecutive regular terms |
+
+No article sets a credit limit for summer terms; the planner uses the team's 12 (reviewer, 19/11).
+
+### 5.4 Credits per term
+
+| Rule | Article, page | Planner |
+|---|---|---|
+| Full-time: average 17 credits; **minimum 14, maximum 21** | Đ15.3, pp.11–12 | Team uses 11–25 (18/11); the page shows the regulation range |
+| Minimum lowered to **11** for weak academic standing or health reasons, **at most 2 terms** | Đ15.3 | Needs the student's declaration |
+| Maximum raised to **25** for excellent standing **and** faculty approval | Đ15.3 | Needs the student's declaration |
+| Audit registration: up to 10 more credits, 28 in total | Đ15.3, p.12 | Outside |
+| Part-time: 11–17 (9 for up to 3 terms; 19 if excellent) | Đ15.3 | Only for part-time programs |
+| Registering below the minimum in a regular term **suspends the student for one term** | Đ37.2, p.24 | Why no term should be under the minimum |
+| Dropping a course must keep the minimum | Đ16, p.13 | Outside |
+| **Last-term exception**: only in the transition rules for cohorts ≤ 2020 (minimum 14, "except terms after the planned study time", which need one course); expired from term 2 of 2021–2022 | PL14, p.54 | Not in the current text, but the university allows a lighter last term in practice: planned without a warning (team, 28/11) |
+
+### 5.5 Study year and course level
+
+| Rule | Article, page | Planner |
+|---|---|---|
+| The study year depends on **N = credits accumulated since enrollment**, not the intake year | Đ24, p.17 | H11 with `year_credit_thresholds` |
+| Registration threshold for full-time: **M = 28 credits** (85 % of 33 planned per year); part-time M = 22 | Đ24, p.17 | One value for every full-time program of the university, whatever its credits per year (team, 28/11): `year_credit_thresholds` = [28, 56, 84] |
+| Year 1: N < M. Year 2: M ≤ N < 2M **and** year-2 language standard. Year 3: 2M ≤ N < 3M and year-3 standard. Year 4: 3M ≤ N < 4M and year-4 standard. Year 5: 4M ≤ N < 5M and year-4 standard | Đ24, p.17 | Credits only; language standards are external requirements |
+| Military and physical education must be completed to be placed in year 3 | Đ24, p.17 | External requirements (end of year 2) |
+| From cohort 2021: basic IT standard after year 1 to be placed in year 2 | PL9, p.40 | External requirement |
+| Language standard per year (Vietnamese-taught programs): year 2 English 1; year 3 English 1–3; year 4 English 1–4. Not for the Japanese high-quality, part-time and distance programs | PL7, p.35 | External requirement |
+| An in-progress course counts as passed when registering the next term | Đ15.1, p.11 | Assumption |
+| Course level: level 1 for all; level 2 from year 2; **levels 3, 4, 5 from year 3** | Đ15.4, p.12 | H11 |
+| Course code `MMLXXX[T]`: MM faculty or field, **L the level**, XXX a number | PL1, p.27 | Level = first digit |
+| PL1 says level 4 is for year 4, levels 5–9 for year 5 | PL1, p.27 | Conflicts with Đ15.4; the planner follows Đ15.4 (team, 28/11) |
+
+The reviewer first chose the cohort year for simplicity (18/11); from 22/11 (Q6) the web planner
+uses accumulated credits 28/56/84. Consequence: the study year depends on the plan itself; a
+level-3 course needs ≥ 56 credits before its term, and a failure can delay a whole chain.
+
+### 5.6 Graduation courses
+
+| Rule | Article, page | Planner |
+|---|---|---|
+| External internship, specialized project and thesis close the program; they need the language standard and accumulated credits | Đ15.5, p.12 | H12 |
+| Internship: ≥ **65 %** of the program's total credits | Đ15.5 | H12 |
+| Specialized project: ≥ **70 %** | Đ15.5 | H12 |
+| Thesis: ≥ **85 %**, plus ≥ 70 % of the training (rèn luyện) program, plus the graduation language standard | Đ15.5 | H12; the rest are external requirements |
+| To register the thesis only **Listening–Reading** of the graduation English standard is needed | PL7, p.36 | Thesis warning (`flags.english_grad_reading`) |
+| From cohort 2021: **MOS** certificate (Excel and PowerPoint) to register the thesis | PL9, p.40 | Thesis warning (`flags.mos`); external requirement |
+| Internship is a **corequisite** of the specialized project; both are **prerequisites** of the thesis | Đ15.5 | From the relation data (add relations if a program lacks them) |
+| In-progress courses count as passed for accumulated credits | Đ15.1, p.11 | Matches |
+| PFIEV: technical internship ≥ 55 %, engineering internship ≥ 75 %, thesis ≥ 85 %; chain worker → technical → engineering internship → thesis | PL10, pp.43–44 | Only if PFIEV is supported |
+
+"Total program credits" is the denominator: for KHMT 2023 (128 credits) the internship needs
+84, the specialized project 90, the thesis 109 (rounded up). The planner computes it as the
+mandatory credits plus each top-level elective group's threshold (`normalize._total_credits`).
+
+### 5.7 Graduation language standard
+
+| Program | Listening–Reading (TOEIC) | Speaking–Writing | Page |
 |---|---|---|---|
-| R1 | Implied credit bound: the future terms together must carry at least the credits still missing (degree minimum − history credits + required retakes of credited courses). | Lets the solver do the arithmetic once instead of course by course. | §9 |
-| R2 | Elective symmetry breaking. Interchangeable electives (`elective_class/3`: same credits, groups, majors, tags, requisites in both directions, offering, level, typical term, fills-next flag, note and popularity) are used in rank order and in non-decreasing term order. Courses the student singled out (pinned, banned in the plan or a term, interest by course id, requested, offered/closed, or in history) are exempt. | Removes plans that differ only by renaming identical electives; at least one best plan is always kept. | §20 |
+| Standard | 500 (cohort ≤ 2018), 550 (2019), 600 (from 2020) | 200 | PL7, p.35 |
+| Talented engineers | 600, 650, 700 (same cohorts) | 245 | PL7, p.35 |
+| PFIEV | as Talented, plus DELF B1 | 245 | PL7, p.35 |
+| Part-time | 400–600 by cohort | 200 (from 2021) | PL7, p.35 |
+| High-quality, Advanced (taught in English) | IELTS 6.0 or TOEIC 730 | 280 | PL8, p.38 |
 
----
+TOEIC to English exemption: 400 exempts basic English; 450 also English 1; 500 also English 2;
+550 also English 3; 600 also English 4 (PL7, p.36). Certificates are valid 2 years. The solver
+does not derive language standards; it reads what the student declares.
 
-## 2. Soft constraints
+### 5.8 The plan's assumptions against the regulation
 
-Ranked from highest to lowest priority. The number is clingo's priority
-(`@N`) and the label is what the CLI and JSON show under `objective`.
-
-| Priority | Label | Minimizes | Applies to | Data | Where |
-|---:|---|---|---|---|---|
-| 7 | `last_semester` | Index of the last used term (earliest graduation; with H4 this also minimizes the number of planned terms). | Whole plan | — | `optimize.lp` |
-| 6 | `retakes` | (a) **Timing of required retakes.** H19/H20 fix which retakes must happen, but not when. This term adds up the term numbers of those retakes, so the solver schedules them as early as it can. (b) **Optional retakes.** A failed elective, or a failed course whose credit was already earned, may be retaken but doesn't have to be. Each such retake costs 1, so the solver prefers a new elective and skips pointless retakes. Cost (@5) alone doesn't stop them, because tuition is flat up to the credit threshold, so an extra course can be free. (a) and (b) share one level: one optional retake weighs the same as moving one required retake one term later. | Retakes | `must/1` | `optimize.lp` |
-| 5 | `cost` | Total future tuition. | Billed future terms | `fee_rule/6` | `optimize.lp` |
-| 4 | `typical_term` | Distance between each special course's term and its typical regular term, counted in half steps: the K-th regular term is position 2K, and a summer after the K-th regular term is 2K+1. | Courses with `typical_regular_term` (see table below) | `typical_term/2` | §18, `optimize.lp` |
-| 3 | `level_order` | Sum of the term indices of planned level-1 and level-2 courses (lower-level courses earlier). | Courses whose level ≤ 2 | `course_level/2` (first digit of the id) | `optimize.lp` |
-| 2 | `balance` | Load of the heaviest future term. | Future terms | — | `optimize.lp` |
-| 1 | `taste` | Minus the total interest score of planned electives. Score of an elective = sum of the weights of its tags that the student weighted. A course-id interest (e.g. +10 / −10) targets one elective. | Elective courses | `interest/2`, `tag/2`, major lists | §19, `optimize.lp` |
-| 0 | `popularity` | Sum over planned electives of (highest count − course count). An elective without a count counts as 0 once any count is known. **Inactive** while `elective_popularity.json` is all `null` (current placeholder). | Elective courses | `popularity/2` | §19, `optimize.lp` |
-
-Typical regular terms in the current data (from the school's usual sequence
-on an 8-regular-term plan):
-
-| Course(s) | Kind | Typical regular term |
-|---|---|---:|
-| CO3101, CO3103, CO3105, CO3119, CO3127 (group B3.2) | Integration project | 5 |
-| CO3107, CO3109, CO3111 (group B3.3) | Multidisciplinary project | 6 |
-| CO3335 | Internship (registered; carried out in the following summer) | 6 |
-| CO4029 | Specialized project | 7 |
-| CO4337 | Capstone project | 8 |
-
-Why `typical_term` exists (measured): integration and multidisciplinary
-projects have no prerequisite and no milestone. Without this objective, the
-sample student's best plans found in 60 s put both in the first summer
-(term 3), or in the same term as the internship and the specialized project.
-With it, they move to the 5th and 6th regular terms, and every
-higher-priority value stays the same. See
-[FEATURES.md](FEATURES.md#f-11) for the runs.
-
-Not active: `extension.lp` §14–15 define a generic `soft_order/1`
-"soft prerequisite" (`order_violation/3`), but no policy fact enables it and no
-objective uses it.
-
----
-
-## 3. Reports (computed, not enforced)
-
-| Report | Meaning |
-|---|---|
-| Minimum GPA (2.50) | Not a per-term constraint. The planner reports the current GPA, the best reachable GPA (`gpa_best_case`), the average needed on the remaining credits (`gpa_required_avg`), and whether the target is already met or impossible. An impossible target withholds `ready_to_graduate`. |
-| External requirements (social work days: 3 by end of year 1, 6 by year 2, 15 at graduation) | A missed past deadline or an unmet graduation minimum withholds `ready_to_graduate`; a future deadline is reported as pending. The planner cannot schedule external progress. |
-| Course notes | `note` text of every planned course (e.g. the internship needs faculty information). |
-| Reserved terms | Terms kept empty by H7. |
+| Assumption | Verdict | Basis |
+|---|---|---|
+| Future planned courses are assumed passed | Kept (a solver assumption; the regulation is silent) | — |
+| An in-progress course is assumed passed unless stated otherwise | **Confirmed** | Đ15.1, p.11 |
+| A course without offering information is assumed offered | Kept (assumption) | — |
+| The last term may fall below the minimum | Not in the current text (only the expired transition rules), but **allowed in practice** (team, 28/11) | Đ15.3; PL14, p.54; Đ37.2 |
+| Course level from the first digit of the code | **Confirmed** | PL1, p.27 |
+| Study year from the cohort | **Rejected** by the text (credits plus language standard); chosen for simplicity on 18/11, replaced by credits on 22/11 in the web planner | Đ24, p.17 |
+| No regular courses in summer | Kept for regular courses (18/11), replaced by the student's summer opt-in (19/11); the external internship usually runs in summer; no summer credit limit in the text | Đ14.1; Đ29.1 |
+| H6 "prior" | Undefined in the text; an obsolete name of a prerequisite (team, 28/11) | Đ2, p.2; PL14, p.55 |
+| H12 thresholds plus English | **Confirmed and extended**: the denominator is the total program credits; the thesis also needs 70 % of the training program and MOS (cohort ≥ 2021), and only Listening–Reading | Đ15.5; PL7, p.36; PL9, p.40 |

@@ -466,7 +466,7 @@ The ASP translator additionally understands these optional planner fields:
 | `ban[]` | `"COURSE"`: never planned; `{course, term}`: not planned in that future term |
 | `offer[]` / `closed[]` | `{course, term}` offering overrides |
 
-The full student-facing description is `pipeline/docs/USER_INPUT.md`.
+The full student-facing description is `pipeline/docs/USER-INPUT.md`.
 
 ### `attempts[]`
 

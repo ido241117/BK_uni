@@ -1,0 +1,1286 @@
+% https://edworkingpapers.com/sites/default/files/Making%20the%20Grade%20v2_0.pdf
+% https://labdisia.disia.unifi.it/grilli/files/Presentations/BerGriRam_ASMOD2013.pdf
+% https://stars.library.ucf.edu/etd2023/362/
+
+
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+
+\usepackage{pdfpages}
+\usepackage{graphicx} % Required for including images
+
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+
+\usepackage{listings}
+\usepackage{minted}                  
+\lstset{
+  frame=tb,
+  framesep=5pt,       % Space between code and frame
+  aboveskip=8pt,      % Space above the code block
+  belowskip=8pt,      % Space below the code block
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+% Định nghĩa màu cho code
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single
+}
+\lstset{style=mystyle}
+
+\usepackage[lined,boxed,commentsnumbered]{algorithm2e} % Thuật toán
+
+
+\lstdefinelanguage{clingo}{
+  morekeywords={not},
+  morekeywords=[2]{\#const,\#sum,\#count,\#max,\#minimize,\#show},
+  sensitive=true,
+  morecomment=[l]{\%},
+}
+\lstset{
+  language=clingo,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue!60!black},
+  keywordstyle=[2]\color{purple!70!black},
+  commentstyle=\color{gray},
+  columns=fullflexible,
+  breaklines=true,
+  breakindent=1em,
+  aboveskip=0pt,belowskip=0pt,
+  xleftmargin=0pt,
+}
+
+% side-by-side block: left = formal text, \sbsmid, right = clingo listing
+\newenvironment{sbs}{\par\medskip\noindent\begin{minipage}[t]{0.46\textwidth}}{\end{minipage}\par\medskip}
+\newcommand{\sbsmid}{\end{minipage}\hfill\begin{minipage}[t]{0.51\textwidth}}
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+
+\newcommand{\cost}{\mathrm{cr}}
+\newcommand{\settled}{\mathcal{S}}
+\newcommand{\planned}{\Pi}
+
+\title{\textbf{Modeling Academic Planning}}
+\date{}
+
+\begin{document}
+
+
+\maketitle
+
+In this context, academic planning encompasses both course recommendation and degree planning. Our aim is to model a system capable of generating a semester-by-semester course plan that guides students toward graduation.
+
+
+\section*{Document Information}
+
+\begin{tabular}{ll}
+    \textbf{Report version:} & 2.0 \\
+    \textbf{Latest update:} & 31 October 2026 \\
+\end{tabular}
+
+\subsection*{Current Version Overview}
+
+This version presents the following main changes in the working progress:
+\begin{enumerate}
+      \item Add a section where we adapt existing implementation.
+      \item Improve our own formulation and encoding.
+      \item Proposed methods regarding synthetic data.
+      \item Proposed pipeline for easy intergration and implementation.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%5
+\tableofcontents
+\pagebreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Building Pipeline for Easy Intergration and Implementation}
+
+\begin{figure}[h]
+\caption{Diagram for pipeline illustration. Rectangle is a pipeline module, oval is output items of a module.}
+\centering
+\includegraphics[width=0.8\textwidth]{pipeline.png}
+\end{figure}
+
+
+\paragraph{Step 1.} Make a ground-truth data input where the formats are all agreed upon.
+
+Later on, we would make a separate synthetic data pipeline, which generates data for student enrollment records or also called student history.
+
+\begin{itemize}
+    \item All inputs are stored in a json format. These json files are the ground truth data for all other input extracting APIs.
+
+    \item The kinds of input files we need will be describe in details below. These are just proposed format, the input format can be chanegd as long as the amount of information retain.
+    \begin{itemize}
+        \item \textbf{Curriculum} information: extracted from the official computer science curriculum year 2023 of HCMUT. This includes: all courses, all course groups, all majors.
+        \item For each \textbf{courses}, we have:
+        \begin{itemize}
+            \item course id, course name
+            \item earned credits if passed
+            \item offering terms: term 1, 2 or 3
+            \item prerequisite courses
+            \item corequisite courses
+            \item capacity load: how many classes, how many student load per class.
+        \end{itemize}
+        \item For each \textbf{course group}, we have:
+        \begin{itemize}
+            \item type: compulsory or elective course group
+            \item total courses included in the group
+            \item minimum requirement cumulative earned credits (applied for elective course group)
+            \item maximum number of courses that students can learn in a group
+            \item minimum number of courses that students can learn in a group
+        \end{itemize}
+
+        \item Study regulations, or in our context, I would call it \textbf{graduation requirements }(since this is the only relevant information in study regulations):
+        \begin{itemize}
+            \item total required earned credits (if it's different for each curriculum, then document the number for each)
+            \item minimum required GPA to consider a course passed
+            \item minimum cumulative GPA required to graduate
+            \item grading policy (detailed later)
+            \item tuition fee policy (detailed later)
+            \item external requirements (that do not depend on courses or GPA)
+        \end{itemize}
+
+        \item \textbf{Grading policy}:  
+        \begin{itemize}
+            \item grade scale: grade (A+, A, B+, B,...), equivalent points, passing (true/false)
+            \item overall gpa (for a semester) calculation: credit weighted mean, included course kinds, scale max, rounding (half up, to how many decimals, applied to which kind of gpa)
+            \item retake policy (note that retake policy depends heavily on grading policy): attempt selection (choose retake with highest score or the latest attempt), credit counting (one per course, but still accounted for credit  fee), max attempts, grade cap, equivalence (can use equivalent course or not?)
+            \item gpa calculation pipeline order: resolve equivalence, select retake attempts (if possible), apply grade cap (if there is), sum by weighted credit, round 
+        \end{itemize}
+
+        \item \textbf{Student enrollment history} (including gpa transcript):
+        \begin{itemize}
+            \item curriculum (not need to specify if only test for one curriculum), regulations (no need to specify if only test for one university)
+            \item enrollment term: which year
+            \item note
+            \item external requirement progress (some external requirements require students to achieve a certain level for some years)
+            \item terms, for each term, specify which courses has passed, for each course, specify the gpa. 
+        \end{itemize}
+        
+    \end{itemize}
+\end{itemize}
+
+
+\paragraph{Step 2.} Make a tool for analyzing and visualize input, as well as transforming the raw json data into the corresponding suitable data for each engine. For example, if the engine is ASP, we need to transform from json to facts - same amount of information, just different format. This is for descriptive statistics of input data, and also for synthetic input data later on.
+
+\paragraph{Step 3.} A core engine where we can plug in and plug out many engines in order to test our main objectives: course recommendation and course planning. We expect each engine will have different formats of inputs and outputs.
+
+\paragraph{Step 4.} A output processing data tool in order to transform the engine output into a common output format for easy evaluate later.
+
+
+\paragraph{Step 5.} Evaluation tools, including evaluation for the engines and for the synthetic data model.
+
+
+
+
+\section{Synthetic Data}
+
+In the literature, most student datasets are private because of privacy reasons. Therefore, a need for a synthetic dataset of student information is apparent. We would like to explore which specify kind of student dataset are essential, as well as propose a probabilistic method to generate such dataset.
+
+In the following section, we would call the core algorithm which is responsible for degree planning the planner, and the synthetic data generating engine the generator.  
+    \subsection{What kinds of synthetic data is required?}
+\begin{itemize}
+      \item Student attributes and initial academic state. Each student should have a unique identifier and a set of initial attributes describing their academic context, such as their entry cohort, initial academic preparedness, and intended degree program. These attributes establish the initial conditions from which individual academic trajectories develop. 
+      \item Semester-level enrollment records. For each student and semester, the dataset should record which courses the student actually enrolls in. Enrollment must be represented as a temporal sequence because course choices in a given semester depend on previously completed courses, accumulated credits, academic performance, and the remaining curriculum requirements. The dataset should also represent relevant outcomes such as non-enrollment, withdrawal, or program completion when these are within the intended scope. Note that, the planning model is only needed for students who remain in the program, so students who drop out are not necessary to be generated, or are cut off and flagged so they can be filtered.
+      \item Course-level academic outcomes. For each course a student attempts, the dataset should contain the resulting score or grade, together with the course and semester identifiers. Scores should reflect both variation between students and differences in course difficulty. Failed courses and subsequent retakes should be represented explicitly where applicable.
+\end{itemize}
+
+Among the 3 kinds of data, \textit{semester-level enrollment records are the main material for evaluating} the course planning model: 
+\begin{itemize}
+    \item Give the planner a student’s enrollment records up to some semester and check whether its plan is feasible and better than baselines, such as following the standard curriculum order.
+    \item Compare the planner’s plan with what the synthetic student actually did next.
+    \item Check feasibility against all constraints, and measure outcomes such as semesters to completion between the planner and the symthetic students, or between the planner and the official recommended plan.
+\end{itemize}
+
+Meanwhile, cumulative GPA, and its distance from the graduation threshold, tells the planning model \textit{when a retake is worthwhile}.
+
+Hence, the following sections focus on student enrollment modeling and course-score generation.
+
+
+
+Note that the course cost differs, it's not just purely by credit unit, therefore, a cost optimization plan is possible.
+
+
+    \subsection{Assumptions}
+
+Before stepping further into proposed methods for generating synthetic data, some assumptions needs to be acknowledged:
+\begin{itemize}
+    \item We can’t show that the data match reality, our aim is for the model to be verified (built correctly), transparent about its assumptions, checked for plausibility by experts and by prior predictive checks, and robust across the plausible parameter range. Within the context of our work, we can claim that the dataset exercises the planner’s rules and plausible student behaviors, and conclusions hold across the stated parameter ranges.
+
+    \item The synthetic data is built while heavily relying on our university rules' characteristics (which are stated in Section~\ref{sec:scope})
+
+    \item Time structure is a standard 4-year program. Each year has 2 main semesters, plus an optional summer semester that students may skip. The typical maximum duration is 6 years, i.e. 12 main semesters.
+
+    \item There are course groups, including mandatory groups (all courses required) and elective groups (a minimum number of credits per group, sometimes with minimum and maximum course counts).
+
+    
+\end{itemize}
+
+    \subsection{Building Pipelines for Synthetic Data}
+To build a complete pipeline for our synthetic data, we have to complete these tasks:
+
+\begin{enumerate}
+    \item Define all the rules of the curriculum and university regulations. These are the constraints of our systems. Also, define some more rules that needs chosen:
+    \begin{itemize}
+        \item Attrition rules (e.g., ``If a student’s cumulative GPA drops below 1.5 for two consecutive semesters, or if they exceed 12 semesters without graduating, they transition to an 'attrited/dropped-out' absorbing state.'')
+    \end{itemize}
+    \item For each student, define his or her independent traits:
+    \begin{itemize}
+        \item A target GPA for each course, and a target accumulative GPA, or none.
+        \item A preference for finishing early.
+        \item A preferred credit load.
+        \item A cost sensitivity.
+        \item A student's ability vector, drawn from a standard normal distribution (this is a convention that defines the yardstick).
+    \end{itemize}
+    \item For each course, beside their attributes such as course id, offering frequencies, capacity loads, we also need to define:
+    \begin{itemize}
+        \item A course difficulty, drawn from a normal with one spread we must choose. Treat all courses alike by default, and test course-type shifts later as one of the sensitivity scenarios. That avoids baking the subjective impressions (e.g., course A must be easier than course B) into the base model. Write down outcome targets as ranges, such as a typical course average, the spread of scores, and a fail rate
+    \end{itemize}
+
+    \item We need to choose a model for student grades. Right now, Item Response Theory model is one potential candidate. This means we treat each course as a test question and each student as a test-taker. The chance of doing well depends on ability minus difficulty. The simplest version for a 10-point score is:
+    
+    \texttt{expected score rises with (ability - difficulty)}  
+    
+    \texttt{actual score = that + noise, kept inside 0-10}
+
+    Beyond the individual abilities and difficulties, the whole model needs only about four numbers:
+        \begin{itemize}
+            \item the spread of course difficulties
+            \item how steeply ability separates students (discrimination)
+            \item the noise level
+            \item optionally, a year effect and a retake effect
+        \end{itemize}
+
+    \item Next, we need to define a model for how students choose course. Currently, a simple agent-based model where students choose course based on utility function seems plausible. 
+
+    \item Define relevant outputs so that we can make sensitivity analysis afterwards, for example:
+        \begin{itemize}
+            \item Time-to-completion: The average number of semesters it takes students to graduate.
+
+            \item On-time graduation rate: The percentage of students graduating within 8 semesters.
+
+            \item Total cost: The average financial cost students incur under the planner vs. the baseline.
+
+            \item Adherence rate: How often students actually stick to the planner's recommendations versus panicking and deviating because of a bad grade.
+        \end{itemize}
+
+    \item We also need to make some analysis on the baseline in order to extract the similar relevant outputs.
+
+    \item Sensitivity analysis: We need to do this to see if tweaking your input parameters drastically changes these outputs. If changing the "noise level" shifts the graduation rate by 40\%, then noise is a critical parameter. To do this, we need to:
+    \begin{enumerate}
+        \item Choose relevant outputs (already mentioned)
+        \item Give each parameter a low and a high value.
+        \item Do it in two passes. First change one parameter at a time while the others stay at baseline, repeating each run with several random seeds so we can separate parameter effects from randomness. Plot how far each output moves (a tornado chart). Then draw a few hundred random combinations across all ranges and see which parameters explain the variation. Python’s SALib library implements this.
+        \item Read the result. If the planner-versus-baseline conclusion, i.e., ``Our planner produces cheaper or faster paths for students than the standard curriculum baseline.'', holds everywhere, we can state that. If it flips on one parameter, report that parameter as the one needing real data.
+
+        \item How to bridge simulation to reality? This is quite a tricky part to defense without observed data nor expert knowledge. Potentially, we can say that:
+        \begin{itemize}
+            \item Our own transcript: Use these only for sanity checks, not calibration.
+            \item Find relevant published aggregates. Universities sometimes publish graduation rates, time to degree, or degree-classification shares... This is quite infeasible to do.
+            \item Present the generator as a stress-test benchmark and claim robustness across stated ranges.
+            \item Using ``parameter recovery'', 
+            \begin{enumerate}
+                \item Take the generator code, and fix a known parameter value, for example, set the grade noise level = 1.2.
+
+                \item Run the generator to produce synthetic student transcripts based on that 1.2 noise level.
+
+                \item Pretend we don't know the noise level was 1.2. Feed the synthetic transcripts into an estimation script (e.g., an IRT maximum-likelihood or MCMC fitting script) and ask it to guess what the noise level was based on the data.
+
+                \item If the estimation script recovers a value very close to 1.2 (e.g., 1.19), we have successfully proven parameter recovery.
+            \end{enumerate}
+        \end{itemize}
+    \end{enumerate}
+
+
+\end{enumerate}
+
+In short: Construct a formatted input, solid groups of inputs, and parameters drawn from a probability distribution $\rightarrow$ Choose the model for scores and student enrollment records  $\rightarrow$ Choose ways to validate and verify the chosen models without observed data.
+
+Right now, to strengthen our claims on the proposed synthetic data method, we need to read paper about the use of synthetic data, application of IRT model and agent-based model on our literature, verification and validation of models.
+
+\section{Adaption of Existing Methods}
+
+    \subsection{ASP Method} \label{subsec:asp}
+    
+The section~\ref{subsec:asp} is based on the formalization of study regulations proposed by Hahn et al.~\cite{hahn2024reasoning}. Their approach provides an abstract knowledge representation (KR) of study regulations, which serves as the foundation for the corresponding general ASP encoding.
+
+
+\paragraph{Original Knowledge Representation.}
+
+The paper conceptualizes a study regulation as a tuple:
+\[
+\mathcal{R} = (M,G,c,s,l,u,R_g,R_t)
+\]
+where:
+\begin{itemize}
+    \item $M$ is the set of modules in the study program.
+    \item $G \subseteq 2^M$ is a collection of module groups used to express group-wise requirements.
+    \item $c : M \rightarrow \mathbb{N}$ assigns credit values to modules.
+    \item $s : M \rightarrow \{w,s,e\}$ specifies the regular semester in which a module is offered.
+    \item $l$ and $u$ define the lower and upper credit bounds for module groups, respectively.
+    \item $R_g$ and $R_t$ represent global and temporal regulatory constraints, respectively.
+\end{itemize}
+
+A study plan is defined as a finite sequence of module sets, where each set represents the modules taken in a particular semester. A valid study plan must satisfy all global and temporal constraints specified by the study regulation.
+
+This abstract representation is translated into ASP through two types of components: an instance containing facts that describe a specific study regulation, and a general encoding that defines the semantics of these facts and generates valid study plans.
+
+
+Our implementation builds upon the general ASP encoding proposed by Hahn et al.~\cite{hahn2024reasoning}. The original implementation is available in the authors' repository:
+\href{https://github.com/potassco/study-regulations}{Potassco/study-regulations}.
+Our adaptation for the HCMUT Computer Science 2023 curriculum is maintained in a separate repository:
+\href{https://github.com/kqyuu22/asp-course-planning}{asp-course-planning}.
+
+\paragraph{General ASP Encoding.}
+The original framework separates a study regulation into two components: a specific instance and a general encoding. The instance describes a particular study program through facts representing its modules, groups, credit values, and regulatory constraints. The general encoding defines the semantics of these facts and generates study plans satisfying the specified constraints.
+
+The general encoding is implemented in \texttt{encoding.lp}. Its generation process begins with a choice rule that assigns each available module to a term within the planning horizon:
+
+\begin{lstlisting}[caption={Module-to-term assignment in the general encoding},label={lst:module-assignment}]
+{ in(E,s(I)) } :- in(E,m), I=1..n.
+\end{lstlisting}
+
+Here, \texttt{in(E,m)} identifies the modules available for planning, while \texttt{in(E,s(I))} represents the assignment of module \texttt{E} to term \texttt{I}. The constant \texttt{n} specifies the number of terms in the planning horizon. The encoding subsequently derives the set \texttt{s}, representing all modules assigned across the planning horizon.
+
+The general encoding also provides mechanisms for representing and enforcing regulatory constraints over sets. Its main predicates include:
+\begin{itemize}
+    \item \texttt{empty(A)}: requires set $A$ to be empty.
+    \item \texttt{subseteq(A,B)}: requires $A$ to be a subset of $B$.
+    \item \texttt{equal(A,B)}: requires $A$ and $B$ to be equal.
+    \item \texttt{card(A,leq,U)}: limits the cardinality of $A$ to at most $U$.
+    \item \texttt{sum(A,F,bw,(L,U))}: constrains the sum of function $F$ over the elements of $A$ to the interval $[L,U]$.
+    \item \texttt{sum(A,F,geq,L)}: requires the sum of function $F$ over $A$ to be at least $L$.
+\end{itemize}
+
+The encoding also supports set operations. For example, \texttt{int(A,B)} represents the intersection of two sets, while \texttt{before(A)} represents the set of modules scheduled in earlier terms than at least one module in $A$. These operators allow an instance to express more complex constraints using the same general mechanisms.
+
+For example, the following rules implement the semantics of the intersection operator and the temporal operator \texttt{before}:
+
+\begin{lstlisting}[caption={Set intersection and temporal ordering operators},label={lst:set-operators}]
+in(E,int(A,B)) :-
+    set(int(A,B)), in(E,A), in(E,B).
+
+in(E1,before(A)) :-
+    set(before(A)),
+    in(E1,s(I)), in(E2,A), in(E2,s(J)), I < J.
+\end{lstlisting}
+
+The operators do not independently impose a particular academic policy. Instead, the study-program instance uses them to define the sets involved in its constraints. For example, a prerequisite relation can be enforced by requiring a prerequisite module to belong to the set \texttt{before(A)}, unless it has already been completed. This separation allows the same set-processing and constraint mechanisms to be reused across different study regulations.
+
+
+\paragraph{Extended Regulation Formulation}
+
+To support flexible curricula, student records, zero-credit courses, and retake policies, we extend the regulation tuple to $\mathcal{R} = (M, G, c, \Phi, l, u, R_g, R_t)$:
+
+\begin{enumerate}
+    \item \textbf{Zero-Credit Modules:} 
+    $$c : M \rightarrow \mathbb{N}_0$$ 
+    Allows 0-credit courses ($c(m) = 0$). These must still be passed if compulsory, but carry zero weight in credit sums or GPA calculations.
+    
+    \item \textbf{Flexible Offering Frequency ($\Phi$):} 
+    Replacing the rigid $s : M \rightarrow \{w, s, e\}$, module availability is governed by periodic recurrence patterns along with explicit additions ($O^+$) and closures ($O^-$):
+    $$\text{avail}(m,i) \iff \Big(\exists (k,o) \in \Phi(m) : (i+\sigma) \bmod k = o \lor (m,i) \in O^+\Big) \land (m,i) \notin O^-$$
+    \textit{Note:} The paper's $w$, $s$, and $e$ map to $(2,1)$, $(2,0)$, and $(1,0)$ respectively.
+\end{enumerate}
+
+\paragraph{Student Record and Attempted Items}
+
+We model student history and transcript records via the structure:
+$$\mathcal{E} = (A, (S_i)_{i=1}^{t}, g, \pi)$$
+
+\begin{itemize}
+    \item $A \subseteq M \cup \{rt(m,k)\}$ is the set of attempted items, where $rt(m,k)$ denotes the $k$-th retake of module $m$.
+    \item $(S_i)_{i=1}^{t}$ is a sequence of module sets taken in past semesters $1$ to $t$ (where $1 \le t \le n$).
+    \item $g : A \rightharpoonup [0, g_{\max}]$ is a partial grade mapping.
+    \item $\pi(x)$ maps each attempt to a passing status:
+    $$\pi(x) = \begin{cases} 
+    \text{passed} & \text{if } g(x) \ge \theta_p \text{ (or explicit P/F override)} \\
+    \text{failed} & \text{if } g(x) < \theta_p \\
+    \text{unknown} & \text{if } g(x) \text{ is undefined (e.g., active semester } t \text{)}
+    \end{cases}$$
+\end{itemize}
+
+\paragraph{Credited Sets}
+
+To prevent counting failed courses toward credit accumulation while allowing optimistic evaluation for future semesters:
+$$C_i = \begin{cases} 
+\{\text{base}(x) \mid x \in S_i, \pi(x) = \text{passed}\} & \text{for } i \le t \\
+\{\text{base}(x) \mid x \in S_i\} & \text{for } i > t 
+\end{cases}$$
+
+\paragraph{Retake Mechanics \& Eligibility}
+Let $N(m)$ be the number of attempts so far and $\text{last}(m)$ the latest attempt:
+$$\text{Elig}(m) \iff N(m) < \text{max\_tries} \land \big(\pi(\text{last}(m)) = \text{failed} \lor (\pi(\text{last}(m)) = \text{passed} \land g < \theta_i)\big)$$
+
+Mandatory retakes are enforced when a compulsory course fails or when explicitly requested:
+$$\text{Must}(m) \iff (\text{Elig-by-failure}(m) \land m \in G_{\text{comp}}) \lor (\text{Elig}(m) \land m \in \text{Req})$$
+
+\paragraph{GPA Calculation}
+Weighted credit mean over the latest attempt of each course (scaled by 10 for integer-based ASP solvers):
+$$\text{GPA} = \frac{\sum (c \cdot g)}{\sum c}$$
+\emph{(Zero-credit courses automatically drop out of the denominator).}
+
+
+\section{Formulation} \label{sec:formulation}
+
+    \subsection{Formulation as Constraint Satisfaction Problem}
+
+      \subsubsection{Motivation: Why a CSP?}\label{sec:motivation}
+Both validating and recommending an academic plan need a representation of the curriculum rules. Two representations are common in the literature. We explain why neither fits our setting, and why we formulate the problem as a constraint satisfaction problem (CSP) instead.
+
+\paragraph{Course prerequisite graph (CPG).}
+A CPG has one node per course and one edge per prerequisite relation. From it, a planner can derive a valid order of courses, find the longest chain of dependent courses and suggest the next courses along a path. The value of a CPG therefore depends on the \emph{density} of its edges: when most courses are linked to others, the graph carries a lot of information about which course should come when. In our target university, only a few courses have prerequisite or
+corequisite relations (assumption A2). The graph is then sparse, made of a few short chains and many isolated courses, and it says little about when most courses should be taken. Moreover, most of the rules we must check (credit load, level, offerings, credit totals, categories, GPA) are not
+relations between two courses, so they cannot be edges at all.
+
+\paragraph{Graph of sub-requirements.}
+Parameswaran, Venetis and Garcia-Molina~\cite{parameswaran2011recommendation} express degree requirements as a structured set of \emph{sub-requirements} over courses (for example, ``at least two courses from this list'') and recommend plans that satisfy them. This representation is expressive and handles complex rules well. Its cost is the modelling effort: curriculum experts must write the sub-requirements of each programme and verify that they match the regulations, and must redo this when the curriculum changes. We do not want the system to depend on such expert-made structures. It should be set up from information that already exists in the curriculum documents.
+
+\paragraph{Constraint satisfaction.}
+A CSP takes the opposite route. We do not describe the structure of a good plan. We only state \emph{variables} (which course is taken when), \emph{domains} (whether the fact that a certain course is taken is true or not) and \emph{constraints} (the rules), and a solver searches for plans that satisfy them. The data needed are those already found in the regulations: the course list, credits, prerequisite lists and thresholds (Section~\ref{sec:inputs}). This gives us the following advantages.
+\begin{itemize}
+      \item \textbf{No density requirement.} A prerequisite is one constraint among others. The model works the same with few or many relations.
+      \item \textbf{No expert-made structure.} The constraints are written once in a general form, and each curriculum only supplies data.
+      \item \textbf{One model, several uses.} The same constraints support generating a plan, checking a student's draft and repairing it (Section~\ref{sec:scope}).
+      \item \textbf{Easy to extend.} A new rule, such as equivalent courses, is a new constraint and does not change the structure of the model.
+      \item \textbf{Hard and soft requirements are separated.} Rules that must hold are constraints, while goals and preferences are objectives.
+\end{itemize}
+
+\paragraph{Disadvantages in our choice.}
+A CSP finds plans that \emph{satisfy the rules}. It does not by itself know which plan is educationally good, which a well-connected graph or an expert-made structure may hint at. We address this through the objectives (Section~\ref{sec:objectives}). Solving a general CSP is hard in the worst
+case, but the instances here (tens to hundreds of courses and a handful of semesters) are small by solver standards.
+
+
+      \subsubsection{Overview and Scope}\label{sec:scope}
+The task is to recommend, for every remaining semester, which courses a student should take so that all curriculum rules are respected and the student graduates. We formulate it as a CSP, following the mixed-initiative view of an academic plan~\cite{wu2005curriculum}: the student may pre-fill part of
+a course--semester matrix, and the system completes, checks or repairs the rest. In Section~\ref{sec:encoding} the CSP is \emph{encoded} as an answer set program and solved with \texttt{clingo}. The formulation supports three modes:
+\begin{itemize}
+      \item{\textbf{Generate.}} Given the history and the student's pins and bans, find the best feasible plan.
+      \item{\textbf{Check.}} Given a complete draft plan, do not search. Report every violated constraint together with the course and semester involved.
+      \item{\textbf{Repair.}} Given a draft plan that violates some constraints, find a feasible plan that differs from the draft in as few cells as possible. The difference between the two matrices tells the student \emph{how to resolve} the problem.
+\end{itemize}
+
+\paragraph{Planning scope.}
+The plan is computed for the \emph{whole remaining horizon at once}, not one semester after another. Graduation is a global condition: a semester-by-semester planner may choose a course early that later makes a prerequisite chain, an offering or the credit target unreachable, and a repair may need to change a semester far from the violation. The system is still used in a rolling way: after each real semester, the
+actual grades are added to the history and the remaining horizon is planned again. The recommendation for the next semester is the first planned column of the matrix, and showing only that column gives the semester-level view.
+
+\paragraph{What needs to be formulated - defined in Section~\ref{sec:inputs}.}
+\begin{itemize}
+      \item \textbf{Curriculum constraints.} One core function of the system is validation, so the rules of the curriculum must be modelled robustly. They include course-level rules (prerequisites, corequisites, credits of a course) and programme-level rules (load limits, level, and the requirements for graduation such as total credits, compulsory courses and English level). We distinguish \emph{semester constraints}, which hold in every planned semester, and \emph{graduation conditions}, which hold for the plan as a whole.
+      \item \textbf{Curriculum data.} The facts that describe the curriculum. They are supplied once per programme and are the same for every student.
+      \item \textbf{Student data.} The facts and decisions of one student: the course history, which is represented as a course--semester matrix, and the student's own choices.
+\end{itemize}
+
+\paragraph{Notable characteristics of the formulation.}
+\begin{itemize}
+      \item \textbf{Hard and soft requirements.} Prerequisites, corequisites, credit limits and compulsory courses are strict yes/no conditions (feasibility conditions). Depending on the curriculum, more hard constraints can be added. In contrast, student preferences, the target GPA and the wish to graduate early are optimization objectives used to rank the admissible plans. No recommended plan therefore violates an academic rule, and the remaining freedom is used for the student's benefit.
+      \item \textbf{Horizon.} The model plans the whole remaining horizon, and the next-semester recommendation is a view of that plan (see the planning scope above).
+      \item \textbf{Uncertainty in future GPA.} Grades cannot be known before a course is completed. Pass/fail is therefore treated deterministically for structural rules (an attempt is assumed passed, assumption A1), while grade-dependent targets, such as the cumulative GPA, use expected grades and are soft.
+      \item \textbf{Retake policy.} Institutions usually count the grade of a retaken course in one of two ways: the \emph{highest} grade counts or the \emph{latest} grade counts. The policy is a parameter of the curriculum. A retake costs load and money in its semester, but its credits are earned only once.
+      \item \textbf{External requirements.} Requirements that do not depend on courses (English level, volunteering days, etc.) are treated as given facts and checked only at graduation (Section~\ref{sec:graduation}).
+\end{itemize}
+
+% The constraints fall into three groups:
+% \begin{itemize}
+%   \item \textbf{semester constraints} (C1--C7), which must hold in every planned semester;
+%   \item \textbf{graduation conditions} (G1--G4), which must hold for the plan as a whole;
+%   \item \textbf{objectives}, which choose the best plan among the feasible
+%         ones.
+% \end{itemize}
+
+\paragraph{Hard and soft requirements.}
+Table~\ref{tab:classes} classifies all requirements. Only the student's own decisions may be relaxed when a plan has to be repaired.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{3.3cm}p{5.2cm}p{4.6cm}@{}}
+\toprule
+\textbf{Class} & \textbf{Content} & \textbf{Treatment} \\
+\midrule
+Curriculum rules & C1, C2, C3, C4, C5 (load), C7 & always hard \\
+Student decisions & pinned/banned cells, budget (C6), $T_{\max}$, retake permissions & hard when solving; may be relaxed in repair \\
+Graduation goals & G1, G2, G3, external requirements & hard \\
+Soft goal & G4 (GPA) & penalized \\
+\bottomrule
+\end{tabular}
+\caption{Classification of the requirements.}
+\label{tab:classes}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      \subsubsection{Assumptions}
+
+\begin{description}
+      \item[A1. Optimistic pass.] Every planned attempt is assumed to be passed, with a grade given by the student or by an external grade-prediction component. When planning semester $s$, the courses planned in earlier planned semesters are therefore treated as ``temporarily passed''. The prediction model itself is outside the scope of the formulation.
+      \item[A2. Acyclic, sparse relations.] The prerequisite graph and the corequisite graph are acyclic, and each course has only a few direct relations. Both are therefore checked directly on each course, without computing transitive closures.
+      \item[A3. Unique course identity.] Equivalent courses are either absent or resolved in preprocessing.
+      \item[A4. History is data.] The grades of completed semesters are read-only input.
+      \item[A5. Fixed horizon.] The student gives a maximum number of semesters $T_{\max}$ within which graduation must be reached.
+\end{description}
+
+      \subsubsection{Input Data and Data Treatment}\label{sec:inputs}
+
+The formulation works with three kinds of data. They differ in where they come from and how often they change.
+\begin{description}
+  \item[Index sets (defined by the system).] The sets that give the problem its size and shape: the set of courses and the set of semesters. They are not typed in. The system builds them from the other two kinds of data (Table~\ref{tab:index}).
+  \item[Curriculum data (supplied by the institution).] Describes the programme. It is entered once, is the same for all students of the programme, and is never changed by the solver (Table~\ref{tab:curriculum}).
+  \item[Student data (supplied per student).] Describes one student: the history, the student's decisions and constraints. It changes between sessions, and the history grows after every real semester (Table~\ref{tab:student}).
+\end{description}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{5.2cm}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} & \textbf{Built from} \\
+\midrule
+$C$ & set of courses & all courses in the curriculum data \\
+$S=\{1,\dots,T_{\max}\}$ & set of semesters & horizon $T_{\max}$ given by the student \\
+$s_0$ & last completed semester & number of semesters in the history matrix $H$ \\
+$S_H=\{1,\dots,s_0\}$ & history semesters & $s_0$ \\
+$S_P=\{s_0+1,\dots,T_{\max}\}$ & planned semesters & $s_0$ and $T_{\max}$ \\
+\bottomrule
+\end{tabular}
+\caption{Index sets (defined by the system).}
+\label{tab:index}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{3.1cm}>{\raggedright\arraybackslash}p{10.2cm}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Course data (one entry per course)}} \\
+$\mathrm{cr}(c)$ & credits of course $c$ \\
+$\mathrm{lv}(c)$ & level of course $c$ ($1$--$4$) \\
+$\mathrm{off}(c,s)$ & course $c$ is offered in semester $s$ \\
+$\mathrm{pre}(c)$, $\mathrm{co}(c)$ & prerequisites and corequisites of $c$, each a conjunction of
+clauses, a clause being a disjunction of courses (CNF) \\
+$C_{\mathrm{comp}}$ & compulsory courses \\
+$G_j$ & category (group) $j$: the set of courses that belong to it \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Programme regulations}} \\
+$g_{\mathrm{pass}}$ & lowest passing grade \\
+$L_{\min}, L_{\max}$ & minimum and maximum load per semester (credits) \\
+$\mathrm{Cr}_{\min}$, $\theta$ & credits and cumulative GPA required to graduate \\
+$r_j$ & credits required from category $G_j$ \\
+$\mathrm{fee}(L)$ & tuition fee of a semester with load $L$ credits \\
+$\lambda(E)$ & student level given $E$ earned credits \\
+$\rho$ & retake policy: \emph{highest} or \emph{latest} grade counts \\
+$K_{\mathrm{ext}}$ & list of external graduation requirements (their status is student data) \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Requirement tree (Section~\ref{sec:graduation})}} \\
+  $\mathcal{R}=(N,\mathrm{root},\mathrm{ch})$ & rooted tree of requirement nodes; $\mathrm{ch}(n)$ are the children of $n$ \\
+  $\mathrm{type}(n)$ & one of AND, OR, ALL, CREDITS, COUNT, EXT \\
+  $P_n\subseteq C$, $k_n$ & pool of eligible courses and threshold of a leaf $n$ (ALL, CREDITS, COUNT) \\
+  $\sigma(n)$ & exclusivity scope of a leaf (possibly none) \\
+  $L_s\subseteq C$ & course list of specialty $s$ (group C), used to define a pool \\
+\bottomrule
+\end{tabular}
+\caption{Curriculum data (supplied by the institution).}
+\label{tab:curriculum}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{3.1cm}>{\raggedright\arraybackslash}p{10.2cm}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+$H$ & course history as a course--semester matrix; $h(c,s)$ is the grade of $c$ in completed semester $s$ (empty if not attempted) \\
+$\hat g(c)$ & expected grade for a planned attempt of $c$, given by the student or by a grade-prediction component \\
+$T_{\max}$ & last semester in which the student may still study (horizon) \\
+$b_s$ & tuition budget of the student for semester $s$ \\
+$\mathrm{Pin}$, $\mathrm{Ban}$ & planned cells that the student insists on, or forbids \\
+$\mathrm{Imp}$ & completed courses that the student allows to retake to improve the grade \\
+$\mathrm{Ext}_k$ & true/false status of each external requirement $k\in K_{\mathrm{ext}}$ \\
+$D$ & draft plan: the cells the student proposes (check and repair modes only) \\
+\bottomrule
+\end{tabular}
+\caption{Student data (supplied per student).}
+\label{tab:student}
+\end{table}
+
+\paragraph{Curriculum data as tables of facts.}
+Every item in Table~\ref{tab:curriculum} is entered as a table of facts: one row per course for credits and level, one row per course and semester for the offerings, and one row per (course, clause, alternative) for prerequisites and corequisites in CNF. The functions $\mathrm{fee}$, $\lambda$ and $\rho$ are deliberately abstract. For example, $\mathrm{fee}$ may be linear in the load, a flat rate with bands, or a table; only the interface ``load of a semester $\to$ money'' is fixed. The curriculum data are assumed to be
+correct and complete. They come from the official curriculum documents, and checking their quality is outside the scope of this work.
+
+\paragraph{Student history as a course--semester matrix.}
+The history is stored as a matrix $H$ whose rows are courses and whose columns are the completed semesters. The entry $h(c,s)$ is the grade the student obtained when taking $c$ in semester $s$, and is empty if the student did not take it. Failed attempts are kept (their grade is below
+$g_{\mathrm{pass}}$), because they count for the load of that semester and may be retaken. A course taken in several semesters simply has several non-empty entries in its row. The matrix is never edited by the solver. It is only extended with the real grades after each semester.
+
+\paragraph{History and plan form one matrix.}
+The plan is the same matrix extended to the planned semesters. The left block (history) is fixed by $H$. The right block (plan) is what the solver completes, except that pinned cells are fixed to ``taken'' and banned cells to ``not taken''. Table~\ref{tab:matrix} shows an example. In check mode the draft $D$ is placed in the right block and only verified. In repair mode the draft is the reference from which the solution must differ as little as possible.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lcc@{\hspace{1.5em}}cc@{}}
+\toprule
+ & \multicolumn{2}{c}{History $S_H$ (fixed)} & \multicolumn{2}{c}{Plan $S_P$ (to complete)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{Course} & S1 & S2 & S3 & S4 \\
+\midrule
+MA101 & 3.0 & -- & ? & ? \\
+CS101 & 0.0 & -- & ? & ? \\
+CS102 & --  & -- & ? & ? \\
+EL2   & --  & -- & 1 & 0 \\
+\bottomrule
+\end{tabular}
+\caption{Example matrix with $s_0=2$ and $T_{\max}=4$. History entries are grades (``--'' means not attempted). In the plan block, ``?'' is a free cell decided by the solver, ``1'' a pinned cell and ``0'' a banned cell. Here the student passed MA101 and failed CS101 in semester 1.}
+\label{tab:matrix}
+\end{table}
+
+
+
+      \subsubsection{Variables and Domain}
+
+The plan is the course--semester matrix described above: rows are courses and columns are semesters. Each cell is a variable
+\[
+  x_{c,s} \in \{0,1\}, \qquad c \in C,\ s \in S,
+\]
+where $x_{c,s}=1$ means that course $c$ is attempted in semester $s$.
+Cells in the history ($s \in S_H$) are fixed by the student's record:
+$x_{c,s}=1$ exactly when $h(c,s)$ is not empty.
+Cells in the planned semesters ($s \in S_P$) are free, except that the
+student may \emph{pin} a cell to $1$ (``I want this course here'') or
+\emph{ban} it (``not this semester'').
+Because several cells of the same row may equal $1$, retaking a course
+needs no special modelling.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      \subsubsection{Derived Quantities}
+
+The following quantities are functions of the matrix $x$.
+
+\begin{itemize}
+  \item \textbf{Pass.} $p_{c,s}=1$ if the course is passed in semester $s$:
+        in the history when $h(c,s) \ge g_{\mathrm{pass}}$, and in a planned
+        semester whenever $x_{c,s}=1$ (assumption A1).
+  \item \textbf{Passed before / by.} $P^{<}_{c,s}=\bigvee_{s'<s} p_{c,s'}$ and
+        $P^{\le}_{c,s}=\bigvee_{s'\le s} p_{c,s'}$.
+  \item \textbf{Load.} $L_s=\sum_{c} \mathrm{cr}(c)\,x_{c,s}$.
+        Every attempt counts, including retakes.
+  \item \textbf{Earned credits.} A course earns its credits only on its
+        first pass: $e_{c,s}=p_{c,s}\wedge\neg P^{<}_{c,s}$.
+        The credits earned before semester $s$ are
+        $E_s=\sum_{s'<s}\sum_c \mathrm{cr}(c)\,e_{c,s'}$.
+  \item \textbf{Level.} The level of the student in semester $s$ is
+        $\lambda(E_s)$. It uses credits earned \emph{before} $s$, which avoids
+        a circular definition.
+  \item \textbf{GPA.} For each attempted course, the counted grade
+        $\gamma(c)$ follows the retake policy $\rho$ (using $h(c,s)$ for
+        completed attempts and $\hat g(c)$ for planned ones). The cumulative GPA is
+        $\sum_c \mathrm{cr}(c)\gamma(c)\big/\sum_c \mathrm{cr}(c)$, summed over attempted
+        courses, each counted once.
+\end{itemize}
+
+The distinction between $L_s$ and $E_s$ implements the retake rule of the
+curriculum: a retake costs load and money in its semester, but it adds
+nothing to the credits needed for the level and for graduation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      \subsubsection{Semester Constraints}
+
+For every planned semester $s \in S_P$ and every course $c$ with $x_{c,s}=1$:
+
+\begin{description}
+  \item[C1. Offering.] $\mathrm{off}(c,s)$ must hold.
+  \item[C2. Retaking.] Under the optimistic pass, repeating a course that
+        is already passed in the plan is pointless, so a planned attempt of
+        $c$ is allowed only if
+        (a) $c$ was not attempted earlier in the plan, and
+        (b) if $c$ was already passed in the history, the student has
+        explicitly allowed a grade-improvement retake ($c\in\mathrm{Imp}$).
+        A failed course in the history can be retaken freely.
+  \item[C3. Prerequisites.] For every clause $K$ of $\mathrm{pre}(c)$, at least
+        one course $a\in K$ has $P^{<}_{a,s}$, i.e.\ it was passed in
+        \emph{any earlier} semester.
+  \item[C4. Corequisites.] For every clause $K$ of $\mathrm{co}(c)$, at least
+        one course $a\in K$ has $P^{\le}_{a,s}$, i.e.\ it was passed in an
+        earlier \emph{or the same} semester.
+  \item[C7. Level.] $\mathrm{lv}(c) \le \lambda(E_s)$.
+\end{description}
+For the semester as a whole:
+\begin{description}
+  \item[C5. Load.] $L_{\min}\le L_s\le L_{\max}$. The minimum is waived in
+        the graduation semester $T$ (Section~\ref{sec:graduation}), and no
+        course may be planned after $T$.
+  \item[C6. Fee.] $\mathrm{fee}(L_s)\le b_s$.
+\end{description}
+(Constraint numbers follow the original list; the constraint on equivalent
+courses was removed, see A3, and C1 was added.)
+
+The CNF form allows both ``and'' and ``or'' relations. For example, a course
+with $\mathrm{pre}=\text{CS101}\wedge(\text{MA101}\vee\text{MA102})$ needs
+CS101 and at least one of the two mathematics courses.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+      \subsubsection{Graduation Requirements}
+\label{sec:graduation}
+ 
+The graduation conditions G1--G3 and the external requirements are expressed
+as one \emph{requirement tree} $\mathcal{R}$ that is part of the curriculum data. This is based on the kind of requirement hierarchy in~\cite{skaggs2025constraint}. The tree is a specification of the curriculum, not of the plan. It
+reads the plan only through the quantity ``course $c$ is passed by
+semester $s$'', that is, $P^{\le}_{c,s}$ of the derived quantities. This
+keeps the semester constraints C1--C7 untouched.
+ 
+\paragraph{Nodes.}
+Internal nodes combine their children. Leaves count courses taken from a
+\emph{pool} $P_n\subseteq C$. Table~\ref{tab:nodes} lists the six node types.
+ 
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lp{4.2cm}p{6.3cm}@{}}
+\toprule
+\textbf{Type} & \textbf{Parameters} & \textbf{Satisfied by semester $s$ when} \\
+\midrule
+AND & children & every child is satisfied \\
+OR & children & at least one child is satisfied \\
+ALL & pool $P_n$ & every course of $P_n$ is passed and counted for $n$ \\
+CREDITS & pool $P_n$, $k_n$ & the counted passed courses of $P_n$ give at least $k_n$ credits \\
+COUNT & pool $P_n$, $k_n$ & at least $k_n$ counted passed courses of $P_n$ \\
+EXT & status $\mathrm{Ext}_n$ & $\mathrm{Ext}_n$ is true \\
+\bottomrule
+\end{tabular}
+\caption{Node types of the requirement tree.}
+\label{tab:nodes}
+\end{table}
+ 
+\paragraph{Eligibility and allocation.}
+A course can be eligible for several leaves: a group-C course may also count
+as a free elective, for example. \emph{Eligibility} ($c\in P_n$) is data.
+\emph{Allocation} is a decision. For every leaf $n$ and $c\in P_n$ we add
+\[
+  u_{n,c}\in\{0,1\},\qquad u_{n,c}=1 \text{ means that } c \text{ counts toward } n.
+\]
+Each leaf has an optional \emph{exclusivity scope} $\sigma(n)$, a label chosen
+by the curriculum data. The allocation obeys:
+\begin{description}
+  \item[U1.] $u_{n,c}\le P^{\le}_{c,T_{\max}}$ : only passed courses are allocated.
+  \item[U2.] If $\sigma(n)$ is empty, $u_{n,c}=P^{\le}_{c,T_{\max}}$ : the leaf
+        counts every eligible passed course. The total-credits leaf is of this kind.
+  \item[U3.] For every scope $X$ and course $c$:
+        $\sum_{n:\ \sigma(n)=X,\ c\in P_n} u_{n,c}\le 1$ : within a scope a
+        course counts for at most one leaf.
+\end{description}
+For example, if a student passes more group-C credits than $r$, the surplus courses are
+allocated to the free-elective leaf. A plan is feasible when \emph{some}
+allocation satisfies the tree. Changing the exclusivity policy of a curriculum
+only changes the labels $\sigma$.
+ 
+\paragraph{Satisfaction.}
+Let $a_{n,c,s}=u_{n,c}\wedge P^{\le}_{c,s}$ be ``$c$ counts for $n$ and is
+passed by $s$''. $\mathrm{Sat}(n,s)$ is defined by induction on the tree:
+\begin{align*}
+  \text{ALL:}\quad     & \mathrm{Sat}(n,s)\iff \textstyle\bigwedge_{c\in P_n} a_{n,c,s}\\
+  \text{CREDITS:}\quad & \mathrm{Sat}(n,s)\iff \textstyle\sum_{c\in P_n}\mathrm{cr}(c)\,a_{n,c,s}\ \ge k_n\\
+  \text{COUNT:}\quad   & \mathrm{Sat}(n,s)\iff \textstyle\sum_{c\in P_n} a_{n,c,s}\ \ge k_n\\
+  \text{EXT:}\quad     & \mathrm{Sat}(n,s)\iff \mathrm{Ext}_n\\
+  \text{AND:}\quad     & \mathrm{Sat}(n,s)\iff \textstyle\bigwedge_{m\in\mathrm{ch}(n)} \mathrm{Sat}(m,s)\\
+  \text{OR:}\quad      & \mathrm{Sat}(n,s)\iff \textstyle\bigvee_{m\in\mathrm{ch}(n)} \mathrm{Sat}(m,s)
+\end{align*}
+Each course is counted once per leaf, so a retake adds no credits.
+All six definitions are monotone in $s$, hence $\mathrm{Sat}(n,s)$ implies
+$\mathrm{Sat}(n,s+1)$. A requirement of the form ``at most $k$ credits from
+list $X$'' would break this property and has to be evaluated at $T$ only.
+ 
+\paragraph{Graduation semester.}
+The graduation semester is the first semester in which the root is satisfied,
+\[
+  T=\min\{\,s\in S : \mathrm{Sat}(\mathrm{root},s)\,\},\qquad T\le T_{\max}
+  \iff \mathrm{Sat}(\mathrm{root},T_{\max}).
+\]
+It is the same $T$ that C5 uses to waive the minimum load, and no course may be
+planned after $T$. The earlier conditions are instances of the tree:
+\begin{description}
+  \item[G1. Compulsory courses.] ALL leaves, one per compulsory group of the curriculum.
+  \item[G2. Total credits.] one CREDITS leaf with pool $C$ and threshold $\mathrm{Cr}_{\min}$, without scope.
+  \item[G3. Categories.] one CREDITS (or COUNT) leaf per elective group, plus the free-elective leaf. These leaves share one scope.
+  \item[External requirements.] EXT leaves. Their status $\mathrm{Ext}_n$ is an input fact and is not a variable of the CSP.
+  \item[G4. Cumulative GPA.] a soft condition, not part of the tree.
+\end{description}
+ 
+\paragraph{Specialties are a parameter of a pool.}
+In our curriculum the six specialties have identical compulsory courses and
+identical elective groups A, B and D. They differ only in the course list
+$L_s$ of group C. The tree therefore has \emph{one} group-C leaf, and the
+specialty only decides its pool:
+\[
+  P_{\mathrm{C}}=
+  \begin{cases}
+    L_s & \text{if the student declares specialty } s,\\[2pt]
+    \bigcup_{s} L_s & \text{if the student chooses freely.}
+  \end{cases}
+\]
+No OR node and no duplicated subtree is needed. Courses of another specialty
+can still be counted through the free-elective leaf. The credits taken from
+each list $L_s$ can be reported to the student as a derived property of the plan
+(``qualifies for specialty $s$''), by adding one non-exclusive CREDITS leaf per
+specialty outside the requirement tree.
+ 
+\paragraph{Example (abridged).}
+Table~\ref{tab:tree} shows the tree of the curriculum for a student who
+chooses freely. The thresholds for the compulsory groups come from the
+listed courses, not from the section totals of the document, which disagree
+with the listed credits in two places: section A5 (listed courses 24, header 21)
+and the compulsory block of the specialties (listed 10, header 13). The two
+errors cancel in the total of 128.
+ 
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{4.3cm}lp{5.6cm}l@{}}
+\toprule
+\textbf{Node} & \textbf{Type} & \textbf{Pool / threshold} & \textbf{Scope} \\
+\midrule
+root & AND & all nodes below & --- \\
+A1--A5, specialty compulsory, graduation module & ALL & courses listed in the group & main \\
+A6, A7 (0-credit courses) & ALL & courses listed in the group & main \\
+elective group A, B & CREDITS & listed courses, $k=1$ & main \\
+elective group C & CREDITS & $P_{\mathrm{C}}$ (see above), $k=15$ & main \\
+elective group D & CREDITS & listed courses, $k=3$ & main \\
+free electives & CREDITS & all elective courses, $k=9$ & main \\
+total credits & CREDITS & $C$, $k=128$ & none \\
+SA4001, ENG\_GC & EXT & $\mathrm{Ext}_n$ & --- \\
+\bottomrule
+\end{tabular}
+\caption{Requirement tree of the Computer Science curriculum.}
+\label{tab:tree}
+\end{table}
+ 
+\paragraph{Why a tree.}
+The tree makes the graduation rules data. A new curriculum, a new cohort or a
+different exclusivity policy changes the tree and its labels but not the
+constraints. The tree can also be evaluated alone on a fixed transcript, which
+is exactly the check mode. Finally, it localizes infeasibility: each child of
+the root can be tested separately for $T_{\max}$
+(Section~\ref{sec:explain}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      \subsubsection{Objectives}\label{sec:objectives}
+
+Among all feasible plans, the system returns the best one under a
+lexicographic order of objectives (Table~\ref{tab:objectives}). The student
+may reorder or reweight them, which is itself a form of interaction.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}cp{11.5cm}@{}}
+\toprule
+\textbf{Rank} & \textbf{Objective (minimize)} \\
+\midrule
+1 & number of cells changed with respect to the student's draft (repair mode only) \\
+2 & graduation semester $T$ \\
+3 & GPA shortfall \\
+4 & number of planned retakes \\
+5 & largest semester load (load balance) \\
+\bottomrule
+\end{tabular}
+\caption{Default objective order.}
+\label{tab:objectives}
+\end{table}
+
+      \subsubsection{Discussion and Extension}
+
+Currently, this formulation lacks some notable characteristics:
+\begin{itemize}
+      \item Pairwise exclusivity: Cases such as: an elective course can be of either group A or group B, not both. In our curriculum, if a group-C elective course can be counted as a 'free elective course' if the student already meets the required credits of group C. We can add one more constraint so that double counting is not allowed.
+      \item Finding infeasible minimal sets: Try dropping each violated constraint and re-solving. If it is still infeasible, the constraint wasn’t needed. This is a minimal unsatisfiable subset, which is one explanation among possibly several. Showing one to three is usually enough.
+      \item 
+\end{itemize}
+
+We currently have some ideas about how the current CSP formulation can be extended. 
+
+Each course can be tagged with some keywords (e.g. course ``Introduction to AI'' is tagged with keyword: ``AI'', ``search algorithms'', ``machine learning''), along with a level of diffullties (e.g., low, intermediate, or high). Students, therefore, can either declare their interest by keywords or let the system infer their interests by course histories. With this way, we can add one more objective about preference in CSP formulation. There are also some main ways to implement this idea:
+\begin{itemize}
+      \item For tagging courses:
+            \begin{itemize}
+                  \item Manually: We need experts to tag the courses for reliability, or we can just tag the courses ourselves (with stated unreliability!).
+                  \item Automatically: We can implement a tag-extracted model and a tagging model.
+            \end{itemize}
+      \item For student's input interest, we can either:
+      \begin{itemize}
+            \item Give students a set of keywords of our system, extracted manually or automatically (said above).
+            \item Let student declare their interests in natural language, we can use a model to infer keywords from them. This gives more flexibility but also comes with high complexity and unreliability if LLM is used.
+      \end{itemize}
+\end{itemize}
+
+
+
+\section{ASP Encoding}\label{sec:encoding}
+ 
+The program is split in three parts that do not depend on each other's
+internals.
+\begin{description}
+  \item[Input.] Facts only. They come from the curriculum data
+        (Table~\ref{tab:curriculum}) and the student data
+        (Table~\ref{tab:student}). Nothing in the engine mentions a course,
+        a group or a curriculum.
+  \item[Engine.] A fixed logic program (\texttt{engine.lp}). It defines the
+        decision variable, the derived quantities, the constraints, the
+        requirement tree and the objectives.
+  \item[Output.] The atoms that the engine shows (\texttt{take/2},
+        \texttt{load/2}, \texttt{grad/1}, \texttt{use/2}, \texttt{viol/3},
+        \texttt{diff/2}, \texttt{gpa\_short/1}). A Python driver using the
+        \texttt{clingo} API loads the files, adds the mode, solves and
+        formats the answer.
+\end{description}
+ 
+\paragraph{Reading the code.}
+A rule $h \texttt{ :- } b_1,\dots,b_n$ derives $h$ when all $b_i$ hold; the
+symbol \texttt{not} is negation as failure. A \emph{choice rule}
+\texttt{\{ take(C,S) \} :- \dots} lets the solver include or exclude each
+ground atom freely. \emph{Aggregates} such as
+\texttt{\#sum\{ Cr,C : take(C,S), credits(C,Cr) \}} compute over the
+\emph{set} of distinct tuples \texttt{(Cr,C)}, so putting the course in the
+tuple counts each course once. A \emph{constraint} \texttt{:- body.} forbids
+the body. \texttt{\#minimize} gives the objectives with priorities
+\texttt{@p}; a larger $p$ is more important.
+ 
+\subsection{Input facts}
+\label{sec:asp-input}
+ 
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}p{4.9cm}p{8.4cm}@{}}
+\toprule
+\textbf{Fact} & \textbf{Meaning} \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Curriculum data}} \\
+\texttt{credits(C,N)} & course \texttt{C} has \texttt{N} credits; defines the course set \\
+\texttt{offered(C,S)} & $\mathrm{off}(c,s)$ \\
+\texttt{pre(C,K,A)}, \texttt{co(C,K,A)} & clause \texttt{K} of the prerequisites (corequisites) of \texttt{C} contains \texttt{A}; one fact per (course, clause, alternative) \\
+\texttt{lv(C,L)}, \texttt{level\_from(L,E)} & $\mathrm{lv}(c)$; level \texttt{L} starts at \texttt{E} earned credits ($\lambda$) \\
+\texttt{load\_min(N)}, \texttt{load\_max(N)} & $L_{\min}$, $L_{\max}$ \\
+\texttt{fee\_rate(R)} & fee of a semester is \texttt{R} times its load (a linear $\mathrm{fee}$) \\
+\texttt{g\_pass(G)}, \texttt{theta(G)} & $g_{\mathrm{pass}}$ and $\theta$, on the same integer grade scale \\
+\texttt{retake\_policy(P)} & \texttt{highest} or \texttt{latest}; exactly one fact \\
+\multicolumn{2}{@{}l}{\emph{Requirement tree}} \\
+\texttt{and\_node(N)}, \texttt{or\_node(N)}, \texttt{child(N,M)} & internal nodes and the tree edges; the root is \texttt{root} \\
+\texttt{all\_of(N)}, \texttt{min\_credits(N,K)}, \texttt{min\_count(N,K)} & leaf types \\
+\texttt{external(N)} & EXT leaf \\
+\texttt{pool(N,G)}, \texttt{in\_group(G,C)} & the pool of leaf \texttt{N} is the group \texttt{G}; the group's courses \\
+\texttt{xscope(N,X)} & leaf \texttt{N} is in exclusivity scope \texttt{X} \\
+\multicolumn{2}{@{}l}{\emph{Student data}} \\
+\texttt{hist\_end(S0)}, \texttt{hist(C,S,G)} & $s_0$ and the history matrix $H$ \\
+\texttt{imp(C)}, \texttt{pin(C,S)}, \texttt{ban(C,S)} & $\mathrm{Imp}$, $\mathrm{Pin}$, $\mathrm{Ban}$ \\
+\texttt{budget(S,B)} & $b_s$ \\
+\texttt{default\_expected(G)}, \texttt{expected(C,G)} & $\hat g(c)$, with exceptions \\
+\texttt{ext\_true(N)} & $\mathrm{Ext}_n$ is true \\
+\texttt{draft(C,S)} & draft plan $D$ (check and repair modes) \\
+\multicolumn{2}{@{}l}{\emph{Supplied by the driver}} \\
+\texttt{mode(M)} & \texttt{check} or \texttt{repair}; absent in generate mode \\
+\texttt{horizon} (constant) & $T_{\max}$, set with \texttt{-c horizon=N} \\
+\bottomrule
+\end{tabular}
+\caption{Input predicates.}
+\label{tab:asp-input}
+\end{table}
+ 
+The grouping facts of the specialties are rules over facts, so the specialty
+parameter of Section~\ref{sec:graduation} stays in the data:
+\begin{lstlisting}
+elective_group((g_ga;g_gb;g_gc;g_gd)).
+in_group(g_gc,C)   :- declared(S), spec_list(S,C).   % declared specialty
+in_group(g_gc,C)   :- free_choice, spec_list(_,C).   % union of all lists
+in_group(g_free,C) :- in_group(G,C), elective_group(G).
+\end{lstlisting}
+The tree of Table~\ref{tab:tree} is written as facts, for example:
+\begin{lstlisting}
+and_node(root).
+child(root,(r_a1;r_a2;r_gc;r_gd;r_free;r_total;r_ext_eng)).   % abridged
+all_of((r_a1;r_a2)).
+min_credits(r_gc,15). min_credits(r_free,9). min_credits(r_total,128).
+external(r_ext_eng).
+pool(r_gc,g_gc). pool(r_free,g_free).
+xscope((r_a1;r_a2;r_gc;r_gd;r_free),main).      % r_total has no scope
+\end{lstlisting}
+ 
+\subsection{Variables and derived quantities}
+ 
+\begin{lstlisting}
+sem(1..horizon).
+plan(S)   :- sem(S), hist_end(H), S > H.
+course(C) :- credits(C,_).
+ 
+take(C,S) :- hist(C,S,_).                     % history is fixed
+{ take(C,S) } :- course(C), plan(S).          % x_{c,s}: free in planned semesters
+ 
+pass(C,S)    :- hist(C,S,G), g_pass(P), G >= P.
+pass(C,S)    :- take(C,S), plan(S).           % A1: optimistic pass
+pass_by(C,S) :- pass(C,S).
+pass_by(C,S) :- pass_by(C,S-1), sem(S).       % P^{<=}_{c,s}
+passed_hist(C) :- pass(C,S), hist(C,S,_).
+load(S,L)   :- plan(S), L = #sum{ Cr,C : take(C,S), credits(C,Cr) }.
+earned(S,E) :- sem(S), E = #sum{ Cr,C : pass_by(C,S-1), credits(C,Cr) }.
+level(S,L)  :- earned(S,E), L = #max{ Lv : level_from(Lv,Em), Em <= E }.
+\end{lstlisting}
+The atom \texttt{pass\_by(C,S)} is $P^{\le}_{c,s}$; the prerequisite check
+uses \texttt{pass\_by(A,S-1)}, which is $P^{<}_{a,s}$. The set semantics of
+\texttt{\#sum} makes $E_s$ count a course once, whatever the number of
+retakes.
+ 
+\subsection{Constraints as violations}
+\label{sec:asp-viol}
+ 
+Every constraint is first written as a derivation of an atom
+\texttt{viol(Family,Key,Detail)}. Whether a violation is forbidden is decided
+separately (Section~\ref{sec:explain}). This is what lets one program serve
+generate, check and repair.
+\begin{lstlisting}
+viol(c1,C,S) :- take(C,S), plan(S), not offered(C,S).                  % C1
+viol(c2,C,S) :- take(C,S), take(C,S2), plan(S), plan(S2), S2 < S.      % C2(a)
+viol(c2,C,S) :- take(C,S), plan(S), passed_hist(C), not imp(C).        % C2(b)
+ 
+pre_ok(C,K,S) :- pre(C,K,A), pass_by(A,S-1), sem(S).
+co_ok(C,K,S)  :- co(C,K,A),  pass_by(A,S),   sem(S).
+viol(c3,(C,K),S) :- take(C,S), plan(S), pre(C,K,_), not pre_ok(C,K,S). % C3
+viol(c4,(C,K),S) :- take(C,S), plan(S), co(C,K,_),  not co_ok(C,K,S).  % C4
+ 
+viol(c5max,S,L) :- load(S,L), load_max(M), L > M.                      % C5
+viol(c5min,S,L) :- load(S,L), load_min(M), L < M, last(T), S < T.
+viol(c6,S,F)    :- load(S,L), fee_rate(R), budget(S,B), F = L*R, F > B.% C6
+viol(c7,C,S)    :- take(C,S), plan(S), lv(C,Lc), level(S,L), Lc > L.   % C7
+ 
+viol(pin,(C,S),0) :- pin(C,S), not take(C,S).                          % student
+viol(ban,(C,S),0) :- ban(C,S), take(C,S).
+viol(after,C,S)   :- take(C,S), plan(S), last(T), S > T.   % nothing after T
+\end{lstlisting}
+A prerequisite or corequisite clause is a disjunction: it holds if
+\emph{any} of its alternatives \texttt{A} is passed, which is what the
+positive rules for \texttt{pre\_ok} and \texttt{co\_ok} say. The relation
+types of the curriculum document (TQ, KN, HT) are all \texttt{pre}; SH is
+\texttt{co}. The original label can be kept as an extra argument for display.
+ 
+\subsection{Requirement tree and allocation}
+ 
+\begin{lstlisting}
+member(N,C) :- pool(N,G), in_group(G,C).
+leaf(N) :- all_of(N).  leaf(N) :- min_credits(N,_).  leaf(N) :- min_count(N,_).
+scoped(N) :- xscope(N,_).
+done(C)   :- pass_by(C,horizon).                       % passed at some point
+ 
+use(N,C) :- leaf(N), not scoped(N), member(N,C), done(C).         % U2
+{ use(N,C) } :- scoped(N), member(N,C), done(C).                  % U1
+:- xscope(_,X), course(C), 2 { use(N,C) : xscope(N,X) }.          % U3
+ 
+counts(N,C,S) :- use(N,C), pass_by(C,S).               % a_{n,c,s}
+sat(N,S) :- all_of(N), sem(S), K = #count{ C : member(N,C) },
+            K <= #count{ C : counts(N,C,S) }.
+sat(N,S) :- min_credits(N,K), sem(S),
+            K <= #sum{ Cr,C : counts(N,C,S), credits(C,Cr) }.
+sat(N,S) :- min_count(N,K), sem(S), K <= #count{ C : counts(N,C,S) }.
+sat(N,S) :- external(N), ext_true(N), sem(S).
+sat(N,S) :- and_node(N), sem(S), sat(X,S) : child(N,X).
+sat(N,S) :- or_node(N),  sem(S), child(N,X), sat(X,S).
+ 
+grad(S)  :- sem(S), sat(root,S), not sat(root,S-1).    % first satisfied semester
+has_grad :- grad(_).
+last(T)  :- grad(T).
+last(horizon) :- not has_grad.
+viol(grad,N,horizon) :- child(root,N), not sat(N,horizon).
+\end{lstlisting}
+Two points are specific to ASP. First, \texttt{sat} is defined only by
+positive rules, so it is true exactly when one of its rules fires, which is
+the ``if and only if'' of the definition. Second, the choice rule for
+\texttt{use} introduces an allocation atom only for a passed course that is
+eligible for a scoped leaf, so the grounding grows with the size of the
+pools, not with $|N|\cdot|C|$. The constraint on the third line is U3: a
+cardinality bound of one per course and scope.
+ 
+\subsection{Enforcement switches and explanation}
+\label{sec:explain}
+ 
+A violation atom does nothing by itself. A constraint is switched on by an
+external atom \texttt{enf(Family,Key)}:
+\begin{lstlisting}
+enfkey(c1,C) :- course(C).   enfkey(c2,C) :- course(C).   enfkey(after,C) :- course(C).
+enfkey(c3,(C,K)) :- pre(C,K,_).   enfkey(c4,(C,K)) :- co(C,K,_).
+enfkey(c5min,S) :- plan(S).  enfkey(c5max,S) :- plan(S).  enfkey(c6,S) :- plan(S).
+enfkey(c7,C) :- lv(C,_).     enfkey(grad,N) :- child(root,N).
+enfkey(pin,(C,S)) :- pin(C,S).  enfkey(ban,(C,S)) :- ban(C,S).
+ 
+#external enf(F,K) : enfkey(F,K).
+:- viol(F,K,_), enf(F,K).        % an enforced constraint may not be violated
+\end{lstlisting}
+There is one switch per course for C1--C4 and C7, per clause for C3 and C4, per
+semester for C5 and C6, per pin and ban, and per child of the root for
+graduation. The three modes differ only in how the switches are set:
+\begin{description}
+  \item[Generate.] All switches are passed as \emph{assumptions} set to true.
+        The solver searches for the best plan. If there is none, it returns an
+        \emph{unsatisfiable core}: a subset of the assumed switches that
+        cannot hold together. The core is shrunk to a minimal subset by
+        deletion: each switch is dropped in turn and the problem is solved
+        again, and the switch stays out if the problem remains infeasible.
+        A minimal core reads as an explanation, for instance
+        \texttt{enf(c3,(co4337,1))} with \texttt{enf(pin,(co4337,4))}
+        (``the capstone is pinned before its prerequisite can be passed'').
+  \item[Check.] No switch is set. The draft is fixed with two constraints
+        (below), and the \texttt{viol} atoms of the answer are the report.
+  \item[Repair.] All switches are set, and the number of cells that differ
+        from the draft is minimized.
+\end{description}
+Because the tree is explicit, a second diagnostic is cheap: for each child
+$m$ of the root, solve with only the switch of $m$ set. If this is already
+infeasible for $T_{\max}$, then $m$ alone is the reason. Otherwise the reason
+is a combination of requirements, and the core shows it. The horizon itself is
+a constant of the program, so a core cannot mention it. The driver instead
+repeats the solve with a larger \texttt{horizon} and reports the smallest
+horizon that is feasible.
+ 
+\paragraph{Driver note.}
+In \texttt{clingo} an external atom is false until it is released. Before
+solving with assumptions the driver sets every \texttt{enf} atom free with
+\texttt{ctl.assign\_external(atom, None)}, and then passes
+\texttt{assumptions=[(atom, True), \dots]} and an \texttt{on\_core} callback.
+The literals in the core are mapped back to atoms with
+\texttt{ctl.symbolic\_atoms}. During core minimization the optimization
+is turned off (\texttt{opt\_mode=ignore}), because only satisfiability matters.
+ 
+\subsection{Modes}
+ 
+\begin{lstlisting}
+:- mode(check), draft(C,S), plan(S), not take(C,S).        % fix the draft
+:- mode(check), take(C,S), plan(S), not draft(C,S).
+diff(C,S) :- mode(repair), draft(C,S), not take(C,S).      % cells that differ
+diff(C,S) :- mode(repair), take(C,S), plan(S), not draft(C,S).
+\end{lstlisting}
+ 
+\subsection{Cumulative GPA}
+ 
+\begin{lstlisting}
+exp_grade(C,G) :- expected(C,G).
+exp_grade(C,G) :- course(C), default_expected(G), not expected(C,_).
+attempt(C,S,G) :- hist(C,S,G).
+attempt(C,S,G) :- take(C,S), plan(S), exp_grade(C,G).
+beaten(C,G) :- attempt(C,_,G), attempt(C,_,G2), G2 > G.
+later(C,S)  :- attempt(C,S,_), attempt(C,S2,_), S2 > S.
+counted(C,G) :- retake_policy(highest), attempt(C,_,G), not beaten(C,G).
+counted(C,G) :- retake_policy(latest),  attempt(C,S,G), not later(C,S).
+gpa_pts(P)   :- P = #sum{ Cr*G,C : counted(C,G), credits(C,Cr) }.
+gpa_cr(N)    :- N = #sum{ Cr,C : counted(C,_), credits(C,Cr) }.
+gpa_gap(D)   :- gpa_pts(P), gpa_cr(N), theta(Th), D = Th*N - P.
+gpa_short(X) :- gpa_gap(D), X = (D + |D|) / 2.             % max(0, D)
+\end{lstlisting}
+The shortfall is $\max\bigl(0,\ \theta\sum_c \mathrm{cr}(c)-\sum_c \mathrm{cr}(c)\gamma(c)\bigr)$,
+computed without division, so all values are integers. The predicate
+\texttt{counted/2} implements the retake policy $\rho$.
+ 
+\subsection{Objectives}
+ 
+\begin{lstlisting}
+retake(C,S) :- take(C,S), plan(S), hist(C,_,_).
+bigger(M)   :- load(_,M), load(_,L), L > M.
+maxload(M)  :- load(_,M), not bigger(M).
+ 
+#minimize{ 1@6,N   : viol(grad,N,_) }.      % only when graduation is not enforced
+#minimize{ 1@5,C,S : diff(C,S) }.           % repair: cells changed
+#minimize{ T@4     : grad(T) }.             % graduation semester
+#minimize{ X@3     : gpa_short(X) }.        % GPA shortfall
+#minimize{ 1@2,C,S : retake(C,S) }.         % planned retakes
+#minimize{ M@1     : maxload(M) }.          % largest semester load
+#minimize{ 1@0,N,C : use(N,C), scoped(N) }. % no unneeded allocations
+\end{lstlisting}
+The levels $5,4,3,2,1$ are the ranks 1--5 of Table~\ref{tab:objectives}.
+Level $6$ matters only when graduation is relaxed, and level $0$ only removes
+redundant allocation atoms from the answer. Priorities are lexicographic, so no
+weights are needed.
+ 
+\paragraph{Declarations.}
+Optional input predicates are declared so that the grounder does not warn
+when a student gives none of them:
+\begin{lstlisting}
+#defined imp/1. #defined fee_rate/1. #defined budget/2. #defined pin/2.
+#defined ban/2. #defined min_count/2. #defined or_node/1. #defined draft/2.
+#defined lv/2. #defined expected/2.
+\end{lstlisting}
+ 
+% \subsection{Validation of the encoding}
+ 
+% The encoding was tested on a small curriculum (ten courses, six semesters)
+% with the following results; each is a consequence of the formulation.
+% \begin{itemize}
+%   \item Pinning a course before its prerequisite gives a minimal core of
+%         two switches, \texttt{enf(c3,(a3,1))} and \texttt{enf(pin,(a3,2))}.
+%         A corequisite pinned too early, a course above the student level, and a
+%         retake without permission give the analogous two- and three-element cores.
+%   \item With $T_{\max}$ lowered to $2$ the cores contain the prerequisite
+%         switch and the switch of the compulsory leaf.
+%   \item With an exclusive free-elective leaf of 12 credits and a group-C
+%         leaf of 6 credits, six distinct courses are needed and only five exist,
+%         so the problem is infeasible and the core is the two leaf switches.
+%         Removing the scope of the free-elective leaf makes it feasible, as expected.
+%   \item Surplus group-C courses are allocated to the free-elective leaf with
+%         no extra rule.
+%   \item In check mode a draft with a prerequisite taken in the same semester and
+%         an overloaded semester is reported with exactly those two violations.
+%   \item The retake policy changes the GPA shortfall as defined: a retake of a
+%         passed course is chosen only if it reduces the shortfall without delaying $T$.
+% \end{itemize}
+% These are checks on a toy instance. They show that the rules implement the
+% definitions, not that the encoding is fast on the full curriculum.
+ 
+
+
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

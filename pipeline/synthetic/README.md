@@ -117,7 +117,7 @@ Sources are the two PDFs in the repo root:
 | **Maximum duration** of a regular program: 12 main semesters | QD1260 Điều 1.1, p.2 |
 | **Internship threshold** (65% of program credits): counted as credits before its term plus the other courses of that term, the internship excluded (decided 23/11/2026, same for the specialized project and thesis thresholds; also in the ASP engine and `planner.validate`) | QD285 Điều 15.5, p.12 |
 
-Other rules the simulator needs but that were not re-extracted: pass marks (D = 4.0; C = 5.5 for graduation courses, from `docs/04-luat-qd285.md` §2), the grade scale and fees (`policy.lp`), and everything `planner.validate` checks.
+Other rules the simulator needs but that were not re-extracted: pass marks (D = 4.0; C = 5.5 for graduation courses, from `docs/CONSTRAINTS.md` section 5.2, the grade scale and fees (`policy.lp`), and everything `planner.validate` checks.
 
 **Simplifications (assumptions, not rules):**
 - Year level ignores the foreign-language and GDQP/GDTC conditions of Điều 24.
@@ -190,6 +190,27 @@ No setting proved optimality. All reach the top objective (graduation term). The
 Cuts (112 of 200 wanted: too few eligible students at n = 20): solver legal 0.79, complete 1.00, every failed required course rescheduled, 9.8% proven optimal, mean 28 s per solve; remaining main semesters solver minus official −0.60 (by k: −0.40, −1.00, −0.83, −0.83, −0.28, −0.22).
 
 ## 7. Known issues
+
+Listed here, not in the pipeline README (synthetic is a separate pipeline, to be completed later).
+
+Found 2026-11-28:
+
+- **`synthetic.checks pool` crashes on all 3 pools.** Each `pool.json` stores
+  `policy = planner/solvers/asp/policy.lp`; the config now says `instances/hcmut/policy`, and
+  `Curriculum` looks for `policy.lp/grading.json`. Options: regenerate the pools, fix
+  `pool.json`, or override the path at load time (weakens the reproducibility check).
+- **Prior predictive check fails one target.** `checks predictive --n 500`:
+  `course_means_in_range` is false; the other 3 targets pass. Recalibrate `[grades]` or revisit
+  `[targets]`.
+- **The agent still applies the internship `fills_next` rule** (`curriculum.fills_next_errors`,
+  `plans.plan_errors`, `simulate.py`, `regulations.py`): the term after the internship holds no
+  course. The solvers dropped this rule on 2026-11-28 (docs/PLANNER-PARITY.md).
+- **Stale paths in this README**: `planner/fixtures/khmt2023.json`, `solvers.py`.
+- **The items below predate the solver-parity work of 2026-11-28** (one input and rule set
+  for both solvers, no `policy.lp`, ASP summer rules and S2/S8 as in CP-SAT, PE and MI1003
+  as conditions). The first three may be resolved; recheck them on the next pool run.
+
+Earlier:
 
 - **ASP plans break the summer rules of `planner.validate`.** With summer opt-in, the engine opens every course in summer (`extra_sem`, ASP-ADAPTER §7), so it places courses with no summer history and project courses in summer. 3 of 20 full plans and 24 of 112 cut plans are illegal for this reason only. Reported as `legal = False`; not fixed here.
 - **ASP plans carry surplus credits** (pilot mean 134 of 128): extra electives in groups B and D. The regular fee is flat for 13–18 credits and no objective penalises extra credits.

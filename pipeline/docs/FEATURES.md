@@ -1,298 +1,293 @@
 # Features
 
-Functional requirements the ASP planner (`pipeline/engine/asp`) currently
-meets. Each feature lists what it does, what it reads, what it produces and
-where it is implemented. Rule IDs (H…, R…) and priorities refer to
-[CONSTRAINTS.md](CONSTRAINTS.md); input fields refer to
-[USER_INPUT.md](USER_INPUT.md).
+What the planner does today. The planner is one package (`pipeline/planner/`) with two solvers,
+CP-SAT and the ASP engine, behind one input, one rule set ([CONSTRAINTS.md](CONSTRAINTS.md))
+and one result shape. Input fields are in [USER-INPUT.md](USER-INPUT.md). A feature only one
+solver has is marked; how such gaps are tracked and closed is in
+[PLANNER-PARITY.md](PLANNER-PARITY.md).
 
-Status legend: **Supported**: implemented and tested. **Placeholder**:
-implemented, but waiting for data. **Not supported**: see the last section.
+Status: **Supported** = implemented and tested; **Partial** = implemented with a stated gap.
 
-| ID | Feature | Status |
-|---|---|---|
-| F-01 | Generate ASP facts from the JSON dataset | Supported |
-| F-02 | Read a student record (JSON or ASP facts) | Supported |
-| F-03 | Plan the remaining courses term by term | Supported |
-| F-04 | Degree audit: groups, credits, majors | Supported |
-| F-05 | Prerequisites, co-requisites, offering, milestones | Supported |
-| F-06 | Retake planning | Supported |
-| F-07 | Load bounds, summer terms, calendar | Supported |
-| F-08 | Tuition and budget | Supported |
-| F-09 | GPA report and target | Supported |
-| F-10 | External requirements and readiness | Supported |
-| F-11 | Typical term of special courses | Supported |
-| F-12 | Courses that fill the following term | Supported |
-| F-13 | Course notes | Supported |
-| F-14 | Pin and ban courses | Supported |
-| F-15 | Elective slots | Supported |
-| F-16 | Interest keywords (tags) | Supported |
-| F-17 | Popularity tie-breaker | Placeholder |
-| F-18 | Elective symmetry breaking | Supported |
-| F-19 | Ranked optimization and alternative plans | Supported |
-| F-20 | Reports (text, Markdown, JSON, raw) and exit codes | Supported |
+| ID | Feature | Solvers | Status |
+|---|---|---|---|
+| F-01 | Planner input from the canonical instances | both | Supported |
+| F-02 | Normalization shared by every solver and the validator | both | Supported |
+| F-03 | Plan the remaining terms, all at once | both | Supported |
+| F-04 | Degree audit: groups, majors, free-elective slots, credit counting order | both | Supported |
+| F-05 | What-if requests | both (some fields CP-SAT only) | Supported |
+| F-06 | Independent validation of every plan | validator | Supported |
+| F-07 | Why there is no plan, with one-click fixes; why a credit target was missed | both (explained with CP-SAT) | Supported |
+| F-08 | Warnings with the regulation article; request report | both | Supported |
+| F-09 | Soft-goal report | both | Supported |
+| F-10 | Course facts for client-side checks | both | Supported |
+| F-11 | Relation snapshot and inferred relations | both | Supported (inference off by default) |
+| F-12 | GPA, tuition, external requirements, majors (reports) | ASP | Supported |
+| F-13 | Interests from course tags | ASP | Supported |
+| F-14 | Capability declarations and the goals-used note | both | Supported |
+| F-15 | Command-line entry point for the web backend | both | Supported |
+| F-16 | Solver registry for evaluation and plug-ins | both | Supported |
 
 ---
 
 <a id="f-01"></a>
-### F-01. Generate ASP facts from the JSON dataset
+### F-01. Planner input from the canonical instances
 
-- **Does**: validates `curriculum.json`, `grading_policy.json`,
-  `graduation_requirements.json`, `tuition_policy.json` and the optional
-  `elective_popularity.json`, then writes `<curriculum-id>.lp`
-  (`cs-2023.lp`) and `policy.lp`. Generated files contain facts only.
-- **Run**: `python -m pipeline.engine.asp.cli` (no `--solve`). When solving,
-  the facts go to a temporary directory.
-- **Code**: `data.py` (validation), `translation.py` (`build_curriculum`,
-  `build_policy`, `build_tuition`, `elective_classes`).
+- **Does**: `planner.model.input.load_fixture(path)` reads one request file of
+  `instances/<uni>/requests/` and builds the planner input (the "fixture"): curriculum, terms,
+  courses, relations, groups, offerings, the student's statuses, every attempt (term, grade), the
+  external progress, the requests (`scenarios`) and the policy (grading, tuition, external
+  requirements, graduation GPA). `to_planner_fixture(...)` does the same from loaded documents.
+- **Checks**: `instances.loader` validates the instance first (schema 3); `facts.validate_input`
+  checks the planner input before solving: unknown courses, relation types, overlapping groups,
+  statuses, scenario terms outside the plan, in-progress results for exactly the in-progress
+  courses, goal ids, wanted courses outside the program, graduation-course kinds. A bad input
+  is an error with a reason, never a silent skip.
 
 <a id="f-02"></a>
-### F-02. Read a student record
+### F-02. Normalization shared by every solver and the validator
 
-- **Does**: `--student-json` reads one record from `student_history.json`
-  (schema v2 tables or legacy v1). It resolves course equivalents, validates
-  courses, grades, terms, pins, bans and interest keywords, numbers retakes,
-  and converts terms to indices and budgets to fixed-point money.
-  `--solve` reads ready-made ASP facts. `t` comes from `as_of_term`, or from
-  the last `taken/2` term.
-- **Code**: `translation.student_to_facts`, `core/translate.lp`.
+`planner/model/normalize.py` reshapes data, adds no rules, and is idempotent, so both solvers,
+the validator and the reports see the same data. Steps:
+
+0. **Student block choices** (`student.block_overrides`, T46, 22/11): a course counts in the
+   block the student chose; a course outside the program joining a listed block becomes a member;
+   joining the free elective counts its credits there.
+1. **Condition courses** are removed from planning: `conditions` plus every 0-credit course.
+   Their statuses are kept (`_condition_statuses`) for the external requirements.
+2. **Specialization** (H15): with a target major, the parent group keeps only the major's list;
+   without one, the child groups are dropped. The child groups are kept for the ASP major report.
+3. **Total program credits** (`_total_credits`) = mandatory credits + each top-level elective
+   group's threshold: the denominator of the graduation thresholds (H12).
+4. **Free elective → slots** `FREE_k` (H13), reduced first by elective surplus inside the
+   program, then by passed (or in progress and assumed passed) courses outside it, then by
+   courses the student typed into the free elective (`student.free_choices`, T62, 23/11), which
+   become a separate mandatory block. This is the myBK counting order (reviewer, 19/11).
 
 <a id="f-03"></a>
-### F-03. Plan the remaining courses
+### F-03. Plan the remaining terms
 
-- **Does**: chooses a future term for every course still needed so that all
-  hard constraints hold. Each planned course is assumed to pass, and an
-  in-progress history course is assumed to pass ("Assumed passes").
-- **Output**: per term: type, attempted and earned credits, fee, cumulative
-  credits, courses (or slots, F-15), notes (F-13). Plus totals.
+- **Does**: one 0/1 decision "course c in term k" for every course not passed and every
+  remaining term; all hard constraints hold; among valid plans the best by the goal order. All
+  remaining terms are planned at once (CONSTRAINTS.md 1.1).
+- **Output per course**: `reason` (`required`, `elective`, `free_elective`, `wanted`, `retake`),
+  `locked`, `block` (which requirement the course fills: each elective group fills its missing
+  part first, the surplus goes to the free elective; courses the student pinned or wanted take
+  the block first, 24/11) and `slot` (an elective the solver picked, shown as "block (x credits)"
+  with a drop-down, Q7). An assumed-failed attempt appears in its term with `assumed_fail: true`.
+- **Statuses**: `OPTIMAL`, `SAT_NOT_PROVEN_OPTIMAL`, `UNSAT`, `TIMEOUT`, `INPUT_ERROR`.
+- **Speed (measured)**: CP-SAT proves optimality on KHMT-size cases in under 3 s (0.4 s for the
+  demo student, 2026-11-28). The ASP engine finds plans with the same shared-goal values but no
+  longer proves optimality on KHMT-size cases within 180 s (PLANNER-PARITY.md 3).
 
 <a id="f-04"></a>
 ### F-04. Degree audit
 
-- **Does**: counts credits per group (mandatory groups count every member;
-  an elective counts in at most one elective group), checks the total
-  (128), and checks the declared major (≥ 5 courses of its list). Reports
-  every major the plan qualifies for. Rules H8–H14.
-- **Output**: `degree_complete`, `major_earned`, `major_count`,
-  `credited`, `passed_course`.
+Mandatory courses, elective groups by credits and/or course count, specialization lists,
+free-elective slots, graduation-course thresholds, 0-credit courses as external requirements
+(CONSTRAINTS.md H2, H3, H12, H13, H15, HC). Elective surplus counts toward the free elective
+(CP-SAT; myBK "used for free elective"); the ASP engine plans only courses that count toward a
+group (an open parity issue).
 
 <a id="f-05"></a>
-### F-05. Prerequisites, co-requisites, offering, milestones
+### F-05. What-if requests
 
-- **Does**: H15–H18. Prerequisites in an earlier term (AND of OR-groups),
-  co-requisites in the same or an earlier term, availability by
-  `offered_terms` with `offer`/`closed`/`pin` overrides, and milestone credit
-  thresholds before the internship (84), specialized project (90) and
-  capstone (109).
+A student changes any of these and solves again; the planner checks the plan and reports what
+is met. Only pressing **Solve** calls the solver (W6, W10, 23/11): a course the student moves on
+the plan becomes a pin, and the solver re-plans the rest.
+
+| # | What-if | Hard / soft | Field | Solvers |
+|---|---|---|---|---|
+| E1 | In-progress course passes or fails; the block of a course | Hard | `in_progress_results`; `student.block_overrides` | both |
+| E2 | Pin a course to a term, including a retake of a passed course (improvement) | Hard (absolute with `rules.pins_absolute`) | `locked` | both; absolute pins and improvement retakes CP-SAT only |
+| E3 | Credits wanted per term | Soft, highest (ST), ±2 | `semester_targets` | CP-SAT |
+| E4 | Which summers to study | Hard | `summer_opt_in` | both |
+| E5 | Skip a regular term | Hard; two consecutive skipped regular terms warn | `skip_semesters` | both |
+| E6 | Assume a pass or a failure: in-progress courses, and future planned courses (W1) | Hard | `in_progress_results`, `assumed_fail` | both; `assumed_fail` CP-SAT only |
+| E7 | A course is / is not offered in a term | Not offered: hard; "is offered" lifts the summer-history rule and the OH warning (W2) | `not_offered`, `offered` | both; `offered` CP-SAT only |
+| E8 | Goal order: rank and switch goals | Soft | `preferences.order`, `preferences.disabled` | both |
+| E9 | Budget (tuition cap) | Later (W3) | — | — |
+| E10 | Pick a course in an elective block; type any course into the free elective | Hard | `locked`, `preferences.wanted_courses`, `student.free_choices` | both |
+| — | Finish by a term | Hard | `graduate_by` | both |
+| — | Maximum credits for every term / per-term bounds | Hard | `max_credits`, `semester_limits` | both |
+| — | Freeze a term (no unpinned course) | Hard | `frozen_semesters` (removed from the page, W13) | CP-SAT |
+| — | Compare with a previous plan | Soft (S3) and report | `previous_plan` → `diff_vs_previous` | both |
+| — | Interests | Soft (TA) | `interests` | ASP |
+
+The web page saves up to 10 plans per account with their what-if settings (one starred plan is
+the baseline, W7), and compares two saved plans, or a plan with the official teaching plan,
+**without calling the solver** (12.7, 23/11): graduation term (earlier is better), regular terms
+outside 15–18 credits (except the last), heaviest regular term, summer credits (not ranked),
+mandatory courses later than the official plan (only courses with a recommended term: 37/96 in
+KHMT 2023), number of warnings; plus the differing what-if settings and the courses that moved.
 
 <a id="f-06"></a>
-### F-06. Retake planning
+### F-06. Independent validation
 
-- **Does**: a failed compulsory course must be retaken; a `request` forces an
-  improvement retake. One future retake per course; no attempt limit.
-  Required retakes are scheduled as early as possible (soft priority 6);
-  optional ones are discouraged. Retake grades are capped at `B` for GPA.
-- **Output**: `must`, plan rows marked "(retake N)".
+`evaluation/validate.py` re-checks every returned plan in plain Python. It shares no rule code
+with the solvers (only `normalize.py`). It checks future terms, unknown courses, double placement, re-planning a passed course, prerequisites, corequisites, offering,
+locks, deadline, course level (cohort or credits), summer rules, graduation thresholds, credits
+per term, free-elective slots, mandatory courses and elective groups. Any violation is returned
+in `violations`; the web shows it as a red warning (a non-empty list means a solver bug). With
+absolute pins, violations on pinned courses become warnings.
 
 <a id="f-07"></a>
-### F-07. Load bounds, summer terms, calendar
+### F-07. Why there is no plan, and why a target was missed
 
-- **Does**: three parts per academic year (fall, spring, summer), computed
-  from the enrollment part. Regular terms 14–21 credits (last term may be
-  lighter), summer 0–12, summer only with `--summer`, regular terms
-  contiguous. H3–H6.
+- **UNSAT** (`_explain_unsat`, `planner/cli.py`): removes the student's choices one at a time
+  (unpin, do not skip, reopen a closed course, drop a credit target, drop an assumed failure,
+  assume a pass, open a summer, drop the deadline, unfreeze, drop credit caps) and returns every
+  removal that gives a plan, as `infeasible_reason` and one-click `infeasible_fixes`. If none
+  helps, relaxes each school rule (course level, graduation thresholds, prerequisites and
+  corequisites) to say which one blocks.
+- **Missed credit target** (`_explain_targets`, T53, 23/11), for up to 2 terms: in the last term,
+  "only N credits are left"; otherwise re-solve with the target as a hard minimum and name the
+  student choice, or the school rule, that prevents it.
 
 <a id="f-08"></a>
-### F-08. Tuition and budget
+### F-08. Warnings and the request report
 
-- **Does**: piecewise per-term fee schedule (flat tiers, per-credit excess
-  over 18; summer per credit). Every billed term must match a rule.
-  `budget`/`--max-budget` caps total future tuition (H23). Tuition is
-  minimized at priority 5.
-- **Output**: `semester_fee`, `total_cost`.
+`warning_items` (structured, for the page; `warnings` keeps the plain text), each with a
+`rule` reference (T56):
+
+| Kind | When | Rule |
+|---|---|---|
+| `english` | The thesis is planned and the student has not met the Listening–Reading standard | QĐ 285 PL7 |
+| `mos` | The thesis is planned, cohort ≥ 2021, no MOS | QĐ 285 PL9 |
+| `limit` | A student cap below the regular minimum | QĐ 285 Đ15.3 |
+| `corequisite` | A course in the same term as its corequisite | QĐ 285 Đ2.1 |
+| `low_credits` | A regular term below the minimum (never padded), except the last term, which may be lighter (28/11) | QĐ 285 Đ15.3, Đ37.2 |
+| `skip_consecutive` | Two consecutive skipped regular terms | QĐ 285 Đ32.1 |
+| `target_over_law` | A credit target above 25 (regular) or 12 (summer) | QĐ 285 Đ15.3 (11–25 is the team's) |
+| `offering_history` | A placement in a term part where the course has not run (soft history) | Team (not a regulation) |
+
+`english`, `mos` and `offering_history` carry a `confirm` action: the student confirms (e.g.
+already has the certificate, the course is offered) and the warning goes away. The **request
+report** (`requests`) gives one row per student request (pin, frozen term, skipped term, target,
+wanted course, deadline, not-offered course): `met`, `warning` (met but against a school rule,
+with which rule), `partial` or `unmet`, with the reason: no request is silently dropped (sprint
+11). Each solver also warns about input fields it does not implement (F-14).
 
 <a id="f-09"></a>
-### F-09. GPA report and target
+### F-09. Soft-goal report
 
-- **Does**: credit-weighted GPA with latest or best attempt selection,
-  retake cap, half-up rounding once at the end. Reports the best reachable
-  GPA and the average the remaining credits need for 2.50. The GPA is a
-  report, not a constraint; an impossible target withholds
-  `ready_to_graduate`.
+`preferences_report`: S1 graduation term; S6 kept or the broken pairs (with the hint "keep
+recommendations first" when S6 ranks below S1); S4 per wanted course; S2 total credits; and,
+when active, S5 heaviest and lightest term, S7 summer loads against 6–9, S10 summer credits, S9
+level-3+ courses in summer, S11 total shortfall against 11, S8 deviation from 15–18, S3 moved
+courses.
 
 <a id="f-10"></a>
-### F-10. External requirements and readiness
+### F-10. Course facts for client-side checks
 
-- **Does**: cumulative external progress (social work days) against
-  end-of-year and graduation deadlines. Reports missed and pending
-  deadlines. `ready_to_graduate` = degree complete, no blocking external
-  failure, GPA target not impossible.
+`course_facts` (per course: prerequisites, corequisites, summer allowed, term parts) and
+`credit_rules` (regular and summer maximum) let the page show, without calling the solver, which
+terms a course may move to and why not (T61): "needs X first", "projects not in summer", "you
+skip this term", "would exceed 25 credits".
 
 <a id="f-11"></a>
-### F-11. Typical term of special courses
+### F-11. Relation snapshot and inferred relations
 
-- **Does**: pulls each course that has `typical_regular_term` toward that
-  regular term (soft priority 4). Distance is counted in half steps: the
-  K-th regular term is position 2K and a summer after it is 2K+1. Regular
-  terms are counted from enrollment, history included, so "the 5th regular
-  term" adapts to students who start in spring or take summers.
-- **Data** (`curriculum.json`): integration projects (B3.2) 5, multidisciplinary
-  (B3.3) 6, internship 6, specialized project 7, capstone 8.
-- **Ordering**: there is no separate "integration → multidisciplinary →
-  internship → specialized → capstone" rule. The increasing typical terms
-  give that order softly. Internship → capstone and specialized → capstone
-  are hard prerequisites, and specialized ↔ internship is a co-requisite (the
-  same term is allowed, but not typical).
-- **Evidence that it is needed** (sample `student.lp`, `--semesters 12`,
-  best plan found in 60 s; neither run proved optimal):
-
-  | Run | Without typical terms | With typical terms |
-  |---|---|---|
-  | no summer | integration term 5 (3rd regular), multidisciplinary term 7 (5th) | integration term 7 (5th), multidisciplinary term 8 (6th) |
-  | with summer | integration, multidisciplinary, internship, specialized all in term 7 | integration term 7 (5th), multidisciplinary term 9 |
-
-  Before this release, the same sample even placed integration and
-  multidisciplinary in the first summer (term 3). The `last_semester` and
-  `cost` values were the same with and without the objective.
-- **Output**: objective value `typical_term`.
-- **Code**: `extension.lp` §18, `optimize.lp`.
+`instances/importers/hcmut/relations.py` snapshots the course relations of all programs
+(`instances/hcmut/raw/relations-snapshot.json`, 19/11: 96 programs, 2,012 relations), reports
+their consistency (493 courses in ≥ 2 programs; 371 with the same prerequisites/corequisites
+everywhere, 122 differing) and can infer relations from other programs (≥ 50 % of the programs
+having both courses). Inferred relations are **not used** when solving (reviewer, 19/11) unless
+`scenario.use_inferred_relations`; the output lists courses without verified prerequisites
+(`unverified_prerequisites`) and the inferred relations it would add.
 
 <a id="f-12"></a>
-### F-12. Courses that fill the following term
+### F-12. GPA, tuition, external requirements, majors (ASP)
 
-- **Does**: a course with `fills_next_term: true` is registered in term I
-  (credits and fee there) and keeps term I+1 empty (H7). This applies to an
-  in-progress history attempt in term `t` too. Today only the internship
-  (CO3335) has it: it is registered in spring and carried out in the
-  following summer.
-- **Output**: `reserved(Term, Course)`; text row "Reserved terms: semester 9
-  kept empty for CO3335"; JSON `reserved_terms`.
-- **Side effect**: the reserved term may be a regular term. Because regular
-  terms must be contiguous, an internship registered in fall blocks every
-  later regular term. With summers on, a plan can therefore register the
-  internship in fall, leave spring empty and finish in the next summer. The
-  sample student did exactly this (internship term 7, term 8 empty, capstone
-  in summer term 9). If the internship can only be registered in spring,
-  set its `offered_terms` to `[2]`; the catalog currently says `[1, 2, 3]`.
-- **Milestone assumption**: the 65 % milestone is checked against credits
-  earned before the **registration** term, not before the summer in which
-  the internship is carried out.
-- **Code**: `extension.lp` §17.
+From the policy and the full record in the input: GPA per scale with the retake grade cap and
+latest-attempt selection (checked against the 7 hand-computed oracle students), best reachable
+GPA and the average needed for 2.50; tuition per planned term; external requirements of
+`policy/external.json` (missed, pending, blocking at graduation); majors the plan qualifies for.
+In `engine_report`. CP-SAT does not compute these (recommendation in PLANNER-PARITY.md 4).
 
 <a id="f-13"></a>
-### F-13. Course notes
+### F-13. Interests from course tags (ASP)
 
-- **Does**: any course may carry a `note` in `curriculum.json`; it is shown
-  whenever that course is planned. Current notes: the internship "needs
-  faculty information" (registered here, carried out in the following
-  summer); the other special projects warn that faculty regulations for the
-  term may add requirements.
-- **Output**: `course_note(Course, Text)`; text "note: …" under the course,
-  Markdown italic, JSON `note`.
+Course tags come from `instances/hcmut/course-tags.json` (written by `tag_classifier`; the list
+of the student's program family, else the merged list). Each interest tag weighs 1; goal TA
+maximizes the summed weights of planned electives' tags. An interest with no course in the
+program is warned. `engine_report.interests` lists the planned courses per interest.
 
 <a id="f-14"></a>
-### F-14. Pin and ban courses
+### F-14. Capability declarations and the goals-used note
 
-- **Does**: `pin` puts a course (first attempt or retake) in an exact future
-  term and makes it available there; `ban` keeps a course out of the whole
-  plan, or out of one term only.
-  Both are hard (H24, H25). This is how a student corrects an untypical
-  choice, e.g. pinning the internship to the term the faculty announces.
-- **Input**: `pin: [{course, term}]`, `ban: [course | {course, term}]`; ASP
-  `pin(E, I)`, `ban(E)`, `ban(E, I)`.
-- **Validation**: unknown course, or a pin or term ban not after
-  `as_of_term`, is an error before solving.
+Each solver declares the input fields and goal ids it implements (`CAPABILITIES`). A request
+using something a solver lacks gets a warning ("asp ignores the input field
+frozen_semesters…"), or a `FixtureError` with `strict=True`. Every result lists, as an
+assumption, the goals that ranked it and the active goals the solver left out.
 
 <a id="f-15"></a>
-### F-15. Elective slots
+### F-15. Command-line entry point for the web backend
 
-- **Does**: an elective the student did not name (by pin or a course-id
-  interest) is reported as a slot of the group it counts toward,
-  not by course name: "one B3.4 elective (3 credits)". With a declared major,
-  a matching elective reads "one B3.4 elective (3 credits), AI major course".
-  Interest tags that matched are listed under the slot.
-- **Output**: text code column `slot`. JSON `courses[].slot` = `{label, group,
-  major, interests, representative, options}`. `representative` is the course
-  the solver used. `options` are the other unplanned courses that are fully
-  interchangeable with it (same class, F-18), so any of them can replace it
-  without changing anything else in the plan.
-- **Code**: `extension.lp` §20 (`elective_slot/2`, `slot_option/2`,
-  `interest_match/2`), `engine.ElectiveSlot`.
+`python -m planner.cli --solver cpsat|clingo [--time-limit 30] < input.json`: the planner input
+plus `scenario` and optional `previous_plan` on stdin, the result on stdout (USER-INPUT.md
+part 4). Bad input gives status `INPUT_ERROR` with `error`, never a traceback; the exit code is 0
+once JSON is printed. The web backend calls it per request (`PLANNER_DIR`, `PLANNER_PYTHON`,
+`PLANNER_TIMEOUT_MS`, `PLANNER_DUMP_DIR`, all optional; 20 calls per minute per user). Students
+use CP-SAT; the ASP option is hidden on the page (Q13).
 
 <a id="f-16"></a>
-### F-16. Interest keywords
+### F-16. Solver registry
 
-- **Does**: `tag(E, K)` from `curriculum.json` course `tags`, plus automatic
-  tags: each major list (AI, ASE, CYB, DSE, IPCV) and each elective's own id.
-  The student gives `interest(K, W)` with W in −10..10. Each elective's score
-  is the sum of the weights of its matching tags, and the planner maximizes
-  the total score of the planned electives at soft priority 1. A course id
-  as keyword (e.g. `{"CO3133": 10}`) targets one elective, so nobody has to
-  rate every elective. The old `prefer` / `avoid` fields are removed; the
-  JSON loader rejects them with a message pointing to `interests`.
-- **Data**: no course `tags` are defined yet; the five major lists work with
-  no new data.
-
-<a id="f-17"></a>
-### F-17. Popularity tie-breaker (placeholder)
-
-- **Does**: at the lowest priority (0), prefers electives that more students
-  have historically taken: cost = (highest count − course count) per planned
-  elective; a course without a count counts as 0 once any count is known.
-- **Data**: `pipeline/data/elective_popularity.json` lists all 57 elective
-  courses with `"count": null`. Null counts are skipped, so the objective is
-  inactive and always 0 today. Fill in counts (the number of students who
-  took each course, from one comparable population, e.g. the same cohorts)
-  and set `source` and `period`; no code change is needed. `--popularity
-  PATH` selects another file.
-- **Code**: `data.parse_popularity`, `translation.build_curriculum`,
-  `extension.lp` §19, `optimize.lp`.
-
-<a id="f-18"></a>
-### F-18. Elective symmetry breaking
-
-- **Does**: groups electives with identical curriculum facts into classes
-  (`elective_class/3`) and keeps only the plan that uses the lowest-ranked
-  members, in non-decreasing term order (R2). The current curriculum has 14
-  classes of 2–5 courses (e.g. five CYB-only courses, five integration
-  projects). Courses the student singled out are exempt.
-- **Effect**: no change to the best objective value (tested); fewer
-  equivalent models to search; `--plans N` alternatives differ in substance,
-  not by renamed electives.
-
-<a id="f-19"></a>
-### F-19. Ranked optimization and alternative plans
-
-- **Does**: eight lexicographic objectives: `last_semester`, `retakes`,
-  `cost`, `typical_term`, `level_order`, `balance`, `taste`, `popularity`
-  (CONSTRAINTS.md §2). `--opt-mode optN` proves optimality and returns up
-  to `--plans` optimal plans; `ignore` returns feasible plans quickly;
-  `--time-limit` bounds the search (default 30 s) and labels results "not
-  proven optimal"; `--fill` pads with non-optimal plans.
-
-<a id="f-20"></a>
-### F-20. Reports and exit codes
-
-- **Does**: `--format text|markdown|json|raw`, written to
-  `reports/<student>-plan.<ext>` unless `--no-report`. `--explain` retries an
-  UNSAT instance without the budget and with more terms. Exit codes: 0
-  success, 1 input error, 2 UNSAT, 3 not proven optimal with
-  `--require-optimal`, 4 no model before the time limit.
+`planner/solvers/registry.py`: each solver adapter has `settings`, `fingerprint` (hash of its
+sources and the shared planner code, part of the evaluation cache key), `solve` and
+`stopped_by`; statuses map to OPTIMAL / FEASIBLE / INFEASIBLE / NO_PLAN. A plug-in loads with
+`[solver] name = "package.module:factory"` (GUIDELINES.md 2).
 
 ---
 
-## Not supported
+## Hand-checked cases
 
-- Faculty rules for special courses that change each term are not modelled.
-  The planner tracks typical timing (F-11), the hard prerequisites and
-  milestones, and shows notes (F-13); use `pin` for the rest.
-- Planning external activities (social work days): reported only.
-- Grade prediction: every planned course is assumed to pass.
-- Per-term elective offerings beyond `offered_terms` + `offer`/`closed`.
-- Program-specific tuition inside one run: one fee schedule per run
-  (`--program`).
-- `soft_order/1` (generic soft prerequisites, `extension.lp` §15) is
-  defined but not used by any objective.
-- Proving optimality on large free instances: a student early in the
-  program with the full elective pool usually ends at the time limit with a
-  "not proven optimal" plan (e.g. the sample `student.lp`, 60 s).
+Answers worked out by hand on the toy curriculum (`instances/toy`, 3–12 credits per term)
+before the code, confirmed by the reviewer where marked; `planner/tests/test_cases_k.py` and
+`test_real_khmt.py` run them on **both** solvers.
+
+| Case | Input | Expected answer | Confirmed |
+|---|---|---|---|
+| K1 | Request `base` | Finishes in 271, 20 credits | 18/11 |
+| K2 | Validator; CS202 failed (corequisite of CS301); hand plan CS301 in 262, CS202 retaken in 271 | Corequisite violation at CS301 (the web's former reading let it pass) | 18/11 |
+| K2b | Solver, same input as K2 | CS202 in 262, with or before CS301; still 271, 23 credits | 18/11 |
+| K3 | `base`, at most 9 credits a term | Finishes in 272 | 18/11 |
+| K4 | `base`, wants EL303 | EL303 planned, still 271 | 18/11 |
+| K5 | `base`, course levels on, cohort 2025 (26x = year 2, 27x = year 3) | 262 (year 2) may not hold level 3 (CS3xx, EL3xx) or 4 (CS401); MA201 needs MA102 passed first, so 262 holds only MA102 (3 credits). CS401 after CS301 (271 at the earliest), so **finishes in 272**, still 20 credits | 18/11 |
+| K5b | As K5, cohort 2024 (26x = year 3) | As `base`: 271, 20 credits | 18/11 |
+| K6 | `base`, CS401 as thesis at 85 %. Total = 30 mandatory + 6 elective = 36, so 31 credits needed | Counting through CS401's own term, CS401 excluded (23/11; every solver since 28/11): in 262 at most 16 + 10 = 26 < 31, in 271 up to 38, so **finishes in 271, 20 credits**. The validator rejects CS401 in 271 next to EL302 only (16 + 9 + 3 = 28). (Before: CP-SAT counted strictly before the term and gave 272) | Pending |
+| K7 | `base`, S6 on, recommendation CS401 before EL302 | Kept without delay: drop EL302, take EL303 (with CS301 in 262) + EL304. **271, 20 credits**, S6 met, whichever S6 order | 18/11 |
+| K7b | `base`, S6 on, recommendation CS401 before CS301 (a cycle with the prerequisite) | Must break; still 271, 20 credits; S6 **not met**, pair CS301–CS401 reported | 18/11 |
+| K7c | `base`, S6 on, default order, recommendation MA102 before CS301 | MA102 failed: retake in 262 at the earliest; keeping it puts CS301 in 271 and CS401 in 272. Default S1 wins: **271, 20 credits**; S6 not met, pair MA102–CS301 | 18/11 |
+| K7d | As K7c, `recommendations_first: true` | S6 wins: **272, 20 credits**, S6 met. E.g. 262 MA102, CS302 · 271 CS301, MA201, EL302, EL304 · 272 CS401; "one term later to keep recommendations" | 18/11 |
+| K8 | `base` plus summer 263, at most 9 credits a term, summer **not** opted in | As K3: 272; 263 empty | Pending |
+| K8b | As K8, summer 263 **opted in** | 262 and 271 hold 18 < 20, so the summer takes at least 2 credits. S9 above S7: levels 1–2 first, so MA201 or MA102 (3 credits) rather than CS401 (2, level 4). **271**, summer MA201 or MA102; S7 reports 3 credits, below 6–9 | Pending (answer changed 19/11 when S9 > S7) |
+| K8d | As K8b, MA201 marked as a project (no summer) | Summer only MA102. **271** | Pending |
+| K8c | As K8b, CS401 at 3 credits (21 in total, the summer must hold 3) | 3-credit courses allowed in summer: MA201, MA102 (levels 1–2) or EL3xx, CS401 (3–4). S9 picks levels 1–2: **271**, summer MA201 or MA102 | Pending |
+
+Real program (KHMT 2023, made-up student): both solvers graduate in 262 with valid plans and
+the same shared-goal values (2026-11-28; it was 271 before the thesis threshold counted its own
+term). Earlier record: CP-SAT `OPTIMAL` in 440 ms; Clingo not proven after 30 s with the same
+objective (18/11).
+
+---
+
+## Not supported, or out of scope
+
+- Budget cap, interest-based goals on the web page, expected GPA from target grades (W3, W4, W9:
+  later); SSO login to myBK.
+- Equivalent and replacement courses; tuition, interests, GPA in CP-SAT (ASP only).
+- A dedicated "skipping makes you exceed 12 regular terms" message (UNSAT offers "do not skip").
+- Language standards per study year as a rule (reported as external requirements only).
+- Grade prediction: every planned course is assumed passed.
+- The planner never logs into myBK, never stores the original progress file, and never puts real
+  names, student ids or grades in code or tests (made-up data only). AI advice does not use solver
+  results.
+
+## History
+
+The web planner's project plan (stages 0–12, tasks T1–T66, review table, page and button specs,
+myBK import decisions, the what-if UI design) is kept in git:
+`git show feature/ui-redesign:docs/02-ke-hoach.md` and `git show
+feature/ui-redesign:docs/04-luat-qd285.md`. Its planning rules, features and inputs are carried
+into CONSTRAINTS.md, this file and USER-INPUT.md.

@@ -254,7 +254,7 @@ rows back into one record (legacy nested v1 files are still accepted). A record
 provides `student_id`, `enrollment_term`, `attempts[]`, `as_of_term` (or
 `expected.as_of_term`), `program`, `major`, `budget`, `external_progress[]`,
 `request[]`, `interests`, `pin[]`, `ban[]`, `offer[]`
-and `closed[]`. See `pipeline/docs/USER_INPUT.md` for every field. It resolves
+and `closed[]`. See `pipeline/docs/USER-INPUT.md` for every field. It resolves
 course equivalents, validates grades and courses, numbers retakes, and emits
 `enroll_part_in/1`, `gpa_last/2` and `student_major/1`. A budget is converted
 to fixed-point money with the tuition policy's `precision`.
