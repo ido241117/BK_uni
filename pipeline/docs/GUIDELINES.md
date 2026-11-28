@@ -11,7 +11,11 @@ built**, so you know whether you are using a feature or writing one.
 
 | Rule | Why |
 | --- | --- |
-| One branch per change, off `research-pipeline` | There is no CI; review is the only gate |
+| Commit directly to `research-pipeline`; no feature branches | Two-person project, so branches and reviews cost more than they catch |
+| Changing input data: add or update tests that check the data's format and content | With no review, a test is the only check on the data before the other person pulls it |
+| Adding or deleting fields: add or update tests that cover the field being added or removed, and document the field | Code that reads the data breaks without warning when a field appears or disappears |
+| Changing, adding or deleting a solver (planner): document it, and check that it still accepts the same input and returns the same output format | Everything downstream (validator, evaluation) depends on that contract |
+| After every change, add an entry to `docs/CHANGELOG.md`: date and time, plus what changed in detail | Few people read `git log` or commit messages; the changelog is where the other person looks |
 | Run the tests of every package you touched, plus `instances` (section 4) before you push | Nothing runs them for you |
 | Don't edit `evaluation/cohort/config.toml` or `synthetic/config.toml` just to try something. Use `--solver`, `--label` and `--pool` instead | Both files are shared, and every edit is a merge conflict waiting to happen |
 | Give every experiment its own `--pool` and `--label` | Outputs go to `evaluation/results/<pool>/solver-<label>/`, so names keep runs apart |
