@@ -12,14 +12,3 @@ export const isPhysicalEducationCourse = (code: string) => (
     code.toUpperCase().startsWith('PE') && !isGenericPhysicalEducation(code)
 );
 
-/**
- * Đếm số môn mà không tính trùng GDTC: mỗi mã chung PE1003/PE1005 có trong danh sách đã đại diện cho
- * một học phần thể thao, nên chỉ đếm phần học phần thể thao vượt quá số mã chung.
- * Ví dụ PE1003 + PE1009 → 1 môn; PE1003 + PE1005 + PE1009 + PE1033 → 2 môn.
- */
-export const countCoursesWithoutPeDuplicates = (items: { course?: { code: string } | null }[]): number => {
-    const codes = items.map(item => item.course?.code ?? '');
-    const sports = codes.filter(isPhysicalEducationCourse).length;
-    const generic = codes.filter(isGenericPhysicalEducation).length;
-    return codes.length - sports + Math.max(0, sports - generic);
-};

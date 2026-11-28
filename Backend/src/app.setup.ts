@@ -11,7 +11,7 @@ export function setupApp(app: INestApplication, origins: string[]): void {
   // Nhập đề cương: mỗi file bkuni.course-outlines (200 đề cương) khoảng 5 MB. Phải đăng ký trước parser chung;
   // parser chung tự bỏ qua request đã được parse. Route vẫn chỉ dành cho Admin.
   app.use(`/api/${OUTLINE_IMPORT_PATH}`, json({ limit: '25mb' }));
-  // Tư vấn với AI gửi kèm ảnh chụp kết quả phân tích học tập, có thể vượt mức mặc định 100 KB.
+  // Một số body JSON (lịch sử lộ trình ở /plans/settings, chương trình đào tạo của Admin) có thể vượt mức mặc định 100 KB.
   (app as NestExpressApplication).useBodyParser('json', { limit: '1mb' });
   app.enableCors({ origin: origins, credentials: true });
   app.use(originMiddleware(origins));

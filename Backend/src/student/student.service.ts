@@ -5,27 +5,14 @@ import { FOREIGN_KEY_VIOLATION, isPostgresError, UNIQUE_VIOLATION } from '../com
 import { Course } from '../course/entities/course.entity';
 import { CurriculumRegulation } from '../curriculum/entities/curriculum-regulation.entity';
 import { CurriculumSpecialization } from '../curriculum/entities/curriculum-specialization.entity';
-import { Curriculum } from '../curriculum/entities/curriculum.entity';
-import { BulkUpsertPlanCoursesDto } from './dto/bulk-upsert-plan-courses.dto';
 import { BulkUpsertStudentCoursesDto } from './dto/bulk-upsert-student-courses.dto';
 import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
-import { UpsertPlanCourseDto } from './dto/upsert-plan-course.dto';
 import { UpsertRegulationStatusDto } from './dto/upsert-regulation-status.dto';
-import { UpsertStudentCourseDto } from './dto/upsert-student-course.dto';
 import { StudentCourse } from './entities/student-course.entity';
-import { StudentPlanCourse } from './entities/student-plan-course.entity';
 import { StudentProfile } from './entities/student-profile.entity';
 import { StudentRegulationStatusEntity } from './entities/student-regulation-status.entity';
 import { StudentCourseStatus } from './enum/student-course-status';
 import { isPhysicalEducationCourse, PE_GENERIC_CODES } from './physical-education';
-
-export type PlanCourseView = {
-  id: string;
-  curriculum_id: string;
-  course_id: string;
-  semester_code: string;
-  course: Course;
-};
 
 @Injectable()
 export class StudentService {
@@ -33,7 +20,6 @@ export class StudentService {
     @InjectRepository(StudentProfile) private readonly profiles: Repository<StudentProfile>,
     @InjectRepository(CurriculumSpecialization) private readonly specializations: Repository<CurriculumSpecialization>,
     @InjectRepository(StudentCourse) private readonly studentCourses: Repository<StudentCourse>,
-    @InjectRepository(StudentPlanCourse) private readonly planCourses: Repository<StudentPlanCourse>,
     @InjectRepository(StudentRegulationStatusEntity)
     private readonly regulationStatuses: Repository<StudentRegulationStatusEntity>,
   ) {}
@@ -93,24 +79,6 @@ export class StudentService {
       relations: { course: true },
       order: { course_id: 'ASC' },
     });
-  }
-
-  async upsertMyCourse(userId: string, courseId: string, dto: UpsertStudentCourseDto): Promise<StudentCourse> {
-    try {
-      await this.studentCourses.manager.transaction(async (manager) => {
-        await this.upsertStatuses(manager, userId, [{ course_id: courseId, status: dto.status }]);
-        await this.syncPhysicalEducation(manager, userId, [courseId]);
-      });
-    } catch (error) {
-      if (isPostgresError(error, FOREIGN_KEY_VIOLATION)) throw new BadRequestException('Môn học không tồn tại.');
-      throw error;
-    }
-    const saved = await this.studentCourses.findOne({
-      where: { user_id: userId, course_id: courseId },
-      relations: { course: true },
-    });
-    if (!saved) throw new NotFoundException('Chưa có trạng thái của môn học này.');
-    return saved;
   }
 
   /**
@@ -196,108 +164,6 @@ export class StudentService {
       userId,
       pendingIds.map(courseId => ({ course_id: courseId, status: StudentCourseStatus.COMPLETED })),
     );
-  }
-
-  async removeMyCourse(userId: string, courseId: string): Promise<null> {
-    const result = await this.studentCourses.delete({ user_id: userId, course_id: courseId });
-    if (!result.affected) throw new NotFoundException('Chưa có trạng thái của môn học này.');
-    return null;
-  }
-
-  // Kế hoạch học tập
-
-  async listMyPlanCourses(userId: string, curriculumId?: string): Promise<PlanCourseView[]> {
-    const rows = await this.planCourses.find({
-      where: curriculumId ? { user_id: userId, curriculum_id: curriculumId } : { user_id: userId },
-      relations: { course: true },
-      order: { semester_code: 'ASC', course_id: 'ASC' },
-    });
-    return rows.map((row) => ({
-      id: row.id,
-      curriculum_id: row.curriculum_id,
-      course_id: row.course_id,
-      semester_code: row.semester_code,
-      course: row.course,
-    }));
-  }
-
-  async upsertMyPlanCourse(
-    userId: string,
-    curriculumId: string,
-    courseId: string,
-    dto: UpsertPlanCourseDto,
-  ): Promise<PlanCourseView> {
-    try {
-      const existing = await this.planCourses.findOne({
-        where: { user_id: userId, curriculum_id: curriculumId, course_id: courseId },
-      });
-      if (existing) {
-        existing.semester_code = dto.semester_code.trim();
-        await this.planCourses.save(existing);
-      } else {
-        await this.planCourses.save(this.planCourses.create({
-          user_id: userId,
-          curriculum_id: curriculumId,
-          course_id: courseId,
-          semester_code: dto.semester_code.trim(),
-        }));
-      }
-    } catch (error) {
-      if (isPostgresError(error, FOREIGN_KEY_VIOLATION)) {
-        throw new BadRequestException('Môn học hoặc chương trình đào tạo không tồn tại.');
-      }
-      throw error;
-    }
-    const rows = await this.listMyPlanCourses(userId, curriculumId);
-    const saved = rows.find((row) => row.course_id === courseId);
-    if (!saved) throw new NotFoundException('Môn học chưa có trong kế hoạch.');
-    return saved;
-  }
-
-  /**
-   * Lưu nhiều môn của kế hoạch trong một transaction: xoá các môn bị bỏ, rồi thêm/đổi học kỳ các môn còn lại
-   * (`INSERT ... ON CONFLICT` theo UQ_student_plan_course). Môn không gửi giữ nguyên.
-   */
-  async bulkUpsertMyPlanCourses(
-    userId: string,
-    curriculumId: string,
-    dto: BulkUpsertPlanCoursesDto,
-  ): Promise<PlanCourseView[]> {
-    const courseIds = dto.items.map((item) => item.course_id);
-    const removeIds = dto.remove_course_ids ?? [];
-    this.assertDistinct(courseIds, removeIds);
-    const curriculumExists = await this.planCourses.manager.exists(Curriculum, { where: { id: curriculumId } });
-    if (!curriculumExists) throw new BadRequestException('Chương trình đào tạo không tồn tại.');
-    await this.assertCoursesExist(courseIds);
-
-    await this.planCourses.manager.transaction(async (manager) => {
-      if (removeIds.length) {
-        await manager.delete(StudentPlanCourse, { user_id: userId, curriculum_id: curriculumId, course_id: In(removeIds) });
-      }
-      if (dto.items.length) {
-        await manager.upsert(
-          StudentPlanCourse,
-          dto.items.map((item) => ({
-            user_id: userId,
-            curriculum_id: curriculumId,
-            course_id: item.course_id,
-            semester_code: item.semester_code.trim(),
-          })),
-          { conflictPaths: ['user_id', 'curriculum_id', 'course_id'] },
-        );
-      }
-    });
-    return this.listMyPlanCourses(userId, curriculumId);
-  }
-
-  async removeMyPlanCourse(userId: string, curriculumId: string, courseId: string): Promise<null> {
-    const result = await this.planCourses.delete({
-      user_id: userId,
-      curriculum_id: curriculumId,
-      course_id: courseId,
-    });
-    if (!result.affected) throw new NotFoundException('Môn học chưa có trong kế hoạch.');
-    return null;
   }
 
   // Trạng thái quy định

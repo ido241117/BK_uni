@@ -1,8 +1,7 @@
 \begin{tikzpicture}
   \ucactor{guest}{0,8.4}{Guest}
   \ucactor{student}{0,3.2}{Student}
-  \ucactor{admin}{0,-3.6}{Admin}
-  \ucactor{ai}{12.4,-0.6}{AI Service\\\scriptsize\guillemotleft system\guillemotright}
+  \ucactor{admin}{0,-2.5}{Admin}
 
   \node[ucwide] (reg)  at (6.4,8.4)  {Register Account};
   \node[ucwide] (prof) at (6.4,6.9)  {Manage Profile and\\Course Progress};
@@ -10,15 +9,13 @@
   \node[ucwide] (plan) at (6.4,4.0)  {Manage Personal Plan};
   \node[ucwide] (ana)  at (6.4,2.6)  {View Progress and Analysis};
   \node[ucwide] (rec)  at (6.4,1.1)  {Get Study Roadmap\\Recommendations};
-  \node[ucwide] (ai1)  at (6.4,-0.4) {AI Academic Advising};
-  \node[ucwide] (acc)  at (6.4,-1.8) {Sign In / Sign Out};
-  \node[ucwide] (cat)  at (6.4,-3.2) {Manage Course Catalog};
-  \node[ucwide] (cur)  at (6.4,-4.6) {Manage Curricula};
+  \node[ucwide] (acc)  at (6.4,-0.4) {Sign In / Sign Out};
+  \node[ucwide] (cat)  at (6.4,-1.9) {Manage Course Catalog};
+  \node[ucwide] (cur)  at (6.4,-3.4) {Manage Curricula};
   \coordinate (top) at (6.4,9.3);
   \ucsystem{(top)(reg)(cur)}{BK Uni}
 
   \draw[assoc] (guest) -- (reg.west);
-  \foreach \u in {prof,mybk,plan,ana,rec,ai1,acc} \draw[assoc] (student) -- (\u.west);
+  \foreach \u in {prof,mybk,plan,ana,rec,acc} \draw[assoc] (student) -- (\u.west);
   \foreach \u in {acc,cat,cur} \draw[assoc] (admin) -- (\u.west);
-  \draw[assoc] (ai1.east) -- (ai);
 \end{tikzpicture}

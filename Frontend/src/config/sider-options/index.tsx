@@ -1,6 +1,5 @@
 import {
     LuBookOpen,
-    LuBot,
     LuGraduationCap,
     LuLayoutGrid,
     LuSparkles,
@@ -42,15 +41,6 @@ export const sidebarMenu: NavItem[] = [
         group: 'HỌC TẬP',
         roles: [ROLE.STUDENT],
         permission: toPageViewPermission(PAGE_RESOURCES.RECOMMENDATIONS),
-    },
-    {
-        key: 'student.advisor',
-        label: 'Tư vấn với AI',
-        path: '/advisor',
-        icon: <LuBot />,
-        group: 'HỌC TẬP',
-        roles: [ROLE.STUDENT],
-        permission: toPageViewPermission(PAGE_RESOURCES.ADVISOR),
     },
     {
         key: 'account.profile',

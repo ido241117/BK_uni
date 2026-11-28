@@ -8,12 +8,12 @@ Viết ngày 23/11/2026, **theo code đọc trong ngày** (nhánh `feature/goi-y
 
 ```
                     ┌─────────────────────────── Trang Môn học (/courses) ───────────────────────────┐
- PDF / chữ dán myBK │ Tab "Tiến độ myBK": nhập file → xác nhận → lưu; Hiệu chỉnh trạng thái môn       │
- ──────────────────►│ Tab "Chương trình" (nhánh main): bảng thẻ môn, kế hoạch tự xếp                   │
-                    └───────────────┬───────────────────────────────────────────────┬────────────────┘
-                                    │ ghi                                           │ ghi
-                                    ▼                                               ▼
-        student_progress_imports (JSON file + data.web)  ·  student_courses (trạng thái môn)  ·  student_plan_courses
+ PDF / chữ dán myBK │ Tiến độ myBK: nhập file → xác nhận → lưu; Hiệu chỉnh trạng thái môn             │
+ ──────────────────►│ Mã môn là link sang /courses/:code (chi tiết môn, đề cương)                      │
+                    └───────────────┬────────────────────────────────────────────────────────────────┘
+                                    │ ghi
+                                    ▼
+        student_progress_imports (JSON file + data.web)  ·  student_courses (trạng thái môn)
                                     │ đọc                                           
                                     ▼                                               
                     ┌──────────────────── Trang Gợi ý học phần (/recommendations) ───────────────────┐
@@ -22,7 +22,7 @@ Viết ngày 23/11/2026, **theo code đọc trong ngày** (nhánh `feature/goi-y
                     └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Một nguồn sự thật cho trạng thái môn:** bộ giải chỉ đọc trạng thái từ **file myBK + Hiệu chỉnh** (quyết định Q2, 22/11). Tab "Chương trình" của nhánh `main` vẫn ghi được `student_courses`; chỗ này **chưa xử lý**, người duyệt sẽ trao đổi với Thiên.
+**Một nguồn sự thật cho trạng thái môn:** bộ giải chỉ đọc trạng thái từ **file myBK + Hiệu chỉnh** (quyết định Q2, 22/11). Ngày 28/11 đã gỡ tab "Chương trình" (bảng thẻ, sơ đồ điều kiện, kế hoạch tay) và trang Phân tích, nên không còn chỗ thứ ba ghi `student_courses`.
 
 Đường dẫn cũ `/plan`, `/student-courses`, `/regulations` đều chuyển về `/courses`.
 
@@ -49,9 +49,9 @@ Supabase dùng chung. Nhánh này **không sửa schema hay dữ liệu dùng ch
 | Bảng | Có gì | Ai ghi |
 |---|---|---|
 | `student_profiles` | `curriculum_id`, năm vào trường, chuyên ngành mục tiêu | Nhập myBK (đặt chương trình theo file) |
-| `student_courses` | Mỗi môn một trạng thái: `completed`, `in-progress`, `failed`, `not-started` | Nhập myBK (ghi đúng như file, xóa môn khác), Hiệu chỉnh, tab Chương trình |
+| `student_courses` | Mỗi môn một trạng thái: `completed`, `in-progress`, `failed`, `not-started` | Nhập myBK (ghi đúng như file, xóa môn khác), Hiệu chỉnh |
 | `student_progress_imports` | Một dòng mỗi tài khoản: `data` = JSON của file (khối, môn, đạt/chưa, **điểm, họ tên, MSSV**) + `data.web` = phần sinh viên khai trên web | Nhập myBK, Hiệu chỉnh, trang Gợi ý |
-| `student_plan_courses` | Kế hoạch sinh viên tự xếp (môn → kỳ) | Tab Chương trình (nhánh `main`); bộ giải **không** đọc |
+| `student_plan_courses` | Kế hoạch tự xếp của tab Chương trình cũ | **Không còn code nào ghi/đọc** (gỡ 28/11); bảng để nguyên trên DB chung |
 
 **`student_progress_imports.data.web`** (không cần migration, giữ nguyên khi nhập lại file):
 
@@ -66,9 +66,9 @@ Supabase dùng chung. Nhánh này **không sửa schema hay dữ liệu dùng ch
 
 ## 3. Trang Môn học (`/courses`)
 
-Sinh viên thấy hai tab; tab đang mở lưu ở `?tab=`. Quản trị chỉ thấy danh mục môn (`CourseCatalog`).
+Sinh viên thấy một trang (từ 28/11 không còn tab; link cũ `?tab=board` mở trang này). Quản trị chỉ thấy danh mục môn (`CourseCatalog`).
 
-### 3.1 Tab "Tiến độ myBK"
+### 3.1 Tiến độ myBK
 
 **Chức năng và luồng UX:**
 1. Nút **"Nhập tiến độ từ myBK"** mở hộp hai cách: **Tải file PDF** (có hướng dẫn in "Lưu dưới dạng PDF") hoặc **Dán nội dung trang** Tiến độ.
@@ -117,19 +117,10 @@ Hiệu chỉnh: PUT /api/plans/mybk/adjustments
 
 File chỉ nằm trong bộ nhớ (không ghi đĩa), tối đa 10 lần/phút. Điểm và họ tên chỉ chính tài khoản đọc được.
 
-### 3.2 Tab "Chương trình" (nhánh `main`, Thiên làm)
+### 3.2 Chi tiết môn (`/courses/:code`)
 
-- **Chức năng:**
-  - Bảng thẻ môn của chương trình, có tab "Sơ đồ điều kiện".
-  - Sinh viên khai trạng thái và xếp kế hoạch tay (môn → kỳ).
-  - Chưa chọn chương trình thì hiện danh mục.
-- **Luồng:**
-  - Bản nháp lưu trong `localStorage` (`bk-course-draft:<user>:<curriculum>`).
-  - Bấm Lưu thì gọi `PUT /student-courses/me` (bulk) và `PUT /student-plan-courses/me/:curriculumId`.
-  - Ghi vào `student_courses` và `student_plan_courses`.
-- **Liên quan Gợi ý:** trạng thái ghi ở đây cũng vào `student_courses` (chỗ Q2 chưa xử lý); kế hoạch tay **không** vào bộ giải.
-
-Hai trang con khác: `/courses/analysis` (Phân tích) và `/courses/:code` (chi tiết môn, đề cương).
+- Bấm mã môn ở bảng tiến độ hoặc bảng "Môn đang học" (thẻ `<a>`) để mở trang chi tiết: học kỳ đã mở, đề cương.
+- Tab "Chương trình" (bảng thẻ, sơ đồ điều kiện, kế hoạch tay) và trang `/courses/analysis` đã gỡ ngày 28/11 (xem [01 mục 5b](01-boi-canh.md)).
 
 ---
 
@@ -218,7 +209,6 @@ Trên dữ liệu KHMT 2023 (sinh viên bịa), một lần Giải kể cả ph�
 | `POST /api/plans/mybk/import` | Môn học | `student_progress_imports`, `student_courses`, `student_profiles` |
 | `GET /api/plans/mybk/progress` | Môn học | Không |
 | `PUT /api/plans/mybk/adjustments` | Môn học (Hiệu chỉnh) | `student_courses`, `data.web` |
-| `PUT /student-courses/me`, `PUT /student-plan-courses/me/:curriculumId` | Môn học (tab Chương trình) | `student_courses`, `student_plan_courses` |
 | `POST /api/plans/solve` | Gợi ý | Không ghi |
 | `GET/PUT /api/plans/settings` | Gợi ý | `data.web.planner` |
 | `GET /api/plans/interest-tags` | Gợi ý (Clingo, đang ẩn) | Không |
@@ -229,7 +219,6 @@ Mọi API cần đăng nhập (401 nếu chưa) và chỉ đọc/ghi dữ liệu
 
 ## 6. Còn mở
 
-- **Q2:** tab Chương trình vẫn ghi `student_courses`, có thể lệch với file myBK + Hiệu chỉnh.
 - **W12:** thứ tự ưu tiên mặc định chưa chốt (đang để Ra trường sớm > 15–18 TC > Không học dư).
 - **Giai đoạn 12 chưa bấm thử trên web** (T66, [05 mục G](05-kiem-thu.md)).
 - Lưu nhiều bản chưa đo dung lượng thật so với giới hạn 200 KB.

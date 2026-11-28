@@ -4,7 +4,7 @@
  * Hàm thuần, không đọc database, để test được. Quy tắc đổi từ database sang đầu vào bộ giải
  * giống `pipeline/planner/fetch_curriculum.py` và mục 3 của
  * `docs/03-thiet-ke.md`:
- * - Môn bắt buộc = môn của chương trình không thuộc khối tự chọn gốc nào (giống trang Phân tích).
+ * - Môn bắt buộc = môn của chương trình không thuộc khối tự chọn gốc nào.
  * - Khối con theo chuyên ngành giữ `parent`, `specialization`; khối `any` giữ nguyên.
  * - Nhóm "Điều kiện tốt nghiệp" (cũ: "E. ...") là điều kiện tốt nghiệp (không xếp lịch); nhóm "Tốt nghiệp"
  *   (cũ: "D. ...") là học phần tốt nghiệp. Xem `CATEGORY_NAMES`.
@@ -13,7 +13,7 @@
  * myBK (`student.scores`, `student.graduation_conditions`) có đưa vào để engine ASP tính GPA và điều kiện
  * tốt nghiệp (20/11/2026); CP-SAT bỏ qua hai trường này. Vì vậy PLANNER_DUMP_DIR cũng ghi điểm ra file.
  */
-import { currentSemester } from '../advisor/semester';
+import { currentSemester } from '../common/semester';
 import type { SolvePlanDto } from './dto/solve-plan.dto';
 
 export type PlannerCourse = { id: string; code: string; name: string; credits: number };

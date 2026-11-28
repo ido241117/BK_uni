@@ -73,14 +73,6 @@ export interface StudentCourse extends BaseRecord {
     course: CourseSummary;
 }
 
-export interface StudentPlanCourse {
-    id: string;
-    curriculum_id: string;
-    course_id: string;
-    semester_code: string;
-    course: CourseSummary;
-}
-
 export interface StudentRegulationStatusRecord extends BaseRecord {
     user_id: string;
     regulation_id: string;

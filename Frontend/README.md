@@ -79,11 +79,9 @@ page  →  hooks (useApiQuery / useApiMutation)  →  apis/<nghiệp-vụ>  → 
 | Trang | Route | API |
 | --- | --- | --- |
 | Đăng nhập / Đăng ký | `/login`, `/register` | `POST /auth/login`, `POST /auth/register`, `GET /auth/me`, `POST /auth/logout` |
-| Chương trình & học phần | `/courses` | `GET /courses`, `GET /curricula/:id/categories`, `GET /student-courses/me` |
+| Môn học (tiến độ myBK + Hiệu chỉnh; quản trị: danh mục) | `/courses` | `POST /plans/mybk/review`, `POST /plans/mybk/import`, `GET /plans/mybk/progress`, `PUT /plans/mybk/adjustments`, `GET /student-courses/me`, `GET /courses` |
 | Chi tiết môn + học kỳ đã mở | `/courses/:code` | `GET /courses/by-code/:code`, `GET /courses/:id/opened-semesters`, `GET /curricula/:id/categories` |
-| Trạng thái môn học | `/student-courses` | `GET/PUT/DELETE /student-courses/me` |
-| Kế hoạch học tập | `/plan` | `GET /curricula/:id/courses`, `GET/PUT/DELETE /student-plan-courses/me` |
-| Quy định tốt nghiệp | `/regulations` | `GET /curricula/:id/regulations`, `GET/PUT/DELETE /student-regulation-statuses/me` |
+| (đường dẫn cũ) | `/student-courses`, `/plan`, `/regulations` | Chuyển về `/courses` |
 | Hồ sơ cá nhân | `/profile` | `GET/PATCH /student-profiles/me` |
 | Quản lý môn học (Admin) | `/admin/courses` | `GET/POST/PATCH/DELETE /courses`, `PUT/DELETE .../opened-semesters` |
 | Chương trình đào tạo (Admin) | `/admin/curricula` | `GET/POST/PATCH/DELETE /curricula` |

@@ -6,7 +6,7 @@ Building on the requirements and behavioural models identified in Section~\ref{s
 \subsection{Architecture Designs}
 \label{subsec:architecture-design}
 
-A platform such as BK Uni brings together several kinds of work that behave very differently: ordinary data management (profiles, curricula, course statuses), rule-based reasoning over a whole curriculum to analyze progress and recommend study plans, and conversational advising backed by a large language model. A well-defined architecture is needed to organize these concerns into one cohesive system. Without it, the dependencies between the curriculum data, the planning solvers that interpret academic rules, and the external AI service would quickly become difficult to reason about, test and evolve, which would directly threaten the correctness and explainability that the system promises.
+A platform such as BK Uni brings together several kinds of work that behave very differently: ordinary data management (profiles, curricula, course statuses), and rule-based reasoning over a whole curriculum to analyze progress and recommend study plans. A well-defined architecture is needed to organize these concerns into one cohesive system. Without it, the dependencies between the curriculum data and the planning solvers that interpret academic rules would quickly become difficult to reason about, test and evolve, which would directly threaten the correctness and explainability that the system promises.
 
 This section presents the architecture of the platform: what software architecture means, the common architectural styles that were considered, the architectural decision made for BK Uni, and the resulting architecture design.
 
@@ -78,19 +78,19 @@ Selecting an architectural style is a critical decision because it determines ho
 
 Among the styles listed above, BK Uni adopts a \textbf{modular, layered monolith} for its server, extended with \textbf{out-of-process Python workers} for the CPU-bound work. The \emph{Backend Server} is a single deployable application that owns all business data and exposes every function of the system. When a request needs combinatorial search or document parsing, the Backend starts a short-lived Python process, the \emph{planner}, passes it the input as JSON on its standard input, and reads the result from its standard output. This keeps the operational simplicity of a monolith while isolating the parts that differ most from ordinary request handling, and it follows directly from the nature of the problem:
 \begin{itemize}
-    \item \textbf{Different runtimes and workloads.} The Backend Server performs short, I/O-bound operations (database reads and writes, calls to the AI service), for which Node.js is well suited. Building a study roadmap is a CPU-bound search over a whole curriculum, and the mature solvers for it, Google OR-Tools CP-SAT and \texttt{clingo}, are available in Python. Running each solving step in its own process keeps it from blocking the request-handling event loop, lets each part use the most suitable language, and allows the Backend to stop a solver that runs too long.
+    \item \textbf{Different runtimes and workloads.} The Backend Server performs short, I/O-bound operations (database reads and writes), for which Node.js is well suited. Building a study roadmap is a CPU-bound search over a whole curriculum, and the mature solvers for it, Google OR-Tools CP-SAT and \texttt{clingo}, are available in Python. Running each solving step in its own process keeps it from blocking the request-handling event loop, lets each part use the most suitable language, and allows the Backend to stop a solver that runs too long.
     \item \textbf{Separation of rules from application code.} The planning problem is defined once as a constraint satisfaction problem (Section~\ref{sec:formulation}) and implemented in the planner, not in the Backend. The planner has two interchangeable solver back-ends: a CP-SAT model, used by the Student interface, and an Answer Set Programming encoding (Section~\ref{sec:encoding}) solved by \texttt{clingo}, available through the same API for comparison. Rules can therefore be developed and tested in Python on fixed inputs without touching the rest of the application, which supports NFR-4.1 and NFR-4.2.
     \item \textbf{Stateless workers with a single data owner.} A planner process never accesses the database. It receives everything it needs for one request and exits after replying, so the Backend Server remains the only component that reads and writes persistent data and enforces authentication and data ownership on every request (NFR-1.1). This avoids the data-consistency and infrastructure overhead of a database per service, which matters for a small development team.
 \end{itemize}
 
-Within the Backend Server, the code follows a modular, layered design: each functional area (authentication, users, student data, curricula, courses, course outlines, planning and the AI advisor) is a self-contained module with its own controllers, services and data entities. This keeps responsibilities clear while avoiding the cost of splitting every module into its own service. Two kinds of work are deliberately kept out of the server. The \emph{progress analysis} of a Student is computed in the browser from data the Backend serves, because it must react instantly to unsaved edits on the course board. \emph{Data ingestion} follows the pipeline style: curricula and course outlines are fetched from the university's systems and transformed offline before being imported into the system.
+Within the Backend Server, the code follows a modular, layered design: each functional area (authentication, users, student data, curricula, courses, course outlines and planning) is a self-contained module with its own controllers, services and data entities. This keeps responsibilities clear while avoiding the cost of splitting every module into its own service. Two kinds of work are deliberately kept out of the server. The \emph{progress analysis} of a Student is computed in the browser from data the Backend serves, because it must react instantly to unsaved edits on the course board. \emph{Data ingestion} follows the pipeline style: curricula and course outlines are fetched from the university's systems and transformed offline before being imported into the system.
 
 An event-driven design with a message broker was deliberately not adopted at this stage. Planning requests are bounded in size, since a single curriculum contains a few hundred courses: the CP-SAT search is limited to 20 seconds and any planner process is stopped after 60 seconds. A synchronous request--response interaction is therefore simpler, easier to debug and sufficient. Because the Backend talks to the planner through a narrow JSON interface, the workers could later be moved behind a queue or onto separate machines without changing the Backend's business modules, should the load require it.
 
 \subsubsection{Architecture Design}
 \label{subsubsec:architecture-overview}
 
-The design follows a client--server model in which a single-page frontend communicates with the Backend Server, and the Backend Server in turn delegates roadmap planning and report parsing to Python workers and conversational advising to an external language model. The design pursues three main goals: keeping the academic rules of planning in one place that can be tested independently; ensuring that persistent data is accessed and protected by exactly one component; and integrating the external AI service in a controlled way so that it can only use data the system provides.
+The design follows a client--server model in which a single-page frontend communicates with the Backend Server, and the Backend Server in turn delegates roadmap planning and report parsing to Python workers. The design pursues two main goals: keeping the academic rules of planning in one place that can be tested independently, and ensuring that persistent data is accessed and protected by exactly one component.
 
 Figure~\ref{fig:system-architecture} shows the overall architecture of BK Uni.
 
@@ -117,9 +117,6 @@ Figure~\ref{fig:system-architecture} shows the overall architecture of BK Uni.
       \draw[thick] (2.6,5.4) rectangle (12.6,8.1);
       \draw[thick] (3.1,5.4) -- (3.1,8.1);
       \node[rotate=90, font=\bfseries\small] at (2.85,6.75) {Servers};
-      \draw[thick] (13.4,7.9) rectangle (18.6,11.1);
-      \draw[thick] (13.4,10.5) -- (18.6,10.5);
-      \node[font=\bfseries\small] at (16.0,10.8) {External Services};
 
       % ---------------- Components ----------------
       \node[comp, minimum width=9.2cm, minimum height=1.3cm] (fe) at (7.85,11.0)
@@ -129,15 +126,12 @@ Figure~\ref{fig:system-architecture} shows the overall architecture of BK Uni.
       \node[comp, minimum width=3.9cm, minimum height=2.2cm] (be) at (5.2,6.75)
            {Backend Server\\[-1pt]{\scriptsize (NestJS)}\\[1pt]
             {\scriptsize Auth $\cdot$ User $\cdot$ Student $\cdot$ Curriculum}\\[-2pt]
-            {\scriptsize Course $\cdot$ Outline $\cdot$ Planner $\cdot$ Advisor}};
+            {\scriptsize Course $\cdot$ Outline $\cdot$ Planner}};
 
       \node[comp, minimum width=3.7cm, minimum height=2.2cm] (re) at (10.6,6.75)
            {Python Workers\\[-1pt]{\scriptsize (one process per request)}\\[1pt]
             {\scriptsize planner.cli: CP-SAT or clingo}\\[-2pt]
             {\scriptsize planner.mybk: progress reports}};
-
-      \node[comp, minimum width=4.4cm, minimum height=1.8cm] (ds) at (16.0,9.3)
-           {DeepSeek API\\[-1pt]{\scriptsize (large language model behind}\\[-2pt]{\scriptsize the AI academic advisor)}};
 
       \node[ext, minimum width=4.2cm, minimum height=1.8cm] (src) at (-0.5,11.0)
            {myBK\\[-1pt]{\scriptsize (university system: curriculum}\\[-2pt]{\scriptsize API, course outlines)}};
@@ -148,16 +142,13 @@ Figure~\ref{fig:system-architecture} shows the overall architecture of BK Uni.
             {\scriptsize build import JSON}};
 
       \node[store] (db) at (4.8,2.3) {PostgreSQL\\Database};
-      \node[store, minimum width=3.0cm] (es) at (7.9,2.3) {Search Index\\{\scriptsize (Elasticsearch,}\\[-2pt]{\scriptsize optional)}};
       \node[store] (asp) at (11.4,2.3) {Planning Rules\\{\scriptsize (CP-SAT model,}\\[-2pt]{\scriptsize ASP \texttt{.lp} files)}};
 
       % ---------------- Flows ----------------
       \draw[flow] (4.6,10.35) -- (4.6,7.85) node[lbl, pos=0.45] {RESTful APIs\\(HTTPS, session cookie)};
       \draw[flow] (7.15,7.15) -- (8.75,7.15) node[lbl, midway, above=1pt, fill=none] {JSON (stdin)};
       \draw[flow] (8.75,6.35) -- (7.15,6.35) node[lbl, midway, below=1pt, fill=none] {JSON (stdout)};
-      \draw[flow] (6.4,7.85) |- (ds.west) node[lbl, pos=0.75] {RESTful APIs (tool calling)};
       \draw[flow] (4.8,5.65) -- (db.north) node[lbl, midway] {SQL queries\\(TypeORM)};
-      \draw[flow] (7.0,5.65) -- (7.0,3.25) node[lbl, midway] {Outline\\search};
       \draw[flow] (asp.north) -- (11.4,5.65) node[lbl, midway] {Loaded by\\the solvers};
       \draw[flow] (src.south) -- (pl.north) node[lbl, midway] {Fetches JSON\\and outlines};
       \draw[flow] (pl.south) |- (3.5,4.4) -- (3.5,5.65);
@@ -169,35 +160,30 @@ Figure~\ref{fig:system-architecture} shows the overall architecture of BK Uni.
 \end{figure}
 
 \begin{itemize}
-    \item \textbf{Clients (Frontend):} A single-page application built with React that serves as the only user interface for both Students and Admins. It communicates exclusively with the Backend Server through RESTful APIs over HTTPS; it never contacts the database, the Python workers or the AI service directly. Authentication relies on a session token stored in an HTTP-only cookie, so the token is never exposed to client-side scripts (NFR-1.3). Besides rendering, the frontend computes the Student's progress analysis (credit progress, course eligibility, outstanding requirements and personal-plan warnings) from the data the Backend serves, and keeps edits on the course board as a draft until the Student saves them. The interface adapts to the user's role, showing the course board, analysis, roadmap recommendations and the AI advisor to Students, and curriculum management screens to Admins.
+    \item \textbf{Clients (Frontend):} A single-page application built with React that serves as the only user interface for both Students and Admins. It communicates exclusively with the Backend Server through RESTful APIs over HTTPS; it never contacts the database or the Python workers directly. Authentication relies on a session token stored in an HTTP-only cookie, so the token is never exposed to client-side scripts (NFR-1.3). Besides rendering, the frontend computes the Student's progress analysis (credit progress, course eligibility, outstanding requirements and personal-plan warnings) from the data the Backend serves, and keeps edits on the course board as a draft until the Student saves them. The interface adapts to the user's role, showing the course board, analysis, and roadmap recommendations to Students, and curriculum management screens to Admins.
 
     \item \textbf{Servers:} The processing layer consists of the Backend Server and the Python workers it starts:
     \begin{itemize}
-        \item \textbf{Backend Server:} The central orchestrator, implemented with NestJS. It handles every client request, authenticates the user, checks role and data ownership, and validates input before any business logic runs; a rate limiter is configured for sign-in and AI requests and must be enabled in production. It is organized into modules: \emph{Auth} (registration, sign-in and server-side sessions), \emph{User}, \emph{Student} (profiles, course statuses, personal plans and regulation statuses), \emph{Curriculum} and \emph{Course} (curricula, elective groups, specializations, categories, course relations and offering history), \emph{Outline} (import and lookup of course outlines), \emph{Planner} (myBK progress import, saved planning scenarios and roadmap solving) and \emph{Advisor} (AI conversations). For a roadmap request, the Planner module loads the Student's record and the curriculum data, builds the solver input, and runs the planner process; for a myBK report, it passes the uploaded bytes to the report reader and stores the parsed progress in a transaction.
+        \item \textbf{Backend Server:} The central orchestrator, implemented with NestJS. It handles every client request, authenticates the user, checks role and data ownership, and validates input before any business logic runs; a rate limiter is configured for sign-in requests and must be enabled in production. It is organized into modules: \emph{Auth} (registration, sign-in and server-side sessions), \emph{User}, \emph{Student} (profiles, course statuses, personal plans and regulation statuses), \emph{Curriculum} and \emph{Course} (curricula, elective groups, specializations, categories, course relations and offering history), \emph{Outline} (import and lookup of course outlines), \emph{Planner} (myBK progress import, saved planning scenarios and roadmap solving). For a roadmap request, the Planner module loads the Student's record and the curriculum data, builds the solver input, and runs the planner process; for a myBK report, it passes the uploaded bytes to the report reader and stores the parsed progress in a transaction.
         \item \textbf{Python Workers:} Short-lived processes of the \texttt{planner} package, started by the Backend for each request and fed through standard input and output. \texttt{planner.cli} implements the formulation in Section~\ref{sec:formulation}: it normalizes the input, solves it with the CP-SAT model (or with the \texttt{clingo} ASP encoding when that engine is selected), validates the resulting roadmap against the curriculum rules, compares it with the Student's baseline roadmap, and returns the roadmap together with the reason for each course, the assumptions and the warnings. If no roadmap satisfies the constraints, it reports which of the Student's settings block it and proposes fixes instead of relaxing any rule (FR-5.6). \texttt{planner.mybk} reads a myBK progress report, either a PDF or pasted text, into structured JSON. The workers hold no state and no database credentials, so they can be tested in isolation on fixed inputs; the Backend stops any worker that has not replied within 60 seconds.
     \end{itemize}
 
     \item \textbf{Data and Rule Tier:}
     \begin{itemize}
-        \item \textbf{Database:} A PostgreSQL database, with all tables grouped under a dedicated schema, which serves as the system of record for user accounts and sessions, student profiles and academic records, imported myBK progress, curricula, course outlines and import batches, and AI advisor conversations (Section~\ref{subsec:database-design}). Only the Backend Server connects to it, multi-step changes are executed in transactions so that data is never left partially updated (NFR-3.2), and database triggers record changes to curriculum data in an audit log (NFR-7).
-        \item \textbf{Search Index:} An optional Elasticsearch index of the course outlines, rebuilt when outlines are imported. The AI advisor uses it for full-text search over outline content (accent-insensitive, with abbreviations and typo tolerance) and to find courses with similar content. When no index is configured, the Backend falls back to searching PostgreSQL, so the system works without it.
+        \item \textbf{Database:} A PostgreSQL database, with all tables grouped under a dedicated schema, which serves as the system of record for user accounts and sessions, student profiles and academic records, imported myBK progress, curricula, and course outlines and import batches (Section~\ref{subsec:database-design}). Only the Backend Server connects to it, multi-step changes are executed in transactions so that data is never left partially updated (NFR-3.2), and database triggers record changes to curriculum data in an audit log (NFR-7).
         \item \textbf{Planning Rules:} The rule base used by the workers: the CP-SAT model in Python and the ASP encodings in \texttt{.lp} files, which express curriculum structure, course relations, credit limits and graduation conditions in a curriculum-independent way. Curriculum-specific information is supplied as input at request time, so supporting a new curriculum requires new data rather than new rules.
     \end{itemize}
 
     \item \textbf{Data Ingestion Scripts:} An offline set of Node.js scripts that turns the university's published data into the system's import format. They read curricula and teaching plans from the public curriculum API of myBK and course outlines from its outline pages, normalize them, and build JSON files. Curricula are then created through the Backend's Admin APIs, and course outlines through the outline import API, which records every import batch and reports discrepancies between sources, so the data used for planning remains traceable to its origin. Because the scripts run outside the request path, a slow or failed download never affects users of the running system.
 
-    \item \textbf{External Services:}
-    \begin{itemize}
-        \item \textbf{DeepSeek API:} The large language model behind the AI academic advisor (FR-7), accessed over RESTful APIs. The Backend Server does not give the model direct access to the database. Instead, it exposes a small set of read-only tools, such as retrieving parts of the Student's progress analysis, course details, offering history, course outlines and specialization information, and executes each tool call itself under the current Student's permissions. The model's final answer is returned through a structured submission tool, which allows the Backend to validate it before displaying it. If the service fails or is unavailable, the Backend reports the error instead of presenting a fabricated answer (FR-7.6, NFR-3.4).
-    \end{itemize}
 \end{itemize}
 
-By establishing this architecture, BK Uni gains a structural foundation in which ordinary data management, roadmap planning and AI-assisted advising are cleanly separated yet coordinated by a single Backend Server. Planning rules live in one tested package, persistent data has exactly one owner, and the external AI service can only see what the system chooses to share. For these components to work together, however, they depend on a well-organized data foundation that can represent curricula, course rules and each Student's academic record precisely. The following section presents the Database Design, detailing the entities, indexes and relationships that support the system's analysis and planning logic.
+By establishing this architecture, BK Uni gains a structural foundation in which ordinary data management and roadmap planning are cleanly separated yet coordinated by a single Backend Server. Planning rules live in one tested package, and persistent data has exactly one owner. For these components to work together, however, they depend on a well-organized data foundation that can represent curricula, course rules and each Student's academic record precisely. The following section presents the Database Design, detailing the entities, indexes and relationships that support the system's analysis and planning logic.
 
 \subsection{Database Design}
 \label{subsec:database-design}
 
-This section describes the conceptual data model of the BK Uni system, as illustrated in the entity--relationship diagram at the end of this section. All persistent data is stored in a PostgreSQL database under a dedicated schema named \texttt{bk\_uni}, which contains the tables and enumerated types of the system. The model is organized around a set of entity types that capture the main concepts of the system: user accounts and student profiles, the progress that students import from myBK, conversations with the AI advisor, curricula together with their specializations, course groups and categories, and course outlines along with the batches through which they are imported. Columns shared by every table, namely \texttt{id}, \texttt{created\_at}, \texttt{updated\_at} and \texttt{updated\_by}, serve purely technical purposes and are therefore omitted from the conceptual model, as are the migration-history table, the audit log that database triggers fill with changes to curriculum data (it has no foreign keys and is not part of the domain), and the provenance metadata of curricula (source system, identifiers, version, synchronization time, English name and introduction texts). Foreign keys are represented as relationships between entities rather than as attributes. The following subsections detail the entities, indexes and relationships of the database.
+This section describes the conceptual data model of the BK Uni system, as illustrated in the entity--relationship diagram at the end of this section. All persistent data is stored in a PostgreSQL database under a dedicated schema named \texttt{bk\_uni}, which contains the tables and enumerated types of the system. The model is organized around a set of entity types that capture the main concepts of the system: user accounts and student profiles, the progress that students import from myBK, curricula together with their specializations, course groups and categories, and course outlines along with the batches through which they are imported. Columns shared by every table, namely \texttt{id}, \texttt{created\_at}, \texttt{updated\_at} and \texttt{updated\_by}, serve purely technical purposes and are therefore omitted from the conceptual model, as are the migration-history table, the audit log that database triggers fill with changes to curriculum data (it has no foreign keys and is not part of the domain), and the provenance metadata of curricula (source system, identifiers, version, synchronization time, English name and introduction texts). Foreign keys are represented as relationships between entities rather than as attributes. The following subsections detail the entities, indexes and relationships of the database.
 
 \subsubsection{Entity}
 \label{subsubsec:db-entity}
@@ -222,10 +208,6 @@ STUDENT & Subclass of USER & (inherited) & Student number, full name, phone, bir
 AUTH\_\allowbreak{}SESSION & Strong & Id & Expiry time of a sign-in session \\
 \hline
 STUDENT\_\allowbreak{}PROGRESS\_\allowbreak{}IMPORT & Strong & Id & Format (PDF or text), official program code, source update date, parsed report and the Student's adjustments (JSON) \\
-\hline
-ADVISOR\_\allowbreak{}SESSION & Strong & Id & Title, model, analysis snapshot and its hash \\
-\hline
-ADVISOR\_\allowbreak{}STEP & Weak (owner: ADVISOR\_\allowbreak{}SESSION) & Partial: Seq & Turn, role, content, reasoning, tool call (id, name, arguments), data, token usage (prompt, completion, cache hit), duration \\
 \hline
 CURRICULUM & Strong & Id, Code & Name, major, faculty, cohort, duration in years, semester credit limits (min, max), description, total credits for graduation, whether a specialization is required \\
 \hline
@@ -275,10 +257,6 @@ auth\_\allowbreak{}sessions & expires\_\allowbreak{}at & No & Find expired sessi
 student\_\allowbreak{}progress\_\allowbreak{}imports & user\_\allowbreak{}id & Yes & One imported progress per account \\
 \hline
 audit\_\allowbreak{}log & table\_\allowbreak{}name, row\_\allowbreak{}id; occurred\_\allowbreak{}at (BRIN) & No & History of one row; changes in a time range \\
-\hline
-advisor\_\allowbreak{}sessions & user\_\allowbreak{}id, updated\_\allowbreak{}at & No & List a student's conversations, most recent first \\
-\hline
-advisor\_\allowbreak{}steps & session\_\allowbreak{}id, seq & Yes & Ordered steps within a conversation \\
 \hline
 courses & lower(code) & Yes & Case-insensitive unique course code \\
 \hline
@@ -346,10 +324,6 @@ This subsection describes the connections between the entities defined above. Ea
 HAS\_\allowbreak{}SESSION & USER -- AUTH\_\allowbreak{}SESSION & 1\,:\,N & Session total \\
 \hline
 UPLOADS & USER -- STUDENT\_\allowbreak{}PROGRESS\_\allowbreak{}IMPORT & 1\,:\,1 & Import total \\
-\hline
-STARTS & USER -- ADVISOR\_\allowbreak{}SESSION & 1\,:\,N & Advisor session total \\
-\hline
-HAS\_\allowbreak{}STEP (identifying) & ADVISOR\_\allowbreak{}SESSION -- ADVISOR\_\allowbreak{}STEP & 1\,:\,N & Step total \\
 \hline
 CREATES & USER -- COURSE\_\allowbreak{}OUTLINE\_\allowbreak{}IMPORT & 1\,:\,N & Both partial \\
 \hline
@@ -427,7 +401,7 @@ At the same time, the UI must stay faithful to the official sources used at the 
 \subsubsection{Flow Summary}
 \label{subsubsec:ui-flow}
 
-To summarize the normal user flow, we present the diagram in Figure~\ref{fig:ui-flow}, showing how a student navigates through BK Uni from signing in to finalizing a study plan. A new student first creates an account on the Register Page and then signs in on the Login Page, after which the system opens the Course List Page. If no curriculum has been selected yet, the pages remind the student to complete the Personal Profile first, since every analysis depends on the curriculum. The student then declares the status and planned semester of each course, opens the Course Detail Page whenever more information about a course is needed, and reviews the overall progress on the Learning Analysis Page. For questions that the analysis alone cannot answer, the student can consult the AI Advisor. Based on what they learn, students return to the Course List Page to adjust their plan, and this loop is repeated until the plan is finalized.
+To summarize the normal user flow, we present the diagram in Figure~\ref{fig:ui-flow}, showing how a student navigates through BK Uni from signing in to finalizing a study plan. A new student first creates an account on the Register Page and then signs in on the Login Page, after which the system opens the Course List Page. If no curriculum has been selected yet, the pages remind the student to complete the Personal Profile first, since every analysis depends on the curriculum. The student then declares the status and planned semester of each course, opens the Course Detail Page whenever more information about a course is needed, and reviews the overall progress on the Learning Analysis Page. Based on what they learn, students return to the Course List Page to adjust their plan, and this loop is repeated until the plan is finalized.
 
 \begin{figure}[H]
     \centering
@@ -453,9 +427,7 @@ To summarize the normal user flow, we present the diagram in Figure~\ref{fig:ui-
         \node[dec, below=of declare] (det) {Wants to view a course in detail?};
         \node[box, right=of det] (detail) {Views the outline and opening history on the \textbf{Course Detail Page}};
         \node[box, below=of det] (ana) {Reviews progress, missing courses and options on the \textbf{Learning Analysis Page}};
-        \node[dec, below=of ana] (adv) {Needs further advice?};
-        \node[box, below=of adv] (ai) {Chats with the AI on the \textbf{AI Advisor Page} and checks its \textbf{Trajectory}};
-        \node[dec, below=of ai] (fin) {Study plan finalized?};
+        \node[dec, below=of ana] (fin) {Study plan finalized?};
         \node[term, below=of fin] (end) {End};
 
         \draw[arr] (start) -- (acc);
@@ -471,10 +443,7 @@ To summarize the normal user flow, we present the diagram in Figure~\ref{fig:ui-
         \draw[arr] (det) -- node[lbl] {Yes} (detail);
         \draw[arr] (detail.north) |- ([yshift=-2mm]declare.east);
         \draw[arr] (det) -- node[lbl] {No} (ana);
-        \draw[arr] (ana) -- (adv);
-        \draw[arr] (adv) -- node[lbl] {Yes} (ai);
-        \draw[arr] (adv.west) -- node[lbl, pos=0.5] {No} ++(-1.4,0) |- (fin.west);
-        \draw[arr] (ai) -- (fin);
+        \draw[arr] (ana) -- (fin);
         \draw[arr] (fin) -- node[lbl] {Yes} (end);
         \draw[arr] (fin.east) -- node[lbl, pos=0.12] {No} ($(fin.east -| detail.east)+(0.8,0)$) |- ([yshift=2mm]declare.east);
     \end{tikzpicture}%
@@ -597,47 +566,6 @@ Further down, the page also lists the courses that can be registered in the next
     \label{fig:ui-analysis-regulations}
 \end{figure}
 
-\subsubsection{AI Advisor Page}
-\label{subsubsec:ui-advisor}
-
-For questions that cannot be answered by the analysis alone, such as which elective suits the student's interests, students can turn to the \emph{Tư vấn với AI} (AI Advisor) page. The subtitle reminds students that the advisor relies on the result of the Learning Analysis at the current semester, gives suggestions for the next one, and may be wrong. The header also contains a selector of previous conversations, a \emph{Mới} (New) button to start a new conversation and a \emph{Xóa} (Delete) button. The content area has two tabs: \emph{Trò chuyện} (Chat) and \emph{Trajectory}.
-
-When a new conversation is started, the Chat tab shows a short introduction explaining what the advisor can do, together with several suggested questions so that students can start with one click, as shown in Figure~\ref{fig:ui-advisor-empty}. Questions can also be typed into the input box at the bottom of the page.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{image/ui/advisor-empty.png}
-    \caption{The AI Advisor page when starting a new conversation}
-    \label{fig:ui-advisor-empty}
-\end{figure}
-
-After a question is sent, the advisor reads the analysis, queries the database through its tools and replies in the chat thread, as illustrated in Figure~\ref{fig:ui-advisor-chat}. The student's question appears on the right and the answer on the left. Besides the written explanation, the answer contains a list of suggested courses, each displayed as a card with its priority, the reason for the suggestion, a summary of its outline (exam format and estimated study hours), and tags indicating whether the student meets its requirements and how likely it is to be offered next semester.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{image/ui/advisor-chat-top.png}
-    \caption{An answer of the AI advisor with suggested courses}
-    \label{fig:ui-advisor-chat}
-\end{figure}
-
-When the advisor needs more information to give a better answer, it asks the student clarifying questions with predefined options instead of guessing, as shown in Figure~\ref{fig:ui-advisor-choices}. Each option comes with a short explanation, and an additional text box lets the student give a different answer before clicking \emph{Gửi lựa chọn} (Send choices). Follow-up questions are also suggested at the end of the answer so that the conversation can continue naturally.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{image/ui/advisor-chat-bottom.png}
-    \caption{Clarifying questions and follow-up suggestions in the Chat tab}
-    \label{fig:ui-advisor-choices}
-\end{figure}
-
-To make the advisor transparent and easy to verify, the Trajectory tab, shown in Figure~\ref{fig:ui-advisor-trace}, records every step the agent performed to produce its answers. The steps are grouped by turn and labelled by their role: the system prompt, the analysis context, the user's message, the model's reasoning together with the tools it decided to call, each tool call with its arguments and result, and the final answer. Each row can be expanded to show its full content, and the token usage, cache hits and duration of each step are displayed on the right. A summary at the top shows the number of turns, requests, tool calls, total tokens and the cache-hit rate, and the steps can be filtered to show only model or tool steps.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{image/ui/advisor-trace.png}
-    \caption{The Trajectory tab of the AI Advisor}
-    \label{fig:ui-advisor-trace}
-\end{figure}
-
 \subsubsection{Personal Profile Page}
 \label{subsubsec:ui-profile}
 
@@ -649,145 +577,3 @@ Lastly, the \emph{Hồ sơ cá nhân} (Personal Profile) page, shown in Figure~\
     \caption{The Personal Profile page}
     \label{fig:ui-profile}
 \end{figure}
-
-\subsection{AI Advisor: Retrieval-Augmented Generation}
-\label{subsec:rag}
-
-This section specifies the algorithm behind the AI Advisor page presented in Section~\ref{subsec:ui-design}. The advisor answers open-ended questions in natural language, such as which elective fits a specialization, whether a course is heavy, or how to balance a semester. A large language model (LLM) plans a \emph{trajectory} of tool calls that retrieve the Student's analysis results and curriculum data, and then writes an answer that the backend validates before showing it. The advisor follows a strict division of labour with the rule-based code of the system (Section~\ref{subsubsec:architecture-overview}): the progress analysis computed from curriculum rules is the source of truth for eligibility, outstanding requirements and bottleneck courses, while the LLM explains, prioritizes and asks follow-up questions. The advisor never decides on its own whether a Student may take a course; it reads that decision from the analysis results.
-
-\subsubsection{Motivation and Design Principles}
-
-An LLM on its own is unsuitable for academic advising. It does not know a specific curriculum, it may invent course codes, credit values or prerequisite relations, and its answers cannot be checked. Retrieval-Augmented Generation (RAG) addresses this by retrieving relevant information from a trusted source and placing it in the model's context before the answer is generated.
-
-Classic RAG retrieves text passages from a vector index by embedding similarity. BK Uni uses an \emph{agentic, tool-based} variant instead, because its knowledge is mostly structured and relational (courses, rules, groups, statuses, offering history) and must be exact rather than merely similar. The model is given a set of tools, each backed by a database query or by the analysis results, and decides during the conversation which tools to call and with which arguments. The design follows four principles:
-\begin{itemize}
-    \item \textbf{Grounding:} every course code, name, credit value or rule mentioned in an answer must come from the context or from a tool result (FR-7.2).
-    \item \textbf{Separation of decision and explanation:} eligibility, outstanding requirements and bottleneck courses are computed by rule-based code and given to the model as facts; the model only interprets them.
-    \item \textbf{Mixed initiative:} when information is missing or several reasonable options exist, the model asks the Student a structured question instead of choosing on the Student's behalf (FR-7.3).
-    \item \textbf{Verifiability:} the final answer is structured data checked by the backend, and the whole trajectory that led to it is stored, so every answer can be audited afterwards.
-\end{itemize}
-
-\subsubsection{Retrieval Sources}
-
-The information available to the model in a turn comes from three layers, ordered from the most general to the most specific:
-\begin{enumerate}
-    \item \textbf{System prompt (domain knowledge).} A fixed instruction that defines the advisor's role and encodes domain knowledge that cannot be inferred from the data: the meaning of prerequisite, prior and corequisite relations; how specializations are obtained (a Student keeps a specialization only while every elective taken from the base group belongs to its list); how physical-education requirements are satisfied by concrete sports courses; and the priority order for recommendations (failed courses to retake, overdue required courses, bottleneck courses that unlock many others, required courses on schedule, then electives), capped by the semester's credit limit.
-    \item \textbf{Analysis context (the Student's state).} A compact JSON summary of the Student's learning analysis, attached to the user message inside a \texttt{<context>} block. It contains the current and next semester, credit overview and capacity, warnings, failed and overdue courses, the number of required courses left, elective-group and specialization progress, the list of courses eligible for the next semester, the top bottleneck courses, the next step of the roadmap and unmet graduation regulations. To save tokens, the context is re-sent only when the analysis changes: the backend stores a SHA-256 hash of the full analysis with the conversation and attaches a new context block only when the hash differs.
-    \item \textbf{Tools (details on demand).} Everything that does not fit in the summary is retrieved through the tools in Table~\ref{tab:advisor-tools}, which the model may call several times and in parallel within a turn.
-\end{enumerate}
-
-\begin{longtable}{|>{\raggedright\arraybackslash}p{0.32\textwidth}|>{\raggedright\arraybackslash}p{0.19\textwidth}|>{\raggedright\arraybackslash}p{0.39\textwidth}|}
-\caption{Tools available to the AI advisor}
-\label{tab:advisor-tools}\\
-\hline
-\textbf{Tool} & \textbf{Data source} & \textbf{Purpose} \\
-\hline
-\endfirsthead
-\hline
-\textbf{Tool} & \textbf{Data source} & \textbf{Purpose} \\
-\hline
-\endhead
-\texttt{get\_analysis\_section} & Analysis results & Returns one section of the analysis in full (for example \texttt{eligible\_next}, \texttt{blocked\_next} with missing courses, \texttt{electives}, \texttt{roadmap}); the primary source for eligibility and progress. \\
-\hline
-\texttt{get\_course\_detail} & Database & Course information, recommended semester, prerequisite, prior and corequisite relations with the Student's status for each related course, courses it unlocks, containing elective groups and specializations, and offering history. \\
-\hline
-\texttt{check\_offering} & Offering history (myBK) & Whether up to 30 courses are offered in a given semester; confirmed when the semester's data exists, predicted otherwise. \\
-\hline
-\texttt{get\_course\_outline} & Course outlines (myBK) & Condensed course outline: objectives, weekly content, learning outcomes, grading scheme, exam format, study hours, materials, and outline conditions placed next to curriculum conditions. \\
-\hline
-\texttt{search\_curriculum\_\allowbreak courses} & Database and outlines & Searches the Student's curriculum by code, name keyword or topic in the outline content (accent-insensitive), returning statuses, groups and specializations. \\
-\hline
-\texttt{get\_specialization\_\allowbreak detail} & Database & Courses of a specialization, grouped by block with the required number of courses or credits, together with the Student's status for each course. \\
-\hline
-\texttt{search\_\allowbreak outlines} & Search index (or database) & Full-text search over the whole content of the course outlines, by topic, skill or tool, ranked by relevance with highlighted excerpts; can be limited to the Student's curriculum and filtered by laboratory work, projects or final-exam format. \\
-\hline
-\texttt{find\_similar\_\allowbreak courses} & Search index & Courses whose outlines are closest in content to a given course, with the characteristic keywords of that course; used for alternatives within an elective group or for what to study next. \\
-\hline
-\texttt{get\_senior\_free\_\allowbreak elective\_tips} & Curated list and database & Free-elective courses recommended by students of earlier cohorts (unofficial experience), with their credits, next-semester offering, the Student's status, and the free-elective requirement of the curriculum. \\
-\hline
-\texttt{submit\_answer} & -- & Submits the final structured answer; must be called exactly once to end the turn. \\
-\hline
-\end{longtable}
-
-All tools are read-only and run inside the backend under the identity of the current Student. Their arguments only select what to read, never whose data, because the Student and the curriculum are fixed by the authenticated session rather than chosen by the model. Each tool result is serialized as JSON and truncated to 16{,}000 characters before being returned to the model.
-
-When the offering data of the target semester is not yet available, \texttt{check\_offering} predicts it from the four most recent semesters of the same type (first semester, second semester or summer) for which data exists. Let $h$ be the number of those semesters in which the course was opened. The verdict is \emph{likely} if $h \ge 3$, \emph{uncertain} if $1 \le h \le 2$, \emph{unlikely} if $h = 0$ but the course has been opened in a semester of that type before, and \emph{never} if it has not. The advisor is instructed to present these verdicts as predictions from history, not as an official timetable.
-
-\subsubsection{Agent Trajectory}
-
-A conversation is a sequence of \emph{turns}, and each turn produces a \emph{trajectory}: an ordered list of steps
-\[
-  \tau = \langle s_1, s_2, \dots, s_n \rangle,
-\]
-where each step $s_i$ has one of the roles \texttt{system}, \texttt{context}, \texttt{user}, \texttt{assistant}, \texttt{tool}, \texttt{answer} or \texttt{error}. An \texttt{assistant} step holds the model's output for one call: its visible content, its reasoning trace and the tool calls it requested, together with token usage and latency. A \texttt{tool} step holds the name, arguments, result and execution time of one tool call. The turn ends with exactly one \texttt{answer} step, or with an \texttt{error} step if it could not be completed. Algorithm~\ref{alg:advisor-turn} describes how a turn is executed.
-
-\begin{algorithm}[H]
-\caption{One turn of the AI advisor}
-\label{alg:advisor-turn}
-\KwIn{Student $u$, conversation $c$ with stored steps $\tau_{\mathit{prev}}$, question $q$, analysis $A$}
-\KwOut{Validated answer $a$, appended to $c$ as new steps}
-$M \leftarrow \textsc{Replay}(\tau_{\mathit{prev}})$\tcp*{rebuild message history}
-\If{$c$ has no system step}{record and prepend the system prompt to $M$}
-\If{$\mathrm{SHA256}(A) \neq c.\mathit{hash}$}{
-  $x \leftarrow \textsc{Summarize}(A)$; record a \texttt{context} step; $c.\mathit{hash} \leftarrow \mathrm{SHA256}(A)$\;
-}
-append $q$ (wrapped with $x$ if present) to $M$ and record a \texttt{user} step\;
-$\mathit{rejected} \leftarrow \mathit{false}$\;
-\For{$r \leftarrow 1$ \KwTo $R_{\max}=8$}{
-  $\mathit{res} \leftarrow \textsc{LLM}(M, \mathit{tools})$; record an \texttt{assistant} step; append $\mathit{res}$ to $M$\;
-  \If{$\mathit{res}$ requests no tool call}{
-    $d \leftarrow \mathit{res}.\mathit{content}$\tcp*{plain-text draft}
-    \textbf{break}\;
-  }
-  \ForEach{tool call $(f, \mathit{args}) \in \mathit{res}$}{
-    \eIf{$f = \texttt{submit\_answer}$}{
-      $(a, E) \leftarrow \textsc{Validate}(\mathit{args}, \mathit{lenient}=\mathit{rejected})$\;
-      \lIf{$a$ is accepted}{$\mathit{out} \leftarrow \{\mathit{ok}\}$}
-      \lElse{$\mathit{out} \leftarrow E$; $\mathit{rejected} \leftarrow \mathit{true}$}
-    }{
-      $\mathit{out} \leftarrow \textsc{Execute}(f, \mathit{args}, u)$\;
-    }
-    record a \texttt{tool} step; append $\textsc{Truncate}(\mathit{out})$ to $M$\;
-  }
-  \lIf{an answer $a$ was accepted}{record an \texttt{answer} step and \Return{$a$}}
-}
-$a \leftarrow \textsc{FormatJson}(d, q, \text{tool results of this turn})$\tcp*{fallback}
-record an \texttt{answer} step and \Return{$a$}\;
-\end{algorithm}
-
-Within one round the model may request several tool calls at once, for example \texttt{check\_offering} for all candidate courses together with \texttt{get\_course\_outline} for the ones whose workload matters. A typical trajectory therefore has two or three rounds: the model reads the context, retrieves the details it needs, and submits its answer. The bound $R_{\max} = 8$ prevents a model that keeps calling tools from running indefinitely. Any exception raised while the turn is being executed, including an unreachable or timed-out AI service, is recorded as an \texttt{error} step, and no answer is fabricated (FR-7.6).
-
-\subsubsection{Answer Validation and Enrichment}
-
-The final answer is not free text but a JSON object passed as the argument of \texttt{submit\_answer}, with four fields:
-\begin{itemize}
-    \item \texttt{message}: a short answer in Vietnamese, with light formatting;
-    \item \texttt{recommendations}: a list of courses, each with a code, a one- or two-sentence reason and a priority (\emph{high}, \emph{medium} or \emph{low});
-    \item \texttt{choices}: structured follow-up questions of type \emph{single}, \emph{multiple} or \emph{text}, each option with a short description of its consequences;
-    \item \texttt{suggestions}: up to three useful follow-up questions.
-\end{itemize}
-
-The backend first normalizes this object against the schema and then \emph{enriches} each recommendation with facts computed by code rather than by the model: the course name and credits from the database, whether the course belongs to the curriculum, its eligibility and missing conditions from the analysis results, its offering verdict for the next semester, and a short summary of its course outline. The interface displays these verified facts next to the model's reason, so a wrong statement in the reason is easy to spot.
-
-Validation includes a self-correction step. If the answer refers to a course code that does not exist or violates the schema, the first submission is rejected and the list of errors is returned to the model as the tool result, so it can correct itself in the next round. If a later submission still contains errors, it is accepted \emph{leniently}: the invalid parts are dropped and a note stating what was removed is attached, so that a single wrong code does not discard an otherwise useful answer.
-
-If the model ends a round with plain text instead of calling \texttt{submit\_answer}, or reaches the round limit, a fallback formatter is used. The backend makes a separate call in JSON mode, with reasoning disabled, that receives the Student's question, the draft answer and the tool results collected during the turn as evidence, and asks for the same schema. The result goes through the same validation. If two attempts fail, the draft text is returned with a note saying it could not be structured. Each answer records whether it came from \texttt{submit\_answer} or from the fallback formatter.
-
-\subsubsection{Trajectory Persistence and Replay}
-
-Every step is stored as soon as it is produced in the \texttt{advisor\_steps} table, ordered by a per-conversation sequence number that is unique within the conversation. This serves three purposes. First, it is the conversation memory: at the start of each turn the message history is rebuilt from the stored steps rather than kept in server memory, so a conversation can be continued at any time, even after the server restarts (FR-7.5). Second, it makes answers auditable: for any answer, it is possible to see exactly which data the model saw, which tools it called with which arguments, what they returned, and how long each step took (NFR-7). Third, the recorded token counts, including tokens served from the provider's prompt cache, make the cost and latency of the advisor measurable.
-
-Replay applies a few rules so that the rebuilt history is always valid for the provider's API:
-\begin{itemize}
-    \item the model's reasoning trace is kept with each assistant message, as the provider requires when reasoning and tool calling are used together;
-    \item calls to the fallback formatter are not part of the main dialogue and are skipped;
-    \item a tool call that never received a result, for example because the previous turn failed, is closed with a synthetic ``interrupted'' result;
-    \item two consecutive user messages, which occur when a previous turn failed before the model replied, are merged into one;
-    \item a context block is replayed together with the user message it was attached to.
-\end{itemize}
-Finally, only one turn may run on a conversation at a time; a second request on the same conversation is rejected until the first finishes, so the step sequence never interleaves. This lock is kept in the memory of the Backend process, which is sufficient for the current single-instance deployment; running several Backend instances would require moving it to the database or a shared cache.
-
-\subsubsection{Mixed-Initiative Interaction}
-
-When the model returns \texttt{choices}, the interface renders them as selectable options. The Student's selections are sent back with the next message and formatted as a ``choice answers'' block that lists each question with the chosen values or free text. The model then continues advising based on these choices. This lets the advisor fill in information it cannot infer on its own, such as a target specialization, the number of credits the Student is willing to take, or whether summer study is an option. It also keeps decisions with real consequences, such as giving up a specialization by taking an elective outside its list, in the Student's hands.
-

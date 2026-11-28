@@ -16,11 +16,9 @@ import { CurriculumRegulation } from '../src/curriculum/entities/curriculum-regu
 import { Curriculum } from '../src/curriculum/entities/curriculum.entity';
 import { CurriculumSpecialization } from '../src/curriculum/entities/curriculum-specialization.entity';
 import { StudentCourse } from '../src/student/entities/student-course.entity';
-import { StudentPlanCourse } from '../src/student/entities/student-plan-course.entity';
 import { StudentProfile } from '../src/student/entities/student-profile.entity';
 import { StudentRegulationStatusEntity } from '../src/student/entities/student-regulation-status.entity';
 import { StudentCourseController } from '../src/student/student-course.controller';
-import { StudentPlanCourseController } from '../src/student/student-plan-course.controller';
 import { StudentProfileController } from '../src/student/student-profile.controller';
 import { StudentRegulationStatusController } from '../src/student/student-regulation-status.controller';
 import { StudentService } from '../src/student/student.service';
@@ -31,7 +29,7 @@ const origin = 'http://localhost:5173';
 const studentId = randomUUID();
 const entities = [
   User, Course, Curriculum, CurriculumCourse, CourseGroup, CourseGroupMember, CourseRelation,
-  CurriculumRegulation, CurriculumSpecialization, StudentProfile, StudentCourse, StudentPlanCourse,
+  CurriculumRegulation, CurriculumSpecialization, StudentProfile, StudentCourse,
   StudentRegulationStatusEntity,
 ];
 
@@ -52,7 +50,7 @@ const entities = [
     TypeOrmModule.forFeature(entities),
   ],
   controllers: [
-    StudentProfileController, StudentCourseController, StudentPlanCourseController, StudentRegulationStatusController,
+    StudentProfileController, StudentCourseController, StudentRegulationStatusController,
   ],
   providers: [StudentService],
 })
@@ -166,36 +164,37 @@ describe('Student API', () => {
   });
 
   it('declares course status', async () => {
-    const declared = await request(server()).put(`/api/student-courses/me/${course.id}`).set('Origin', origin)
-      .send({ status: 'in-progress' }).expect(200);
-    expect(declared.body.data).toMatchObject({ course_id: course.id, status: 'in-progress' });
-    expect(declared.body.data.course.code).toBe('CO2003');
+    const save = (items: { course_id: string; status: string }[]) =>
+      request(server()).put('/api/student-courses/me').set('Origin', origin).send({ items });
+
+    const declared = await save([{ course_id: course.id, status: 'in-progress' }]).expect(200);
+    expect(declared.body.data).toHaveLength(1);
+    expect(declared.body.data[0]).toMatchObject({ course_id: course.id, status: 'in-progress' });
+    expect(declared.body.data[0].course.code).toBe('CO2003');
 
     // "Đã học nhưng rớt": cần cho quy tắc học trước (HT).
-    const failed = await request(server()).put(`/api/student-courses/me/${course.id}`).set('Origin', origin)
-      .send({ status: 'failed' }).expect(200);
-    expect(failed.body.data.status).toBe('failed');
+    const failed = await save([{ course_id: course.id, status: 'failed' }]).expect(200);
+    expect(failed.body.data[0].status).toBe('failed');
 
-    const updated = await request(server()).put(`/api/student-courses/me/${course.id}`).set('Origin', origin)
-      .send({ status: 'completed' }).expect(200);
-    expect(updated.body.data.status).toBe('completed');
+    const updated = await save([{ course_id: course.id, status: 'completed' }]).expect(200);
+    expect(updated.body.data[0].status).toBe('completed');
 
     const list = await request(server()).get('/api/student-courses/me').expect(200);
     expect(list.body.data).toHaveLength(1);
     expect(list.body.data[0].course.code).toBe('CO2003');
 
-    await request(server()).put(`/api/student-courses/me/${course.id}`).set('Origin', origin)
-      .send({ status: 'official' }).expect(400);
-    await request(server()).put(`/api/student-courses/me/${randomUUID()}`).set('Origin', origin)
-      .send({ status: 'completed' }).expect(400);
+    await save([{ course_id: course.id, status: 'official' }]).expect(400);
+    await save([{ course_id: randomUUID(), status: 'completed' }]).expect(400);
 
-    await request(server()).delete(`/api/student-courses/me/${course.id}`).set('Origin', origin).expect(200);
-    await request(server()).delete(`/api/student-courses/me/${course.id}`).set('Origin', origin).expect(404);
+    await request(server()).put('/api/student-courses/me').set('Origin', origin)
+      .send({ items: [], remove_course_ids: [course.id] }).expect(200);
+    const empty = await request(server()).get('/api/student-courses/me').expect(200);
+    expect(empty.body.data).toHaveLength(0);
   });
 
   it('declares many course statuses at once and keeps the others', async () => {
-    await request(server()).put(`/api/student-courses/me/${course.id}`).set('Origin', origin)
-      .send({ status: 'in-progress' }).expect(200);
+    await request(server()).put('/api/student-courses/me').set('Origin', origin)
+      .send({ items: [{ course_id: course.id, status: 'in-progress' }] }).expect(200);
 
     // Một môn đã khai được cập nhật, một môn mới được tạo.
     const saved = await request(server()).put('/api/student-courses/me').set('Origin', origin).send({
@@ -226,8 +225,8 @@ describe('Student API', () => {
     // Danh sách rỗng hợp lệ, không đổi gì.
     await request(server()).put('/api/student-courses/me').set('Origin', origin).send({ items: [] }).expect(200);
 
-    await request(server()).delete(`/api/student-courses/me/${course.id}`).set('Origin', origin).expect(200);
-    await request(server()).delete(`/api/student-courses/me/${extraCourse.id}`).set('Origin', origin).expect(200);
+    await request(server()).put('/api/student-courses/me').set('Origin', origin)
+      .send({ items: [], remove_course_ids: [course.id, extraCourse.id] }).expect(200);
   });
 
   it('saves and removes course statuses in one request', async () => {
@@ -253,72 +252,6 @@ describe('Student API', () => {
       .send({ items: [], remove_course_ids: [course.id] }).expect(200);
     const empty = await request(server()).get('/api/student-courses/me').expect(200);
     expect(empty.body.data).toHaveLength(0);
-  });
-
-  it('saves many plan courses at once', async () => {
-    const saved = await request(server()).put(`/api/student-plan-courses/me/${curriculum.id}`).set('Origin', origin).send({
-      items: [{ course_id: course.id, semester_code: '261' }, { course_id: extraCourse.id, semester_code: '262' }],
-    }).expect(200);
-    expect(saved.body.data).toHaveLength(2);
-
-    const changed = await request(server()).put(`/api/student-plan-courses/me/${curriculum.id}`).set('Origin', origin).send({
-      items: [{ course_id: course.id, semester_code: '271' }],
-      remove_course_ids: [extraCourse.id],
-    }).expect(200);
-    expect(changed.body.data).toHaveLength(1);
-    expect(changed.body.data[0]).toMatchObject({ course_id: course.id, semester_code: '271' });
-
-    await request(server()).put(`/api/student-plan-courses/me/${curriculum.id}`).set('Origin', origin)
-      .send({ items: [{ course_id: course.id, semester_code: '27' }] }).expect(400);
-    await request(server()).put(`/api/student-plan-courses/me/${randomUUID()}`).set('Origin', origin)
-      .send({ items: [{ course_id: course.id, semester_code: '271' }] }).expect(400);
-
-    await request(server()).put(`/api/student-plan-courses/me/${curriculum.id}`).set('Origin', origin)
-      .send({ items: [], remove_course_ids: [course.id] }).expect(200);
-  });
-
-  it('manages plan courses', async () => {
-    const planned = await request(server())
-      .put(`/api/student-plan-courses/me/${curriculum.id}/${course.id}`)
-      .set('Origin', origin)
-      .send({ semester_code: '262' })
-      .expect(200);
-    expect(planned.body.data).toMatchObject({ curriculum_id: curriculum.id, course_id: course.id, semester_code: '262' });
-    expect(planned.body.data.course.code).toBe('CO2003');
-
-    const changed = await request(server())
-      .put(`/api/student-plan-courses/me/${curriculum.id}/${course.id}`)
-      .set('Origin', origin)
-      .send({ semester_code: '271' })
-      .expect(200);
-    expect(changed.body.data.id).toBe(planned.body.data.id);
-    expect(changed.body.data.semester_code).toBe('271');
-
-    const list = await request(server()).get('/api/student-plan-courses/me')
-      .query({ curriculum_id: curriculum.id }).expect(200);
-    expect(list.body.data).toHaveLength(1);
-
-    // Tự chọn tự do: môn không thuộc chương trình vẫn lập kế hoạch được.
-    const outside = await request(server())
-      .put(`/api/student-plan-courses/me/${curriculum.id}/${extraCourse.id}`)
-      .set('Origin', origin)
-      .send({ semester_code: '271' })
-      .expect(200);
-    expect(outside.body.data.course.code).toBe('CO9999');
-
-    const otherCurriculum = randomUUID();
-    await request(server())
-      .put(`/api/student-plan-courses/me/${otherCurriculum}/${course.id}`)
-      .set('Origin', origin)
-      .send({ semester_code: '262' })
-      .expect(400);
-
-    await request(server()).delete(`/api/student-plan-courses/me/${curriculum.id}/${extraCourse.id}`)
-      .set('Origin', origin).expect(200);
-    await request(server()).delete(`/api/student-plan-courses/me/${curriculum.id}/${course.id}`)
-      .set('Origin', origin).expect(200);
-    await request(server()).delete(`/api/student-plan-courses/me/${curriculum.id}/${course.id}`)
-      .set('Origin', origin).expect(404);
   });
 
   it('manages regulation statuses', async () => {

@@ -14,7 +14,6 @@ Students are BK Uni's primary users and direct beneficiaries. They need to track
     \item Record the academic status of each course and its planned semester to keep their personal progress up to date.
     \item Identify outstanding required courses, elective requirements, or educational regulations, and check eligibility for subsequent courses.
     \item Receive course recommendations for a planned semester, with explanations of recommended and deferred courses and applicable credit limits.
-    \item Chat with an AI assistant for further advice on course selection, electives, and specializations.
 \end{itemize}
 
 \textbf{Roles and responsibilities:}
@@ -69,7 +68,7 @@ Academic advisor & Indirect, does not operate the system & Helping Students revi
 
 \subsection{Actors \& Roles}
 
-An actor is an individual, group, or external system that interacts with BK Uni. A role defines the scope of functions and data each actor is permitted to use. The system's primary actors are Student and Admin; the AI Service is a secondary actor (an external system).
+An actor is an individual, group, or external system that interacts with BK Uni. A role defines the scope of functions and data each actor is permitted to use. The system's actors are Student and Admin.
 
 \subsubsection{Student}
 Students are users signed in with student accounts and are the primary actors using BK Uni's study-planning functions.
@@ -79,7 +78,6 @@ Students are users signed in with student accounts and are the primary actors us
     \item Create and update their own academic profiles and select a curriculum.
     \item Record course statuses, planned semesters, and the status of educational regulations, and view their personal progress.
     \item Analyze course eligibility, review outstanding requirements, and receive explained semester recommendations.
-    \item Chat with the AI assistant and review their own conversations.
     \item View or modify only profiles and personal data they own; they cannot modify standard curriculum data.
 \end{itemize}
 
@@ -98,9 +96,6 @@ Admins are responsible for managing course data, curricula, and the academic rul
 
 Admin privileges are granted under controlled authorization so that only people responsible for administration can modify standard data.
 
-\subsubsection{AI Service (secondary actor)}
-The AI Service is an external language model that BK Uni calls to answer Students' advising questions. It does not sign in and does not access the database directly; it only receives the data the system sends and retrieves additional information through tools provided by the system.
-
 \textbf{Access-control summary:}
 \begin{longtable}{|p{0.16\textwidth}|p{0.36\textwidth}|p{0.38\textwidth}|}
 \hline
@@ -111,11 +106,9 @@ The AI Service is an external language model that BK Uni calls to answer Student
 \textbf{Actor} & \textbf{Access} & \textbf{Primary permissions} \\
 \hline
 \endhead
-Student & Their own profile and academic data & Manage profile, update progress, view analyses, plan studies, and consult the AI assistant \\
+Student & Their own profile and academic data & Manage profile, update progress, view analyses, and plan studies \\
 \hline
 Admin & Course data and standard curriculum data & Manage courses, curricula, recommended semesters, elective groups, rules, and regulations; view the course catalog \\
-\hline
-AI Service & Only the data the system sends within each conversation & Generate advising answers for Students \\
 \hline
 \end{longtable}
 
@@ -295,30 +288,6 @@ FR-6.6 & System & If the course pathway declared by the Student does not satisfy
 \hline
 \end{longtable}
 
-\subsubsection{FR-7. AI Academic Advising}
-\begin{longtable}{|p{0.10\textwidth}|p{0.15\textwidth}|p{0.65\textwidth}|}
-\hline
-\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
-\hline
-\endfirsthead
-\hline
-\textbf{ID} & \textbf{Role} & \textbf{Requirement} \\
-\hline
-\endhead
-FR-7.1 & Student & A Student can chat with the AI assistant to ask about course selection, electives, specializations, and study plans. \\
-\hline
-FR-7.2 & System & The AI assistant answers based on the Student's academic data and the curriculum data in the system; it does not produce course codes, course names, or conditions that are not in the data, and the system checks the course codes in each answer before showing it. \\
-\hline
-FR-7.3 & System & When information is missing or several options exist, the AI assistant asks the Student follow-up questions with choices instead of deciding on the Student's behalf. \\
-\hline
-FR-7.4 & System & The AI assistant can suggest courses with reasons; its results are for reference only and do not confirm official enrollment. \\
-\hline
-FR-7.5 & Student & A Student can review, continue, or delete their own conversations. \\
-\hline
-FR-7.6 & System & When the AI service fails or is unavailable, the system clearly reports this and does not display a fabricated answer. \\
-\hline
-\end{longtable}
-
 \subsection{Non-functional Requirements}
 
 Non-functional requirements define BK Uni's quality and operational criteria. Quantitative criteria are evaluated in an agreed test environment using data representative of expected usage.
@@ -447,7 +416,7 @@ NFR-6.5 & Actions with significant effects on data, such as deletion or confirma
 \hline
 NFR-6.6 & The interface must be usable on common desktop and mobile devices, with readable content, consistent navigation, and error messages associated with the relevant action. \\
 \hline
-NFR-6.7 & After signing in, Students must be able to open the system's main features (Academic Analysis, Course Recommendations, and AI Advising) within no more than two navigation actions from the main menu. \\
+NFR-6.7 & After signing in, Students must be able to open the system's main features (Academic Analysis and Course Recommendations) within no more than two navigation actions from the main menu. \\
 \hline
 \end{longtable}
 
@@ -469,7 +438,7 @@ NFR-7.2 & The system must record account and access-related events, such as sign
 
 \subsection{Usecase Diagram}
 
-The following use case diagrams illustrate the main interactions between Guests, Students, Admins, the AI Service, and BK Uni. The overview summarizes the system's scope; each of the following diagrams details one group of functional requirements. All diagrams use the same notation: a solid arrow links an actor to a use case it starts, a dashed arrow labeled \incl{} or \extd{} shows inclusion or extension, and a hollow triangle shows generalization.
+The following use case diagrams illustrate the main interactions between Guests, Students, Admins, and BK Uni. The overview summarizes the system's scope; each of the following diagrams details one group of functional requirements. All diagrams use the same notation: a solid arrow links an actor to a use case it starts, a dashed arrow labeled \incl{} or \extd{} shows inclusion or extension, and a hollow triangle shows generalization.
 
 \subsubsection{System Overview}
 \begin{figure}[H]
@@ -477,7 +446,7 @@ The following use case diagrams illustrate the main interactions between Guests,
     \input{contents/usecase/overview}
     \caption{BK Uni use case overview}
 \end{figure}
-Guests can only register an account. Students manage their profile and course progress, import their progress from myBK, edit a personal plan, view their progress analysis, request study-roadmap recommendations, and chat with the AI advisor, which relies on the AI Service as a secondary actor. Admins maintain the course catalog and the curricula. Both Students and Admins sign in and sign out.
+Guests can only register an account. Students manage their profile and course progress, import their progress from myBK, edit a personal plan, view their progress analysis, and request study-roadmap recommendations. Admins maintain the course catalog and the curricula. Both Students and Admins sign in and sign out.
 
 \subsubsection{Account and Access}
 \begin{figure}[H]
@@ -510,14 +479,6 @@ Viewing the analysis always computes credit progress by knowledge block, checks 
     \caption{Course recommendation use cases}
 \end{figure}
 Students first configure a scenario: they may set preferences, pin courses or freeze semesters, add free-choice courses, and explore what-if assumptions. Solving the roadmap always builds the solver input from the Student's progress and the curriculum, and always verifies the result against the curriculum rules. When no roadmap exists or the solver runs out of time, the system reports it and may propose fixes that the Student can apply; when the roadmap schedules the graduation thesis before a graduation condition is met, the Student can confirm that condition. Students can also save roadmaps and compare a new roadmap with the saved baseline.
-
-\subsubsection{AI Academic Advising}
-\begin{figure}[H]
-    \centering
-    \input{contents/usecase/advisor}
-    \caption{AI academic-advising use cases}
-\end{figure}
-Students chat with the AI Advisor, which always includes sending an analysis snapshot and querying system data through read-only tools; the AI Service is a secondary actor. The chat can be extended with answering choice questions, viewing suggested courses with reasons, and a notice when the AI Service is unavailable. Students can also manage their conversations by viewing the history, deleting a conversation, or continuing one, which includes chatting with the AI Advisor.
 
 \subsubsection{Student Personal Plan}
 \begin{figure}[H]
@@ -748,30 +709,7 @@ This section describes the main interaction goals of Students and Admins with BK
 \hline
 \end{longtable}
 
-\subsubsection{UC-10 --- AI Academic Advising}
-\begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
-\hline
-\textbf{Name} & AI Academic Advising \\
-\hline
-\textbf{Related req.} & FR-7.1--FR-7.6 \\
-\hline
-\textbf{Actor} & Student (primary), AI Service (secondary) \\
-\hline
-\textbf{Description} & Allows a Student to ask the AI assistant about course selection, electives, and specializations; the assistant answers based on the Student's academic data and the curriculum data. \\
-\hline
-\textbf{Pre-conditions} & The Student is signed in and has selected a curriculum. \\
-\hline
-\textbf{Post-conditions} & The question and answer are saved in the Student's conversation.\newline Academic and curriculum data are not changed. \\
-\hline
-\textbf{Normal flow} & 1. The Student opens the AI Advising function.\newline 2. The Student enters a question.\newline 3. The system sends the question together with a summary of the Student's academic analysis to the AI Service.\newline 4. The AI Service retrieves any additional information it needs through tools provided by the system (course details, offering likelihood, syllabi, specializations).\newline 5. The system displays the answer, suggested courses with reasons, and suggested follow-up questions.\newline 6. The Student continues asking in the same conversation if needed. \\
-\hline
-\textbf{Alternate flow} & 1a. The Student reopens a previous conversation: the system displays its full content and allows the Student to continue.\newline 1b. The Student deletes a conversation: the system asks for confirmation and then deletes it.\newline 5a. The assistant needs more information: the system displays choices for the Student to answer, then continues advising based on the selected choice. \\
-\hline
-\textbf{Exception} & E1. No curriculum has been selected: the system asks the Student to select one in the profile.\newline E2. The AI Service fails or is not configured: the system reports that the AI cannot answer and does not display a fabricated answer.\newline E3. Too many questions in a short period: the system temporarily rejects the requests.\newline E4. The Student attempts to view another user's conversation: the system denies access. \\
-\hline
-\end{longtable}
-
-\subsubsection{UC-11 --- Manage Courses}
+\subsubsection{UC-10 --- Manage Courses}
 \begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
 \hline
 \textbf{Name} & Manage Courses \\
@@ -794,7 +732,7 @@ This section describes the main interaction goals of Students and Admins with BK
 \hline
 \end{longtable}
 
-\subsubsection{UC-12 --- Manage Curricula}
+\subsubsection{UC-11 --- Manage Curricula}
 \begin{longtable}{|p{0.21\textwidth}|p{0.71\textwidth}|}
 \hline
 \textbf{Name} & Manage Curricula \\
@@ -819,7 +757,7 @@ This section describes the main interaction goals of Students and Admins with BK
 
 \subsection{Sequence Diagram}
 
-The following sequence diagrams show how the actors, the frontend, the backend, the database, and the external components (the myBK reader, the constraint solver, and the AI Service) exchange messages in the main BK Uni workflows. Solid arrows are requests, dashed arrows are replies, and \texttt{alt}, \texttt{opt}, and \texttt{loop} frames mark alternatives, optional parts, and repetition. Every request that needs an account carries the session cookie; the backend identifies the user from the token, never from an identifier sent by the client.
+The following sequence diagrams show how the actors, the frontend, the backend, the database, and the external components (the myBK reader and the constraint solver) exchange messages in the main BK Uni workflows. Solid arrows are requests, dashed arrows are replies, and \texttt{alt}, \texttt{opt}, and \texttt{loop} frames mark alternatives, optional parts, and repetition. Every request that needs an account carries the session cookie; the backend identifies the user from the token, never from an identifier sent by the client.
 
 \subsubsection{Student Profile and Curriculum}
 \begin{figure}[H]
@@ -860,14 +798,6 @@ The uploaded report is first sent for review: the backend passes its bytes to th
     \caption{Course-recommendation sequence}
 \end{figure}
 The page restores the saved scenario, and every change to the scenario is saved without starting a computation. When the Student presses Solve, the backend loads the curriculum and Student data, checks the free-choice course codes, builds the solver input, and runs the Python CP-SAT solver as a separate process with a 20-second search limit. The solver validates the roadmap and compares it with the baseline. If no roadmap exists, the reply names the blocking settings and proposes fixes; if the process produces no output within 60 seconds, the backend stops it and returns a timeout.
-
-\subsubsection{AI Academic Advising}
-\begin{figure}[H]
-    \centering
-    \input{contents/sequence/advisor}
-    \caption{AI academic-advising sequence}
-\end{figure}
-When the Student asks a question, the frontend builds an analysis snapshot and sends it with the message over a server-sent-event stream. The backend checks that the AI Service is configured, that a curriculum is selected, and that the conversation is not already answering, then stores the user step. In at most eight rounds, the AI Service either calls a read-only tool, whose result the backend computes from the database, or submits an answer. Every step is stored and streamed to the frontend. The backend checks the course codes in the answer before sending it; if the AI Service fails, the Student sees an error instead of an answer.
 
 \subsubsection{Student Personal Plan}
 \begin{figure}[H]
@@ -929,14 +859,6 @@ The reader parses the uploaded report; an unreadable file ends the activity with
 \end{figure}
 The Student adjusts the restored scenario and presses Solve. The backend builds the input and the solver searches for a roadmap. An infeasible scenario returns a reason and suggested fixes; applying a fix leads back to solving. A found roadmap is shown with its reasons and warnings and can be saved or marked as the baseline. If the solver runs out of time, the backend stops it and the Student sees a timeout notice.
 
-\subsubsection{AI Academic Advising}
-\begin{figure}[H]
-    \centering
-    \input{contents/activity/advisor}
-    \caption{AI academic-advising activity diagram}
-\end{figure}
-The Student asks a question in a new or previous conversation, and the frontend sends it with an analysis snapshot. The AI Service reads the question, the context, and the history; while it needs more data, the backend runs a read-only tool and stores the step. When the AI Service submits an answer, the backend checks its course codes and stores it, and the frontend shows the answer, suggested courses, and choices. The Student may answer a choice or ask more, which starts a new turn.
-
 \subsubsection{Edit the Personal Plan}
 \begin{figure}[H]
     \centering
@@ -955,7 +877,7 @@ The Admin creates, edits, or deletes an item of a curriculum. The backend first 
 
 \subsection{Class Diagram}
 
-The class diagrams on the following pages present BK Uni's domain model, independent of the database schema and implementation framework. The first diagram gives an overview of the main classes---users and students, curricula with their specializations, course groups, categories and regulations, courses, and each student's progress, plans, and AI advising sessions---together with their associations. The second diagram expands the \texttt{CourseOutline} class into its components, including study hours, credit breakdown, grade weights, examinations, learning outcomes, assessment activities, and the teaching schedule.
+The class diagrams on the following pages present BK Uni's domain model, independent of the database schema and implementation framework. The first diagram gives an overview of the main classes---users and students, curricula with their specializations, course groups, categories and regulations, courses, and each student's progress, and plans---together with their associations. The second diagram expands the \texttt{CourseOutline} class into its components, including study hours, credit breakdown, grade weights, examinations, learning outcomes, assessment activities, and the teaching schedule.
 
 % Class diagram on its own landscape page, without header and footer
 \newgeometry{margin=1.2cm}

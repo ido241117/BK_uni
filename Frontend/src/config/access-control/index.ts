@@ -11,7 +11,6 @@ const STUDENT_PAGES: PageResource[] = [
     PAGE_RESOURCES.COURSES,
     PAGE_RESOURCES.REGULATIONS,
     PAGE_RESOURCES.RECOMMENDATIONS,
-    PAGE_RESOURCES.ADVISOR,
     PAGE_RESOURCES.PROFILE,
 ];
 
@@ -71,11 +70,6 @@ export const routeAccessRules: RouteAccessRule[] = [
     {
         pathPrefix: '/recommendations',
         permission: { resource: PAGE_RESOURCES.RECOMMENDATIONS, action: 'view' },
-        roles: [ROLE.STUDENT],
-    },
-    {
-        pathPrefix: '/advisor',
-        permission: { resource: PAGE_RESOURCES.ADVISOR, action: 'view' },
         roles: [ROLE.STUDENT],
     },
     {

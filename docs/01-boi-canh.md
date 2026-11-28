@@ -40,7 +40,7 @@ Khởi động backend không sửa schema: `Backend/src/database/database-optio
 |---|---|
 | Toàn bộ 96 chương trình: 503 TQ, 50 HT, 175 SH, 1 284 KN | Đếm `type` qua `GET /api/curricula/:id/relations` |
 | Khối: 230 tự chọn `listed`, 117 tự chọn `any` (tự chọn tự do), chỉ 2 khối `required` | `GET /api/curricula/:id/groups` |
-| Web coi **môn bắt buộc** là môn của chương trình không thuộc khối tự chọn gốc nào | `Frontend/src/pages/courses/analysis/analyze.ts`, khoảng dòng 242–273 |
+| Web coi **môn bắt buộc** là môn của chương trình không thuộc khối tự chọn gốc nào | Từng ở `Frontend/src/pages/courses/analysis/analyze.ts` (dòng 242–273, đã gỡ 28/11); backend dùng cùng cách: `Backend/src/planner/planner-input.ts` |
 | KHMT 2023: 10 khối. Nhóm C (15 TC) có **5 khối con theo chuyên ngành** (`parent_group_id`, `specialization_id`). Tự chọn tự do 9 TC, mỗi môn tính 3 TC (`pool_course_credits`) | Như trên; kiểm tự động trong `check_baseline.py` |
 | KHMT 2023 có 5 chuyên ngành; mô tả: "Đạt chuyên ngành khi các môn tự chọn của khối gốc đều thuộc danh sách của chuyên ngành" | `GET /api/curricula/:id/specializations` |
 | KHMT 2023 nhóm "D. Học phần tốt nghiệp": CO3335 (thực tập), CO4029 (đồ án chuyên ngành), CO4337 (đồ án tốt nghiệp). Nhóm "E. Điều kiện tốt nghiệp": ENG_GC, SA4001 | `GET /api/curricula/:id/categories` |
@@ -107,10 +107,17 @@ Thêm từ việc đọc code backend ngày 18/11: `student_courses` **không c�
 ## 5. Web lúc bắt đầu (đọc code ngày 18/11; hiện hành xem [06](06-tong-ket.md))
 
 - Sinh viên **tự chọn chương trình** trong hồ sơ, **tự khai trạng thái từng môn** (`not-started`, `in-progress`, `completed`, `failed`) hoặc tải Excel/CSV theo mẫu của nhóm. Không đọc được file myBK.
-- Trang Phân tích tính **trong trình duyệt** (`Frontend/src/pages/courses/analysis/analyze.ts`), không lưu kết quả. Lộ trình là heuristic xếp lần lượt từng kỳ.
-- AI tư vấn (DeepSeek) nhận bản tóm tắt phân tích do trình duyệt gửi lên.
+- Trang Phân tích tính **trong trình duyệt** (`Frontend/src/pages/courses/analysis/analyze.ts`), không lưu kết quả. Lộ trình là heuristic xếp lần lượt từng kỳ. **Đã gỡ 28/11** cùng tab "Chương trình" của trang Môn học (bảng thẻ, sơ đồ điều kiện, kế hoạch tay): xem mục 5b.
+- AI tư vấn (DeepSeek) nhận bản tóm tắt phân tích do trình duyệt gửi lên. **Đã gỡ toàn bộ ngày 28/11** (trang `/advisor`, API, module `Backend/src/advisor`, entity, báo cáo LaTeX). Cùng ngày gỡ luôn Elasticsearch (`Backend/src/outline/search`, `docker-compose.yml`, `npm run search:reindex`, API `/course-outlines/search/*`, biến `ELASTICSEARCH_*`, `db-lab/es-bench.ts`, `db-lab/search-lab.ts`); nhập đề cương chỉ ghi PostgreSQL. Sơ đồ class và ERD sinh lại từ `Report/` (copy từ DACN2, đã bỏ advisor). Bảng `advisor_sessions`, `advisor_steps` vẫn còn trên Supabase chung (không sửa DB); file migration `1795100000000-advisor.ts` giữ để lịch sử migration khớp DB. `currentSemester` chuyển sang `Backend/src/common/semester.ts`.
 - Trang Gợi ý (`/recommendations`): từ 19/11 là trang thật (xem 6b, 6c).
 - Mã kỳ dạng myBK: `251` = năm học 2025–2026 kỳ 1, `253` = kỳ hè.
+
+## 5b. Gỡ tab "Chương trình" và trang Phân tích (28/11, kiểm bằng `tsc`, `eslint`, `jest`, `vite build`)
+
+- Trang Môn học của sinh viên chỉ còn tiến độ myBK + Hiệu chỉnh (`Frontend/src/pages/courses/index.tsx`, không còn `Tabs`). Mã môn trong bảng tiến độ và bảng "Môn đang học" là link `/courses/:code` (`MybkProgress.tsx`, hàm `courseLink`). Link cũ `?tab=board` rơi về trang này.
+- Đã xóa: `pages/courses/board/`, `pages/courses/analysis/` (route `/courses/analysis`), `CourseEditModal`, `CourseStatusFileActions`, `ProgressSummary`, `utils/student-course-file.ts`, `utils/course-search.ts`, nhánh sinh viên của `CourseCatalog` (nay chỉ cho quản trị), gói `@xyflow/react`, `exceljs`, CSS thẻ môn / sơ đồ / khối số liệu / lộ trình. Hàm mã học kỳ phía web chuyển sang `Frontend/src/utils/semester.ts`.
+- Backend đã xóa: API `/student-plan-courses/*` (controller, service, DTO, entity `StudentPlanCourse`), `PUT/DELETE /student-courses/me/:courseId`, `GET /course-outlines/summaries`, hàm `OutlineService.searchTexts` (sót từ AI tư vấn). Còn `GET/PUT /student-courses/me`.
+- Bảng `student_plan_courses` **vẫn còn** trên Supabase chung (không sửa DB, không viết migration); không code nào đọc/ghi nữa. Trang Gợi ý không dùng bảng này (lưu ở `student_progress_imports.data.web.planner`).
 
 ## 6. Bộ giải (`pipeline/planner/`, ghi 18–19/11)
 

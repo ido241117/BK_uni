@@ -5,7 +5,6 @@ export const PAGE_RESOURCES = {
     COURSES: 'page.course',
     REGULATIONS: 'page.regulation',
     RECOMMENDATIONS: 'page.recommendation',
-    ADVISOR: 'page.advisor',
     PROFILE: 'page.profile',
     ADMIN_CURRICULA: 'page.admin.curriculum',
     ADMIN_COURSES: 'page.admin.course',

@@ -13,7 +13,7 @@ import {
     type OutlineContent,
     type OutlineExam,
 } from '@/types';
-import { currentSemester } from '../../analysis/semester';
+import { currentSemester } from '@/utils/semester';
 import { CategoryStackBar, DonutChart } from '../charts';
 import {
     COMPONENT_LABEL,

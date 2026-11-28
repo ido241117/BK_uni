@@ -21,7 +21,7 @@ import { SolvePlanDto } from './dto/solve-plan.dto';
 import { analyzeMybk, CatalogCourse, MybkParsed } from './mybk-check';
 import { importedCodes, ImportedFile, planImportStatuses } from './mybk-import';
 import { certificateCourses, reviewMybk, ReviewCurriculum, ReviewFile } from './mybk-review';
-import { currentSemester } from '../advisor/semester';
+import { currentSemester } from '../common/semester';
 import { AdjustMybkDto } from './dto/adjust-mybk.dto';
 import { InterestTag, interestTagsFor } from './interest-tags';
 import { buildPlannerInput, mergeBlockChoices, mergeNotes, savedBlockChoices, PlannerSource, progressFromImport, savedCurrentSemester, savedNotes } from './planner-input';

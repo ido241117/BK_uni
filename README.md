@@ -1,6 +1,6 @@
 # BK Uni
 
-Hệ thống hỗ trợ sinh viên theo dõi chương trình đào tạo, kế hoạch học tập và tư vấn học vụ với AI.
+Hệ thống hỗ trợ sinh viên theo dõi chương trình đào tạo, kế hoạch học tập và gợi ý lộ trình học.
 
 | Thư mục | Nội dung |
 | --- | --- |
@@ -39,8 +39,6 @@ DB_SSL_MODE=require
 
 JWT_ACCESS_SECRET=<chuỗi ngẫu nhiên, tối thiểu 32 ký tự>
 
-# Chỉ cần nếu dùng trang Tư vấn với AI
-DEEPSEEK_API_KEY=
 ```
 
 Database dùng chung đã có sẵn bảng và dữ liệu. Tài khoản dev chỉ được xem, thêm, sửa, xóa dữ liệu, không được tạo, sửa hay xóa bảng, nên **không chạy `npm run migration:run` hay `migration:revert`**. Nếu cần thay đổi schema, báo Thiên để chạy migration.

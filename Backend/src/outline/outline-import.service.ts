@@ -1,11 +1,10 @@
-import { BadRequestException, Injectable, Logger, Optional } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { DataSource, EntityManager, In } from 'typeorm';
 import { CourseOutlineImport, type OutlineImportIssue } from './entities/course-outline-import.entity';
 import { CourseOutlinePrerequisite } from './entities/course-outline-prerequisite.entity';
 import { CourseOutline } from './entities/course-outline.entity';
 import { validateDocumentHeader, validateOutline, type OutlineDocument, type ValidOutline } from './outline-format';
-import { OutlineSearchService } from './search/outline-search.service';
 
 export interface OutlineImportResult {
   import_id: string;
@@ -38,12 +37,7 @@ const hashOf = (outline: ValidOutline) => createHash('sha256').update(JSON.strin
  */
 @Injectable()
 export class OutlineImportService {
-  private readonly logger = new Logger(OutlineImportService.name);
-
-  constructor(
-    private readonly dataSource: DataSource,
-    @Optional() private readonly search?: OutlineSearchService,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   async importDocument(
     document: OutlineDocument,
@@ -75,8 +69,7 @@ export class OutlineImportService {
       valid.set(key, { outline, hash: hashOf(outline) });
     });
 
-    let changedCodes: string[] = [];
-    const result = await this.dataSource.transaction(async manager => {
+    return this.dataSource.transaction(async manager => {
       // Hai lần nhập chạy song song (vd. hai phần của cùng một bộ file) cùng đọc "chưa có" rồi cùng INSERT
       // một (course_code, version) -> lần sau vi phạm UQ_course_outline_version và mất cả transaction.
       // Advisory lock cấp transaction tuần tự hóa các lần nhập; tự nhả khi COMMIT/ROLLBACK.
@@ -105,7 +98,6 @@ export class OutlineImportService {
         .filter((item): item is { entry: typeof entries[number]; current: { id: string; content_hash: string } } => (
           Boolean(item.current) && item.current!.content_hash !== item.entry.hash
         ));
-      changedCodes = [...toCreate.map(entry => entry.outline.course_code), ...toUpdate.map(item => item.entry.outline.course_code)];
 
       const row = ({ outline, hash }: typeof entries[number]) => ({
         course_code: outline.course_code,
@@ -161,18 +153,6 @@ export class OutlineImportService {
         issues,
       };
     });
-
-    // Đồng bộ sang Elasticsearch SAU khi COMMIT (ES không tham gia transaction của PostgreSQL): index tìm kiếm
-    // nhất quán sau một khoảng trễ ngắn. Lỗi ES chỉ ghi log, không làm hỏng lần nhập đã thành công.
-    if (this.search?.enabled && changedCodes.length) {
-      try {
-        const indexed = await this.search.indexCourses(changedCodes);
-        this.logger.log(`Đã cập nhật ${indexed} tài liệu Elasticsearch sau lần nhập ${result.import_id}`);
-      } catch (error) {
-        this.logger.warn(`Không cập nhật được Elasticsearch: ${(error as Error).message}. Chạy lại npm run search:reindex.`);
-      }
-    }
-    return result;
   }
 
   /** (course_code@version) -> bản đang có, để quyết định tạo/cập nhật/bỏ qua. */

@@ -2,10 +2,7 @@ import 'dotenv/config';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { join, resolve } from 'path';
 import { DataSource } from 'typeorm';
-import { CourseOutline } from '../outline/entities/course-outline.entity';
 import { OutlineImportService } from '../outline/outline-import.service';
-import { ElasticsearchClient } from '../outline/search/elasticsearch.client';
-import { OutlineSearchService } from '../outline/search/outline-search.service';
 import type { OutlineDocument } from '../outline/outline-format';
 import { getDatabaseOptions } from './database-options';
 import { entities } from './entities';
@@ -41,8 +38,7 @@ async function main(): Promise<void> {
     migrations: [],
   });
   await dataSource.initialize();
-  // Có ELASTICSEARCH_URL thì đề cương vừa nhập cũng được cập nhật vào index tìm kiếm.
-  const importer = new OutlineImportService(dataSource, new OutlineSearchService(dataSource.getRepository(CourseOutline), new ElasticsearchClient()));
+  const importer = new OutlineImportService(dataSource);
   const total = { received: 0, created: 0, updated: 0, unchanged: 0, skipped: 0 };
 
   try {

@@ -3,7 +3,7 @@ import { LuCircleCheck, LuCircleX, LuLock } from 'react-icons/lu';
 import { IOutLinedBtn } from '@/components';
 import type { ReactNode } from 'react';
 import type { PlanCourse, PlanCourseReason, PlanFix, PlanRequest, PlanResult } from '@/types';
-import { semesterLabel } from '@/pages/courses/analysis/semester';
+import { semesterLabel } from '@/utils/semester';
 import EngineReportCard from './EngineReportCard';
 
 const { Text } = Typography;

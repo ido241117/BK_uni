@@ -26,8 +26,6 @@ Theo lịch, HK 261 là năm 4 của khóa 2023 nên các bạn này đều ch�
 | `khmt.lech@bkuni.local` | `out-of-order` | 50 TC: học trước CO2013, CO3001 nhưng bỏ CO2007, CO2011; rớt MT2013; đang học cải thiện MT1003. | Tốt nghiệp 281, 23 môn. |
 | `khmt.he@bkuni.local` | `preset` | Như steady, kèm kịch bản dựng sẵn (chưa giải): học hè 263, 273; ghim CO2013 vào 262; CO3001 không mở ở 262; muốn 21 TC ở 262; muốn học CO3117, CO3133; xong trước 281. | **Lỗi**: báo TIMEOUT sau ~0,2 s. Học hè + "số TC muốn" làm trọng số mục tiêu CP-SAT tràn int64 (MODEL_INVALID). Bỏ một trong hai thì giải được. |
 
-Trạng thái chi tiết của hai tài khoản Student và các câu hỏi test tương ứng: xem mục 2.1 của [ADVISOR-QUESTIONS.md](ADVISOR-QUESTIONS.md).
-
 Tạo thêm tài khoản Student bằng API (tự đăng ký), sau đó đăng nhập:
 
 ```bash

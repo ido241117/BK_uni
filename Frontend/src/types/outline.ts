@@ -130,26 +130,3 @@ export interface CourseOutlineByCode {
     selected: CourseOutlineDetail | null;
     versions: CourseOutlineVersion[];
 }
-
-/** Tóm tắt đề cương của một môn cho trang Phân tích học tập (`GET /course-outlines/summaries`). */
-export interface OutlineSummary {
-    course_code: string;
-    outline_id: string;
-    version: string;
-    applies_from: string | null;
-    credits: number | null;
-    total_periods: number | null;
-    total_study_hours: number | null;
-    has_lab: boolean;
-    has_project: boolean;
-    has_assignment: boolean;
-    weights: OutlineComponents;
-    midterm: { format: string | null; duration_minutes: number | null } | null;
-    final_exam: { format: string | null; duration_minutes: number | null } | null;
-    prerequisites: { type: CourseRelationType | null; related_course_code: string }[];
-}
-
-export interface OutlineSummaries {
-    semester: string;
-    items: OutlineSummary[];
-}

@@ -380,8 +380,8 @@ Người duyệt xác nhận **trước khi** code giai đoạn 2. K1–K4 tính
 ## 8. Những gì KHÔNG làm
 
 - Không sửa schema, không chạy migration, không sửa dữ liệu trên Supabase chung.
-- Không đổi trang Phân tích hay heuristic cũ.
-- Không cho AI tư vấn dùng kết quả bộ giải.
+- Không đổi trang Phân tích hay heuristic cũ. (Trang Phân tích đã gỡ 28/11.)
+- Không cho AI tư vấn dùng kết quả bộ giải. (Tính năng AI tư vấn đã gỡ 28/11.)
 - Không đăng nhập myBK hay thu mật khẩu; file tiến độ do sinh viên tự tải lên.
 - Không lưu file tiến độ gốc; không đưa tên, MSSV, điểm thật vào code hay test. (Từ 20/11: điểm, họ tên, MSSV, mã lớp, điểm TBTL **được lưu** trong database theo tài khoản, xem nhật ký. Code, test và commit vẫn chỉ dùng dữ liệu bịa.)
 
@@ -391,6 +391,9 @@ Người duyệt xác nhận **trước khi** code giai đoạn 2. K1–K4 tính
 
 | Ngày | Quyết định | Trạng thái |
 |---|---|---|
+| 28/11 | **Gỡ tab "Chương trình" và trang Phân tích** theo yêu cầu người duyệt (có người kiểm code): trang Môn học chỉ còn tiến độ myBK + Hiệu chỉnh, mã môn là link `/courses/:code`. Xóa bảng thẻ, sơ đồ điều kiện, `/courses/analysis`, component, CSS, API frontend; backend xóa `/student-plan-courses/*`, `PUT/DELETE /student-courses/me/:courseId`, `GET /course-outlines/summaries`. Bảng `student_plan_courses` để nguyên trên DB chung. Q2 hết đối tượng (không còn bảng thẻ ghi `student_courses`) | Đã duyệt (người duyệt 28/11) |
+| 28/11 | **Gỡ tính năng AI tư vấn (chatbot)** theo yêu cầu người duyệt: xóa trang, API, CSS, module backend, tool, entity, test, biến `DEEPSEEK_*`, hàm `search`/`similar` của Elasticsearch (chỉ tool AI gọi) và các mục AI trong báo cáo LaTeX (FR-7, UC-10 cũ, mục RAG). Không viết migration: bảng cũ để nguyên trên DB chung | Đã duyệt (người duyệt) |
+| 28/11 | **Gỡ Elasticsearch** (không còn ai đọc index): module `outline/search`, API `search/status`, `search/reindex`, script reindex, docker-compose, biến môi trường, test, bài lab ES; bỏ Search Index khỏi sơ đồ kiến trúc. Copy nguồn sơ đồ `Report/ClassDiagram`, `Report/ERD` từ DACN2, bỏ advisor, sinh lại PDF cho LaTeX bằng Inkscape | Đã duyệt (người duyệt) |
 | 23/11 | Gộp 9 commit remote (bộ phân loại tag, thẻ sở thích cho Clingo): giữ trang Gợi ý mới; ô chọn thẻ sở thích chưa hiện vì chọn bộ giải đang ẩn (Q13), phần backend và ASP giữ nguyên. Báo đồng đội | Đề xuất (cần đồng đội đồng ý) |
 | 23/11 | Trang Gợi ý gọn lại: bỏ khung "Ghim môn vào kỳ" và "Môn không mở ở kỳ" ở cột trái; "không mở" thành nút trên thẻ môn (hỏi xác nhận, chip ở đầu kỳ bấm × để bỏ); số TC muốn là ô ngay đầu mỗi kỳ; cảnh báo gắn vào đúng môn / kỳ (nhãn "Lưu ý"), lời nhẹ nhàng; cảnh báo chỉ là nhắc thì sinh viên tự xác nhận (chuẩn tiếng Anh → ghi ENG_GC* Đã hoàn thành). Bỏ nhãn "mới so với mốc", "dời từ" trên bảng. Validator: ô FREE_ và luật mở lớp mềm (Q9) không còn là lỗi kỳ hè | Đã duyệt (người duyệt) |
 | 22/11 | **T46: hoàn toàn tôn trọng lựa chọn của sinh viên về khối.** Môn bất kỳ (kể cả ngoài CTĐT) được tính vào khối sinh viên chọn ở Hiệu chỉnh; web không chặn khối nào, chỉ nhắc sinh viên tự hỏi khoa về việc công nhận. Mặc định: khối của file myBK, môn ngoài CTĐT tính vào tự chọn tự do. Sửa cùng ngày: áp cho **mọi môn** (đã/đang/chưa học), chỉ nhắc "có thể khác cách tính của myBK"; mở trang Gợi ý luôn giải lại từ database | Đã duyệt (người duyệt) |
@@ -500,6 +503,7 @@ Chỉ cần ghi "Đồng ý" hoặc "Không" vào cột thứ hai.
 | 11 | | | Sprint mở 22/11 (T38–T50, xem mục 6). Người duyệt bấm web 22–23/11 và góp ý, đã sửa; phần lớn giao diện đã được giai đoạn 12 thay |
 | 10 | | | Sprint mở 20/11. T32 xong 21/11 (code + test + API thật, chưa bấm web); T34 một phần; T33, T35, T36 chưa làm. "Hộp xác nhận mọi lần" đã duyệt 21/11. Chờ người duyệt chốt tên nút, việc bỏ thẻ kế hoạch cũ |
 | 12 | | | Mở 23/11: đặc tả mục 12 + mẫu tương tác + kế hoạch T51–T66 (12.12). W10, W11, W13 chốt 23/11; W12 tạm theo gợi ý. **T51–T65 code xong 23/11 (tối), test tự động qua; chưa bấm thử web (T66, 05 mục G)** |
+| Ngoài kế hoạch (28/11) | | | Gỡ AI tư vấn + Elasticsearch; gỡ tab "Chương trình" + trang Phân tích (nhật ký mục 9). Code + test tự động xong, chưa bấm thử web |
 
 ---
 
@@ -610,7 +614,7 @@ Chi tiết: 03 mục 3, Phụ lục C.
 | Mã | Câu hỏi | Vì sao hỏi | Lựa chọn | Gợi ý của AI | Bạn chọn |
 |---|---|---|---|---|---|
 | Q1 **chặn** | Trang trả lời câu hỏi gì? | Quyết định mọi thứ phía sau | 1) Lộ trình mọi kỳ tới tốt nghiệp + what-if · 2) Chỉ kỳ tới · 3) Kỳ tới nổi bật, các kỳ sau thu gọn | **3**: sinh viên hành động ở kỳ tới, nhưng chỉ lộ trình đủ mới cho biết có kịp tốt nghiệp | **Chốt 22/11:** bộ giải luôn tính toàn bộ lộ trình tới tốt nghiệp; 1 và 3 chỉ khác cách hiện ở frontend, quyết ở Q15. Kỳ tới phải đáng tin hơn (xem Q9) |
-| Q2 **chặn** | Trạng thái môn đưa vào bộ giải lấy từ đâu? | 3 chỗ cùng ghi `student_courses`: nhập PDF, Hiệu chỉnh, bảng thẻ của Thiên | 1) Chỉ PDF + Hiệu chỉnh, khóa Lưu ở bảng thẻ · 2) Cả ba, lần ghi sau thắng | **1**: một nguồn thì giải thích được kết quả | **Chốt 22/11: 1.** Bộ giải chỉ lấy từ nhập PDF + Hiệu chỉnh. Bảng thẻ của Thiên (tab Chương trình) vẫn ghi được `student_courses`: **chưa xử lý**, người duyệt sẽ trao đổi với Thiên sau |
+| Q2 **chặn** | Trạng thái môn đưa vào bộ giải lấy từ đâu? | 3 chỗ cùng ghi `student_courses`: nhập PDF, Hiệu chỉnh, bảng thẻ của Thiên | 1) Chỉ PDF + Hiệu chỉnh, khóa Lưu ở bảng thẻ · 2) Cả ba, lần ghi sau thắng | **1**: một nguồn thì giải thích được kết quả | **Chốt 22/11: 1.** Bộ giải chỉ lấy từ nhập PDF + Hiệu chỉnh. Bảng thẻ của Thiên (tab Chương trình) vẫn ghi được `student_courses`: **chưa xử lý**, người duyệt sẽ trao đổi với Thiên sau. **28/11: đã gỡ tab Chương trình**, chỉ còn nhập PDF + Hiệu chỉnh ghi `student_courses` |
 | Q3 | "--" trong PDF là chưa học hay rớt? | PDF không phân biệt; rớt tự chọn được chọn môn khác (Đ3) | 1) Mặc định Chưa học, sinh viên tự đổi Rớt · 2) Suy từ điểm | **1**: bộ giải xử lý hai trạng thái như nhau | |
 | Q4 | Môn đang học mặc định ra sao? | — | 1) Giả định đậu (Đ15.1) · 2) Bắt chọn đậu/rớt từng môn | **1**, giữ ô đậu/rớt làm what-if | |
 | Q5 **chặn** | Mức TC mỗi kỳ chính? | Đã chốt 11–25 (18/11) nhưng QĐ Đ15.3 ghi 14–21; ASP dùng 14–21; nguyên nhân chính của xfail | 1) Giữ 11–25 · 2) Mặc định 14–21, sinh viên hạ tới 11 / nâng tới 25 kèm cảnh báo | **2**: mặc định đúng quy định, ngoại lệ là lựa chọn có ý thức | |

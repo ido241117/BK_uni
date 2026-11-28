@@ -2,6 +2,7 @@ import { type ReactNode, useMemo, useRef, useState } from 'react';
 import { Alert, Card, Collapse, Descriptions, Input, Modal, Select, Space, Switch, Table, Tabs, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router';
 import { LuCircleCheck, LuClipboardPaste, LuFileText, LuPencil, LuUpload } from 'react-icons/lu';
 import { EmptyState, IOutLinedBtn, ISolidBtn } from '@/components';
 import { listCourses } from '@/apis/course';
@@ -9,7 +10,7 @@ import { adjustMybk, getMybkProgress, importMybk, reviewMybk } from '@/apis/plan
 import { listCourseGroups } from '@/apis/curriculum';
 import { getMyProfile, listMyCourses } from '@/apis/student';
 import { useApiMutation, useApiQuery, useDebounce } from '@/hooks';
-import { semesterLabel } from '@/pages/courses/analysis/semester';
+import { semesterLabel } from '@/utils/semester';
 import {
     STUDENT_COURSE_STATUS,
     STUDENT_COURSE_STATUS_COLOR,
@@ -109,6 +110,8 @@ const GDTC_WEB_CODES = ['PE1003', 'PE1005'];
 const confirmThen = (title: string, action: () => void) => {
     Modal.confirm({ title, okText: 'OK', cancelText: 'Hủy', onOk: action });
 };
+/** Mã môn là thẻ `<a>` tới trang chi tiết `/courses/:code` (bỏ tab Chương trình 28/11). */
+const courseLink = (code: string) => <Link to={`/courses/${encodeURIComponent(code)}`}>{code}</Link>;
 const rowLabel = (row: MybkProgressCourse) => (row.code === GDTC_FILE_CODE ? 'Giáo dục thể chất' : row.code);
 
 /**
@@ -143,7 +146,7 @@ const courseColumns = (web?: WebStatusView, withCredits = true, blockLabel?: str
     { title: 'Stt', key: 'index', width: 56, render: (_v, _row, index) => index + 1 },
     {
         title: 'Mã môn học', dataIndex: 'code', key: 'code', width: 120,
-        render: (code: string) => (code === GDTC_FILE_CODE ? '' : code),
+        render: (code: string) => (code === GDTC_FILE_CODE ? '' : courseLink(code)),
     },
     {
         title: 'Tên môn học', dataIndex: 'name', key: 'name',
@@ -572,7 +575,7 @@ const InProgressList = ({ rows, fileBlockOf, editing, picker }: {
         size="small" rowKey="id" pagination={false} scroll={{ x: 640 }} dataSource={rows}
         locale={{ emptyText: 'Chưa có môn đang học. Bấm Hiệu chỉnh rồi gõ mã môn ở ô "+ Môn đang học".' }}
         columns={[
-            { title: 'Mã môn', dataIndex: 'code', width: 100 },
+            { title: 'Mã môn', dataIndex: 'code', width: 100, render: (code: string) => courseLink(code) },
             {
                 title: 'Tên môn', dataIndex: 'name',
                 render: (name: string, row) => <Space size={4} wrap>{name}{row.outside && <Tag>Ngoài CTĐT</Tag>}</Space>,

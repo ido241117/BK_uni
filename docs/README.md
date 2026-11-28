@@ -1,6 +1,6 @@
 # Tài liệu BK Uni: tính năng "Gợi ý học phần"
 
-Đọc file này trước. Cập nhật lần cuối: **24/11/2026**.
+Đọc file này trước. Cập nhật lần cuối: **28/11/2026**.
 
 ## Mục lục
 
@@ -18,7 +18,7 @@ Script `pipeline/check_baseline.py` kiểm tự động phần lớn sự thật
 
 ---
 
-## Đang ở đâu (24/11)
+## Đang ở đâu (28/11)
 
 | Giai đoạn | Nội dung | Trạng thái |
 |---|---|---|
@@ -33,13 +33,17 @@ Script `pipeline/check_baseline.py` kiểm tự động phần lớn sự thật
 | 11 | Gợi ý theo ý sinh viên (T38–T50) | T40, T42, T43 xong; T41, T45, T46, T47 gần xong. **Nội dung T38–T50 và Q17–Q20 chưa được ghi đủ vào 02** |
 | 12 | What-if theo đặc tả 02 mục 12 (T51–T66) | **T51–T65 code xong 23/11**, test tự động qua (pytest 165 + 7 xfail + 1 xpass, jest 104, typecheck + lint, logic trang 28/28). **Chưa bấm thử web (T66)**. Giao diện: màu, font của web, bố cục theo mẫu `mau-what-if` |
 
+**28/11:** đã gỡ toàn bộ tính năng AI tư vấn (frontend, backend, tool, entity, báo cáo LaTeX) và Elasticsearch theo yêu cầu người duyệt; sơ đồ class, ERD sinh lại từ `Report/`. Xem nhật ký 02 ngày 28/11.
+
+**28/11 (sau):** đã gỡ tab "Chương trình" và trang Phân tích của trang Môn học (frontend, CSS, API, backend `student-plan-courses`, `PUT/DELETE /student-courses/me/:courseId`, `course-outlines/summaries`); mã môn trong bảng tiến độ là link `/courses/:code`. Bảng `student_plan_courses` để nguyên trên DB chung. Chi tiết: [01 mục 5b](01-boi-canh.md). Chưa bấm thử web.
+
 ## Người duyệt cần làm (phiên sau bắt đầu từ đây)
 
 1. **Bấm thử giai đoạn 12** theo [05 mục G](05-kiem-thu.md#g-what-if-theo-đặc-tả-mục-12-giai-đoạn-12-code-2311) bằng tài khoản thử A; điền bảng M1–M18.
 2. **Chốt W12** (thứ tự ưu tiên mặc định, 02 mục 12.10).
 3. Ghi "Đồng ý" / "Không" cho các giai đoạn ở [02 mục 10](02-ke-hoach.md#10-duyệt).
 4. Xác nhận đáp án các ca K6, K8, K8b, K8c, K8d ([02 mục 7](02-ke-hoach.md#7-ca-kiểm-tra-có-đáp-án-xếp-tay)).
-5. **Q2:** trao đổi với Thiên: tab "Chương trình" của trang Môn học vẫn ghi `student_courses`.
+5. **Bấm thử trang Môn học sau khi gỡ tab (28/11):** `/courses` không còn tab, bấm mã môn sang trang chi tiết; quản trị vẫn thấy danh mục. Báo Thiên việc tab "Chương trình" đã gỡ (Q2 hết đối tượng).
 6. Xem chỗ dữ liệu KHMT 2023 của web lệch myBK ([01 mục 6c, 6e](01-boi-canh.md#6e-database-mới-và-luồng-pdf--database-2111)).
 
 ## Việc còn treo

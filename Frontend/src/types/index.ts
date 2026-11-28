@@ -1,4 +1,3 @@
-export type * from './advisor';
 export * from './authz';
 export type * from './auth';
 export type * from './common';

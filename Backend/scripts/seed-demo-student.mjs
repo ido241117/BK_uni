@@ -27,7 +27,6 @@
  *
  * Ghi thẳng vào PostgreSQL (không cần chạy server), trong một transaction. Chạy lại được nhiều lần:
  * tài khoản trùng email thì đặt lại mật khẩu, hồ sơ cập nhật, trạng thái môn/quy định/kế hoạch xóa và ghi lại.
- * Lịch sử chat (advisor_sessions) không bị xóa.
  *
  * Cách dùng (từ thư mục Backend):
  *   node scripts/seed-demo-student.mjs --dry-run
@@ -193,7 +192,6 @@ try {
   }
 
   await client.query('DELETE FROM student_courses WHERE user_id = $1', [userId]);
-  await client.query('DELETE FROM student_plan_courses WHERE user_id = $1', [userId]);
   await client.query('DELETE FROM student_regulation_statuses WHERE user_id = $1', [userId]);
 
   const statusRows = [

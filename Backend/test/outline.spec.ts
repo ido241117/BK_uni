@@ -20,8 +20,6 @@ import { OutlineController } from '../src/outline/outline.controller';
 import { OutlineService } from '../src/outline/outline.service';
 import { User } from '../src/user/entities/user.entity';
 import { ROLE } from '../src/user/enum/role';
-import { ElasticsearchClient } from '../src/outline/search/elasticsearch.client';
-import { OutlineSearchService } from '../src/outline/search/outline-search.service';
 
 const origin = 'http://localhost:5173';
 const adminId = randomUUID();
@@ -49,7 +47,7 @@ const entities = [
     TypeOrmModule.forFeature(entities),
   ],
   controllers: [OutlineController],
-  providers: [OutlineService, OutlineImportService, { provide: ElasticsearchClient, useValue: { enabled: false, index: 'bkuni-outlines-test' } }, OutlineSearchService],
+  providers: [OutlineService, OutlineImportService],
 })
 class OutlineTestModule {}
 
@@ -203,13 +201,6 @@ describe('Course outlines API', () => {
       type_mismatch: [{ related_course_code: 'CO2003', outline_type: 'recommended', curriculum_type: 'prerequisite' }],
     })]);
     expect(await relations.count()).toBe(1);
-
-    const summaries = await request(server())
-      .get(`/api/course-outlines/summaries?curriculum_id=${curriculum.id}&semester=262`).expect(200);
-    expect(summaries.body.data.items.map((item: { course_code: string; version: string }) => `${item.course_code}@${item.version}`).sort())
-      .toEqual(['CO2003@14.1', 'CO3135@4.1']);
-    expect(summaries.body.data.items.find((item: { course_code: string }) => item.course_code === 'CO3135').prerequisites)
-      .toEqual([{ type: 'recommended', related_course_code: 'CO2003' }]);
 
     const imports = await request(server()).get('/api/course-outlines/imports').expect(200);
     // File sai định dạng bị từ chối trước khi ghi nhật ký, nên chỉ có 3 lần nhập.

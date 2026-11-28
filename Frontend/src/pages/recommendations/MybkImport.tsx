@@ -18,7 +18,7 @@ import {
 } from '@/types';
 import { ApiError } from '@/utils/error';
 import { toastMessage } from '@/utils/toast';
-import { semesterLabel } from '@/pages/courses/analysis/semester';
+import { semesterLabel } from '@/utils/semester';
 
 const { Text } = Typography;
 

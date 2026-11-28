@@ -1,4 +1,4 @@
--- 4.6 Tìm kiếm toàn văn: phía PostgreSQL (tsvector + GIN) trên CÙNG nội dung đề cương đã đưa vào Elasticsearch.
+-- 4.6 Tìm kiếm toàn văn: phía PostgreSQL (tsvector + GIN) trên nội dung đề cương.
 -- So sánh với kết quả của db-lab/es-bench.ts. Chỉ ghi vào schema bk_lab (xóa khi xong).
 \pset footer off
 \ir 00-lab-helpers.sql
