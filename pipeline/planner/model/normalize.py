@@ -32,6 +32,10 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
         return fixture
     fx = copy.deepcopy(fixture)
     credits = {c["code"]: c["credits"] for c in fx["courses"]}
+    # "prior" (hoc truoc) is an obsolete name of a prerequisite (decision of 28/11/2026).
+    for rel in fx["course_relations"]:
+        if rel["type"] == "prior":
+            rel["type"] = "prerequisite"
     groups = fx["course_groups"]
     for g in groups:
         g.setdefault("pool_scope", "listed")
@@ -56,8 +60,12 @@ def normalize(fixture: dict[str, Any]) -> dict[str, Any]:
     for code in sorted(to_listed - listed_curriculum):
         fx["curriculum_courses"].append({"course_code": code, "recommended_year": None, "recommended_term": None})
 
-    # 1. Mon dieu kien.
-    conditions = set(fx.get("conditions", []))
+    # 1. Mon dieu kien. A course of 0 credits is a condition too (external requirement, never
+    #    planned; decision of 2026-11-28), whether or not the input lists it in ``conditions``.
+    zero = {cc["course_code"] for cc in fx["curriculum_courses"] if credits.get(cc["course_code"]) == 0}
+    conditions = set(fx.get("conditions", [])) | zero
+    if zero - set(fx.get("conditions", [])):
+        fx["conditions"] = sorted(conditions)
     # Trang thai mon dieu kien truoc khi bo: engine ASP dung lam external_requirement.
     fx["_condition_statuses"] = {sc["course_code"]: sc["status"] for sc in fx["student"]["student_courses"]
                                  if sc["course_code"] in conditions}

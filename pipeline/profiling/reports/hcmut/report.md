@@ -8,19 +8,19 @@ Khoa học Máy tính (Computer Science) - khóa 2023
 
 | Metric | Value |
 |---|---|
-| Courses (condition courses) | 96 (2) |
+| Courses (condition courses) | 96 (5) |
 | Degree credits / listed credits | 128 / 254 |
 | Mandatory credits | 99 |
 | Elective groups / free-elective credits | 4 / 9 |
 | Share of degree chosen by the student | 23% |
 | Relations by type | {'prerequisite': 11, 'recommended': 18, 'prior': 2, 'corequisite': 1} |
-| Hard relations per course | 0.128 |
-| Courses in a hard relation | 17% |
+| Hard relations per course | 0.132 |
+| Courses in a hard relation | 18% |
 | Longest prerequisite chain | 4 (LA1003 -> LA1005 -> LA1007 -> LA1009) |
 | Regular terms: nominal / by load / by chain | 8 / 6 / 4 |
 | Load needed on time (allowed) | 16.0 (11-25) |
-| Typical term known | 39% |
-| Offering known: regular / summer history | 0% / 100% |
+| Typical term known | 37% |
+| Offering known: regular / summer history | 100% / 100% |
 | Majors (mean overlap) | 5 (0.104) |
 
 | Elective group | Pool courses | Pool credits | Required credits | Slack |
@@ -34,43 +34,8 @@ Courses most others depend on: CO1027 (3), LA1003 (3), LA1005 (2), CO1005 (1), C
 
 ### Remarks
 
-- Sparse ordering: 12 prerequisite/corequisite relations for 96 courses (0.128 per course); only 17% of courses take part in one. Plans will differ mainly through load limits, groups, offering and the objective, not through course order.
+- Sparse ordering: 12 prerequisite/corequisite relations for 96 courses (0.132 per course); only 18% of courses take part in one. Plans will differ mainly through load limits, groups, offering and the objective, not through course order.
 - Calendar has room: 8 nominal regular terms; lower bounds 6 (degree credits / max load) and 4 (longest prerequisite chain); slack 2 term(s). On-time graduation needs 16.0 credits per regular term on average (allowed 11-25).
-
-## Curriculum cs_2023
-
-Computer Science 2023
-
-| Metric | Value |
-|---|---|
-| Courses (condition courses) | 93 (0) |
-| Degree credits / listed credits | 128 / 254 |
-| Mandatory credits | 99 |
-| Elective groups / free-elective credits | 5 / 0 |
-| Share of degree chosen by the student | 23% |
-| Relations by type | {'prerequisite': 31, 'corequisite': 1} |
-| Hard relations per course | 0.344 |
-| Courses in a hard relation | 42% |
-| Longest prerequisite chain | 5 (SP1031 -> SP1033 -> SP1035 -> SP1039 -> SP1037) |
-| Regular terms: nominal / by load / by chain | None / 7 / 5 |
-| Load needed on time (allowed) | None (14-21) |
-| Typical term known | 12% |
-| Offering known: regular / summer history | 100% / 0% |
-| Majors (mean overlap) | 5 (0.104) |
-
-| Elective group | Pool courses | Pool credits | Required credits | Slack |
-|---|---|---|---|---|
-| B3.2  | 5 | 5 | 1 | 5.0 |
-| B3.3  | 3 | 3 | 1 | 3.0 |
-| B3.4  | 44 | 132 | 15 | 8.8 |
-| B3.5  | 5 | 15 | 3 | 5.0 |
-| C  | 44 | 132 | 9 | 14.67 |
-
-Courses most others depend on: CO1027 (7), CO1007 (4), CO2013 (4), SP1031 (4), LA1003 (3).
-
-### Remarks
-
-- None.
 
 ## All programs (catalog.json)
 
@@ -81,14 +46,6 @@ Courses most others depend on: CO1027 (7), CO1007 (4), CO2013 (4), SP1031 (4), L
 - Across 96 programs the median is 0.12 hard relations per course (max 0.83); 36 programs state none at all.
 - Of 158 hard relations whose two courses appear together in two or more programs, programs agree 33% of the time on average; 114 are stated by fewer than half of those programs. Missing relations are more likely omissions than different rules.
 
-## Students: cs_2023-oracle
-
-7 students ({'unknown': 7}), 25 attempts, outcomes {'passed': 23, 'failed': 2}, 0 without term, 24 with grade, 4 retaken course(s).
-
-### Remarks
-
-- Has expected answers (oracle) for testing GPA and credit computations.
-
 ## Students: khmt2023-demo
 
 1 students ({'simulated': 1}), 32 attempts, outcomes {'passed': 29, 'in_progress': 3}, 32 without term, 0 with grade, 0 retaken course(s).
@@ -97,3 +54,11 @@ Courses most others depend on: CO1027 (7), CO1007 (4), CO2013 (4), SP1031 (4), L
 
 - No attempt has a term: the history gives what was passed, not when.
 - No grades: GPA-based rules (standing, retakes for grade) cannot be checked on this data.
+
+## Students: khmt2023-oracle
+
+7 students ({'unknown': 7}), 25 attempts, outcomes {'passed': 23, 'failed': 2}, 0 without term, 24 with grade, 4 retaken course(s).
+
+### Remarks
+
+- Has expected answers (oracle) for testing GPA and credit computations.

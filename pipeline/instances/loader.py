@@ -36,7 +36,7 @@ class InstanceError(ValueError):
 @dataclass
 class University:
     root: Path
-    policy: dict[str, Any] = field(default_factory=dict)          # "grading", "tuition"
+    policy: dict[str, Any] = field(default_factory=dict)          # "grading", "tuition", "standing", "external"
     curricula: dict[str, dict[str, Any]] = field(default_factory=dict)  # id -> {"curriculum", "graduation"?, "popularity"?}
     students: dict[str, dict[str, Any]] = field(default_factory=dict)   # file stem -> student tables
     requests: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
@@ -84,6 +84,8 @@ def validate_curriculum(cur: dict[str, Any], ctx: str) -> list[str]:
             err(f"{ctx}: course {cid}: credits must be a non-negative integer")
         if c.get("kind", "regular") not in COURSE_KINDS:
             err(f"{ctx}: course {cid}: unknown kind {c['kind']!r}")
+        if c.get("credits") == 0 and c.get("kind") != "condition":
+            err(f"{ctx}: course {cid}: a 0-credit course is an external requirement, set kind = condition")
         for key in ("offered_terms", "allowed_terms"):
             if c.get(key) is not None and not set(c[key]) <= TERM_PARTS:
                 err(f"{ctx}: course {cid}: {key} must be a subset of {sorted(TERM_PARTS)}")
@@ -145,6 +147,13 @@ def validate_curriculum(cur: dict[str, Any], ctx: str) -> list[str]:
     for c in p.get("summer_always_allowed") or []:
         if c not in courses:
             err(f"{ctx}: planning.summer_always_allowed: unknown course {c!r}")
+    thresholds = p.get("year_credit_thresholds")
+    if thresholds is not None and not (isinstance(thresholds, list) and thresholds
+                                       and all(isinstance(x, int) and x >= 0 for x in thresholds)
+                                       and thresholds == sorted(thresholds)):
+        err(f"{ctx}: planning.year_credit_thresholds must be a non-empty ascending list of credits")
+    if thresholds and not p.get("level_min_year"):
+        err(f"{ctx}: planning.year_credit_thresholds needs level_min_year (the level rule it applies to)")
 
     for r in (cur.get("offerings") or {}).get("records", []):
         if r.get("course") not in courses or not _is_term(r.get("term")):
@@ -186,9 +195,40 @@ def validate_students(doc: dict[str, Any], ctx: str, uni: University) -> list[st
             err(f"{actx}: grade {a['grade']!r} is not in the grading policy")
         if a.get("grade") is None and a.get("result") is None:
             err(f"{actx}: needs a grade or a result")
+    known = {r["id"] for r in uni.policy.get("external", {}).get("requirements", [])}
     for e in doc.get("external_progress", []):
         if e.get("student_id") not in rows:
             err(f"{ctx}: external_progress for unknown student {e.get('student_id')!r}")
+        if known and e.get("requirement") not in known:
+            err(f"{ctx}: external_progress names unknown requirement {e.get('requirement')!r}")
+        if e.get("term") is not None and not _is_term(e["term"]):
+            err(f"{ctx}: external_progress term must look like YYYY-P or be null")
+    return errors
+
+
+EXTERNAL_DEADLINES = ("end_of_year", "graduation")
+
+
+def validate_external(doc: dict[str, Any], ctx: str) -> list[str]:
+    """``policy/external.json``: requirements outside the course plan (SCHEMA.md)."""
+    errors: list[str] = []
+    ids = [r.get("id") for r in doc.get("requirements", [])]
+    if len(ids) != len(set(ids)):
+        errors.append(f"{ctx}: duplicate requirement id")
+    for r in doc.get("requirements", []):
+        rctx = f"{ctx}: requirement {r.get('id')!r}"
+        if r.get("enforcement") not in ("blocking", "warning"):
+            errors.append(f"{rctx}: enforcement must be blocking or warning")
+        if not r.get("milestones"):
+            errors.append(f"{rctx}: needs at least one milestone")
+        for m in r.get("milestones", []):
+            d = m.get("deadline") or {}
+            if d.get("type") not in EXTERNAL_DEADLINES:
+                errors.append(f"{rctx}: deadline type must be one of {EXTERNAL_DEADLINES}")
+            if d.get("type") == "end_of_year" and not (isinstance(d.get("year"), int) and d["year"] >= 1):
+                errors.append(f"{rctx}: end_of_year needs a year >= 1")
+            if not (isinstance(m.get("min"), int) and m["min"] >= 1):
+                errors.append(f"{rctx}: milestone min must be an integer >= 1")
     return errors
 
 
@@ -253,10 +293,12 @@ def load_university(root: str | Path) -> University:
     root = Path(root)
     uni = University(root=root)
     errors: list[str] = []
-    for name in ("grading", "tuition", "standing"):
+    for name in ("grading", "tuition", "standing", "external"):
         path = root / "policy" / f"{name}.json"
         if path.is_file():
             uni.policy[name] = _read(path)
+    if "external" in uni.policy:
+        errors += validate_external(uni.policy["external"], str(root / "policy" / "external.json"))
     for cur_dir in sorted((root / "curricula").iterdir()) if (root / "curricula").is_dir() else []:
         entry: dict[str, Any] = {"curriculum": _read(cur_dir / "curriculum.json")}
         for name in ("graduation", "popularity", "official_plan"):

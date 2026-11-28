@@ -88,13 +88,12 @@ def test_validator_rejects_regular_course_in_summer(khmt):
 # --- K6: nguong tin chi mon tot nghiep (QD 285 Dieu 15.5), tren toy.json ------
 # Tong TC chuong trinh toy = 30 bat buoc + 6 tu chon = 36. Gan CS401 (2 TC) la khoa luan
 # (85%): can ceil(30.6) = 31 TC. Truoc 262 co 16 TC; ky toi da 12.
-# ASP and validator (23/11/2026): credits before the term plus the other courses of that
-# term (CS401 excluded). CS401 in 262: at most 16 + 10 = 26 < 31; in 271: up to 16 + 12 + 10
-# = 38 -> CS401 earliest 271. Answer: graduation 271, 20 TC.
-# CP-SAT (strict, before the term only): before 271 at most 28 < 31 -> CS401 earliest 272.
+# All solvers and the validator (docs/PLANNER-PARITY.md, 2026-11-28): credits before the
+# term plus the other courses of that term (CS401 excluded). CS401 in 262: at most 16 + 10 =
+# 26 < 31; in 271: up to 16 + 12 + 10 = 38 -> CS401 earliest 271. Answer: graduation 271, 20 TC.
 
-@pytest.mark.parametrize("name, graduation", [("cpsat", "272"), ("clingo", "271")])
-def test_k6_thesis_threshold(name, graduation, toy_policy):
+@pytest.mark.parametrize("name, graduation", [("cpsat", "271"), ("clingo", "271")])
+def test_k6_thesis_threshold(name, graduation):
     toy = copy.deepcopy(load_fixture(DEFAULT_FIXTURE))
     toy["graduation_courses"] = {"thesis": "CS401"}
     toy["rules"] = {"graduation_thresholds": {"thesis": 0.85}}

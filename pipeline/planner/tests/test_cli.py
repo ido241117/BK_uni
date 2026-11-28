@@ -37,12 +37,9 @@ def test_cli_base_matches_contract(solver):
     out = call(request(), solver)
     assert out["status"] == "OPTIMAL"
     assert out["graduation_semester"] == "271"
-    if solver == "cpsat":
-        assert out["violations"] == []
-    else:
-        # Engine ASP dung muc tin chi cua policy.lp (toi da 21) con toy.json toi da 12: validator
-        # chi duoc bao vuot muc tin chi, khong duoc co vi pham khac.
-        assert all(v.endswith("vuot toi da 12") for v in out["violations"]), out["violations"]
+    # Both solvers use the input's load bounds (docs/PLANNER-PARITY.md): no violation.
+    assert out["violations"] == []
+    if solver != "cpsat":
         assert out["engine_report"]["objective"]
     first = out["semesters"][0]
     assert set(first) == {"semester_code", "credits", "courses"}

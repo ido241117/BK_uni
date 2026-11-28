@@ -6,16 +6,16 @@
    "name": "Khoa học Máy tính (Computer Science) - khóa 2023",
    "size": {
     "courses": 96,
-    "condition_courses": 2,
+    "condition_courses": 5,
     "listed_credits": 254,
     "degree_credits": 128,
     "course_credits": {
-     "min": 0,
-     "median": 3.0,
+     "min": 1,
+     "median": 3,
      "max": 4
     },
     "levels": {
-     "1": 27,
+     "1": 24,
      "2": 8,
      "3": 51,
      "4": 8
@@ -71,8 +71,8 @@
      "curriculum": 32
     },
     "hard": 12,
-    "hard_per_course": 0.128,
-    "share_of_courses_in_hard_relation": 0.17,
+    "hard_per_course": 0.132,
+    "share_of_courses_in_hard_relation": 0.176,
     "or_clauses": 0,
     "longest_prerequisite_chain": 4,
     "longest_chain_example": [
@@ -114,11 +114,11 @@
     "max_load": 25
    },
    "offering": {
-    "offered_terms_known": 0.0,
+    "offered_terms_known": 1.0,
     "summer_history_known": 1.0,
-    "summer_ever_offered": 0.925531914893617,
+    "summer_ever_offered": 1.0,
     "summer_forbidden_by_rule": 10,
-    "typical_term_known": 0.39361702127659576
+    "typical_term_known": 0.37362637362637363
    },
    "majors": {
     "count": 5,
@@ -158,218 +158,36 @@
     "milestones_without_threshold": []
    },
    "remarks": [
-    "Sparse ordering: 12 prerequisite/corequisite relations for 96 courses (0.128 per course); only 17% of courses take part in one. Plans will differ mainly through load limits, groups, offering and the objective, not through course order.",
+    "Sparse ordering: 12 prerequisite/corequisite relations for 96 courses (0.132 per course); only 18% of courses take part in one. Plans will differ mainly through load limits, groups, offering and the objective, not through course order.",
     "Calendar has room: 8 nominal regular terms; lower bounds 6 (degree credits / max load) and 4 (longest prerequisite chain); slack 2 term(s). On-time graduation needs 16.0 credits per regular term on average (allowed 11-25)."
    ]
-  },
-  "cs_2023": {
-   "id": "cs_2023",
-   "name": "Computer Science 2023",
-   "size": {
-    "courses": 93,
-    "condition_courses": 0,
-    "listed_credits": 254,
-    "degree_credits": 128,
-    "course_credits": {
-     "min": 0,
-     "median": 3,
-     "max": 4
-    },
-    "levels": {}
-   },
-   "choice": {
-    "mandatory_credits": 99,
-    "elective_groups": [
-     {
-      "id": "B3.2",
-      "name": null,
-      "pool_courses": 5,
-      "pool_credits": 5,
-      "required_credits": 1,
-      "slack": 5.0
-     },
-     {
-      "id": "B3.3",
-      "name": null,
-      "pool_courses": 3,
-      "pool_credits": 3,
-      "required_credits": 1,
-      "slack": 3.0
-     },
-     {
-      "id": "B3.4",
-      "name": null,
-      "pool_courses": 44,
-      "pool_credits": 132,
-      "required_credits": 15,
-      "slack": 8.8
-     },
-     {
-      "id": "B3.5",
-      "name": null,
-      "pool_courses": 5,
-      "pool_credits": 15,
-      "required_credits": 3,
-      "slack": 5.0
-     },
-     {
-      "id": "C",
-      "name": null,
-      "pool_courses": 44,
-      "pool_credits": 132,
-      "required_credits": 9,
-      "slack": 14.67
-     }
-    ],
-    "free_elective_credits": 0,
-    "chosen_credit_share": 0.227
-   },
-   "relations": {
-    "by_type": {
-     "prerequisite": 31,
-     "corequisite": 1
-    },
-    "by_source": {
-     "curriculum": 32
-    },
-    "hard": 32,
-    "hard_per_course": 0.344,
-    "share_of_courses_in_hard_relation": 0.419,
-    "or_clauses": 0,
-    "longest_prerequisite_chain": 5,
-    "longest_chain_example": [
-     "SP1031",
-     "SP1033",
-     "SP1035",
-     "SP1039",
-     "SP1037"
-    ],
-    "top_dependents": [
-     {
-      "course": "CO1027",
-      "dependents": 7
-     },
-     {
-      "course": "CO1007",
-      "dependents": 4
-     },
-     {
-      "course": "CO2013",
-      "dependents": 4
-     },
-     {
-      "course": "SP1031",
-      "dependents": 4
-     },
-     {
-      "course": "LA1003",
-      "dependents": 3
-     }
-    ]
-   },
-   "calendar_fit": {
-    "nominal_regular_terms": null,
-    "terms_needed_by_max_load": 7,
-    "terms_needed_by_chain": 5,
-    "slack_terms": null,
-    "mean_load_needed": null,
-    "min_load": 14,
-    "max_load": 21
-   },
-   "offering": {
-    "offered_terms_known": 1.0,
-    "summer_history_known": 0.0,
-    "summer_ever_offered": 0.989247311827957,
-    "summer_forbidden_by_rule": 0,
-    "typical_term_known": 0.11827956989247312
-   },
-   "majors": {
-    "count": 5,
-    "sizes": {
-     "DSE": 13,
-     "ASE": 9,
-     "CYB": 8,
-     "AI": 16,
-     "IPCV": 8
-    },
-    "mean_jaccard_overlap": 0.104,
-    "max_jaccard_overlap": 0.333
-   },
-   "milestones": [
-    {
-     "course": "CO3335",
-     "min_credit_percent": 65,
-     "kind": null
-    },
-    {
-     "course": "CO4029",
-     "min_credit_percent": 70,
-     "kind": null
-    },
-    {
-     "course": "CO4337",
-     "min_credit_percent": 85,
-     "kind": null
-    }
-   ],
-   "quality": {
-    "courses_in_no_group": [],
-    "courses_in_several_groups": [
-     "CO3011",
-     "CO3013",
-     "CO3015",
-     "CO3017",
-     "CO3021",
-     "CO3023",
-     "CO3027",
-     "CO3029",
-     "CO3031",
-     "CO3033",
-     "CO3035",
-     "CO3037",
-     "CO3041",
-     "CO3043",
-     "CO3045",
-     "CO3047",
-     "CO3049",
-     "CO3051",
-     "CO3057",
-     "CO3059",
-     "CO3061",
-     "CO3065",
-     "CO3067",
-     "CO3069",
-     "CO3071",
-     "CO3083",
-     "CO3085",
-     "CO3089",
-     "CO3115",
-     "CO3117",
-     "CO3129",
-     "CO3131",
-     "CO3133",
-     "CO3135",
-     "CO3137",
-     "CO3139",
-     "CO3151",
-     "CO3153",
-     "CO4025",
-     "CO4031",
-     "CO4033",
-     "CO4035",
-     "CO4037",
-     "CO4039"
-    ],
-    "groups_needing_more_than_their_pool": [],
-    "prerequisite_cycles": [],
-    "typical_term_contradicts_prerequisite": [],
-    "milestones_without_threshold": []
-   },
-   "remarks": []
   }
  },
  "students": {
-  "cs_2023-oracle": {
+  "khmt2023-demo": {
+   "students": 1,
+   "sources": {
+    "simulated": 1
+   },
+   "attempts": 32,
+   "attempts_per_student": {
+    "32": 1
+   },
+   "outcomes": {
+    "passed": 29,
+    "in_progress": 3
+   },
+   "attempts_without_term": 32,
+   "attempts_with_grade": 0,
+   "retaken_courses": 0,
+   "highest_fail_rate": [],
+   "has_expected_answers": false,
+   "remarks": [
+    "No attempt has a term: the history gives what was passed, not when.",
+    "No grades: GPA-based rules (standing, retakes for grade) cannot be checked on this data."
+   ]
+  },
+  "khmt2023-oracle": {
    "students": 7,
    "sources": {
     "unknown": 7
@@ -400,29 +218,6 @@
    "has_expected_answers": true,
    "remarks": [
     "Has expected answers (oracle) for testing GPA and credit computations."
-   ]
-  },
-  "khmt2023-demo": {
-   "students": 1,
-   "sources": {
-    "simulated": 1
-   },
-   "attempts": 32,
-   "attempts_per_student": {
-    "32": 1
-   },
-   "outcomes": {
-    "passed": 29,
-    "in_progress": 3
-   },
-   "attempts_without_term": 32,
-   "attempts_with_grade": 0,
-   "retaken_courses": 0,
-   "highest_fail_rate": [],
-   "has_expected_answers": false,
-   "remarks": [
-    "No attempt has a term: the history gives what was passed, not when.",
-    "No grades: GPA-based rules (standing, retakes for grade) cannot be checked on this data."
    ]
   }
  },

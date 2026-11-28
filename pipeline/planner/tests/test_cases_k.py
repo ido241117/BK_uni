@@ -1,4 +1,4 @@
-"""Ca K1-K7d cua ke hoach (docs/02-ke-hoach.md, muc 7).
+"""Ca K1-K7d cua ke hoach (docs/FEATURES.md, hand-checked cases).
 
 Dap an XEP TAY, nguoi duyet xac nhan ngay 18/11. Moi ca chay CA HAI bo giai, va
 lo trinh nao cung phai qua validator.
@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from planner.model.facts import get_scenario  # noqa: E402
 from planner.model.input import load_fixture  # noqa: E402
 from evaluation.run_scenarios import DEFAULT_FIXTURE  # noqa: E402
+from planner.model.report import warning_items  # noqa: E402
 from planner.model.result import plan_map  # noqa: E402
 from planner.solvers.asp.adapter import solve_asp  # noqa: E402
 from planner.solvers.cpsat import solve_cpsat  # noqa: E402
@@ -25,19 +26,8 @@ from evaluation.validate import validate_plan  # noqa: E402
 SOLVERS = {"clingo": solve_asp, "cpsat": solve_cpsat}  # "clingo" = engine ASP
 
 
-def asp_differs(reason: str) -> list:
-    """Hai bo giai, voi engine ASP danh dau xfail: engine ASP chua co muc tieu/luat nay.
-
-    Khong strict: engine chay nhieu luong (solve_asp.THREADS) nen giua cac nghiem ngang nhau co the
-    tinh co chon dung dap an cua test. Danh sach khac biet: planner/solvers/asp/ADAPTER.md, muc 7.
-    """
-    return ["cpsat", pytest.param("clingo", marks=pytest.mark.xfail(strict=False, reason=reason))]
-
-
-
 @pytest.fixture()
-def toy(toy_policy):
-    # Engine ASP chay voi muc tin chi cua toy.json (xem conftest.toy_policy).
+def toy():
     return copy.deepcopy(load_fixture(DEFAULT_FIXTURE))
 
 
@@ -118,7 +108,7 @@ def test_k3_max_nine_credits(name, toy):
 
 # --- K4: muon hoc mot mon (S4) -----------------------------------------------
 
-@pytest.mark.parametrize("name", asp_differs("engine ASP chua co S4 (mon sinh vien muon hoc)"))
+@pytest.mark.parametrize("name", SOLVERS)
 def test_k4_wanted_course(name, toy):
     scenario = base(toy)
     scenario["preferences"] = {"wanted_courses": ["EL303"]}
@@ -148,7 +138,7 @@ def test_k5b_earlier_cohort_is_not_blocked(name, toy):
 
 # --- K7..K7d: khuyen nghi la mong muon mem (S6) -------------------------------
 
-@pytest.mark.parametrize("name", asp_differs("engine ASP chua co S6 (khuyen nghi KN)"))
+@pytest.mark.parametrize("name", SOLVERS)
 def test_k7_recommendation_kept_without_delay(name, toy):
     recommend(toy, "EL302", before="CS401")
     r = run(name, toy, base(toy))
@@ -176,7 +166,7 @@ def test_k7c_default_graduation_first(name, toy):
     assert {"before": "MA102", "course": "CS301"} in s6(r)["broken"]
 
 
-@pytest.mark.parametrize("name", asp_differs("engine ASP chua co S6 va thu tu recommendations_first"))
+@pytest.mark.parametrize("name", SOLVERS)
 def test_k7d_recommendations_first_delays_graduation(name, toy):
     recommend(toy, "CS301", before="MA102")
     scenario = base(toy)
@@ -203,15 +193,17 @@ def test_semester_limit_moves_load(name, toy):
     assert r["semesters"][0]["credits"] <= 6
 
 
-@pytest.mark.parametrize("name", asp_differs("engine ASP chua co S11 (ky chinh du 11 TC); muc tieu deu tai @1 chia 9/11 thay vi 12/8"))
-def test_last_semester_below_minimum_is_warned(name, toy):
+@pytest.mark.parametrize("name", SOLVERS)
+def test_last_semester_below_minimum_is_allowed_without_warning(name, toy):
     # Muc chung 12 (mem S11): ky 262 co the du 12 (CS301, CS302, MA102, EL303) ma khong hoc
-    # thua, nen S11 chon 12; ky cuoi 271 con 8 TC -> canh bao.
+    # thua, nen S11 chon 12; ky cuoi 271 con 8 TC. The last term may be lighter (university
+    # practice, 28/11/2026): no low-credit warning for it.
     toy["curriculum"]["min_semester_credits"] = 12
     r = run(name, toy, base(toy))
     assert r["graduation_semester"] == "271"
     assert r["semesters"][-1]["credits"] == 8
-    assert any(w.startswith("Kỳ cuối 271 chỉ 8 TC") for w in r["warnings"])
+    assert not any(item["kind"] == "low_credits" and item["semester"] == "271"
+                   for item in warning_items(toy, base(toy), plan_map(r)))
 
 
 # --- K8: ky he do sinh vien tu bat (quyet dinh 19/11) ----------------------------
@@ -235,7 +227,7 @@ def test_k8_summer_not_used_without_opt_in(name, toy):
     assert "263" not in plan_map(r).values()
 
 
-@pytest.mark.parametrize("name", asp_differs("engine ASP dung luat ky he rieng (quyet dinh 20/11): moi mon duoc xep vao ky he da bat, khong co S7/S9"))
+@pytest.mark.parametrize("name", SOLVERS)
 def test_k8_opt_in_summer_used_minimally(name, toy):
     scenario = base(with_summer(toy))
     scenario["max_credits"] = 9
@@ -258,7 +250,7 @@ def test_k8_validator_rejects_course_in_summer_not_opted(toy):
 
 
 @pytest.mark.parametrize("band", [
-    pytest.param((11, 12), marks=pytest.mark.xfail(strict=False, reason="engine ASP chua co S8 (khoang tin chi dep)")),
+    (11, 12),
     (6, 8),
 ])
 def test_s8_both_solvers_agree(toy, band):
@@ -276,7 +268,7 @@ def test_s8_both_solvers_agree(toy, band):
 # Mon 3 TC xep he duoc: MA201 hoac MA102 (cap 1-2), hoac EL3xx, CS401 (cap 3-4).
 # S9 chon mon cap 1-2. Dap an: xong 271, mon he co cap <= 2, S9 dap ung.
 
-@pytest.mark.parametrize("name", asp_differs("engine ASP chua co S9 (ky he uu tien mon cap 1-2); dap an phu thuoc nghiem ngang nhau"))
+@pytest.mark.parametrize("name", SOLVERS)
 def test_k8c_summer_prefers_general_courses(name, toy):
     for c in toy["courses"]:
         if c["code"] == "CS401":
@@ -295,7 +287,7 @@ def test_k8c_summer_prefers_general_courses(name, toy):
 # Nhu K8b nhung danh dau MA201 la "do an" (summer_excluded). He chi con MA102 la mon
 # cap 1-2 xep duoc. Dap an: xong 271, he la MA102.
 
-@pytest.mark.parametrize("name", asp_differs("engine ASP dung luat ky he rieng: khong loai do an khoi ky he"))
+@pytest.mark.parametrize("name", SOLVERS)
 def test_k8d_projects_never_in_summer(name, toy):
     toy["summer_excluded"] = ["MA201"]
     scenario = base(with_summer(toy))

@@ -55,9 +55,10 @@ def _pin_rule_breaks(fixture, scenario, plan, passed, credits, course, sem) -> l
     need = graduation_needs(fixture).get(course)
     if need is not None:
         have = sum(credits.get(c, 0) for c in passed if c in credits) + fixture.get("_free_outside_credits", 0)
-        have += sum(credits.get(c, 0) for c, s in plan.items() if s < sem)
+        # Credits through the course's own term, the course excluded (docs/PLANNER-PARITY.md D4).
+        have += sum(credits.get(c, 0) for c, s in plan.items() if s <= sem and c != course)
         if have < need:
-            out.append(f"cần tích lũy {need} TC trước kỳ {sem}, mới có {have}")
+            out.append(f"cần tích lũy {need} TC tính đến hết kỳ {sem} (không tính môn này), mới có {have}")
     if is_summer(sem) and not summer_allowed(fixture, scenario, course, sem):
         out.append(f"kỳ hè {sem} không xếp môn này")
     for rec in list(fixture["offerings"]["records"]) + list(scenario.get("not_offered", [])):

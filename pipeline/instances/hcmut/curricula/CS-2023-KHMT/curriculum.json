@@ -2,6 +2,7 @@
   "schema_version": 3,
   "id": "CS-2023-KHMT",
   "name": "Khoa học Máy tính (Computer Science) - khóa 2023",
+  "program": "Computer Science",
   "cohort": 2023,
   "planning": {
     "first_term": "2023-1",
@@ -36,7 +37,12 @@
       "level": 1,
       "typical_year": 3,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO1005",
@@ -45,7 +51,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO1007",
@@ -54,7 +65,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO1023",
@@ -63,7 +79,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO1027",
@@ -72,7 +93,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO2001",
@@ -81,7 +107,12 @@
       "level": 2,
       "typical_year": 3,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO2003",
@@ -90,7 +121,12 @@
       "level": 2,
       "typical_year": 2,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO2007",
@@ -99,7 +135,12 @@
       "level": 2,
       "typical_year": 2,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO2011",
@@ -108,7 +149,12 @@
       "level": 2,
       "typical_year": 2,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO2013",
@@ -117,7 +163,12 @@
       "level": 2,
       "typical_year": 3,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO2017",
@@ -126,7 +177,12 @@
       "level": 2,
       "typical_year": 2,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO2039",
@@ -135,7 +191,12 @@
       "level": 2,
       "typical_year": 2,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3001",
@@ -144,7 +205,12 @@
       "level": 3,
       "typical_year": 3,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3005",
@@ -153,7 +219,12 @@
       "level": 3,
       "typical_year": 3,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3011",
@@ -162,7 +233,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3013",
@@ -171,7 +247,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3015",
@@ -180,7 +261,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3017",
@@ -189,7 +275,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3021",
@@ -198,7 +289,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3023",
@@ -207,7 +303,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3027",
@@ -216,7 +317,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3029",
@@ -225,7 +331,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3031",
@@ -234,7 +345,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3033",
@@ -243,7 +359,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3035",
@@ -252,7 +373,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3037",
@@ -261,7 +387,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3041",
@@ -270,7 +401,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3043",
@@ -279,7 +415,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3045",
@@ -288,7 +429,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3047",
@@ -297,7 +443,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3049",
@@ -306,7 +457,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3051",
@@ -315,7 +471,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3057",
@@ -324,7 +485,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3059",
@@ -333,7 +499,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3061",
@@ -342,7 +513,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3065",
@@ -351,7 +527,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3067",
@@ -360,7 +541,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3069",
@@ -369,7 +555,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3071",
@@ -378,7 +569,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3083",
@@ -387,7 +583,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3085",
@@ -396,7 +597,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3089",
@@ -405,7 +611,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3093",
@@ -414,7 +625,12 @@
       "level": 3,
       "typical_year": 3,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3101",
@@ -427,7 +643,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3103",
@@ -440,7 +661,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3105",
@@ -453,7 +679,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3107",
@@ -466,7 +697,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3109",
@@ -479,7 +715,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3111",
@@ -492,7 +733,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3115",
@@ -501,7 +747,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3117",
@@ -510,7 +761,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3119",
@@ -523,7 +779,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3127",
@@ -536,7 +797,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3129",
@@ -545,7 +811,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3131",
@@ -554,7 +825,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3133",
@@ -563,7 +839,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3135",
@@ -572,7 +853,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3137",
@@ -581,7 +867,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3139",
@@ -590,7 +881,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3151",
@@ -599,7 +895,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3153",
@@ -608,7 +909,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO3335",
@@ -617,7 +923,12 @@
       "level": 3,
       "typical_year": 3,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO4025",
@@ -626,7 +937,12 @@
       "level": 4,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO4029",
@@ -639,7 +955,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO4031",
@@ -648,7 +969,12 @@
       "level": 4,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO4033",
@@ -657,7 +983,12 @@
       "level": 4,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO4035",
@@ -666,7 +997,12 @@
       "level": 4,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO4037",
@@ -675,7 +1011,12 @@
       "level": 4,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO4039",
@@ -684,7 +1025,12 @@
       "level": 4,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "CO4337",
@@ -697,7 +1043,12 @@
         1,
         2
       ],
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "ENG_GC",
@@ -706,7 +1057,12 @@
       "kind": "condition",
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "IM1013",
@@ -715,7 +1071,12 @@
       "level": 1,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "IM1023",
@@ -724,7 +1085,12 @@
       "level": 1,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "IM1025",
@@ -733,7 +1099,12 @@
       "level": 1,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "IM1027",
@@ -742,7 +1113,12 @@
       "level": 1,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "IM3001",
@@ -751,7 +1127,12 @@
       "level": 3,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "LA1003",
@@ -760,7 +1141,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "LA1005",
@@ -769,7 +1155,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "LA1007",
@@ -778,7 +1169,12 @@
       "level": 1,
       "typical_year": 2,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "LA1009",
@@ -787,12 +1183,18 @@
       "level": 1,
       "typical_year": 2,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "MI1003",
       "name": "Giáo dục Quốc phòng / Military Training",
       "credits": 0,
+      "kind": "condition",
       "level": 1,
       "typical_year": 1,
       "typical_part": 2,
@@ -805,7 +1207,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "MT1005",
@@ -814,7 +1221,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "MT1007",
@@ -823,7 +1235,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "MT2013",
@@ -832,7 +1249,12 @@
       "level": 2,
       "typical_year": 2,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "PE1003",
@@ -841,7 +1263,8 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 1,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "kind": "condition"
     },
     {
       "id": "PE1005",
@@ -850,7 +1273,8 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 2,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "kind": "condition"
     },
     {
       "id": "PH1003",
@@ -859,7 +1283,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "PH1007",
@@ -868,7 +1297,12 @@
       "level": 1,
       "typical_year": 1,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "SA4001",
@@ -878,7 +1312,11 @@
       "level": 4,
       "typical_year": null,
       "typical_part": null,
-      "offered_in_summer": false
+      "offered_in_summer": false,
+      "offered_terms": [
+        1,
+        2
+      ]
     },
     {
       "id": "SP1007",
@@ -887,7 +1325,12 @@
       "level": 1,
       "typical_year": 4,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "SP1031",
@@ -896,7 +1339,12 @@
       "level": 1,
       "typical_year": 2,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "SP1033",
@@ -905,7 +1353,12 @@
       "level": 1,
       "typical_year": 2,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "SP1035",
@@ -914,7 +1367,12 @@
       "level": 1,
       "typical_year": 3,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "SP1037",
@@ -923,7 +1381,12 @@
       "level": 1,
       "typical_year": 4,
       "typical_part": 1,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "SP1039",
@@ -932,7 +1395,12 @@
       "level": 1,
       "typical_year": 3,
       "typical_part": 2,
-      "offered_in_summer": true
+      "offered_in_summer": true,
+      "offered_terms": [
+        1,
+        2,
+        3
+      ]
     }
   ],
   "relations": [
@@ -1252,7 +1720,8 @@
         "CO3127"
       ],
       "min_courses": 1,
-      "min_credits": 1
+      "min_credits": 1,
+      "max_courses": 1
     },
     {
       "id": "G3",
@@ -1264,7 +1733,8 @@
         "CO3111"
       ],
       "min_courses": 1,
-      "min_credits": 1
+      "min_credits": 1,
+      "max_courses": 1
     },
     {
       "id": "G4",
@@ -1331,7 +1801,8 @@
         "IM3001"
       ],
       "min_courses": 1,
-      "min_credits": 3
+      "min_credits": 3,
+      "max_courses": 1
     },
     {
       "id": "G6",

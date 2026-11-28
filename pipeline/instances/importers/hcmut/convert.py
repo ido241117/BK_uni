@@ -105,6 +105,8 @@ def from_planner_fixture(fx: dict[str, Any], student_id: str,
         if g.get("pool_scope") == "any":
             group["scope"] = "any"
             group["slot_credits"] = g.get("pool_course_credits")
+        if g.get("max_count") is not None:
+            group["max_courses"] = g["max_count"]
         groups.append(group)
 
     milestones = []
@@ -130,12 +132,15 @@ def from_planner_fixture(fx: dict[str, Any], student_id: str,
         "summer_always_allowed": sorted(always_summer),
         "level_min_year": HCMUT_LEVEL_RULE if rules.get("course_level") else None,
     }
+    if rules.get("year_by_credits"):
+        planning["year_credit_thresholds"] = list(rules["year_by_credits"])
 
     offerings = fx.get("offerings") or {}
     curriculum = {
         "schema_version": 3,
         "id": curriculum_id,
         "name": cur["name"],
+        **({"program": cur["program"]} if cur.get("program") else {}),
         "cohort": cur["cohort"],
         "planning": planning,
         "courses": courses,
@@ -166,11 +171,19 @@ def from_planner_fixture(fx: dict[str, Any], student_id: str,
             "source": st.get("source"),
         }],
         "attempts": [
+            {"student_id": student_id, **{("course" if k == "course_code" else "term" if k == "semester_code" else k):
+                                          (hcmut_to_term(v) if k == "semester_code" and v is not None else v)
+                                          for k, v in a.items()}}
+            for a in st["attempts"]
+        ] if "attempts" in st else [
             {"student_id": student_id, "attempt_id": f"{student_id}-{i:02d}", "course": sc["course_code"],
              "term": None, "grade": None, "result": STATUS_TO_RESULT[sc["status"]], "course_kind": "regular"}
             for i, sc in enumerate(st["student_courses"], start=1) if sc["status"] != "not-started"
         ],
-        "external_progress": [],
+        "external_progress": [
+            {"student_id": student_id, "requirement": e["requirement"],
+             "term": hcmut_to_term(e["semester_code"]) if e.get("semester_code") is not None else None,
+             "amount": e["amount"]} for e in st.get("external_progress", [])],
         "expected": [],
     }
 

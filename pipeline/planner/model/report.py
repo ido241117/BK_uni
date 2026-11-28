@@ -18,6 +18,7 @@ from planner.model.facts import (
     credit_limits,
     is_summer,
     plan_semesters,
+    SOLVER_GOALS,
     preference_order,
     preferences,
     preferred_load,
@@ -111,7 +112,8 @@ def objective(
     m = metrics(fixture, scenario, plan, previous_plan)
     value = {k: (len(v) if isinstance(v, list) else v) for k, v in m.items()}
     # ST, OH (sprint 11) chua co trong metrics: tinh 0 khi so sanh hai bo giai.
-    return tuple(value.get(name, 0) for name in preference_order(fixture, scenario))
+    # Solver-specific goals (facts.SOLVER_GOALS) are left out: they are not comparable across solvers.
+    return tuple(value.get(name, 0) for name in preference_order(fixture, scenario) if name not in SOLVER_GOALS)
 
 
 def preferences_report(
@@ -218,9 +220,10 @@ def warning_items(fixture: dict[str, Any], scenario: dict[str, Any], plan: dict[
         for c, s in plan.items():
             loads[s] += credits[c]
         for s, load in loads.items():
-            if is_summer(s) or load >= base_min:
+            # The last term may hold fewer credits than the minimum (university practice, 28/11/2026).
+            if is_summer(s) or load >= base_min or s == last:
                 continue
-            which = f"Kỳ cuối {s}" if s == last else f"Kỳ {s}"
+            which = f"Kỳ {s}"
             out.append({
                 "kind": "low_credits", "semester": s,
                 "text": f"{which} chỉ {load} TC, dưới {base_min} TC của kỳ chính (không học thừa để đủ). "
@@ -235,7 +238,7 @@ def warning_items(fixture: dict[str, Any], scenario: dict[str, Any], plan: dict[
     return out
 
 
-# T56 (23/11): moi loai canh bao gan dieu cua QD 285 (docs/04-luat-qd285.md); luat nhom tu dat ghi ro.
+# T56 (23/11): moi loai canh bao gan dieu cua QD 285 (docs/CONSTRAINTS.md, section 5); luat nhom tu dat ghi ro.
 RULE_OF_KIND = {
     "english": "QĐ 285 Phụ lục 7",
     "mos": "QĐ 285 Phụ lục 9",

@@ -2,50 +2,93 @@
 % optimize.lp : preferences (objectives) and output
 %
 % Hard rules live in extension.lp; this file only ranks the valid plans and
-% chooses what is displayed.  clingo reports the objective vector by
-% descending priority:
-%   @8 gaps, @7 last_semester, @6 retakes, @5 offering_history, @4 cost,
-%   @3 typical_term, @2 level_order, @1 balance, @0 taste.
+% chooses what is displayed.  Which goals are active, and in which order, is
+% decided by the request, as for every solver (docs/SOLVER-PARITY.md D7):
+% the adapter emits goal(Id, P) for each active goal this engine implements,
+% P = priority (higher first).  A goal without a goal/2 fact is off.
+%   s1  earliest graduation          s6  keep recommended order (KN)
+%   s2  no surplus credits           s4  wanted courses planned
+%   s3  close to the previous plan   s5  balanced load (heaviest term)
+%   s7  summer load in its band      s8  regular load in its band
+%   s9  summer: low-level courses    s10 few summer credits
+%   s11 regular terms reach the      oh  offering history (soft)
+%       soft minimum load
+%   rt  retakes early                fee lowest tuition
+%   lo  lower-level courses first    ta  electives matching interests
+% Goal ids are the planner's (planner/model/facts.py), lower-cased.
 % =====================================================================
 
-#defined course_level/2.
+#defined course_level/2.  #defined goal/2.
 
-% no empty regular term between used ones (extension.lp section 9): a gap
-% is only used when no plan without one exists; it is shown as a warning.
-#minimize{ 1@8,J : gap(J) }.
+% S1 earliest graduation: minimise the last used term.
+#minimize{ M@P : max_used(M), goal(s1, P) }.
 
-% earliest graduation: minimise the last used term.  Together with the gap
-% objective this also minimises the number of planned terms.
-#minimize{ M@7 : max_used(M) }.
+% S6 recommended order: a recommended relation is a soft prerequisite.
+#minimize{ 1@P,B,A : kn_broken(B, A), goal(s6, P) }.
 
-% fail-recovery first: retake failed/requested courses as early as possible.
-#minimize{ I@6,E : in(rt(E,N), s(I)), retake_no(E,N), must(E) }.
-% Same priority: avoid unnecessary/voluntary retakes.
-#minimize{ 1@6,E : in(rt(E,N), s), retake_no(E,N), not must(E) }.
+% S11 soft minimum load of regular terms (extension.lp section 9).
+#minimize{ D@P,I : deficit(I, D), goal(s11, P) }.
 
-% offering history: place courses in the part of the year in which they
-% usually open (extension.lp section 19).  Replaces the former popularity.
-#minimize{ D@5,E,I : offer_miss(E, I, D) }.
+% The goals below have the definitions of planner/solvers/cpsat.py.
+#defined pref_band/2.  #defined summer_band/2.  #defined internship/1.
+#defined summer_heavy/1.  #defined wanted/1.  #defined prev/2.
+#defined regular_plan/1.  #defined summer_plan/1.
 
-% future tuition (inactive when policy.lp has no fee_rule/6)
-#minimize{ F@4,I : fee(I, F) }.
+% S2 no surplus: credits of every planned attempt.
+#minimize{ C@P,X : in(X, s(I)), I > t, map(c, X, C), goal(s2, P) }.
 
-% special courses near their typical term: half-step distance from the
-% typical regular term (extension.lp section 18).
-#minimize{ D@3,E : typical_gap(E, D) }.
+% S3 previous plan: its (course, term) pairs the new plan does not keep.
+#minimize{ 1@P,E,I : prev(E, I), not placed(E, I), goal(s3, P) }.
 
-% lower-level courses first: pull 1xxx/2xxx courses into earlier terms.
-#minimize{ I@2,X : in(X, s(I)), I > t, base(X, E), course_level(E, L), L <= 2 }.
+% S4 wanted courses (not passed yet) that are not planned.
+#minimize{ 1@P,E : wanted(E), not placed(E, _), goal(s4, P) }.
 
-% balanced workload: minimise the heaviest future term.  Counting the
+% S8 regular terms in the preferred band: credits above it, and below it for
+% every term before the last used one.
+s8_dev(I, over, C - Hi) :- regular_plan(I), pref_band(_, Hi), sum_val(s(I), c, C), C > Hi.
+s8_dev(I, under, Lo - C) :- regular_plan(I), pref_band(Lo, _), max_used(M), I < M,
+                            sum_val(s(I), c, C), C < Lo.
+#minimize{ D@P,I,K : s8_dev(I, K, D), goal(s8, P) }.
+
+% Summer load without internships, per summer term.
+summer_load(I, L) :- summer_plan(I),
+    L = #sum{ C, X : in(X, s(I)), base(X, E), not internship(E), map(c, X, C) }.
+
+% S7 a summer with study is in its band: credits above it, or below it when
+% the term has any study.
+s7_dev(I, over, L - Hi) :- summer_load(I, L), summer_band(_, Hi), L > Hi.
+s7_dev(I, under, Lo - L) :- summer_load(I, L), summer_band(Lo, _), L > 0, L < Lo.
+#minimize{ D@P,I,K : s7_dev(I, K, D), goal(s7, P) }.
+
+% S10 few summer credits (internships excluded).
+#minimize{ L@P,I : summer_load(I, L), goal(s10, P) }.
+
+% S9 summer: credits of level-3+ courses (not internships) planned in summer.
+#minimize{ C@P,X : in(X, s(I)), summer_plan(I), base(X, E), summer_heavy(E), map(c, X, C), goal(s9, P) }.
+
+% S5 balanced workload: minimise the heaviest future term.  Counting the
 % thresholds 1..C reached by some term equals the maximum load, without
 % materialising a #max over all possible load values.
-heavy(V) :- semester_credits(I, C), I > t, V = 1..C.
-#minimize{ 1@1,V : heavy(V) }.
+heavy(V) :- goal(s5, _), semester_credits(I, C), I > t, V = 1..C.
+#minimize{ 1@P,V : heavy(V), goal(s5, P) }.
 
-% student taste: maximise the interest score of the planned electives
+% OH offering history: placements in a term part where the course has not run.
+#minimize{ 1@P,E,I : oh(E, I), goal(oh, P) }.
+
+% RT fail-recovery: retake failed/requested courses as early as possible,
+% and avoid unnecessary/voluntary retakes.
+#minimize{ I@P,E : in(rt(E,N), s(I)), retake_no(E,N), must(E), goal(rt, P) }.
+#minimize{ 1@P,E : in(rt(E,N), s), retake_no(E,N), not must(E), goal(rt, P) }.
+
+% FEE future tuition (inactive without fee_rule/6).
+#minimize{ F@P,I : fee(I, F), goal(fee, P) }.
+
+% LO lower-level courses first: pull 1xxx/2xxx courses into earlier terms.
+#minimize{ I@P,X : in(X, s(I)), I > t, base(X, E), course_level(E, L), L <= 2, goal(lo, P) }.
+
+% TA student taste: maximise the interest score of the planned electives
 % (sum of the weights of their matching tags).
-#minimize{ -S@0,E : placed(E, _), score(E, S) }.
+#minimize{ -S@P,E : placed(E, _), score(E, S), goal(ta, P) }.
 
 % ---------------------------------------------------------------------
 % Output
@@ -82,6 +125,6 @@ heavy(V) :- semester_credits(I, C), I > t, V = 1..C.
 #show slot_option/2.
 #show interest_match/2.
 #show course_note/2.
-#show reserved/2.
-#show gap/1.
-#show offer_miss/3.
+#show oh/2.
+#show kn_broken/2.
+#show deficit/2.

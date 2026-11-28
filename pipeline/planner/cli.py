@@ -11,7 +11,7 @@ cong them:
     scenario.use_inferred_relations (mac dinh false, nguoi duyet 19/11): dung quan he suy ra
     tu ban chup ``data/relations-snapshot.json`` (giai doan 3)
 
-Dau ra: muc 4.3 cua ke hoach (docs/02-ke-hoach.md).
+Dau ra: docs/USER-INPUT.md, part 4.
 Du lieu sai -> status "INPUT_ERROR" kem ``error``; khong bao gio in traceback ra stdout.
 Ma thoat luon la 0 khi da in duoc JSON.
 """

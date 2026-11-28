@@ -10,7 +10,7 @@
 %   map(g,X,G)          final grade of attempt X
 %   raw_score(X,V)      raw score of attempt X on the score scale (score_10),
 %                       fixed-point (7.3 -> 730).  When present it gives the
-%                       grade (grade_min_score/3, policy.lp) and map(g,X,G)
+%                       grade (grade_min_score/3, policy facts) and map(g,X,G)
 %                       is ignored; the score itself is the score_10 GPA
 %                       value (extension.lp section 11) unless the retake
 %                       cap lowered the grade (capped/1).
@@ -59,7 +59,7 @@ retake_no(E, N) :- attempt_count(E, N).
 
 % ---------- effective grade ---------------------------------------------
 % Every recorded grade is final.  A retake's effective grade is capped at
-% retake_grade_cap/1 (policy.lp) when defined; first attempts never are.
+% retake_grade_cap/1 (policy facts) when defined; first attempts never are.
 % Score -> letter: the grade whose lowest score is the largest one <= V.
 % A score, when given, wins over the letter map(g,X,G) of the same attempt.
 has_score(X) :- taken(X, _), raw_score(X, _).

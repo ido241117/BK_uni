@@ -2,16 +2,16 @@
 % extension.lp : the generic planning layer on top of encoding.lp
 %
 % Curriculum-, university- and student-independent.  It turns the facts of
-%   policy.lp      (grades, loads, calendar shape, tuition, graduation)
-%   cs-XXXX.lp     (groups, credits, prerequisites, offering, majors, ...)
+%   policy facts   (grades, calendar shape, tuition, graduation; asp/policy.py)
+%   adapter facts  (groups, credits, prerequisites, offering, majors, loads, ...)
 %   translate.lp   (the student's history in engine vocabulary)
 % into planning semantics, expressed as far as possible with the set
 % declarations of encoding.lp (empty/subseteq/card/sum/sum_dom).
 % Objectives and output live in optimize.lp.
 %
 % Load order (any order works in ASP; this is the dependency order):
-%   encoding.lp extension.lp policy.lp cs-XXXX.lp translate.lp
-%   <student>.lp optimize.lp
+%   encoding.lp extension.lp <policy facts> <adapter facts> translate.lp
+%   optimize.lp
 % =====================================================================
 
 #const t = 0.          % number of studied (fixed) terms
@@ -32,17 +32,17 @@
 #defined external_milestone/4.
 #defined pin/2.              #defined ban/1.          #defined ban/2.
 #defined interest/2.         #defined tag/2.
-#defined typical_term/2.     #defined fills_next/1.
 #defined elective_class/3.
 #defined sem_min/2.          #defined sem_max/2.      #defined skip/1.
-#defined fee_rule/6.         #defined offer_hist/3.   #defined offer_seen/2.
+#defined fee_rule/6.         #defined oh_pair/2.      #defined recommended/2.
+#defined soft_min/2.         #defined level_need/2.
 #defined raw_score/2.            #defined scale_role/2.
 
 % =====================================================================
 % 1. Calendar
 % =====================================================================
 % Term 1 is the enrollment term, whose part is enroll_part/1 (translate.lp).
-% Parts cycle 1..K with K = term_parts(K); term_part_type/2 (policy.lp)
+% Parts cycle 1..K with K = term_parts(K); term_part_type/2 (policy facts)
 % names each part (e.g. regular / summer).
 part(I, P) :- I = 1..n, enroll_part(Q), term_parts(K),
               P = ((I + Q - 2) \ K) + 1.
@@ -145,6 +145,16 @@ coreq_met(C, G, J) :- coreq_option(C, G, A), precred(A, J).
 :- coreq(C, A), in(X, s(J)), base(X, C), J > t,
    not in(A, ok(J)), not precred(A, J).
 
+% recommended(B,A) (goal S6): A should be credited in an earlier term than B.
+% A plan that places B without it is kept but has kn_broken(B,A), ranked in
+% optimize.lp (a soft prerequisite, docs/SOLVER-PARITY.md D1).
+kn_broken(B, A) :- recommended(B, A), placed(B, J), not precred(A, J).
+
+% Course level by accumulated credits (rules.year_by_credits): level_need(E,
+% Min) (adapter) asks for Min credits credited before E's term.
+:- level_need(E, Min), placed(E, J),
+   not Min <= #sum{ C, A : in(A, ok_before(J)), map(c, A, C) }.
+
 % =====================================================================
 % 7. Offering
 % =====================================================================
@@ -172,7 +182,7 @@ sum(ok_through(C, J), c, geq, Min) :-
 % =====================================================================
 % 9. Term loads and calendar shape
 % =====================================================================
-% load_bound(Type, Min, Max) comes from policy.lp.
+% load_bound(Type, Min, Max) comes from the adapter (the planner input).
 used(I)     :- in(_, s(I)), I > t.
 max_used(M) :- used(_), M = #max{ I : used(I) }.
 
@@ -199,21 +209,18 @@ semester_earned(I, C)  :- used(I), sum_val(ok(I), c, C).
 semester_earned(I, C)  :- I = 1..t, in(_, s(I)),
     C = #sum{ Cr, E : in(E, ok(I)), map(c, E, Cr) }.
 
-% Minimum load on every used future term except the last one.
-load_bearing(I) :- semester_credits(I, C), I > t, C > 0.
-sum(s(I), c, geq, Min) :-
-    load_bearing(I), term_min(I, Min), max_used(M), I < M.
+% Hard minimum load on every future term before the last used one, as in
+% CP-SAT: only a minimum the student set (sem_min/2), since the adapter emits
+% load_bound(T, 0, Max) (docs/SOLVER-PARITY.md D2, D3).
+sum(s(I), c, geq, Min) :- term_min(I, Min), Min > 0, max_used(M), I < M.
 
-% Core (non-extra) terms should form one contiguous block from the current
-% term on; extra terms may be skipped.  A future core term left empty before
-% the last used core term is a gap(J) -- also right after the current term,
-% since the student is enrolled there.  A gap is allowed, but penalised first
-% in optimize.lp, so a plan only has one when no plan without it exists, and
-% it is shown as a warning.  skip(J) (student input) means "I take term J
-% off": it is kept empty and is not reported as a gap.
-core_used(I) :- used(I), core_term(I).
-gap(J) :- core_term(J), J > t, not core_used(J), not skip(J),
-          core_used(K), J < K.
+% Soft minimum (goal S11): soft_min(I, Min) (adapter, regular terms) is the
+% school's minimum; a term before the last used one that falls short of it
+% has deficit(I, Min - C), ranked in optimize.lp.  An empty term counts too.
+deficit(I, Min - C) :- soft_min(I, Min), max_used(M), I < M, I > t,
+                       sum_val(s(I), c, C), C < Min.
+
+% skip(J) (student input) means "I take term J off": it is kept empty.
 empty(s(J)) :- skip(J), J > t.
 
 % Attempted credits of the whole plan.
@@ -354,7 +361,7 @@ ready_to_graduate :- degree_complete, not graduation_blocked(_),
 % =====================================================================
 % 13. Tuition and budget
 % =====================================================================
-% fee_rule(Type, Min, Max, Base, Rate, Over) (policy.lp): for
+% fee_rule(Type, Min, Max, Base, Rate, Over) (policy facts): for
 % Min <= credits <= Max the fee is Base + Rate * max(0, credits - Over).
 fee(I, F) :- semester_credits(I, C), I > t, C > 0, semester_type(I, Type),
     fee_rule(Type, Min, Max, Base, _, Over), C >= Min, C <= Max, C <= Over,
@@ -406,7 +413,7 @@ ready_by(E, J) :- can_at(E, I), open_term(J), I <= J.
 % =====================================================================
 % 15. Soft ordering (reported here, ranked in optimize.lp)
 % =====================================================================
-% soft_order(F) (policy.lp): a planned course should not be taken while a
+% soft_order(F) (policy facts): a planned course should not be taken while a
 % course with a smaller value of attribute map(F,E,V) -- one that could
 % already have been taken by then -- is postponed to a later term.  This is
 % a "soft prerequisite" between value classes; a lower course that a
@@ -446,29 +453,6 @@ offered(E, I) :- pin(E, I).
 :- ban(E, I), placed(E, I).
 
 % =====================================================================
-% 17. Courses that fill the following term (fills_next/1)
-% =====================================================================
-% fills_next(E) (curriculum): E is registered in term I but physically
-% carried out in term I+1 (the internship runs in the following summer).
-% Its credits and fee stay in term I; term I+1 is kept empty.  A history
-% attempt in term t reserves term t+1 as well.
-occupies(E, I)     :- fills_next(E), in(X, s(I)), base(X, E).
-reserved(I + 1, E) :- occupies(E, I), I + 1 > t, I < n.
-empty(s(J))        :- reserved(J, _).
-
-% =====================================================================
-% 18. Typical term of special courses (reported here, ranked in optimize.lp)
-% =====================================================================
-% typical_term(E,K) (curriculum): E is normally taken in the K-th regular
-% (core) term counted from enrollment, history included.  Positions are in
-% half steps so an extra term (summer) sits between its neighbours:
-% core term number K -> 2K, an extra term after core term K -> 2K+1.
-core_ord(I, K)       :- core_term(I), K = #count{ J : core_term(J), J <= I }.
-term_pos(I, 2*K)     :- core_ord(I, K).
-term_pos(I, 2*K + 1) :- extra_term(I), K = #count{ J : core_term(J), J < I }.
-typical_gap(E, |P - 2*K|) :- typical_term(E, K), placed(E, I), term_pos(I, P).
-
-% =====================================================================
 % 19. Interests, tags and offering history (reported here, ranked in
 %     optimize.lp)
 % =====================================================================
@@ -480,19 +464,10 @@ tag(E, M)  :- major_course(M, E).
 tag(E, E)  :- in(E, el).
 score(E, S) :- in(E, el), S = #sum{ W,K : tag(E, K), interest(K, W) }, S != 0.
 
-% Offering history: which part of the year a course usually opens in.
-%   offer_hist(E, P, N)  course E opened in N past terms of part P
-%   offer_seen(P, M)     M past terms of part P are covered by the history
-% A placement of E in a term of part P misses (M - N) / M of the observed
-% terms; offer_miss/3 expresses that share in percent so parts with a
-% different number of observed terms are comparable.  A course without any
-% history is not penalised (missing data is not evidence), and a part with
-% no observed term is not judged.
-offer_known(E)       :- offer_hist(E, _, _).
-offer_count(E, P, N) :- offer_hist(E, P, N).
-offer_count(E, P, 0) :- offer_known(E), offer_seen(P, _), not offer_hist(E, P, _).
-offer_miss(E, I, (100 * (M - N)) / M) :-
-    placed(E, I), part(I, P), offer_seen(P, M), M > 0, offer_count(E, P, N), N < M.
+% Offering history (goal OH): oh_pair(E,I) (adapter) marks a future term I
+% in a part of the year where course E has not run in the recorded history;
+% placing E there is oh(E,I), ranked in optimize.lp.
+oh(E, I) :- oh_pair(E, I), placed(E, I).
 
 % =====================================================================
 % 20. Elective slots and symmetry breaking
@@ -505,8 +480,7 @@ named(E) :- interest(E, _), in(E, m).
 
 % elective_class(E,K,R) (curriculum): electives of class K are
 % interchangeable -- same credits, groups, majors, tags, requisites (both
-% directions), offering, level, typical term, fills_next, note and
-% offering history (offer_hist).  For a student who has not singled any of them out, swapping
+% directions), offering, level, note and offering history (oh_pair).  For a student who has not singled any of them out, swapping
 % two members changes no constraint and no objective, so only the plan that
 % uses the lowest-ranked members, in non-decreasing term order, is kept.
 % This removes permutations and keeps at least one optimal plan.

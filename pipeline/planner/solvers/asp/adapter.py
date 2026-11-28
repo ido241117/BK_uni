@@ -1,18 +1,20 @@
-"""Adapter: planner JSON -> engine ASP (``pipeline/planner/solvers/asp``) -> ket qua chung.
+"""Adapter: planner input -> ASP engine (``planner/solvers/asp/core``) -> common result.
 
-Day la cau noi DUY NHAT giua dau vao cua web (JSON do backend ghep tu database, xem
-``Backend/src/planner/planner-input.ts``) va engine ASP. Engine khong biet JSON; adapter
-khong chua luat. Tai lieu day du: ``pipeline/planner/solvers/asp/ADAPTER.md``.
+The ASP engine reads the same planner input as CP-SAT (``planner.model.input``) and is held to
+the same rules (docs/PLANNER-PARITY.md): load bounds, summer rules, graduation thresholds and
+goals all come from the input and from ``planner.model.facts``, not from the engine files.
+The engine does not know JSON; the adapter holds no rules, it only translates.
 
     from planner.solvers.asp.adapter import solve_asp
     result = solve_asp(fixture, scenario, previous_plan=None, time_limit=30.0)
 
-Cung chu ky va cung dang ket qua voi ``solve_cpsat`` (qua ``result.make_result``), cong them
-``engine_report`` (GPA, chuyen nganh, dieu kien tot nghiep, lich su mo lop, hoc phi, tag).
+Same signature and result shape as ``solve_cpsat`` (``result.make_result``), plus
+``engine_report`` (GPA, majors, external requirements, tuition, tags, objective).
 
-Chuong trinh Clingo duoc nap theo thu tu:
-    core/encoding.lp  core/extension.lp  policy.lp  <facts cua adapter>
+Clingo program, in load order:
+    core/encoding.lp  core/extension.lp  <policy facts>  <adapter facts>
     core/translate.lp  core/optimize.lp
+The policy facts are compiled from ``fixture["policy"]`` by ``planner/solvers/asp/policy.py``.
 """
 
 from __future__ import annotations
@@ -27,39 +29,63 @@ import clingo
 
 from planner.model.facts import (
     FixtureError,
+    preferences,
+    preferred_load,
+    summer_courses,
+    summer_preferred_load,
+    summer_specialized,
+    base_credit_limits,
+    check_capabilities,
     course_level,
+    credit_limits,
+    goals_note,
     graduation_needs,
+    is_summer,
     level_enabled,
+    offered_pairs,
+    offered_terms,
+    offering_soft,
+    pinned,
     plan_semesters,
+    preference_order,
     required_year,
     semester_year,
+    summer_allowed,
     validate_input,
+    year_thresholds,
 )
 from planner.model.normalize import normalize
 from planner.model.result import make_result
+from planner.solvers.asp.policy import applies, compile_policy, grade_atom
 
 ASP_DIR = Path(__file__).resolve().parent
 PIPELINE = ASP_DIR.parents[2]
-SOURCES_BEFORE = (ASP_DIR / "core" / "encoding.lp", ASP_DIR / "core" / "extension.lp", ASP_DIR / "policy.lp")
+SOURCES_BEFORE = (ASP_DIR / "core" / "encoding.lp", ASP_DIR / "core" / "extension.lp")
 SOURCES_AFTER = (ASP_DIR / "core" / "translate.lp", ASP_DIR / "core" / "optimize.lp")
 TAGS_FILE = PIPELINE / "instances" / "hcmut" / "course-tags.json"
 ALIASES_FILE = PIPELINE / "instances" / "importers" / "hcmut" / "mybk-code-aliases.json"
-# So luong Clingo (portfolio cau hinh). Do 20/11/2026 tren du lieu that (KHMT, 21 ky): 1 luong het 30 s
-# chua chung minh toi uu va nghiem kem hon; 4 luong tim nghiem tot nhat trong 30 s o ca 3 lan chay,
-# chung minh toi uu 1/3 lan. planner/solvers/asp/ADAPTER.md muc 8.
+# Clingo threads (configuration portfolio). Measured 20/11/2026 on real data (KHMT, 21 terms):
+# 1 thread hit 30 s without proving optimality and found worse plans; 4 threads found the best
+# plan within 30 s in all 3 runs and proved optimality in 1 of 3. planner/solvers/asp/ADAPTER.md §8.
 THREADS = 4
 
+# What this solver implements (docs/PLANNER-PARITY.md). Not implemented: offered,
+# assumed_fail, frozen_semesters, semester_targets with its goal ST (CP-SAT only, decision of
+# 2026-11-28) and rules.pins_absolute (web only).
+CAPABILITIES = {
+    "fields": frozenset({"locked", "not_offered", "graduate_by", "max_credits", "semester_limits",
+                         "summer_opt_in", "skip_semesters", "interests"}),
+    "goals": frozenset({"S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "OH",
+                        "RT", "FEE", "LO", "TA"}),
+}
+
 SEMESTER = re.compile(r"^(\d\d)([123])$")
-GRADES = {"A+": "a_plus", "A": "a", "B+": "b_plus", "B": "b", "C+": "c_plus", "C": "c",
-          "D+": "d_plus", "D": "d", "F": "f"}  # ky hieu diem chu trong policy.lp
-OBJECTIVE_LEVELS = ("gaps", "last_semester", "retakes", "offering_history", "cost",
-                    "typical_term", "level_order", "balance", "taste")  # @8 .. @0 (optimize.lp)
 
 
-# --- Tien ich -----------------------------------------------------------------
+# --- Helpers ------------------------------------------------------------------
 
 def _q(value: str) -> str:
-    """Chuoi ASP co nhay kep (ma mon giu nguyen, khoi phuc duoc khi doc ket qua)."""
+    """Quoted ASP string (course codes are kept as they are and read back from the result)."""
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
@@ -67,14 +93,8 @@ def _load_json(path: Path, default: Any) -> Any:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else default
 
 
-def _policy_constants() -> dict[str, int]:
-    """``#const`` trong policy.lp (muc tin chi), de doi chieu voi du lieu chuong trinh."""
-    text = (ASP_DIR / "policy.lp").read_text(encoding="utf-8")
-    return {m.group(1): int(m.group(2)) for m in re.finditer(r"#const\s+(\w+)\s*=\s*(-?\d+)\s*\.", text)}
-
-
 def _parse_score(value: Any) -> int | None:
-    """Diem he 10 dang chuoi ("7.5", "7,5") hoac so -> so nguyen x100; khong doc duoc -> None."""
+    """10-point score as a string ("7.5", "7,5") or number -> integer x100; unreadable -> None."""
     if value is None:
         return None
     try:
@@ -85,16 +105,16 @@ def _parse_score(value: Any) -> int | None:
 
 
 class Calendar:
-    """Doi ma ky YYS sang chi so ky cua engine: ky 1 la ky dau tien trong ``semesters``.
+    """Semester code YYS -> engine term index; term 1 is the first code of ``semesters``.
 
-    Engine danh so ky lien tuc (ky 1, 2, he, 1, 2, he...), nen chi so tinh tu ma ky,
-    khong tu vi tri trong danh sach (fixture co the bo qua ky he).
+    The engine numbers terms continuously (1, 2, summer, 1, 2, summer...), so the index is
+    computed from the code, not from the position in the list (a fixture may omit summers).
     """
 
     def __init__(self, semesters: list[str]):
         bad = [s for s in semesters if not SEMESTER.match(s)]
         if bad:
-            raise FixtureError(f"engine ASP can ma ky dang YYS (vd 251, 253), nhan {bad[:3]}")
+            raise FixtureError(f"the ASP engine needs YYS semester codes (e.g. 251, 253), got {bad[:3]}")
         first = SEMESTER.match(semesters[0])
         self.year0, self.part0 = int(first.group(1)), int(first.group(2))
 
@@ -105,7 +125,7 @@ class Calendar:
     def index(self, code: str) -> int:
         m = SEMESTER.match(code)
         if not m:
-            raise FixtureError(f"ma ky khong hop le: {code}")
+            raise FixtureError(f"bad semester code: {code}")
         return (int(m.group(1)) - self.year0) * 3 + (int(m.group(2)) - self.part0) + 1
 
     def code(self, index: int) -> str:
@@ -113,12 +133,19 @@ class Calendar:
         return f"{self.year0 + k // 3:02d}{k % 3 + 1}"
 
 
-# --- Sinh facts ---------------------------------------------------------------
+def active_goals(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[tuple[str, int]]:
+    """[(goal id, priority)] of the active goals this engine implements, highest priority first."""
+    order = [g for g in preference_order(fixture, scenario) if g in CAPABILITIES["goals"]]
+    return [(g, len(order) - k) for k, g in enumerate(order)]
 
-def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-    """Fixture DA chuan hoa + kich ban -> (facts, ngu canh de doc ket qua).
 
-    Ham thuan, khong goi Clingo: test duoc rieng.
+# --- Facts ----------------------------------------------------------------------
+
+def build_program(fixture: dict[str, Any], scenario: dict[str, Any],
+                  previous_plan: dict[str, str] | None = None) -> tuple[str, dict[str, Any]]:
+    """NORMALIZED fixture + scenario -> (facts, context for reading the result).
+
+    Pure function, no Clingo call: testable on its own.
     """
     cal = Calendar(fixture["semesters"])
     plan = plan_semesters(fixture)
@@ -129,14 +156,18 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
     future = range(t + 1, n + 1)
     plan_index = {code: cal.index(code) for code in plan if cal.index(code) <= n}
     credits = {c["code"]: c["credits"] for c in fixture["courses"]}
-    out: list[str] = [f"enroll_part_in({cal.enroll_part})."]
-    warnings: list[str] = []
+    cur = fixture["curriculum"]
+    goals = active_goals(fixture, scenario)
+    goal_ids = {g for g, _ in goals}
+    policy_text, warnings = compile_policy(fixture.get("policy"), cur.get("program"), cur.get("cohort"))
+    out: list[str] = [policy_text.rstrip(), f"enroll_part_in({cal.enroll_part})."]
+    out += [f"goal({g.lower()}, {p})." for g, p in goals]
 
-    # Ky trong khoang t+1..n ma fixture khong cho xep (vd fixture khong liet ke ky he do).
+    # Terms in t+1..n the fixture does not list (e.g. a calendar without summers).
     plannable = set(plan_index.values())
     out.extend(f"empty(s({i}))." for i in future if i not in plannable)
 
-    # -- Chuong trinh: khoi, tin chi, quan he -----------------------------------
+    # -- Curriculum: groups, credits, relations ------------------------------------
     members: set[str] = set()
     lower_total = 0
     for k, group in enumerate(fixture["course_groups"], start=1):
@@ -155,7 +186,6 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
         out.append(f"map(l, {gid}, {lo}). map(u, {gid}, {hi}).  % {group['name']}")
         lower_total += lo
     out.extend(f"map(c, {_q(c)}, {credits[c]})." for c in sorted(members))
-    # total_degree tu chinh cac khoi (khong de trong policy.lp vi moi chuong trinh khac nhau).
     out.append(f"map(l, total_degree, {lower_total}). "
                f"map(u, total_degree, {sum(credits[c] for c in members)}).")
 
@@ -167,60 +197,56 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
             out.append(f"prereq({_q(course)}, {_q(related)}).")
         elif rel["type"] == "corequisite":
             out.append(f"coreq({_q(course)}, {_q(related)}).")
-        # "prior" bi bo (18/11); "recommended" engine chua co muc tieu tuong ung.
+        elif rel["type"] == "recommended":  # soft prerequisite, goal S6 (D1)
+            out.append(f"recommended({_q(course)}, {_q(related)}).")
+        # "prior" never arrives here: normalize() turns it into "prerequisite" (28/11).
 
     for code in sorted(members):
         level = course_level(code)
         if level is not None:
             out.append(f"course_level({_q(code)}, {level}).")
 
-    # Cap do mon (QD 285 Dieu 15.4): mon cap L chi tu nam required_year(L).
+    # Course level (QD 285 art. 15.4): level L only from year required_year(L). The year is the
+    # cohort year, or with rules.year_by_credits the year reached by accumulated credits (Q6),
+    # as in CP-SAT. Credits outside the program (counted as free electives) are not in the
+    # engine, so they are subtracted from the threshold.
+    outside = fixture.get("_free_outside_credits", 0)
     if level_enabled(fixture):
-        cohort = fixture["curriculum"]["cohort"]
+        thresholds = year_thresholds(fixture)
+        cohort = cur["cohort"]
         for code in sorted(members):
             level = course_level(code)
             if level is None:
                 continue
             need = required_year(level)
+            if thresholds:
+                if need >= 2:
+                    floor = thresholds[min(need - 2, len(thresholds) - 1)]
+                    out.append(f"level_need({_q(code)}, {max(0, floor - outside)}).")
+                continue
             for i in future:
                 if semester_year(cal.code(i), cohort) < need:
                     out.append(f"ban({_q(code)}, {i}).")
 
-    # Internship (rules.summer_courses, KHMT 2023: CO3335): registered in a term with its
-    # credits and fee there, carried out in the following term, which the engine keeps empty
-    # (fills_next, extension.lp section 17). No placement restriction: usually semester 6
-    # with the internship in the summer after.
-    internships = set((fixture.get("rules") or {}).get("summer_courses", [])) & members
-    for code in sorted(internships):
-        out.append(f"fills_next({_q(code)}).")
-
-    # Mon tot nghiep (QD 285 Dieu 15.5). TC ngoai chuong trinh (da tinh vao tu chon tu do)
-    # khong nam trong engine nen tru truoc.
-    # Counting (23/11/2026): credits before the course's term plus the other courses of that
-    # term (the course itself excluded), for every graduation course.
-    outside = fixture.get("_free_outside_credits", 0)
+    # Graduation courses (QD 285 art. 15.5): credits through the course's own term, the course
+    # excluded (D4, as CP-SAT and the validator).
     for code, need in sorted(graduation_needs(fixture).items()):
         if code in members:
             out.append(f"milestone({_q(code)}, {max(0, need - outside)}).")
 
-    # Lich su mo lop -> offer_hist/offer_seen (muc tieu mem @5).
-    history = fixture.get("opened_semesters") or {}
-    seen: dict[int, set[str]] = {}
-    for sems in history.values():
-        for sem in sems:
-            m = SEMESTER.match(sem)
-            if m:
-                seen.setdefault(int(m.group(2)), set()).add(sem)
-    out.extend(f"offer_seen({part}, {len(sems)})." for part, sems in sorted(seen.items()))
-    for code in sorted(members):
-        counts: dict[int, int] = {}
-        for sem in set(history.get(code, [])):
-            m = SEMESTER.match(sem)
-            if m:
-                counts[int(m.group(2))] = counts.get(int(m.group(2)), 0) + 1
-        out.extend(f"offer_hist({_q(code)}, {part}, {cnt})." for part, cnt in sorted(counts.items()))
+    # Offering history (goal OH, D10): placements in a term part where the course has not run.
+    if "OH" in goal_ids and offering_soft(fixture):
+        pins = pinned(scenario)
+        reported = offered_pairs(scenario)
+        for code in sorted(members):
+            parts = offered_terms(fixture, code)
+            if parts is None:
+                continue
+            for sem, i in sorted(plan_index.items()):
+                if sem[-1] not in parts and pins.get(code) != sem and (code, sem) not in reported:
+                    out.append(f"oh_pair({_q(code)}, {i}).")
 
-    # Chuyen nganh -> major (dem so mon, dung required_count cua khoi con).
+    # Specializations -> major (count of courses, required_count of the child group).
     target = fixture["student"].get("target_specialization")
     for spec in fixture.get("_specializations", []):
         major = _q(spec["code"])
@@ -231,10 +257,10 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
             if spec["code"] == target:
                 out.append(f"student_major({major}).")
 
-    # Tags (pipeline/instances/hcmut/course-tags.json, written by pipeline/tag_classifier): the list of the
+    # Tags (instances/hcmut/course-tags.json, written by pipeline/tag_classifier): the list of the
     # student's program family (all cohorts of the program), else the merged list of every family.
     tag_file = _load_json(TAGS_FILE, {})
-    family = (tag_file.get("families") or {}).get(fixture["curriculum"].get("code"))
+    family = (tag_file.get("families") or {}).get(cur.get("code"))
     tags = (tag_file.get("by_family") or {}).get(family) if family else None
     if tags is None:
         tags = tag_file.get("tags") or {}
@@ -245,57 +271,57 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
                 out.append(f"tag({_q(code)}, {_q(tag)}).")
                 course_tags.setdefault(code, []).append(tag)
 
-    # -- Sinh vien -------------------------------------------------------------
-    statuses = {sc["course_code"]: sc["status"] for sc in fixture["student"]["student_courses"]}
+    # -- Loads (D2, D3): the same numbers as CP-SAT, from the input -------------------
+    base_min, base_max = base_credit_limits(fixture)
+    limits = credit_limits(fixture, scenario)
+    summer_max = max((hi for sem, (lo, hi) in limits.items() if is_summer(sem)), default=0)
+    out.append(f"load_bound(regular, 0, {base_max}). load_bound(summer, 0, {max(summer_max, 0)}).")
+    for sem, i in sorted(plan_index.items(), key=lambda kv: kv[1]):
+        lo, hi = limits[sem]
+        out.append(f"sem_max({i}, {hi}).")
+        if lo > 0:
+            out.append(f"sem_min({i}, {lo}).")
+        if is_summer(sem):
+            out.append(f"summer_plan({i}).")
+        else:
+            out.append(f"soft_min({i}, {base_min}). regular_plan({i}).")
+
+    # -- Goal inputs (same definitions as CP-SAT, planner/solvers/cpsat.py) -----------
+    band = preferred_load(fixture, scenario)
+    if band:
+        out.append(f"pref_band({band[0]}, {band[1]}).")  # S8
+    s_lo, s_hi = summer_preferred_load(fixture)
+    out.append(f"summer_band({s_lo}, {s_hi}).")  # S7
+    out.extend(f"internship({_q(c)})." for c in sorted(summer_courses(fixture) & members))
+    out.extend(f"summer_heavy({_q(c)})." for c in sorted(members) if summer_specialized(fixture, c))  # S9
+    passed_now = {sc["course_code"] for sc in fixture["student"]["student_courses"]
+                  if sc["status"] == "completed"
+                  or (sc["status"] == "in-progress" and scenario["in_progress_results"].get(sc["course_code"]) == "pass")}
+    out.extend(f"wanted({_q(c)})." for c in preferences(scenario)["wanted_courses"]
+               if c in members and c not in passed_now)  # S4
+    out.extend(f"prev({_q(c)}, {plan_index[sem]})." for c, sem in sorted((previous_plan or {}).items())
+               if sem in plan_index)  # S3
+
+    # -- Summer (H14, D5): who may study in which summer, per term and course --------
+    for sem, i in sorted(plan_index.items(), key=lambda kv: kv[1]):
+        if is_summer(sem):
+            out.extend(f"closed({_q(c)}, {i})." for c in sorted(members)
+                       if not summer_allowed(fixture, scenario, c, sem))
+
+    # -- Student ---------------------------------------------------------------------
     results = scenario.get("in_progress_results", {})
-    grades: dict[str, dict[str, Any]] = {}
-    for row in fixture["student"].get("scores") or []:
-        grades[row["code"]] = row
-    unknown_letters: set[str] = set()
-    for code in sorted(members):
-        status = statuses.get(code, "not-started")
-        row = grades.get(code, {})
-        score = _parse_score(row.get("score"))
-        letter = row.get("letter")
-        if status == "not-started" and not (score is not None and score < 400):
-            continue  # chua hoc (diem rot tu file myBK van tinh la mot lan hoc rot)
-        a = _q(code)
-        out.append(f"taken({a}, {t}). attempt_count({a}, 1). last_attempt({a}, {a}).")
-        if status == "in-progress":
-            if results.get(code) == "fail":
-                out.append(f"result({a}, failed).")
-            continue  # dang hoc, gia dinh dau: engine ghi nhan lac quan (status unknown)
-        if letter in GRADES:
-            out.append(f"map(g, {a}, {GRADES[letter]}).")
-        elif letter:
-            unknown_letters.add(str(letter))
-        if score is not None:
-            out.append(f"raw_score({a}, {score}).")
-        elif letter not in GRADES:
-            out.append(f"result({a}, {'passed' if status == 'completed' else 'failed'}).")
-    if unknown_letters:
-        warnings.append(f"Điểm chữ không có trong thang điểm của policy.lp, bỏ qua khi tính GPA: "
-                        f"{', '.join(sorted(unknown_letters))}")
+    if fixture["student"].get("attempts"):
+        _attempt_facts(fixture, members, cal, t, results, out, warnings)
+    else:
+        _status_facts(fixture, members, t, results, out, warnings)
 
-    # Dieu kien tot nghiep (nhom E: ENG_GC, SA4001...) -> external_requirement.
-    aliases = _load_json(ALIASES_FILE, {}).get("aliases") or {}
-    passed_conditions = {code for code, st in (fixture.get("_condition_statuses") or {}).items()
-                         if st == "completed"}
-    for row in fixture["student"].get("graduation_conditions") or []:
-        if row.get("passed"):
-            # Chuong trinh co the dung ma goc (ENG_GC) hoac ma myBK (ENG_GC_600): nhan ca hai.
-            passed_conditions.update({row["code"], aliases.get(row["code"], row["code"])})
-    for code in fixture.get("conditions", []):
-        r = _q(code)
-        out.append(f"external_requirement({r}, course, cumulative, blocking). "
-                   f"external_milestone({r}, graduation, 1).")
-        if code in passed_conditions:
-            out.append(f"external_progress({r}, {t}, 1).")
+    # -- External requirements (policy/external.json, conditions, progress) -----------
+    _external_facts(fixture, cal, t, out, warnings)
 
-    # -- Kich ban --------------------------------------------------------------
+    # -- Request ---------------------------------------------------------------------
     def future_index(code: str, where: str) -> int:
         if code not in plan_index:
-            raise FixtureError(f"{where}: ky {code} khong nam trong cac ky se xep")
+            raise FixtureError(f"{where}: term {code} is not a term to plan")
         return plan_index[code]
 
     for item in scenario.get("locked", []):
@@ -305,19 +331,11 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
     for rec in blocked:
         if rec["semester_code"] in plan_index:
             out.append(f"closed({_q(rec['course_code'])}, {plan_index[rec['semester_code']]}).")
-    if scenario.get("max_credits") is not None:
-        out.extend(f"sem_max({i}, {scenario['max_credits']})." for i in future)
-    for sem, own in (scenario.get("semester_limits") or {}).items():
-        i = future_index(sem, "scenario.semester_limits")
-        if "max" in own:
-            out.append(f"sem_max({i}, {own['max']}).")
-        if "min" in own:
-            out.append(f"sem_min({i}, {own['min']}).")
     for sem in scenario.get("skip_semesters") or []:
         out.append(f"skip({future_index(sem, 'scenario.skip_semesters')}).")
 
-    # Interests: tag names the student picked (Clingo tab). Weight 1 each; optimize.lp maximises the
-    # summed weights of the planned electives' tags, at the lowest priority (taste).
+    # Interests: tag names the student picked. Weight 1 each; goal TA maximises the summed
+    # weights of the planned electives' tags.
     interests = scenario.get("interests") or []
     if not isinstance(interests, list) or not all(isinstance(x, str) and x for x in interests):
         raise FixtureError("scenario.interests: expected a list of tag names")
@@ -328,32 +346,147 @@ def build_program(fixture: dict[str, Any], scenario: dict[str, Any]) -> tuple[st
         if tag not in tagged:
             warnings.append(f'Interest "{tag}" has no course in your program, so it does not change the plan.')
 
-    # -- Doi chieu muc tin chi: policy.lp la quy dinh, du lieu chuong trinh chi de canh bao --
-    pol = _policy_constants()
-    cur = fixture["curriculum"]
-    rules = fixture.get("rules") or {}
-    pairs = [("chương trình", cur.get("min_semester_credits"), cur.get("max_semester_credits")),
-             ("rules của web", rules.get("credits_min"), rules.get("credits_max"))]
-    for label, lo, hi in pairs:
-        if lo is None or hi is None:
-            continue
-        if (lo, hi) != (pol.get("min_load"), pol.get("max_load")):
-            warnings.append(f"Mức tín chỉ kỳ chính theo {label} ({cur.get('code')}): {lo}–{hi} TC, khác policy.lp "
-                            f"({pol.get('min_load')}–{pol.get('max_load')} TC). Bộ giải ASP dùng policy.lp.")
-    summer_max = rules.get("summer_credits_max")
-    if summer_max is not None and summer_max != pol.get("max_load_summer"):
-        warnings.append(f"Tối đa kỳ hè theo rules của web: {summer_max} TC, khác policy.lp "
-                        f"({pol.get('max_load_summer')} TC). Bộ giải ASP dùng policy.lp.")
-
     context = {
         "calendar": cal, "t": t, "n": n, "plan": plan, "plan_index": plan_index,
-        "allow_summer": bool(scenario.get("summer_opt_in")), "course_tags": course_tags,
-        "interests": interests, "warnings": warnings,
+        "allow_summer": any(is_summer(s) for s in plan_index), "course_tags": course_tags,
+        "interests": interests, "warnings": warnings, "goals": goals,
     }
     return "\n".join(out) + "\n", context
 
 
-# --- Giai -----------------------------------------------------------------------
+def _attempt_facts(fixture: dict[str, Any], members: set[str], cal: Calendar, t: int,
+                   results: dict[str, str], out: list[str], warnings: list[str]) -> None:
+    """History from the full record (``student.attempts``, D8): one engine attempt per recorded attempt.
+
+    The first attempt of course E is ``E``, the k-th retake ``rt(E, k)``. A grade becomes
+    ``map(g, X, Grade)`` (the policy decides pass, credit and GPA); without a grade the
+    recorded result is used. An attempt without a term is put in the current term.
+    """
+    graded = bool((fixture.get("policy") or {}).get("grading"))
+    by_course: dict[str, list[tuple[int, dict[str, Any]]]] = {}
+    skipped_outside, skipped_late = set(), set()
+    for k, a in enumerate(fixture["student"]["attempts"]):
+        code = a["course_code"]
+        if code not in members:
+            skipped_outside.add(code)
+            continue
+        i = cal.index(a["semester_code"]) if a.get("semester_code") else t
+        if i > t:
+            skipped_late.add(code)
+            continue
+        by_course.setdefault(code, []).append((max(1, i), a))
+    for code, rows in sorted(by_course.items()):
+        rows.sort(key=lambda r: r[0])
+        objects = [_q(code)] + [f"rt({_q(code)}, {k})" for k in range(1, len(rows))]
+        last_graded = None
+        for obj, (i, a) in zip(objects, rows):
+            out.append(f"taken({obj}, {i}).")
+            kind = a.get("course_kind") or "regular"
+            if kind != "regular":
+                out.append(f"course_kind({obj}, {kind}). kind_known({obj}).")
+            if a.get("grade") is not None and graded:
+                out.append(f"map(g, {obj}, {grade_atom(a['grade'])}).")
+                last_graded = obj
+            elif a.get("result") in ("passed", "failed"):
+                out.append(f"result({obj}, {a['result']}).")
+            elif a.get("result") == "in_progress":
+                if obj == objects[-1] and results.get(code) == "fail":
+                    out.append(f"result({obj}, failed).")
+            else:
+                raise FixtureError(f"attempt {a.get('attempt_id')} of {code}: no grading policy and no result")
+        out.append(f"attempt_count({_q(code)}, {len(rows)}). last_attempt({_q(code)}, {objects[-1]}).")
+        if last_graded is not None:
+            out.append(f"gpa_last({_q(code)}, {last_graded}).")
+    if skipped_outside:
+        warnings.append("Attempts of courses outside the program are not in the ASP engine (GPA leaves them out): "
+                        + ", ".join(sorted(skipped_outside)))
+    if skipped_late:
+        warnings.append("Attempts recorded after the current term are left out: " + ", ".join(sorted(skipped_late)))
+
+
+def _status_facts(fixture: dict[str, Any], members: set[str], t: int, results: dict[str, str],
+                  out: list[str], warnings: list[str]) -> None:
+    """History from course statuses only (web input): every past course is in the current term."""
+    statuses = {sc["course_code"]: sc["status"] for sc in fixture["student"]["student_courses"]}
+    graded = bool((fixture.get("policy") or {}).get("grading"))
+    grades = {row["code"]: row for row in fixture["student"].get("scores") or []}
+    letters = {g["grade"] for g in ((fixture.get("policy") or {}).get("grading") or {}).get("grade_scale", [])}
+    unknown_letters: set[str] = set()
+    for code in sorted(members):
+        status = statuses.get(code, "not-started")
+        row = grades.get(code, {})
+        score = _parse_score(row.get("score")) if graded else None
+        letter = row.get("letter") if graded else None
+        if status == "not-started" and not (score is not None and score < 400):
+            continue  # not taken (a failing score from a myBK file still counts as a failed attempt)
+        a = _q(code)
+        out.append(f"taken({a}, {t}). attempt_count({a}, 1). last_attempt({a}, {a}).")
+        if status == "in-progress":
+            if results.get(code) == "fail":
+                out.append(f"result({a}, failed).")
+            continue  # in progress, assumed passed: the engine keeps it open (status unknown)
+        if letter in letters:
+            out.append(f"map(g, {a}, {grade_atom(letter)}).")
+        elif letter:
+            unknown_letters.add(str(letter))
+        if score is not None:
+            out.append(f"raw_score({a}, {score}).")
+        elif letter not in letters:
+            out.append(f"result({a}, {'passed' if status == 'completed' else 'failed'}).")
+    if unknown_letters:
+        warnings.append("Letter grades not in the grading policy, left out of the GPA: "
+                        + ", ".join(sorted(unknown_letters)))
+
+
+def _external_facts(fixture: dict[str, Any], cal: Calendar, t: int, out: list[str], warnings: list[str]) -> None:
+    """Progress on the external requirements of ``policy/external.json``, and condition courses.
+
+    A requirement with ``satisfied_by_courses`` progresses by one per such course passed. A
+    condition course that no requirement covers becomes its own requirement (pass it once
+    before graduation), as before the external policy existed.
+    """
+    cohort = fixture["curriculum"].get("cohort")
+    reqs = [r for r in ((fixture.get("policy") or {}).get("external") or {}).get("requirements", [])
+            if applies(r, cohort)]
+    aliases = _load_json(ALIASES_FILE, {}).get("aliases") or {}
+    passed = {code for code, st in (fixture.get("_condition_statuses") or {}).items() if st == "completed"}
+    for row in fixture["student"].get("graduation_conditions") or []:
+        if row.get("passed"):
+            # The program may use the base code (ENG_GC) or the myBK code (ENG_GC_600): accept both.
+            passed.update({row["code"], aliases.get(row["code"], row["code"])})
+    covered: set[str] = set()
+    progress: dict[tuple[str, int], int] = {}
+    for r in reqs:
+        courses = r.get("satisfied_by_courses") or []
+        covered.update(courses)
+        done = sum(1 for c in courses if c in passed)
+        if done:
+            progress[(r["id"], t)] = progress.get((r["id"], t), 0) + done
+    known = {r["id"] for r in reqs}
+    unknown = set()
+    for e in fixture["student"].get("external_progress") or []:
+        if e["requirement"] not in known:
+            unknown.add(e["requirement"])
+            continue
+        i = cal.index(e["semester_code"]) if e.get("semester_code") else t
+        if i <= t:
+            key = (e["requirement"], max(0, i))
+            progress[key] = progress.get(key, 0) + int(e["amount"])
+    if unknown:
+        warnings.append("External progress for requirements not in the policy (or not for this cohort), left out: "
+                        + ", ".join(sorted(unknown)))
+    out.extend(f"external_progress({_q(rid)}, {i}, {amount})." for (rid, i), amount in sorted(progress.items()))
+    for code in fixture.get("conditions", []):
+        if code in covered:
+            continue
+        r = _q(code)
+        out.append(f"external_requirement({r}, course, cumulative, blocking). "
+                   f"external_milestone({r}, graduation, 1).")
+        if code in passed:
+            out.append(f"external_progress({r}, {t}, 1).")
+
+
+# --- Solve ----------------------------------------------------------------------
 
 def _term(symbol: clingo.Symbol) -> Any:
     if symbol.type == clingo.SymbolType.Number:
@@ -364,7 +497,7 @@ def _term(symbol: clingo.Symbol) -> Any:
 
 
 def _base_code(symbol: clingo.Symbol) -> tuple[str, bool]:
-    """plan(X, I): X la "MA" hoac rt("MA", K) (hoc lai)."""
+    """plan(X, I): X is "CODE" or rt("CODE", K) (a retake)."""
     if symbol.type == clingo.SymbolType.Function and symbol.name == "rt":
         return symbol.arguments[0].string, True
     return symbol.string, False
@@ -377,25 +510,29 @@ def solve_asp(
     time_limit: float = 30.0,
     threads: int = THREADS,
     solve_limit: int | None = None,
+    strict: bool = False,
 ) -> dict[str, Any]:
-    """Giai bang engine ASP. ``previous_plan`` khong dung (engine chua co muc tieu S3);
-    khac biet so voi lo trinh moc do ``cli.py`` tinh.
+    """Solve with the ASP engine. ``previous_plan`` feeds goal S3 (stay close to it).
 
     ``solve_limit``: stop after this many conflicts (clasp ``--solve-limit``). With
     ``threads=1`` the result is then reproducible, unlike the wall-clock ``time_limit``
     (still applied as a safety net; ``engine_report.stopped_by`` says which limit hit).
+    ``strict``: a request field or goal this solver does not implement raises ``FixtureError``
+    instead of adding a warning (``facts.check_capabilities``).
     """
     fixture = normalize(fixture)
     validate_input(fixture, scenario)
-    facts, ctx = build_program(fixture, scenario)
+    unsupported = check_capabilities(fixture, scenario, "asp", CAPABILITIES["fields"], CAPABILITIES["goals"],
+                                     previous_plan, strict)
+    facts, ctx = build_program(fixture, scenario, previous_plan)
 
     args = ["--opt-mode=opt", "--warn=none", f"--parallel-mode={threads}", f"-c t={ctx['t']}", f"-c n={ctx['n']}"]
     if solve_limit is not None:
         args.append(f"--solve-limit={solve_limit}")
     if ctx["allow_summer"]:
-        args.append("-c extra_sem=1")
+        args.append("-c extra_sem=1")  # which course may use which summer: closed/2 facts (D5)
     ctl = clingo.Control(args)
-    # Khong dung ctl.load(): Clingo tren Windows khong mo duoc duong dan co dau.
+    # Not ctl.load(): Clingo on Windows cannot open paths with accented characters.
     for path in SOURCES_BEFORE:
         ctl.add("base", [], path.read_text(encoding="utf-8"))
     ctl.add("base", [], facts)
@@ -411,12 +548,12 @@ def solve_asp(
     def on_model(model: clingo.Model) -> None:
         nonlocal best, cost, proven
         best = list(model.symbols(shown=True))
-        # Clingo bo cac muc khong co phan tu nao, nen ghep gia tri voi muc uu tien that.
+        # Clingo drops priority levels without elements, so pair values with the real priorities.
         cost = list(zip(model.priority, model.cost))
         proven = model.optimality_proven
 
-    # Gioi han thoi gian: mem (Clingo chi kiem tra giua cac buoc lan truyen; grounding
-    # khong ngat duoc). Gioi han cung la PLANNER_TIMEOUT_MS cua backend (giet tien trinh).
+    # Time limit: soft (Clingo checks it between propagation steps; grounding cannot be
+    # interrupted). The hard limit is the backend's PLANNER_TIMEOUT_MS (kills the process).
     remaining = max(0.1, time_limit - (time.perf_counter() - started))
     timed_out = False
     with ctl.solve(on_model=on_model, async_=True) as handle:
@@ -432,7 +569,7 @@ def solve_asp(
 
     takes = None
     report: dict[str, Any] = {"objective": [], "ground_and_solve_ms": round((time.perf_counter() - started) * 1000)}
-    engine_warnings = list(ctx["warnings"])
+    engine_warnings = unsupported + list(ctx["warnings"])
     if best is not None:
         takes, report, more = _decode(best, cost, ctx)
         report["ground_and_solve_ms"] = round((time.perf_counter() - started) * 1000)
@@ -441,7 +578,13 @@ def solve_asp(
                             else "time_limit" if timed_out else "solve_limit")
 
     result = make_result(fixture, scenario, "clingo", status, takes, previous_plan)
-    result["assumptions"] = _assumptions(fixture, scenario, ctx)
+    result["assumptions"] += [
+        "Solver: ASP engine (planner/solvers/asp/core); rule values from the planner input",
+        "Past courses without a recorded term are placed in the current term",
+        goals_note(fixture, scenario, "asp", CAPABILITIES["goals"]),
+    ]
+    if ctx["interests"]:
+        result["assumptions"].append(f"Interests: {', '.join(ctx['interests'])} (goal TA ranks the electives by them)")
     result["warnings"] = engine_warnings + result["warnings"]
     result["engine_report"] = report
     return result
@@ -450,12 +593,12 @@ def solve_asp(
 def _decode(symbols: list[clingo.Symbol], cost: list[tuple[int, int]], ctx: dict[str, Any]):
     cal: Calendar = ctx["calendar"]
     plan_pos = {code: k for k, code in enumerate(ctx["plan"], start=1)}
+    by_priority = {p: g for g, p in ctx["goals"]}
     takes: list[tuple[str, int]] = []
     report: dict[str, Any] = {
-        "objective": [{"level": OBJECTIVE_LEVELS[8 - p] if 0 <= p <= 8 else str(p), "priority": p, "value": v}
-                      for p, v in cost],
-        "gpa": {}, "majors": [], "fees": {}, "offering_misses": [], "gaps": [],
-        "graduation_blocked": [], "external_missed": [], "external_pending": [],
+        "objective": [{"level": by_priority.get(p, str(p)), "priority": p, "value": v} for p, v in cost],
+        "gpa": {}, "majors": [], "fees": {}, "offering_misses": [], "recommendations_broken": [],
+        "load_deficits": {}, "graduation_blocked": [], "external_missed": [], "external_pending": [],
         "degree_complete": False, "ready_to_graduate": False,
     }
     warnings: list[str] = []
@@ -466,8 +609,6 @@ def _decode(symbols: list[clingo.Symbol], cost: list[tuple[int, int]], ctx: dict
         if s.name == "plan" and len(args) == 2:
             code, _ = _base_code(args[0])
             takes.append((code, plan_pos[cal.code(args[1].number)]))
-        elif s.name == "gap":
-            report["gaps"].append(cal.code(args[0].number))
         elif s.name == "gpa" and len(args) == 2:
             report["gpa"][str(args[0])] = args[1].number / 100
         elif s.name in ("gpa_best_case", "gpa_required_avg"):
@@ -481,9 +622,12 @@ def _decode(symbols: list[clingo.Symbol], cost: list[tuple[int, int]], ctx: dict
             majors_earned.add(_term(args[0]))
         elif s.name == "semester_fee":
             report["fees"][cal.code(args[0].number)] = args[1].number
-        elif s.name == "offer_miss":
-            report["offering_misses"].append({"course": _term(args[0]), "semester": cal.code(args[1].number),
-                                              "missed_percent": args[2].number})
+        elif s.name == "oh":
+            report["offering_misses"].append({"course": _term(args[0]), "semester": cal.code(args[1].number)})
+        elif s.name == "kn_broken":
+            report["recommendations_broken"].append({"course": _term(args[0]), "before": _term(args[1])})
+        elif s.name == "deficit":
+            report["load_deficits"][cal.code(args[0].number)] = args[1].number
         elif s.name == "graduation_blocked":
             report["graduation_blocked"].append(_term(args[0]))
         elif s.name == "ext_missed":
@@ -496,43 +640,8 @@ def _decode(symbols: list[clingo.Symbol], cost: list[tuple[int, int]], ctx: dict
     # Planned courses carrying each interest the student picked ([] when none of them was planned).
     report["interests"] = {tag: sorted(c for c, tags in report["course_tags"].items() if tag in tags)
                            for tag in ctx["interests"]}
-    for key in ("gaps", "graduation_blocked"):
-        report[key].sort()
-    for sem in report["gaps"]:
-        warnings.append(f"Kỳ {sem} bị bỏ trống giữa các kỳ có học vì không xếp được môn nào hợp lệ. "
-                        f"Nếu bạn muốn nghỉ kỳ này, chọn nghỉ kỳ {sem} (skip_semesters).")
+    for key in ("graduation_blocked", "offering_misses", "recommendations_broken"):
+        report[key].sort(key=str)
     for req in report["graduation_blocked"]:
-        warnings.append(f"Chưa đạt điều kiện tốt nghiệp {req} (theo dữ liệu hiện có).")
+        warnings.append(f"External requirement {req} is not met yet (with the data available).")
     return takes, report, warnings
-
-
-def _assumptions(fixture: dict[str, Any], scenario: dict[str, Any], ctx: dict[str, Any]) -> list[str]:
-    notes = [f"Môn đang học {code}: giả định {'đậu' if r == 'pass' else 'rớt'}"
-             for code, r in sorted(scenario["in_progress_results"].items())]
-    pol = _policy_constants()
-    notes += [
-        "Bộ giải: engine ASP (pipeline/planner/solvers/asp/core) với quy định trong policy.lp",
-        "Mọi môn xếp trong tương lai được giả định sẽ đậu",
-        f"Tín chỉ mỗi kỳ chính {pol.get('min_load')}–{pol.get('max_load')} (trừ kỳ cuối có môn), "
-        f"kỳ hè tối đa {pol.get('max_load_summer')} theo policy.lp",
-        "Thứ tự mục tiêu cố định: không bỏ trống kỳ, xong sớm, học lại sớm, đúng kỳ thường mở lớp, "
-        "học phí, kỳ điển hình, môn cấp thấp trước, đều tải",
-        "Mong muốn trên trang Gợi ý (môn muốn học, ưu tiên khuyến nghị, đều tải, khoảng tín chỉ đẹp, "
-        "giữ lộ trình mốc) chưa có trong engine ASP nên không được xét",
-        "Quan hệ học trước (HT) và khuyến nghị (KN) không được xét",
-        "Môn đã học được ghi nhận ở kỳ hiện tại (web không lưu kỳ học của từng môn)",
-    ]
-    if level_enabled(fixture):
-        notes.append("Năm học tính theo khóa; cấp độ môn lấy từ chữ số đầu của mã môn")
-    notes.append("Kỳ hè: được xếp mọi môn (luật kỳ hè của engine)" if ctx["allow_summer"]
-                 else "Không xếp môn vào kỳ hè (bạn chưa bật kỳ hè nào)")
-    for item in scenario.get("locked", []):
-        notes.append(f"Bạn khóa {item['course_code']} vào kỳ {item['semester_code']}")
-    for item in scenario.get("not_offered", []):
-        notes.append(f"Giả định {item['course_code']} không mở kỳ {item['semester_code']}")
-    for sem in scenario.get("skip_semesters") or []:
-        notes.append(f"Bạn nghỉ kỳ {sem}")
-    if ctx["interests"]:
-        notes.append(f"Interests: {', '.join(ctx['interests'])}. Lowest priority: they decide between electives only "
-                     "when every other goal is equal")
-    return notes

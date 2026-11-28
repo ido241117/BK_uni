@@ -15,7 +15,6 @@ sys.path.insert(0, str(PIPELINE))
 
 from instances.importers.hcmut import fetch_curriculum  # noqa: E402
 from instances.importers.hcmut.convert import from_planner_fixture  # noqa: E402
-from planner.solvers.asp.data import from_instance_curriculum  # noqa: E402
 from planner.model.input import (  # noqa: E402
     ConversionError,
     hcmut_to_term,
@@ -156,19 +155,6 @@ def test_fetch_curriculum_writes_a_loadable_instance(tmp_path, monkeypatch):
     uni = load_university(tmp_path / "hcmut")
     assert uni.curricula["CS-2023-KHMT"]["curriculum"] == curriculum
     assert uni.requests["khmt2023-demo"] == requests
-
-
-def test_asp_adapter_turns_relations_into_or_groups():
-    cur = _read(INSTANCES / "hcmut/curricula/cs_2023/curriculum.json")
-    target = cur["courses"][5]["id"]
-    cur["relations"] = [r for r in cur["relations"] if r["course"] != target] + [
-        {"course": target, "type": "prerequisite", "any_of": ["CO1005", "CO1007"], "source": "curriculum"},
-        {"course": target, "type": "prerequisite", "any_of": ["MT1003"]},
-        {"course": target, "type": "recommended", "any_of": ["CH1003"]},
-    ]
-    course = next(c for c in from_instance_curriculum(cur)["courses"] if c["id"] == target)
-    assert course["prerequisites"] == [["CO1005", "CO1007"], ["MT1003"]]
-    assert course["corequisites"] == []
 
 
 def test_validator_rejects_catalog_relation_outside_program(toy_copy):

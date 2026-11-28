@@ -8,8 +8,9 @@ instances/<university>/
   policy/grading.json             grade scale, GPA, retakes      (shared by curricula)
   policy/tuition.json             fees by program and term type  (shared by curricula)
   policy/standing.json            academic-standing thresholds   (optional; synthetic students)
+  policy/external.json            requirements outside the course plan (optional)
   curricula/<id>/curriculum.json  courses, relations, groups, majors, planning bounds
-  curricula/<id>/graduation.json  graduation and external requirements (optional)
+  curricula/<id>/graduation.json  graduation requirements: groups, credits, GPA (optional)
   curricula/<id>/popularity.json  past enrollment per elective (optional)
   curricula/<id>/official_plan.json  the published term-by-term plan (optional)
   students/<set>.json             student histories as flat tables
@@ -64,13 +65,14 @@ are listed in their sections below. Its `curriculum.json` section is replaced by
 | `preferred_load`, `summer_preferred_load` | `[low, high]` soft target, null = none |
 | `summer_always_allowed` | Courses that may be taken in summer without the student opting in (e.g. an internship) |
 | `level_min_year` | `{"<level>": <earliest study year>}`; null = no level rule. Uses `courses[].level` |
+| `year_credit_thresholds` | Optional, with `level_min_year`: accumulated credits that start study years 2, 3, 4, ... (e.g. `[28, 56, 84]`, QD 285 art. 24). Then the study year of a term is reached by credits earned before it, not by cohort year. Read by both solvers and the validator (`rules.year_by_credits`) |
 
 ### courses[]
 
 | Field | Meaning |
 |---|---|
 | `id`, `name`, `credits` | Required |
-| `kind` | `regular` (default) or `condition`: a non-credit requirement recorded as a course (e.g. a language certificate) |
+| `kind` | `regular` (default) or `condition`: a non-credit requirement recorded as a course (e.g. a language certificate). Every 0-credit course must be `condition` (an external requirement, never planned) |
 | `level` | Course level (int), optional |
 | `typical_year`, `typical_part` | Term the official plan puts the course in; not a constraint |
 | `allowed_terms` | Term parts where the rules allow the course (hard); omitted = all |
@@ -89,7 +91,7 @@ One row is one AND-clause; its `any_of` list is the OR alternatives.
 | Field | Meaning |
 |---|---|
 | `course` | The course that has the requirement |
-| `type` | `prerequisite` (passed before), `corequisite` (before or same term), `recommended` (soft), `prior` (attempted before; currently ignored by the solvers) |
+| `type` | `prerequisite` (passed before), `corequisite` (before or same term), `recommended` (soft), `prior` (an obsolete name of a prerequisite; the planner treats it as `prerequisite`) |
 | `any_of` | Non-empty list of course ids |
 | `source` | `curriculum` (from this program) or `inferred` (from other programs); optional |
 
@@ -148,6 +150,35 @@ any of:
 | `semester_targets` | `{term: credits}` |
 | `summer_opt_in` | Summer terms the student is willing to study |
 | `preferences` | Soft-objective settings (solver-specific keys) |
+
+## policy/external.json
+
+Optional. Requirements a student must meet outside the course plan (language standard,
+physical education, social work, ...). The ASP engine reports their state (`engine_report`:
+`graduation_blocked`, `external_pending`, `external_missed`); no solver schedules them.
+
+`{"schema_version": 1, "requirements": [...]}`, each requirement:
+
+| Field | Meaning |
+|---|---|
+| `id`, `name` | `id` is what `students[].external_progress[].requirement` names |
+| `unit` | What is counted: `days`, `courses`, `certificate`, `level`, ... |
+| `enforcement` | `blocking` (graduation waits for it) or `warning` |
+| `cohorts` | `{"from", "to"}` intake years it applies to; null = open |
+| `satisfied_by_courses` | Optional: condition courses (`kind: condition`) whose pass counts 1 each |
+| `milestones` | `[{"deadline": {"type": "end_of_year", "year": Y} or {"type": "graduation"}, "min": N}]`: at least N units by the deadline |
+| `source`, `review` | Where the rule comes from; `review: true` = not yet checked against the regulation |
+
+Progress = passed `satisfied_by_courses` + the student's `external_progress` amounts.
+
+## How the solvers receive the policy
+
+`planner.model.input.to_planner_fixture(..., policy=...)` copies `grading`, `tuition`,
+`external` and the curriculum's `graduation` into the planner input (`fixture["policy"]`),
+together with every attempt (term, grade) and the external progress of the student. The
+solvers read nothing else, so the evaluation cache key (a hash of the input) covers the
+policy. The ASP engine compiles it with `planner/solvers/asp/policy.py`; per-term load
+bounds always come from `planning`, for every solver.
 
 ## policy/standing.json
 

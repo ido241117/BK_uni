@@ -34,6 +34,8 @@ def check(cfg=None) -> list[str]:
     listed = [c for s in off["semesters"] for c in s["required"]]
     if len(listed) != len(set(listed)):
         problems.append("a required course is listed twice")
+    # Condition courses (e.g. PE1003, PE1005: external requirements) are in the PDF but not planned.
+    listed = [c for c in listed if c not in set(cur.raw.get("conditions", []))]
     if set(listed) != set(required["members"]):
         problems.append(f"required set differs: missing {sorted(set(required['members']) - set(listed))}, "
                         f"extra {sorted(set(listed) - set(required['members']))}")

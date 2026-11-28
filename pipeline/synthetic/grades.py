@@ -16,7 +16,7 @@ import math
 import numpy as np
 
 # Pass marks: D (4.0) in general, C (5.5) for graduation courses
-# (QD285 Dieu 17.2 p.13, Dieu 18.3 p.14; see docs/04-luat-qd285.md section 2).
+# (QD285 Dieu 17.2 p.13, Dieu 18.3 p.14; see docs/CONSTRAINTS.md section 5.2).
 PASS_SCORE = 4.0
 GRADUATION_PASS_SCORE = 5.5
 

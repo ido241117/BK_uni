@@ -18,35 +18,5 @@
       "value": "2.50"
     }
   ],
-  "external_requirements": [
-    {
-      "id": "social_work_days",
-      "unit": "days",
-      "mode": "cumulative",
-      "enforcement": "blocking",
-      "milestones": [
-        {
-          "deadline": {
-            "type": "end_of_year",
-            "year": 1
-          },
-          "min": 3
-        },
-        {
-          "deadline": {
-            "type": "end_of_year",
-            "year": 2
-          },
-          "min": 6
-        },
-        {
-          "deadline": {
-            "type": "graduation"
-          },
-          "min": 15
-        }
-      ]
-    }
-  ],
-  "_provenance": "copied from cs_2023 (same program, CS 2023); not checked against the database"
+  "_provenance": "copied from cs_2023 (same program, CS 2023); not checked against the database. External requirements moved to policy/external.json on 2026-11-28."
 }

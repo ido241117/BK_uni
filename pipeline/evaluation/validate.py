@@ -85,7 +85,7 @@ def validate_plan(
         t = when[course]
         earlier = related in when and when[related] < t
         same = related in when and when[related] == t
-        # QD 285 Dieu 2. "prior" bi bo (18/11); "recommended" la mem, khong xet o day.
+        # QD 285 Dieu 2. "prior" is a prerequisite (normalize, 28/11); "recommended" la mem, khong xet o day.
         if kind == "prerequisite" and not (related in passed or earlier):
             errors.append(f"{course}: chua dat tien quyet {related}")
         elif kind == "corequisite" and not (related in passed or earlier or same):
@@ -109,9 +109,14 @@ def validate_plan(
             if t > limit:
                 errors.append(f"{course}: xep sau han tot nghiep {scenario['graduate_by']}")
 
-    # Cap do mon (QD 285 Dieu 15.4), nam hoc theo khoa.
+    # Cap do mon (QD 285 Dieu 15.4): nam hoc theo khoa, or with rules.year_by_credits by the
+    # credits accumulated before the term (Q6), as both solvers do.
     if rules.get("course_level"):
         cohort = cur["cohort"]
+        thresholds = rules.get("year_by_credits")
+        curriculum_codes = {cc["course_code"] for cc in fixture["curriculum_courses"]}
+        base_acc = (sum(credits[c] for c in passed if c in curriculum_codes)
+                    + fixture.get("_free_outside_credits", 0))
         for course, t in when.items():
             digits = [ch for ch in course if ch.isdigit()]
             head = course[: course.index(digits[0])] if digits else ""
@@ -119,6 +124,14 @@ def validate_plan(
                 continue
             level = int(digits[0])
             need = 1 if level <= 1 else 2 if level == 2 else 3
+            if thresholds:
+                if need >= 2:
+                    floor = thresholds[min(need - 2, len(thresholds) - 1)]
+                    have = base_acc + sum(credits[c] for c, u in when.items() if u < t)
+                    if have < floor:
+                        errors.append(f"{course}: level {level} needs {floor} accumulated credits before "
+                                      f"term {sem_of[t]}, has {have}")
+                continue
             year = int(sem_of[t][:2]) - cohort % 100 + 1
             if year < need:
                 errors.append(f"{course}: cap {level} can nam {need}, ky {sem_of[t]} moi la nam {year}")

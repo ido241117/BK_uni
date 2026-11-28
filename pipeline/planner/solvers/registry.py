@@ -41,6 +41,12 @@ def hash_files(paths) -> str:
     return h.hexdigest()
 
 
+def shared_model_files() -> tuple[str, ...]:
+    """Planner code every built-in solver runs (input checks, normalization, result building)."""
+    from planner.model import facts, normalize, report, result, student_requests
+    return tuple(m.__file__ for m in (facts, normalize, report, result, student_requests))
+
+
 class AspSolver:
     """``planner.solvers.asp.adapter`` (engine in ``pipeline/planner/solvers/asp``).
 
@@ -60,7 +66,9 @@ class AspSolver:
 
     def fingerprint(self) -> str:
         from planner.solvers.asp import adapter as S
-        return hash_files((*S.SOURCES_BEFORE, *S.SOURCES_AFTER, S.__file__, S.TAGS_FILE))
+        from planner.solvers.asp import policy
+        return hash_files((*S.SOURCES_BEFORE, *S.SOURCES_AFTER, S.__file__, policy.__file__, S.TAGS_FILE,
+                           S.ALIASES_FILE, *shared_model_files()))
 
     def solve(self, fx: dict, sc: dict, st: dict) -> dict:
         from planner.solvers.asp.adapter import solve_asp
@@ -81,9 +89,8 @@ class CpSatSolver:
         return {"time_limit": float(s["time_limit"])}
 
     def fingerprint(self) -> str:
-        from planner.model import facts, normalize
         from planner.solvers import cpsat
-        return hash_files((cpsat.__file__, facts.__file__, normalize.__file__))
+        return hash_files((cpsat.__file__, *shared_model_files()))
 
     def solve(self, fx: dict, sc: dict, st: dict) -> dict:
         from planner.solvers.cpsat import solve_cpsat

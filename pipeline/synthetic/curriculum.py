@@ -72,7 +72,14 @@ class Curriculum:
         # The planner input for this curriculum; _fixture() replaces the student each time.
         nobody = {"students": [{"student_id": "synthetic", "current_term": canonical["planning"]["first_term"]}],
                   "attempts": []}
-        self.raw = to_planner_fixture(canonical, nobody, "synthetic")
+        policy_dir = PIPELINE / run["policy"]
+        # The policy goes into the planner input, as for every solver input (planner.model.input).
+        policy_docs = {name: json.loads((policy_dir / f"{name}.json").read_text(encoding="utf-8"))
+                       for name in ("grading", "tuition", "external") if (policy_dir / f"{name}.json").is_file()}
+        graduation = (PIPELINE / run["curriculum"]).parent / "graduation.json"
+        if graduation.is_file():
+            policy_docs["graduation"] = json.loads(graduation.read_text(encoding="utf-8"))
+        self.raw = to_planner_fixture(canonical, nobody, "synthetic", policy=policy_docs)
         # Elective groups are keyed by their curriculum id; the planner keeps only names.
         self._group_ids = {g["name"]: g["id"] for g in canonical["groups"]}
         self.free_group = next(g["id"] for g in canonical["groups"] if g.get("scope") == "any")

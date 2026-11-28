@@ -1,7 +1,8 @@
 """Dap an duoi day duoc XEP TAY tu fixture toy.json, khong lay tu output cua solver.
 
-Dap an tinh theo luat cua planner (toi da 12 TC/ky cua toy.json), nen chay bang CP-SAT.
-Engine ASP dung quy dinh cua policy.lp (14-21 TC): test rieng o test_solve_asp.py.
+Dap an tinh theo luat cua planner (toi da 12 TC/ky cua toy.json), chay bang CP-SAT. The ASP
+engine follows the same rules (docs/PLANNER-PARITY.md); its own tests are in test_solve_asp.py
+and test_parity.py.
 """
 
 from __future__ import annotations
@@ -132,8 +133,8 @@ def test_validator_uses_scenario_assumptions(fixture):
 
 
 # --- Doi chieu hai bo giai (engine ASP va CP-SAT) ---------------------
-# Hai bo giai dung luat khac nhau (policy.lp vs rules cua web) nen muc tieu co the LECH;
-# o day chi kiem tra so sanh chay duoc va CP-SAT van hop le theo validator.
+# Same input, rules and goals (docs/PLANNER-PARITY.md): on the toy requests both plans are valid
+# and the comparison agrees (same status, last term, total credits and changes).
 
 def test_compare_runs_both_solvers_on_toy(fixture):
     from evaluation.compare import agree, run_pair
@@ -141,8 +142,8 @@ def test_compare_runs_both_solvers_on_toy(fixture):
     for scenario in fixture["scenarios"]:
         rows = run_pair(fixture, scenario, None, 30.0)
         assert [r["solver"] for r in rows] == ["asp", "cp-sat"]
-        assert agree(rows) in ("KHOP", "LECH"), scenario["id"]
-        assert rows[1]["valid"], scenario["id"]
+        assert agree(rows) == "KHOP", scenario["id"]
+        assert all(r["valid"] for r in rows if r["objective"] is not None), scenario["id"]
 
 
 @pytest.mark.parametrize("seed", [1, 2, 3])

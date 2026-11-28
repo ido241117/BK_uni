@@ -15,7 +15,10 @@ from typing import Any
 from ortools.sat.python import cp_model
 
 from planner.model.facts import (
+    SCENARIO_FIELDS,
     assumed_fails,
+    check_capabilities,
+    goals_note,
     base_credit_limits,
     course_level,
     credit_limits,
@@ -42,6 +45,13 @@ from planner.model.facts import (
 from planner.model.normalize import normalize
 from planner.model.result import make_result
 
+# What this solver implements (docs/PLANNER-PARITY.md): every request field but the
+# interests, and every shared goal. The solver-specific goals (RT, FEE, LO, TA) are ASP's.
+CAPABILITIES = {
+    "fields": frozenset(set(SCENARIO_FIELDS) - {"interests"} | {"rules.pins_absolute"}),
+    "goals": frozenset({"ST", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "OH"}),
+}
+
 
 def solve_cpsat(
     fixture: dict[str, Any],
@@ -49,10 +59,24 @@ def solve_cpsat(
     previous_plan: dict[str, str] | None = None,
     time_limit: float = 30.0,
     linearization_level: int | None = None,
+    strict: bool = False,
 ) -> dict[str, Any]:
-    """``linearization_level=0`` tat noi long tuyen tinh (chi dung de chan doan)."""
+    """``linearization_level=0`` tat noi long tuyen tinh (chi dung de chan doan).
+
+    ``strict``: a request field or goal this solver does not implement raises ``FixtureError``
+    instead of adding a warning (``facts.check_capabilities``).
+    """
     fixture = normalize(fixture)
     validate_input(fixture, scenario)
+    unsupported = check_capabilities(fixture, scenario, "cp-sat", CAPABILITIES["fields"], CAPABILITIES["goals"],
+                                     previous_plan, strict)
+    result = _solve(fixture, scenario, previous_plan, time_limit, linearization_level)
+    result["warnings"] = unsupported + result["warnings"]
+    result["assumptions"].append(goals_note(fixture, scenario, "cp-sat", CAPABILITIES["goals"]))
+    return result
+
+
+def _solve(fixture, scenario, previous_plan, time_limit, linearization_level) -> dict[str, Any]:
     semesters = plan_semesters(fixture)
     n = len(semesters)
     index = {code: i for i, code in enumerate(semesters, start=1)}
@@ -151,7 +175,7 @@ def solve_cpsat(
             for i in sems:
                 model.add(broken >= x[c, i] - before(r, i))
             kn_terms.append(broken)
-        # "prior" bi bo theo quyet dinh 18/11
+        # "prior" never arrives here: normalize() turns it into "prerequisite" (28/11).
 
     # --- Mo mon, khoa mon, han tot nghiep, cap do mon ---------------------
     blocked = [r for r in fixture["offerings"]["records"] if r["status"] == "not-offered"]
@@ -217,13 +241,16 @@ def solve_cpsat(
         if is_summer(semesters[i - 1]) and free(c, i) and not summer_allowed(fixture, scenario, c, semesters[i - 1]):
             model.add(var == 0)
 
-    # --- Mon tot nghiep: du TC tich luy truoc ky hoc (QD 285 Dieu 15.5) -----
+    # --- Graduation courses (QD 285 art. 15.5): credits through the course's own term ----------
+    # Counted as the ASP engine and the validator do (docs/PLANNER-PARITY.md): credits before
+    # the term plus the other courses of that term, the course itself excluded.
     for g, need_credits in graduation_needs(fixture).items():
         if g not in taken:
             continue
         for i in sems:
             if free(g, i):
-                model.add(acc_before(i) >= need_credits).only_enforce_if(x[g, i])
+                through = acc_before(i) + load[i] - retake_load[i] - credits[g] * x[g, i]
+                model.add(through >= need_credits).only_enforce_if(x[g, i])
     used = {i: model.new_bool_var(f"used_{i}") for i in sems}
     targets = {index[s]: v for s, v in (scenario.get("semester_targets") or {}).items() if s in index}
     # caps: muc toi da THAT cua tung ky (sau khi noi theo o TC dau ky va ghim). Moi bien phu ben
@@ -346,6 +373,8 @@ def solve_cpsat(
     }
     objective, weight = 0, 1
     for name in reversed(preference_order(fixture, scenario)):
+        if name not in terms:  # a goal only another solver implements (facts.SOLVER_GOALS)
+            continue
         expr, ub = terms[name]
         objective += weight * expr
         weight *= ub + 1

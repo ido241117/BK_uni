@@ -91,11 +91,43 @@ def _map_request_terms(scenario: dict[str, Any], fn) -> dict[str, Any]:
     return out
 
 
+def _attempt_result(attempt: dict[str, Any], passing: dict[str, bool] | None) -> str:
+    """Canonical result of an attempt; from the grade (grading policy) when ``result`` is absent."""
+    if attempt.get("result") is not None:
+        return attempt["result"]
+    if passing is None or attempt.get("grade") not in passing:
+        raise ConversionError(f"attempt {attempt.get('attempt_id')}: no result, and its grade "
+                              f"{attempt.get('grade')!r} cannot be read without the grading policy")
+    return "passed" if passing[attempt["grade"]] else "failed"
+
+
+def _course_statuses(attempts: list[dict[str, Any]], passing: dict[str, bool] | None) -> list[dict[str, Any]]:
+    """One planner status per course: completed if any attempt passed, else the latest attempt's.
+
+    Attempts are ordered by term (a missing term counts as the latest), then by file order.
+    """
+    ordered = sorted(enumerate(attempts), key=lambda ia: (ia[1].get("term") is None, ia[1].get("term") or "", ia[0]))
+    status: dict[str, str] = {}
+    for _, a in ordered:
+        result = _attempt_result(a, passing)
+        if status.get(a["course"]) != "completed":
+            status[a["course"]] = RESULT_TO_STATUS[result]
+    return [{"course_code": c, "status": s} for c, s in status.items()]
+
+
 def to_planner_fixture(curriculum: dict[str, Any], students: dict[str, Any], student_id: str,
-                       requests: list[dict[str, Any]] | None = None) -> dict[str, Any]:
-    """Canonical -> planner fixture (the input CP-SAT, the validator and synthetic/ read)."""
+                       requests: list[dict[str, Any]] | None = None,
+                       policy: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Canonical -> planner fixture (the input CP-SAT, the ASP adapter and the validator read).
+
+    ``policy`` (optional): ``{"grading", "tuition", "external", "graduation"}`` documents of the
+    university (instances/SCHEMA.md). It is copied into ``fixture["policy"]`` so that every
+    solver, and the evaluation cache key, sees the same policy.
+    """
     student = next(s for s in students["students"] if s["student_id"] == student_id)
     attempts = [a for a in students["attempts"] if a["student_id"] == student_id]
+    grading = (policy or {}).get("grading")
+    passing = {g["grade"]: bool(g["passing"]) for g in grading["grade_scale"]} if grading else None
     p = curriculum["planning"]
     semesters = [term_to_hcmut(t) for t in term_sequence(p["first_term"], p["horizon"], p["summer_terms"])]
     courses = curriculum["courses"]
@@ -103,6 +135,8 @@ def to_planner_fixture(curriculum: dict[str, Any], students: dict[str, Any], stu
     rules: dict[str, Any] = {}  # load bounds go to curriculum.min/max_semester_credits
     if p.get("level_min_year"):
         rules["course_level"] = True
+    if p.get("year_credit_thresholds"):
+        rules["year_by_credits"] = list(p["year_credit_thresholds"])
     for src, dst in (("summer_max_load", "summer_credits_max"), ("preferred_load", "preferred_load"),
                      ("summer_preferred_load", "summer_preferred_load")):
         if p.get(src) is not None:
@@ -125,6 +159,7 @@ def to_planner_fixture(curriculum: dict[str, Any], students: dict[str, Any], stu
             "pool_scope": g.get("scope", "listed"),
             "members": list(g["course_ids"]),
             **({"pool_course_credits": g.get("slot_credits")} if g.get("scope") == "any" else {}),
+            **({"max_count": g["max_courses"]} if g.get("max_courses") is not None else {}),
         })
     for m in curriculum["majors"]:
         if "refines_group" not in m:
@@ -149,6 +184,7 @@ def to_planner_fixture(curriculum: dict[str, Any], students: dict[str, Any], stu
         "schema_version": 1,
         "curriculum": {
             "code": curriculum["id"], "name": curriculum["name"], "cohort": curriculum["cohort"],
+            **({"program": curriculum["program"]} if curriculum.get("program") else {}),
             "duration_years": p["duration_years"],
             "min_semester_credits": p["min_load"], "max_semester_credits": p["max_load"],
         },
@@ -191,9 +227,25 @@ def to_planner_fixture(curriculum: dict[str, Any], students: dict[str, Any], stu
         "current_semester": term_to_hcmut(student["current_term"]),
         **({"source": student["source"]} if student.get("source") is not None else {}),
         **({"target_specialization": student["declared_major"]} if student.get("declared_major") else {}),
-        "student_courses": [{"course_code": a["course"], "status": RESULT_TO_STATUS[a["result"]]}
-                            for a in attempts],
+        "student_courses": _course_statuses(attempts, passing),
     }
+    # Full record (docs/PLANNER-PARITY.md): every attempt with its term and grade, and the
+    # progress on external requirements. Fields are the canonical ones, terms as semester codes.
+    if any(a.get("term") is not None or a.get("grade") is not None for a in attempts)             or len({a["course"] for a in attempts}) != len(attempts):
+        fx["student"]["attempts"] = [
+            {("course_code" if k == "course" else "semester_code" if k == "term" else k):
+             (term_to_hcmut(v) if k == "term" and v is not None else v)
+             for k, v in a.items() if k != "student_id"}
+            for a in attempts]
+    progress = [e for e in students.get("external_progress", []) if e["student_id"] == student_id]
+    if progress:
+        fx["student"]["external_progress"] = [
+            {"requirement": e["requirement"],
+             "semester_code": term_to_hcmut(e["term"]) if e.get("term") is not None else None,
+             "amount": e["amount"]} for e in progress]
+    if policy:
+        fx["policy"] = {k: copy.deepcopy(v) for k, v in policy.items()
+                        if k in ("grading", "tuition", "external", "graduation") and v is not None}
     if requests is not None:
         scenarios = []
         for req in requests:
@@ -220,4 +272,13 @@ def load_fixture(path: str | Path) -> dict[str, Any]:
         raise ConversionError(f"{path}: requests for several students: {sorted(students)}")
     curriculum_id, student_id = students.pop()
     doc, _ = uni.student_record(student_id)
-    return to_planner_fixture(uni.curricula[curriculum_id]["curriculum"], doc, student_id, requests)
+    entry = uni.curricula[curriculum_id]
+    return to_planner_fixture(entry["curriculum"], doc, student_id, requests, university_policy(uni, curriculum_id))
+
+
+def university_policy(uni: Any, curriculum_id: str) -> dict[str, Any]:
+    """The policy documents ``to_planner_fixture`` copies into the input (``instances.loader.University``)."""
+    out = {k: uni.policy[k] for k in ("grading", "tuition", "external") if k in uni.policy}
+    if "graduation" in uni.curricula[curriculum_id]:
+        out["graduation"] = uni.curricula[curriculum_id]["graduation"]
+    return out

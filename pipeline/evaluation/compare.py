@@ -6,8 +6,9 @@
 
 Hai bo giai co the tra hai lo trinh KHAC nhau ma van dung, mien la cung gia tri
 muc tieu. Vi vay so sanh bo ba (ky cuoi, tong tin chi, so thay doi), khong so
-tung mon. Engine ASP dung quy dinh cua policy.lp va thu tu muc tieu rieng
-(planner/solvers/asp/ADAPTER.md), nen "LECH" la ket qua binh thuong: day chinh la diem can so sanh.
+tung mon. Since 2026-11-28 both solvers use the same input, rules and goal list
+(docs/PLANNER-PARITY.md); "LECH" then points to a solver that did not prove optimality or to a
+goal only one solver implements (each result lists the goals it used).
 """
 
 from __future__ import annotations

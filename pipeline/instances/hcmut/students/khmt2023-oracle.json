@@ -3,7 +3,7 @@
   "students": [
     {
       "student_id": "S001",
-      "curriculum_id": "cs_2023",
+      "curriculum_id": "CS-2023-KHMT",
       "grading_policy": "policy_2020",
       "cohort": 2024,
       "enrollment_term": "2024-1",
@@ -11,7 +11,7 @@
     },
     {
       "student_id": "S002",
-      "curriculum_id": "cs_2023",
+      "curriculum_id": "CS-2023-KHMT",
       "grading_policy": "policy_2020",
       "cohort": 2024,
       "enrollment_term": "2024-1",
@@ -19,7 +19,7 @@
     },
     {
       "student_id": "S003",
-      "curriculum_id": "cs_2023",
+      "curriculum_id": "CS-2023-KHMT",
       "grading_policy": "policy_2020",
       "cohort": 2024,
       "enrollment_term": "2024-1",
@@ -27,7 +27,7 @@
     },
     {
       "student_id": "S004",
-      "curriculum_id": "cs_2023",
+      "curriculum_id": "CS-2023-KHMT",
       "grading_policy": "policy_2020",
       "cohort": 2024,
       "enrollment_term": "2024-1",
@@ -35,7 +35,7 @@
     },
     {
       "student_id": "S005",
-      "curriculum_id": "cs_2023",
+      "curriculum_id": "CS-2023-KHMT",
       "grading_policy": "policy_2020",
       "cohort": 2024,
       "enrollment_term": "2024-1",
@@ -43,7 +43,7 @@
     },
     {
       "student_id": "S006",
-      "curriculum_id": "cs_2023",
+      "curriculum_id": "CS-2023-KHMT",
       "grading_policy": "policy_2020",
       "cohort": 2024,
       "enrollment_term": "2024-1",
@@ -51,7 +51,7 @@
     },
     {
       "student_id": "S007",
-      "curriculum_id": "cs_2023",
+      "curriculum_id": "CS-2023-KHMT",
       "grading_policy": "policy_2020",
       "cohort": 2024,
       "enrollment_term": "2024-1",

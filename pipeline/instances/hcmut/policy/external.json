@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "_review": "Extracted 2026-11-28 from the QD 285 summary (now docs/CONSTRAINTS.md section 5) and the former cs_2023 graduation.json; reviewed by the team on 2026-11-28 (review=false). Entries added later keep review=true until checked.",
+  "requirements": [
+    {
+      "id": "social_work_days",
+      "name": "Social work days",
+      "unit": "days",
+      "enforcement": "blocking",
+      "cohorts": {
+        "from": null,
+        "to": null
+      },
+      "milestones": [
+        {
+          "deadline": {
+            "type": "end_of_year",
+            "year": 1
+          },
+          "min": 3
+        },
+        {
+          "deadline": {
+            "type": "end_of_year",
+            "year": 2
+          },
+          "min": 6
+        },
+        {
+          "deadline": {
+            "type": "graduation"
+          },
+          "min": 15
+        }
+      ],
+      "source": "former cs_2023 graduation.json (research data); no article found in the QD 285 summary",
+      "review": false
+    },
+    {
+      "id": "physical_education",
+      "name": "Physical education (PE1003, PE1005)",
+      "unit": "courses",
+      "enforcement": "blocking",
+      "cohorts": {
+        "from": null,
+        "to": null
+      },
+      "satisfied_by_courses": [
+        "PE1003",
+        "PE1005"
+      ],
+      "milestones": [
+        {
+          "deadline": {
+            "type": "end_of_year",
+            "year": 2
+          },
+          "min": 2
+        },
+        {
+          "deadline": {
+            "type": "graduation"
+          },
+          "min": 2
+        }
+      ],
+      "source": "QD 285 art. 24, p.17 (physical and military education must be completed before year 3)",
+      "review": false
+    },
+    {
+      "id": "military_education",
+      "name": "Military training (MI1003)",
+      "unit": "courses",
+      "enforcement": "blocking",
+      "cohorts": {
+        "from": null,
+        "to": null
+      },
+      "satisfied_by_courses": [
+        "MI1003"
+      ],
+      "milestones": [
+        {
+          "deadline": {
+            "type": "end_of_year",
+            "year": 2
+          },
+          "min": 1
+        },
+        {
+          "deadline": {
+            "type": "graduation"
+          },
+          "min": 1
+        }
+      ],
+      "source": "QD 285 art. 24, p.17 (physical and military education must be completed before year 3)",
+      "review": true
+    },
+    {
+      "id": "english_graduation",
+      "name": "English graduation standard (TOEIC Listening-Reading 600, Speaking-Writing 200)",
+      "unit": "certificate",
+      "enforcement": "blocking",
+      "cohorts": {
+        "from": 2020,
+        "to": null
+      },
+      "satisfied_by_courses": [
+        "ENG_GC"
+      ],
+      "milestones": [
+        {
+          "deadline": {
+            "type": "graduation"
+          },
+          "min": 1
+        }
+      ],
+      "source": "QD 285 appendix 7, p.35 (standard programs); only Listening-Reading is needed to register the thesis (p.36)",
+      "review": false
+    },
+    {
+      "id": "english_yearly",
+      "name": "Yearly English standard (year 2: English 1; year 3: English 1-3; year 4: English 1-4)",
+      "unit": "level",
+      "enforcement": "blocking",
+      "cohorts": {
+        "from": null,
+        "to": null
+      },
+      "milestones": [
+        {
+          "deadline": {
+            "type": "end_of_year",
+            "year": 1
+          },
+          "min": 1
+        },
+        {
+          "deadline": {
+            "type": "end_of_year",
+            "year": 2
+          },
+          "min": 3
+        },
+        {
+          "deadline": {
+            "type": "end_of_year",
+            "year": 3
+          },
+          "min": 4
+        }
+      ],
+      "source": "QD 285 appendix 7, p.35 (Vietnamese-taught programs); the level reached is reported through external_progress",
+      "review": false
+    },
+    {
+      "id": "basic_it",
+      "name": "Basic IT standard",
+      "unit": "certificate",
+      "enforcement": "blocking",
+      "cohorts": {
+        "from": 2021,
+        "to": null
+      },
+      "milestones": [
+        {
+          "deadline": {
+            "type": "end_of_year",
+            "year": 1
+          },
+          "min": 1
+        }
+      ],
+      "source": "QD 285 appendix 9, p.40 (needed to be placed in year 2)",
+      "review": false
+    },
+    {
+      "id": "mos",
+      "name": "MOS certificate (Excel and PowerPoint)",
+      "unit": "certificate",
+      "enforcement": "blocking",
+      "cohorts": {
+        "from": 2021,
+        "to": null
+      },
+      "milestones": [
+        {
+          "deadline": {
+            "type": "graduation"
+          },
+          "min": 1
+        }
+      ],
+      "source": "QD 285 appendix 9, p.40 (needed to register the thesis; the engine has no 'before course' deadline, so graduation is used)",
+      "review": false
+    },
+    {
+      "id": "student_activities",
+      "name": "Student activities (SA4001)",
+      "unit": "certificate",
+      "enforcement": "blocking",
+      "cohorts": {
+        "from": null,
+        "to": null
+      },
+      "satisfied_by_courses": [
+        "SA4001"
+      ],
+      "milestones": [
+        {
+          "deadline": {
+            "type": "graduation"
+          },
+          "min": 1
+        }
+      ],
+      "source": "web database group 'E. Dieu kien tot nghiep'; QD 285 art. 15.5, p.12 also asks 70% of the training (ren luyen) program for the thesis",
+      "review": false
+    }
+  ]
+}

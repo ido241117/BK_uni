@@ -10,12 +10,13 @@ import math
 import re
 from typing import Any
 
-# Rang buoc cung. "prior" (hoc truoc) bi BO theo quyet dinh 18/11: chap nhan
-# trong dau vao nhung khong xet. "recommended" (khuyen nghi) la mong muon mem S6.
+# Rang buoc cung. "recommended" (khuyen nghi) la mong muon mem S6. "prior" (hoc truoc) is an
+# obsolete name of a prerequisite (decision of 28/11/2026, replacing "ignored" of 18/11):
+# normalize() turns it into "prerequisite", so no solver sees it.
 HARD_RELATIONS = ("prerequisite", "corequisite")
 SOFT_RELATIONS = ("recommended",)
-IGNORED_RELATIONS = ("prior",)
-ALL_RELATIONS = HARD_RELATIONS + SOFT_RELATIONS + IGNORED_RELATIONS
+PRIOR_RELATION = "prior"
+ALL_RELATIONS = HARD_RELATIONS + SOFT_RELATIONS + (PRIOR_RELATION,)
 STATUSES = ("not-started", "in-progress", "completed", "failed")
 
 # Thu tu uu tien mong muon mem (ke hoach muc 3.2). S5 chi xet khi bat balanced_load;
@@ -33,6 +34,17 @@ DEFAULT_SUMMER_MAX = 12  # nguoi duyet chon 19/11; QD 285 khong quy dinh
 USER_PRIORITIES = ("S1", "S6", "S4", "S5", "S10", "OH", "S3", "S2", "S8")
 INTERNAL_PRIORITIES = ("S9", "S7", "S2", "S11", "S8")
 DEFAULT_ON = ("S2", "S8")
+# Soft goals that only some solvers implement (docs/PLANNER-PARITY.md). They come after the
+# shared goals in every order; a request may move them (``preferences.order``) or turn them off
+# (``preferences.disabled``) like the shared ones. Today only the ASP engine has them:
+#   RT  retake failed courses as early as possible
+#   FEE lowest future tuition (needs the tuition policy in the input)
+#   LO  lower-level (1xxx, 2xxx) courses in earlier terms
+#   TA  electives matching the student's interests (``scenario.interests``)
+SOLVER_GOALS = ("RT", "FEE", "LO", "TA")
+REQUEST_GOALS = USER_PRIORITIES + SOLVER_GOALS
+# Every goal id a solver may implement, for capability declarations (D9).
+ALL_GOALS = ("ST", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "OH") + SOLVER_GOALS
 
 
 class FixtureError(ValueError):
@@ -84,7 +96,7 @@ def preference_order(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[
     summer = bool(scenario.get("summer_opt_in"))
     disabled = set((scenario.get("preferences") or {}).get("disabled") or [])
     if user_order is not None:
-        order = [s for s in user_order if s in USER_PRIORITIES]
+        order = [s for s in user_order if s in REQUEST_GOALS and not (s in SOLVER_GOALS and s in disabled)]
         order += [s for s in INTERNAL_PRIORITIES
                   if s not in order and not (s in DEFAULT_ON and s in disabled)]
         active = {"S7": summer, "S9": summer, "S8": preferred_load(fixture, scenario) is not None,
@@ -101,6 +113,7 @@ def preference_order(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[
             "S8": preferred_load(fixture, scenario) is not None,
         }
     order = [s for s in order if not (s in DEFAULT_ON and s in disabled)]
+    order += [s for s in SOLVER_GOALS if s not in order and s not in disabled]
     if scenario.get("semester_targets"):
         order.insert(0, "ST")
     return [s for s in order if active.get(s, True)]
@@ -360,8 +373,8 @@ def validate_input(fixture: dict[str, Any], scenario: dict[str, Any]) -> None:
                 raise FixtureError(f"scenario.{key}: ky {sem} khong nam trong cac ky se xep")
     for key in ("order", "disabled"):
         for item in (scenario.get("preferences") or {}).get(key) or []:
-            if item not in USER_PRIORITIES:
-                raise FixtureError(f"scenario.preferences.{key}: muc la {item} (cho phep {', '.join(USER_PRIORITIES)})")
+            if item not in REQUEST_GOALS:
+                raise FixtureError(f"scenario.preferences.{key}: unknown goal {item} (allowed: {', '.join(REQUEST_GOALS)})")
     for code in assumed_fails(scenario):
         if statuses.get(code) == "completed" or code not in in_curriculum:
             raise FixtureError(f"scenario.assumed_fail: {code} da dat hoac khong thuoc chuong trinh")
@@ -395,6 +408,62 @@ def validate_input(fixture: dict[str, Any], scenario: dict[str, Any]) -> None:
         need(code, "rules.summer_courses")
 
 
+# --- Capabilities (docs/PLANNER-PARITY.md) ------------------------------------------
+# A solver declares the request fields and goals it implements; ``check_capabilities``
+# compares a request with that declaration, so nothing is silently ignored.
+SCENARIO_FIELDS = ("in_progress_results", "locked", "not_offered", "offered", "assumed_fail", "graduate_by",
+                   "max_credits", "semester_limits", "semester_targets", "summer_opt_in", "skip_semesters",
+                   "frozen_semesters", "interests")
+FIXTURE_FIELDS = ("rules.pins_absolute",)
+
+
+def requested(fixture: dict[str, Any], scenario: dict[str, Any],
+              previous_plan: dict[str, str] | None = None) -> tuple[set[str], set[str]]:
+    """(input fields, goals) the request asks for explicitly. Empty values do not count."""
+    fields = {k for k in SCENARIO_FIELDS if k != "in_progress_results" and scenario.get(k)}
+    if (fixture.get("rules") or {}).get("pins_absolute"):
+        fields.add("rules.pins_absolute")
+    prefs = scenario.get("preferences") or {}
+    goals = set(prefs.get("order") or [])
+    if prefs.get("wanted_courses"):
+        goals.add("S4")
+    if prefs.get("balanced_load"):
+        goals.add("S5")
+    if prefs.get("preferred_load") is not None:
+        goals.add("S8")
+    if prefs.get("recommendations_first"):
+        goals.add("S6")
+    if scenario.get("semester_targets"):
+        goals.add("ST")
+    if previous_plan:
+        goals.add("S3")
+    return fields, goals
+
+
+def check_capabilities(fixture: dict[str, Any], scenario: dict[str, Any], solver: str,
+                       fields: set[str] | frozenset[str], goals: set[str] | frozenset[str],
+                       previous_plan: dict[str, str] | None = None, strict: bool = False) -> list[str]:
+    """Warnings for request parts ``solver`` does not implement; ``FixtureError`` instead when ``strict``."""
+    want_fields, want_goals = requested(fixture, scenario, previous_plan)
+    missing_fields = sorted(want_fields - set(fields))
+    missing_goals = sorted(want_goals - set(goals))
+    if strict and (missing_fields or missing_goals):
+        raise FixtureError(f"{solver} does not support: " + ", ".join(missing_fields + missing_goals))
+    out = [f"{solver} ignores the input field {f}: it is not implemented in this solver." for f in missing_fields]
+    out += [f"{solver} ignores the goal {g}: it is not implemented in this solver." for g in missing_goals]
+    return out
+
+
+def goals_note(fixture: dict[str, Any], scenario: dict[str, Any], solver: str,
+               goals: set[str] | frozenset[str]) -> str:
+    """Assumption line: the goals that ranked the plan, highest first, and the active ones left out."""
+    order = preference_order(fixture, scenario)
+    used = [g for g in order if g in goals]
+    left = [g for g in order if g not in goals]
+    return (f"Goals used by {solver}, highest priority first: {', '.join(used) or 'none'}"
+            + (f"; active but not implemented: {', '.join(left)}" if left else ""))
+
+
 def assumptions(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[str]:
     """Cac gia dinh ma ket qua phu thuoc vao, de in kem lo trinh."""
     notes = [
@@ -403,7 +472,7 @@ def assumptions(fixture: dict[str, Any], scenario: dict[str, Any]) -> list[str]:
     ]
     notes.append("Mọi môn xếp trong tương lai được giả định sẽ đậu")
     notes.append("Môn không có thông tin mở lớp được giả định là có mở")
-    notes.append("Quan hệ học trước (HT) không được xét")
+    notes.append("The prior relation (HT) is treated as a prerequisite")
     notes.append("Khuyến nghị (KN) là mong muốn, không bắt buộc: có thể bị phá, xem phần mong muốn")
     notes.append("Kỳ khuyến nghị trong chương trình không bắt buộc")
     notes.append("Kỳ chính cố gắng đủ 11 TC nhưng không học thừa để đủ; kỳ nào dưới 11 TC có ghi chú để trao đổi phòng đào tạo")
