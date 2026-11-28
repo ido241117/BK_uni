@@ -55,15 +55,15 @@ def elective_order(cur: Curriculum, student, seed: int) -> dict[str, list[str]]:
     return out
 
 
-def _spec_from_slots(required: dict[str, int], slots: dict[str, list[int]],
+def _spec_from_slots(cur: Curriculum, required: dict[str, int], slots: dict[str, list[int]],
                      order: dict[str, list[str]]) -> PlanSpec:
     sem = dict(required)
     for key, idx in slots.items():
-        if key == "FREE":
+        if key == cur.free_group:
             continue
         for course, k in zip(order[key], sorted(idx)):
             sem[course] = k
-    return PlanSpec(sem, tuple(sorted(slots.get("FREE", []))))
+    return PlanSpec(sem, tuple(sorted(slots.get(cur.free_group, []))))
 
 
 def official_spec(cur: Curriculum, official: dict, order: dict[str, list[str]]) -> PlanSpec:
@@ -73,11 +73,11 @@ def official_spec(cur: Curriculum, official: dict, order: dict[str, list[str]]) 
             required[c] = s["semester"]
         for key, n in s["slots"].items():
             slots.setdefault(key, []).extend([s["semester"]] * n)
-    return _spec_from_slots(required, slots, order)
+    return _spec_from_slots(cur, required, slots, order)
 
 
 def baseline_spec(cur: Curriculum, spec: str, order: dict[str, list[str]]) -> PlanSpec:
-    return _spec_from_slots(dict(cur.recommended(spec)),
+    return _spec_from_slots(cur, dict(cur.recommended(spec)),
                             {k: list(v) for k, v in cur.elective_semesters.items()}, order)
 
 

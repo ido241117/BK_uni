@@ -32,7 +32,7 @@ def _base_course(term: str) -> str:
 
 @pytest.mark.parametrize("filename", ["student.lp", "student_showcase.lp"])
 def test_student_sample_only_uses_curriculum_courses(filename: str) -> None:
-    curriculum = _atoms((ASP_DIR / "cs-2023.lp").read_text(encoding="utf-8"))
+    curriculum = _atoms((ASP_DIR / "examples" / "cs-2023.lp").read_text(encoding="utf-8"))
     known: set[str] = set()
     for symbol in curriculum:
         args = symbol.arguments
@@ -45,7 +45,7 @@ def test_student_sample_only_uses_curriculum_courses(filename: str) -> None:
 
     assert known, "cs-2023.lp did not define any courses"
 
-    student = _atoms((ASP_DIR / filename).read_text(encoding="utf-8"))
+    student = _atoms((ASP_DIR / "examples" / filename).read_text(encoding="utf-8"))
     used: set[str] = set()
     for symbol in student:
         args = symbol.arguments
@@ -76,7 +76,7 @@ def test_student_sample_only_uses_curriculum_courses(filename: str) -> None:
 
 
 def test_showcase_scenario_is_deterministic() -> None:
-    text = (ASP_DIR / "student_showcase.lp").read_text(encoding="utf-8")
+    text = (ASP_DIR / "examples" / "student_showcase.lp").read_text(encoding="utf-8")
     # The scenario rule closes the remaining elective slots to the two courses
     # used by the documented tight-budget plan.
     assert "E != co3057" in text
@@ -97,9 +97,9 @@ def test_showcase_tight_budget_is_optimal() -> None:
         DEFAULT_GRADUATION,
     )
     solutions = solve(
-        ASP_DIR / "cs-2023.lp",
+        ASP_DIR / "examples" / "cs-2023.lp",
         ASP_DIR / "policy.lp",
-        ASP_DIR / "student_showcase.lp",
+        ASP_DIR / "examples" / "student_showcase.lp",
         SolverOptions(
             horizon=12,
             studied_terms=8,

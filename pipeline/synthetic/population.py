@@ -48,10 +48,10 @@ def latin_hypercube(n: int, bounds: list[tuple[float, float]], seed: int) -> np.
 
 
 def interest_weights(cur, spec: str) -> dict[str, int]:
-    """Tag -> number of the specialization's group-C courses carrying it."""
+    """Tag -> number of the specialization's own courses (major group) carrying it."""
     tags = cur.course_tags()
     w: dict[str, int] = {}
-    for c in cur.group_c(spec):
+    for c in cur.major_group_members(spec):
         for t in tags.get(c, ()):
             w[t] = w.get(t, 0) + 1
     return dict(sorted(w.items()))

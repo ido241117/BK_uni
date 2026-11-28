@@ -24,6 +24,7 @@ from planner.model.input import (  # noqa: E402
     to_planner_fixture,
 )
 from instances.loader import InstanceError, load_university  # noqa: E402
+from instances.policy import fee_tiers, grade_cutoffs, term_fee  # noqa: E402
 
 INSTANCES = PIPELINE / "instances"
 TOY = ("toy", "TOY-2025", "toy-demo")
@@ -168,3 +169,48 @@ def test_asp_adapter_turns_relations_into_or_groups():
     course = next(c for c in from_instance_curriculum(cur)["courses"] if c["id"] == target)
     assert course["prerequisites"] == [["CO1005", "CO1007"], ["MT1003"]]
     assert course["corequisites"] == []
+
+
+def test_validator_rejects_catalog_relation_outside_program(toy_copy):
+    catalog = [{"id": "P", "cohort": 2025, "course_ids": ["A", "B"],
+                "relations": [{"course": "B", "type": "prerequisite", "any_of": ["Z"]}]}]
+    (toy_copy / "catalog.json").write_text(json.dumps(catalog), encoding="utf-8")
+    with pytest.raises(InstanceError, match="outside the program"):
+        load_university(toy_copy)
+
+
+# --- policy reader --------------------------------------------------------------
+
+def test_fee_tiers_round_half_up_and_match_programs():
+    tuition = {"precision": 3, "tuition_rules": [
+        {"programs": ["P"], "semester_types": ["regular"], "fee_model": {"type": "piecewise", "tiers": [
+            {"condition": {"min_credits": 0, "max_credits": 6}, "fee_type": "flat", "discount": 0.45,
+             "flat_fee": 13.75},
+            {"condition": {"min_credits": 7}, "fee_type": "per_credit", "applies_to": "excess_over",
+             "excess_over": 6, "base_fee": 10, "rate_per_credit": 0.5}]}},
+        {"programs": ["*"], "semester_types": ["summer"], "fee_model": {"type": "per_credit", "rate_per_credit": 1.2}},
+        {"programs": ["Q"], "semester_types": ["regular"], "fee_model": {"type": "per_credit", "rate_per_credit": 9}}]}
+    tiers = fee_tiers(tuition, "P")
+    assert tiers["regular"] == [(0, 6, 7.563, 0.0, 0), (7, 999, 10.0, 0.5, 6)]   # 13.75 * 0.55 = 7.5625
+    assert term_fee(tiers, 0, "regular") == 0.0
+    assert term_fee(tiers, 9, "regular") == pytest.approx(11.5)
+    assert term_fee(tiers, 5, "summer") == pytest.approx(6.0)
+    with pytest.raises(ValueError):
+        fee_tiers({"tuition_rules": tuition["tuition_rules"] + [tuition["tuition_rules"][1]]}, "P")
+
+
+def test_hcmut_policy_files_read():
+    policy = INSTANCES / "hcmut" / "policy"
+    cut = grade_cutoffs(json.loads((policy / "grading.json").read_text(encoding="utf-8")))
+    assert cut[0] == (9.5, 4.0) and cut[-1] == (0.0, 0.0)
+    tiers = fee_tiers(json.loads((policy / "tuition.json").read_text(encoding="utf-8")), "Computer Science")
+    assert term_fee(tiers, 20, "regular") == pytest.approx(13.75 + 2 * 0.805)
+
+
+def test_official_plan_validator():
+    from instances.loader import validate_official_plan
+    cur = {"courses": [{"id": "A"}], "groups": [{"id": "G1"}]}
+    ok = {"semesters": [{"semester": 1, "required": ["A"], "slots": {"G1": 1}}]}
+    assert validate_official_plan(ok, cur, "x") == []
+    bad = {"semesters": [{"semester": 1, "required": ["Z"], "slots": {"G9": 1}}]}
+    assert len(validate_official_plan(bad, cur, "x")) == 2

@@ -57,7 +57,7 @@ def check(cfg=None) -> list[str]:
         if g.get("required_credits") and sum(cr[-n:] if n else []) < g["required_credits"]:
             problems.append(f"group {key}: slots cannot reach {g['required_credits']} credits")
     free_group = next(g for g in cur.raw["course_groups"] if g.get("pool_scope") == "any")
-    if slots.get("FREE", 0) * cur.free_credits != free_group["required_credits"]:
+    if slots.get(cur.free_group, 0) * cur.free_credits != free_group["required_credits"]:
         problems.append("free-elective slots do not match the free-elective credits")
 
     for spec in cur.specializations:

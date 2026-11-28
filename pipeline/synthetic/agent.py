@@ -13,7 +13,7 @@ Options are built from the student's official plan (``plans.official_spec``):
 | ``all_left`` | Every still-needed course that can be registered | Only when no option above reaches 11 credits |
 
 Empty options are never offered in a main semester (the agent never skips by choice).
-Options below the 11-credit minimum (QD1260 Dieu 1.2b) are dropped when another option
+Options below the minimum main-term load (policy/standing.json) are dropped when another option
 reaches it; when none does, ``all_left`` replaces them (a forced under-load, which
 ``[rules] forced_underload_exempt`` exempts from suspension).
 Identical bundles are offered once. Utility: AGENT-MODEL section 3 without ``trust``
@@ -26,7 +26,6 @@ from __future__ import annotations
 import numpy as np
 
 from synthetic import grades as G
-from synthetic import regulations as R
 from synthetic.plans import MAX_MAIN_CREDITS, MAX_SUMMER_CREDITS, due, fit, registrable, slot_credits
 
 _STREAM_AGENT = 3
@@ -77,9 +76,9 @@ def _options(ctx, ps, state, student, semester, k, diff, force_internship):
         if b and key not in seen:
             seen.add(key)
             out.append((name, b))
-    # Minimum load (QD1260 Dieu 1.2b, 11 credits): options below it are dropped when any
+    # Minimum load (policy/standing.json): options below it are dropped when any
     # option reaches it; when none does, the only option is everything still registrable.
-    big = [o for o in out if sum(slot_credits(cur, spec, o[1]).values()) >= R.MIN_MAIN_CREDITS]
+    big = [o for o in out if sum(slot_credits(cur, spec, o[1]).values()) >= cur.standing.min_main_load]
     if big or not out:
         return big
     full = registrable(cur, ps, state, student, semester, k)

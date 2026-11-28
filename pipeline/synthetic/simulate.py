@@ -76,7 +76,7 @@ def run_student(ctx: Context, student, policy, registrable=None):
     spec = student.specialization
     credits = dict(cur.credits(spec))
     p, _, diff = ctx.params(student)
-    state, standing = State(current=cur.start), R.Standing()
+    state, standing = State(current=cur.start), R.Standing(cur.standing)
     sem_rows, tx_rows = [], []
     status, reason, cost = "active", "", 0.0
     on_internship = False      # the previous term registered the internship (fills_next)
@@ -108,7 +108,7 @@ def run_student(ctx: Context, student, policy, registrable=None):
             state.current = semester
             continue
         if not summer and not bundle:
-            status, reason = "withdrawn", "no_registration"   # QD1260 Dieu 1.7
+            status, reason = "withdrawn", "no_registration"   # standing.json _sources.no_registration
             break
 
         credits.update({c: cur.free_credits for c in bundle if c.startswith("FREE_")})
@@ -119,7 +119,7 @@ def run_student(ctx: Context, student, policy, registrable=None):
         failed_cr, pts, w = 0, 0.0, 0
         would_finish = cur.graduated(spec, state.passed | set(bundle))
         forced = False
-        if (not summer and reg < R.MIN_MAIN_CREDITS and not would_finish and registrable
+        if (not summer and reg < cur.standing.min_main_load and not would_finish and registrable
                 and ctx.cfg["rules"]["forced_underload_exempt"]):
             forced = set(registrable(state, k, semester)) <= set(bundle)
         for slot in sorted(bundle):
@@ -163,12 +163,12 @@ def run_student(ctx: Context, student, policy, registrable=None):
         acc = sum(credits[c] for c in state.passed)
         sem_gpa = pts / w if w else None
         c_gpa = cpa(state, credits, cur.scale)
-        reasons = R.warning_reasons(
+        reasons = R.warning_reasons(cur.standing,
             registered_credits=reg, failed_credits=failed_cr,
             outstanding_credits=sum(credits[c] for c in state.failed_open),
             semester_gpa=sem_gpa, first_semester=(standing.main_semesters == 0),
             cpa=c_gpa, accumulated_credits=acc)
-        under = reg < R.MIN_MAIN_CREDITS and not would_finish and not forced
+        under = reg < cur.standing.min_main_load and not would_finish and not forced
         state.shock = bool(failed_cr or reasons)
         row.update(semester_gpa=None if sem_gpa is None else round(sem_gpa, 3),
                    cpa=None if c_gpa is None else round(c_gpa, 3),

@@ -1,0 +1,40 @@
+# Evaluation of synthetic cohorts (steps 3-5, viz): solver, cuts, metrics, sensitivity.
+# The pool's own settings (steps 1-2) live in synthetic/config.toml and pool.json.
+
+[solver]
+# Step 3 solver (planner/solvers/registry.py): "asp", "cpsat", or "package.module:factory" for a plugged-in
+# adapter. Outputs of steps 3-5 go to evaluation/results/<pool>/solver-<label>/ (label defaults to the
+# name), so results of different solvers or solver versions sit side by side.
+name = "asp"
+label = ""
+# Preferred load -> solver (open): "none" (the solver's own loads) or "max_credits"
+# (preferred maximum becomes scenario.max_credits).
+load_mapping = "none"
+
+[solver.asp]
+# DESIGN.md B2: the stopping rule is open.
+# "conflicts": 1 thread, stop after solve_limit conflicts (reproducible);
+#              time_limit is only a safety net (a hit is recorded).
+# "time":      `threads` threads, stop at time_limit seconds (not reproducible).
+mode = "conflicts"
+threads = 1
+solve_limit = 20000
+time_limit = 120.0
+
+[solver.cpsat]
+time_limit = 30.0                 # seconds, 1 worker (wall clock: not reproducible)
+
+[cuts]
+# Step 3b (DESIGN.md B3): share of cuts after k finished main semesters.
+n = 200
+shares = { 1 = 0.25, 2 = 0.20, 3 = 0.20, 4 = 0.15, 5 = 0.10, 6 = 0.10 }
+
+[evaluation]
+on_time_main_semesters = 8
+bootstrap = 2000
+
+[sensitivity]
+# Step 5 (open): computed from a pool with per_student_params = true.
+# "src": standardized regression coefficients (numpy only);
+# "delta": SALib moment-independent delta (works on a given sample).
+method = "src"

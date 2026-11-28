@@ -102,7 +102,7 @@ def test_checked_in_generated_files_match_cli_output(tmp_path: Path) -> None:
     )
     assert code == 0
     assert curriculum_output.read_text(encoding="utf-8") == (
-        ASP_DIR / "cs-2023.lp"
+        ASP_DIR / "examples" / "cs-2023.lp"
     ).read_text(encoding="utf-8")
     assert policy_output.read_text(encoding="utf-8") == (
         ASP_DIR / "policy.lp"

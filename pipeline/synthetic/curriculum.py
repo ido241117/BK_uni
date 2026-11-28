@@ -1,4 +1,4 @@
-"""Curriculum, grade scale and tuition, read from the planner's own data.
+"""Curriculum, grade scale and tuition, read from the instance files (instances/SCHEMA.md).
 
 Registration legality and the graduation check reuse ``evaluation.validate`` so the
 simulator does not re-encode curriculum rules.
@@ -15,6 +15,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from instances.policy import fee_tiers, grade_cutoffs, term_fee
+from synthetic.regulations import load_rules
 from planner.model.input import to_planner_fixture
 from planner.model.normalize import normalize
 from evaluation.validate import validate_plan
@@ -52,7 +54,7 @@ def ranges(cfg: dict[str, Any]) -> dict[str, tuple[str, float, float, float]]:
 
 @dataclass(frozen=True)
 class Scale:
-    """policy.lp: letter cut-offs on the 10-point scale and 4-point grade points."""
+    """Grade cut-offs on the 10-point scale and their 4-point grade points."""
 
     cutoffs: tuple[tuple[float, float], ...]   # (min_score, gpa_points), descending
 
@@ -63,17 +65,6 @@ class Scale:
         return 0.0
 
 
-def parse_policy(path: Path) -> tuple[Scale, list[tuple[str, int, int, float, float, int]]]:
-    text = path.read_text(encoding="utf-8")
-    mins = {g: int(v) for g, v in re.findall(r"grade_min_score\(score_10, (\w+), (\d+)\)", text)}
-    pts = {g: int(v) for g, v in re.findall(r"grade_points\(gpa_4, (\w+), (\d+)\)", text)}
-    cut = tuple(sorted(((mins[g] / 100, pts[g] / 100) for g in mins), reverse=True))
-    fees = [(t, int(a), int(b), int(base) / 1000, int(rate) / 1000, int(over))
-            for t, a, b, base, rate, over in re.findall(
-                r"fee_rule\((\w+), (\d+), (\d+), (\d+), (\d+), (\d+)\)", text)]
-    return Scale(cut), fees
-
-
 class Curriculum:
     def __init__(self, cfg: dict[str, Any]):
         run = cfg["run"]
@@ -82,7 +73,18 @@ class Curriculum:
         nobody = {"students": [{"student_id": "synthetic", "current_term": canonical["planning"]["first_term"]}],
                   "attempts": []}
         self.raw = to_planner_fixture(canonical, nobody, "synthetic")
-        self.scale, self.fee_rules = parse_policy(PIPELINE / run["policy"])
+        # Elective groups are keyed by their curriculum id; the planner keeps only names.
+        self._group_ids = {g["name"]: g["id"] for g in canonical["groups"]}
+        self.free_group = next(g["id"] for g in canonical["groups"] if g.get("scope") == "any")
+        refined = {m["refines_group"] for m in canonical.get("majors", []) if m.get("refines_group")}
+        if len(refined) != 1:
+            raise ValueError(f"expected the majors to refine one group, got {sorted(refined)}")
+        self.major_group = refined.pop()
+        policy = PIPELINE / run["policy"]
+        self.scale = Scale(grade_cutoffs(json.loads((policy / "grading.json").read_text(encoding="utf-8"))))
+        self.fee_tiers = fee_tiers(json.loads((policy / "tuition.json").read_text(encoding="utf-8")),
+                                   run["tuition_program"])
+        self.standing = load_rules(policy / "standing.json")
         self.start = run["semester_before_start"]
         self.semesters = [self.start] + list(self.raw["semesters"])
         self.specializations = list(cfg["population"]["specializations"])
@@ -140,8 +142,9 @@ class Curriculum:
                 out.setdefault(c, set()).add(tag)
         return {c: frozenset(t) for c, t in out.items()}
 
-    def group_c(self, spec: str) -> list[str]:
-        return next(g["members"] for g in self.groups(spec) if self.elective_group_key(g) == "C")
+    def major_group_members(self, spec: str) -> list[str]:
+        """Courses of the group the specialization refines (its own course list)."""
+        return next(g["members"] for g in self.groups(spec) if self.elective_group_key(g) == self.major_group)
 
     def free_slots(self, spec: str, passed) -> list[str]:
         """Planner slot codes still open for this student's state."""
@@ -149,21 +152,17 @@ class Curriculum:
         return [c for g in fx["course_groups"] if g.get("_free_slots") for c in g["members"]]
 
     def elective_group_key(self, group: dict[str, Any]) -> str | None:
-        m = re.search(r"nhóm ([A-D])", group["name"])
-        return m.group(1) if m else None
+        """Curriculum id of a planner elective group (normalize() appends " [<major>]")."""
+        if group["kind"] != "elective":
+            return None
+        return self._group_ids.get(re.sub(r" \[[^\]]+\]$", "", group["name"]))
 
     def is_summer(self, sem: str) -> bool:
         return sem.endswith("3")
 
     def fee(self, credits: int, summer: bool) -> float:
-        """Tuition in million VND (policy.lp fee_rule). Zero credits -> no fee."""
-        if credits <= 0:
-            return 0.0
-        kind = "summer" if summer else "regular"
-        for t, lo, hi, base, rate, over in self.fee_rules:
-            if t == kind and lo <= credits <= hi:
-                return base + rate * max(0, credits - over)
-        raise ValueError(f"no fee rule for {credits} credits ({kind})")
+        """Tuition in million VND (policy/tuition.json). Zero credits -> no fee."""
+        return term_fee(self.fee_tiers, credits, "summer" if summer else "regular")
 
     # -- state-dependent checks -----------------------------------------------
     def _fixture(self, spec: str, passed, failed, current: str) -> dict[str, Any]:

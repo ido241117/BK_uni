@@ -7,11 +7,14 @@ evaluation) reads this format; university-specific code lives only in importers.
 instances/<university>/
   policy/grading.json             grade scale, GPA, retakes      (shared by curricula)
   policy/tuition.json             fees by program and term type  (shared by curricula)
+  policy/standing.json            academic-standing thresholds   (optional; synthetic students)
   curricula/<id>/curriculum.json  courses, relations, groups, majors, planning bounds
   curricula/<id>/graduation.json  graduation and external requirements (optional)
   curricula/<id>/popularity.json  past enrollment per elective (optional)
+  curricula/<id>/official_plan.json  the published term-by-term plan (optional)
   students/<set>.json             student histories as flat tables
   requests/<set>.json             planning requests / what-if scenarios
+  catalog.json                    courses and relations of every program (optional)
 ```
 
 Validate with `python -m instances.loader instances/<university>`.
@@ -145,3 +148,35 @@ any of:
 | `semester_targets` | `{term: credits}` |
 | `summer_opt_in` | Summer terms the student is willing to study |
 | `preferences` | Soft-objective settings (solver-specific keys) |
+
+## policy/standing.json
+
+Optional; read by the synthetic student model (`synthetic/regulations.py`), not by the
+solvers. A warning is given at the end of a main term when a threshold is crossed; more
+than N consecutive warnings or suspensions, or reaching `max_main_terms`, means withdrawal.
+
+| Field | Meaning |
+|---|---|
+| `credits_per_year`, `max_year` | Year level = accumulated credits // `credits_per_year` + 1, capped |
+| `max_main_terms` | Maximum number of main terms (suspended ones count) |
+| `min_main_load` | A main term below this load leads to a suspension next term |
+| `warning.failed_share_above` | Failed credits above this share of registered credits |
+| `warning.outstanding_failed_credits_above` | Failed, never-passed credits above this |
+| `warning.term_gpa_below` | `{"first", "later"}`: term GPA thresholds |
+| `warning.cumulative_gpa_below_by_year` | `{"1": x, ..., "later": y}` by year level |
+| `withdraw_after_consecutive` | `{"warnings", "suspensions"}` |
+| `_sources` | Where each number comes from (free text) |
+
+## curricula/<id>/official_plan.json
+
+Optional; the plan the university publishes, used as the "follow the official plan"
+baseline (synthetic, evaluation). `semesters[]`: `{"semester": k, "credits",
+"required": [course ids], "slots": {group id: number of courses}}`, with `k` the main-term
+index from 1. `total_credits` is the sum. Courses and group ids must exist in
+`curriculum.json`.
+
+## catalog.json
+
+Optional; for analysis across programs (profiling), not read by the solvers. A list of
+`{"id", "cohort", "course_ids", "relations"}`, one per program, with `relations` rows as
+in `curriculum.json`. Every course in a relation must be in `course_ids`.

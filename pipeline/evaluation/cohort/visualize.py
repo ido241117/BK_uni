@@ -1,6 +1,6 @@
 """Figures and a markdown report for one pool and one solver (reads stored data only).
 
-    .venv/Scripts/python -m synthetic.visualize --pool base [--solver asp]
+    .venv/Scripts/python -m evaluation.cohort.visualize --pool base [--solver asp]
     (also step "viz" of ``synthetic.run``)
 
 Writes ``<pool>/solver-<label>/figures/*.png`` and ``report.md`` (the numbers behind every
@@ -388,17 +388,16 @@ def build(path: Path, sdir: Path) -> list[Path]:
 
 def main() -> None:
     import sys
-    from synthetic.run import DATA, load_pool, solver_dir
+    from evaluation.cohort.run import load_eval_config, solver_dir
+    from synthetic.run import DATA
     ap = argparse.ArgumentParser()
     ap.add_argument("--pool", required=True)
     ap.add_argument("--solver", default=None, help="solver label folder (default from config)")
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     path = DATA / args.pool
-    cfg, _, _ = load_pool(path)
-    if args.solver:
-        cfg["solver"]["name"], cfg["solver"]["label"] = args.solver, ""
-    for f in build(path, solver_dir(path, cfg)):
+    cfg, _, _ = load_eval_config(path, args.solver)
+    for f in build(path, solver_dir(args.pool, cfg)):
         print("wrote", f)
 
 

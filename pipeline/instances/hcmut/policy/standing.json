@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "hcmut_standing_2026",
+  "_sources": {
+    "QD285": "Quy dinh ve hoc vu va dao tao bac dai hoc - Phien ban hop nhat, so 285/DHBK-DT, 28/7/2022 (scanned)",
+    "QD1260": "1260 QD dieu chinh HVu Dai hoc 2933 (2026); amends QD 2933/QD-DHBK (= HVu_DH; QD285 Dieu 37 is HVu_DH Dieu 14). Newer text wins.",
+    "credits_per_year": "QD285 Dieu 24 (p.17), regular program, 'Ke hoach' column; the language and GDQP/GDTC conditions are not modelled",
+    "max_main_terms": "QD1260 Dieu 1.1 (p.2): regular program, max 12 main semesters",
+    "min_main_load": "QD1260 Dieu 1.2b (p.3): min credits of a main semester for regular students",
+    "warning": "QD285 Dieu 37.1 (p.24)",
+    "withdraw_after_consecutive": "QD285 Dieu 37.3 (p.24) / QD1260 Dieu 1.7 (p.5): more than 2 consecutive warnings or suspensions",
+    "no_registration": "QD1260 Dieu 1.7 (p.5): not registering in a main semester -> withdrawal"
+  },
+  "credits_per_year": 33,
+  "max_year": 5,
+  "max_main_terms": 12,
+  "min_main_load": 11,
+  "warning": {
+    "failed_share_above": 0.5,
+    "outstanding_failed_credits_above": 24,
+    "term_gpa_below": {"first": 0.8, "later": 1.0},
+    "cumulative_gpa_below_by_year": {"1": 1.2, "2": 1.4, "3": 1.6, "later": 1.8}
+  },
+  "withdraw_after_consecutive": {"warnings": 2, "suspensions": 2}
+}

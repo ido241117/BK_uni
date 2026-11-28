@@ -40,6 +40,7 @@ class University:
     curricula: dict[str, dict[str, Any]] = field(default_factory=dict)  # id -> {"curriculum", "graduation"?, "popularity"?}
     students: dict[str, dict[str, Any]] = field(default_factory=dict)   # file stem -> student tables
     requests: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    catalog: list[dict[str, Any]] | None = None                    # catalog.json, optional
 
     def student_record(self, student_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
         """(student tables file, student row) holding ``student_id``."""
@@ -220,17 +221,45 @@ def validate_requests(reqs: list[dict[str, Any]], ctx: str, uni: University) -> 
     return errors
 
 
+def validate_catalog(catalog: list[dict[str, Any]], ctx: str) -> list[str]:
+    errors: list[str] = []
+    ids = [e.get("id") for e in catalog]
+    if len(ids) != len(set(ids)):
+        errors.append(f"{ctx}: duplicate program id")
+    for e in catalog:
+        members = set(e.get("course_ids", []))
+        for r in e.get("relations", []):
+            if r.get("type") not in RELATION_TYPES:
+                errors.append(f"{ctx}: {e.get('id')}: unknown relation type {r.get('type')!r}")
+            if r.get("course") not in members or not r.get("any_of") or not set(r["any_of"]) <= members:
+                errors.append(f"{ctx}: {e.get('id')}: relation {r} uses a course outside the program")
+    return errors
+
+
+def validate_official_plan(plan: dict[str, Any], cur: dict[str, Any], ctx: str) -> list[str]:
+    errors: list[str] = []
+    courses, groups = {c["id"] for c in cur.get("courses", [])}, {g["id"] for g in cur.get("groups", [])}
+    for t in plan.get("semesters", []):
+        unknown = sorted(set(t.get("required", [])) - courses)
+        if unknown:
+            errors.append(f"{ctx}: semester {t.get('semester')}: unknown courses {unknown}")
+        bad = sorted(set(t.get("slots", {})) - groups)
+        if bad:
+            errors.append(f"{ctx}: semester {t.get('semester')}: slots name unknown groups {bad}")
+    return errors
+
+
 def load_university(root: str | Path) -> University:
     root = Path(root)
     uni = University(root=root)
     errors: list[str] = []
-    for name in ("grading", "tuition"):
+    for name in ("grading", "tuition", "standing"):
         path = root / "policy" / f"{name}.json"
         if path.is_file():
             uni.policy[name] = _read(path)
     for cur_dir in sorted((root / "curricula").iterdir()) if (root / "curricula").is_dir() else []:
         entry: dict[str, Any] = {"curriculum": _read(cur_dir / "curriculum.json")}
-        for name in ("graduation", "popularity"):
+        for name in ("graduation", "popularity", "official_plan"):
             if (cur_dir / f"{name}.json").is_file():
                 entry[name] = _read(cur_dir / f"{name}.json")
         cid = entry["curriculum"].get("id")
@@ -239,7 +268,13 @@ def load_university(root: str | Path) -> University:
         errors += validate_curriculum(entry["curriculum"], str(cur_dir / "curriculum.json"))
         if "graduation" in entry and entry["graduation"].get("curriculum_id") != cid:
             errors.append(f"{cur_dir}/graduation.json: curriculum_id differs from {cid!r}")
+        if "official_plan" in entry:
+            errors += validate_official_plan(entry["official_plan"], entry["curriculum"],
+                                             str(cur_dir / "official_plan.json"))
         uni.curricula[cid] = entry
+    if (root / "catalog.json").is_file():
+        uni.catalog = _read(root / "catalog.json")
+        errors += validate_catalog(uni.catalog, str(root / "catalog.json"))
     for path in sorted((root / "students").glob("*.json")):
         uni.students[path.stem] = _read(path)
         errors += validate_students(uni.students[path.stem], str(path), uni)
@@ -269,6 +304,8 @@ def main(argv: list[str]) -> int:
         print(f"students/{stem}: {len(doc['students'])} students, {len(doc['attempts'])} attempts")
     for stem, reqs in uni.requests.items():
         print(f"requests/{stem}: {len(reqs)} requests")
+    if uni.catalog is not None:
+        print(f"catalog: {len(uni.catalog)} programs")
     return 0
 
 

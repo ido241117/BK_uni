@@ -26,7 +26,7 @@ from synthetic.plans import (MAX_MAIN_CREDITS, MAX_SUMMER_CREDITS, allpass_plan,
                              canonical, elective_order, fit, internship_allowed, last_free_index,
                              official_spec,
                              plan_completes, plan_errors, slot_credits, spec_plan)
-from synthetic.solve import split
+from evaluation.cohort.solve import split
 
 PLANS = ("solver", "record", "official", "baseline")
 
@@ -129,7 +129,7 @@ def first_attempt_grades(ctx, student, plan: dict[str, list[str]]) -> dict:
         w += s_w
         if not cur.is_summer(sem):
             cw = sum(x[1] for x in best.values())
-            reasons = R.warning_reasons(
+            reasons = R.warning_reasons(cur.standing,
                 registered_credits=reg, failed_credits=failed, outstanding_credits=outstanding,
                 semester_gpa=s_pts / s_w if s_w else None, first_semester=first,
                 cpa=sum(g * x for g, x in best.values()) / cw if cw else None,
@@ -225,7 +225,7 @@ def required_of(cur: Curriculum, spec: str) -> set[str]:
 def evaluate_cuts(ctx, students, official: dict, cuts: pd.DataFrame, solver_cuts: dict) -> pd.DataFrame:
     cur = ctx.cur
     by_id = {s.id: s for s in students}
-    on_time_limit = R.MAX_MAIN_SEMESTERS
+    on_time_limit = cur.standing.max_main_terms
     rows = []
     for c in cuts.itertuples():
         s = by_id[c.student]

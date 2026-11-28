@@ -1,7 +1,7 @@
 """Step 6 checks.
 
     .venv/Scripts/python -m synthetic.checks predictive --n 2000 --seed 1
-    .venv/Scripts/python -m synthetic.checks pool --pool base [--resolve 5]
+    .venv/Scripts/python -m synthetic.checks pool --pool base
 
 ``predictive``: prior predictive check of the score model against ``[targets]``. Draws
 first-attempt scores for every (student, course) pair, with the year taken from the
@@ -12,9 +12,9 @@ course's recommended semester. No policy is involved.
   record's own states) and the term after an internship holds no course (fills_next);
 * graduation status agrees with the validator's completeness check;
 * first-attempt scores in step 4 equal the record's scores (common random numbers);
-* rerunning step 2 for the first students gives identical records;
-* with ``--resolve m``: m solver cases solved again without the cache give the same plan
-  (expected only for a reproducible solver setting, e.g. ASP in "conflicts" mode).
+* rerunning step 2 for the first students gives identical records.
+
+Whether a solver reproduces its stored plans is ``evaluation.cohort.run --resolve m``.
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ def _roundtrip(df):
                        dtype={"semester": str, "last_semester": str})
 
 
-def pool_checks(pool: str, n_rerun: int = 10, n_resolve: int = 0) -> dict:
+def pool_checks(pool: str, n_rerun: int = 10) -> dict:
     from synthetic.run import DATA, load_pool, make_students, read_records, run_records
     from synthetic.simulate import Context
     path = DATA / pool
@@ -128,20 +128,6 @@ def pool_checks(pool: str, n_rerun: int = 10, n_resolve: int = 0) -> dict:
     res["records_reproducible"] = bool(
         _roundtrip(o2).equals(o[o["student"] < n_rerun].reset_index(drop=True))
         and _roundtrip(tx2).equals(tx[tx["student"] < n_rerun].reset_index(drop=True)))
-    if n_resolve:
-        import json
-        from synthetic.run import solver_dir
-        from synthetic.solve import solver_input
-        from synthetic.solvers import get_solver, solver_name, solver_settings
-        full = json.loads((solver_dir(path, cfg) / "solver_full.json").read_text(encoding="utf-8"))
-        adapter, st = get_solver(solver_name(cfg)), solver_settings(cfg)
-        same = []
-        for stu in students[:n_resolve]:
-            fx, sc = solver_input(cur, cfg, stu)
-            r = adapter.solve(fx, sc, st)
-            plan = {x["semester_code"]: sorted(x["courses"]) for x in (r.get("semesters") or [])}
-            same.append(plan == full[str(stu.id)]["plan"])
-        res["solver_reproducible"] = f"{sum(same)}/{len(same)}"
     return res
 
 
@@ -152,14 +138,13 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--pool", default=None)
     ap.add_argument("--rerun", type=int, default=10)
-    ap.add_argument("--resolve", type=int, default=0)
     args = ap.parse_args()
     if args.what == "predictive":
         cfg = load_config()
         s = predictive_summary(cfg, args.n, args.seed)
         print(json.dumps({"summary": s, "checks": compare(s, cfg["targets"])}, indent=2))
     else:
-        print(json.dumps(pool_checks(args.pool, args.rerun, args.resolve), indent=2))
+        print(json.dumps(pool_checks(args.pool, args.rerun), indent=2))
 
 
 if __name__ == "__main__":

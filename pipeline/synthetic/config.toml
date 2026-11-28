@@ -4,8 +4,9 @@
 
 [run]
 curriculum = "instances/hcmut/curricula/CS-2023-KHMT/curriculum.json"   # relative to pipeline/
-policy = "planner/solvers/asp/policy.lp"              # grade scale and tuition
-official_plan = "synthetic/official_plan.json"
+policy = "instances/hcmut/policy"            # grading.json, tuition.json, standing.json
+tuition_program = "Computer Science"         # program name in tuition.json rules
+official_plan = "instances/hcmut/curricula/CS-2023-KHMT/official_plan.json"
 semester_before_start = "223"                # "current semester" for a new student
 
 [grades]
@@ -29,7 +30,7 @@ fail_rate = [0.05, 0.20]
 clip_mass_max = 0.03
 
 [rules]
-# QD285 Dieu 37.2: a main semester below 11 credits -> suspension. Modelled exemptions:
+# A main semester below min_main_load (policy/standing.json) -> suspension. Modelled exemptions:
 # the semester completes the degree (always), or (when true) the student registered
 # every still-needed course that could legally be registered (the shortfall is forced
 # by prerequisites, not chosen). Assumption, not a rule text.
@@ -71,44 +72,7 @@ fee_ref = 13.75                   # million VND, one regular semester of 13-18 c
 # "Follow the curriculum": required courses at their recommended semester
 # (curriculum_courses), electives at the semester in the group name, backlog
 # and retakes first. Free-elective slots and the C split are our choice
-# (the curriculum gives only "semester 7 and 8"). The internship is registered
+# (the curriculum gives only "semester 7 and 8" for group C). The internship is registered
 # at its recommended semester 6 and fills the next term (DESIGN.md B1).
-elective_semesters = { A = [5], B = [6], C = [7, 7, 7, 8, 8], D = [7], FREE = [6, 7, 8] }
-
-[solver]
-# Step 3 solver (solvers.py): "asp", "cpsat", or "package.module:factory" for a plugged-in
-# adapter. Outputs of steps 3-5 go to data/<pool>/solver-<label>/ (label defaults to the
-# name), so results of different solvers or solver versions sit side by side.
-name = "asp"
-label = ""
-# Preferred load -> solver (open): "none" (the solver's own loads) or "max_credits"
-# (preferred maximum becomes scenario.max_credits).
-load_mapping = "none"
-
-[solver.asp]
-# DESIGN.md B2: the stopping rule is open.
-# "conflicts": 1 thread, stop after solve_limit conflicts (reproducible);
-#              time_limit is only a safety net (a hit is recorded).
-# "time":      `threads` threads, stop at time_limit seconds (not reproducible).
-mode = "conflicts"
-threads = 1
-solve_limit = 20000
-time_limit = 120.0
-
-[solver.cpsat]
-time_limit = 30.0                 # seconds, 1 worker (wall clock: not reproducible)
-
-[cuts]
-# Step 3b (DESIGN.md B3): share of cuts after k finished main semesters.
-n = 200
-shares = { 1 = 0.25, 2 = 0.20, 3 = 0.20, 4 = 0.15, 5 = 0.10, 6 = 0.10 }
-
-[evaluation]
-on_time_main_semesters = 8
-bootstrap = 2000
-
-[sensitivity]
-# Step 5 (open): computed from a pool with per_student_params = true.
-# "src": standardized regression coefficients (numpy only);
-# "delta": SALib moment-independent delta (works on a given sample).
-method = "src"
+# Keys are curriculum group ids: G2-G5 = groups A-D, G6 = free elective.
+elective_semesters = { G2 = [5], G3 = [6], G4 = [7, 7, 7, 8, 8], G5 = [7], G6 = [6, 7, 8] }

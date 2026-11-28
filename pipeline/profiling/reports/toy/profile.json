@@ -1,0 +1,153 @@
+{
+ "university": "toy",
+ "curricula": {
+  "TOY-2025": {
+   "id": "TOY-2025",
+   "name": "Chuong trinh do choi",
+   "size": {
+    "courses": 14,
+    "condition_courses": 0,
+    "listed_credits": 42,
+    "degree_credits": 36,
+    "course_credits": {
+     "min": 2,
+     "median": 3.0,
+     "max": 4
+    },
+    "levels": {
+     "1": 4,
+     "2": 3,
+     "3": 6,
+     "4": 1
+    }
+   },
+   "choice": {
+    "mandatory_credits": 30,
+    "elective_groups": [
+     {
+      "id": "G2",
+      "name": "Tu chon",
+      "pool_courses": 4,
+      "pool_credits": 12,
+      "required_credits": 6,
+      "slack": 2.0
+     }
+    ],
+    "free_elective_credits": 0,
+    "chosen_credit_share": 0.167
+   },
+   "relations": {
+    "by_type": {
+     "prerequisite": 10,
+     "prior": 1,
+     "corequisite": 2,
+     "recommended": 1
+    },
+    "by_source": {
+     "unknown": 14
+    },
+    "hard": 12,
+    "hard_per_course": 0.857,
+    "share_of_courses_in_hard_relation": 0.857,
+    "or_clauses": 0,
+    "longest_prerequisite_chain": 5,
+    "longest_chain_example": [
+     "CS101",
+     "CS102",
+     "CS201",
+     "CS301",
+     "CS401"
+    ],
+    "top_dependents": [
+     {
+      "course": "CS101",
+      "dependents": 7
+     },
+     {
+      "course": "CS102",
+      "dependents": 6
+     },
+     {
+      "course": "CS201",
+      "dependents": 5
+     },
+     {
+      "course": "CS302",
+      "dependents": 2
+     },
+     {
+      "course": "MA102",
+      "dependents": 2
+     }
+    ]
+   },
+   "calendar_fit": {
+    "nominal_regular_terms": 6,
+    "terms_needed_by_max_load": 3,
+    "terms_needed_by_chain": 5,
+    "slack_terms": 1,
+    "mean_load_needed": 6.0,
+    "min_load": 3,
+    "max_load": 12
+   },
+   "offering": {
+    "offered_terms_known": 0.0,
+    "summer_history_known": 0.0,
+    "summer_ever_offered": 0.0,
+    "summer_forbidden_by_rule": 0,
+    "typical_term_known": 0.7142857142857143
+   },
+   "majors": {
+    "count": 0,
+    "sizes": {},
+    "mean_jaccard_overlap": null,
+    "max_jaccard_overlap": null
+   },
+   "milestones": [],
+   "quality": {
+    "courses_in_no_group": [],
+    "courses_in_several_groups": [],
+    "groups_needing_more_than_their_pool": [],
+    "prerequisite_cycles": [],
+    "typical_term_contradicts_prerequisite": [],
+    "milestones_without_threshold": []
+   },
+   "remarks": [
+    "Calendar is tight: 6 nominal regular terms; lower bounds 3 (degree credits / max load) and 5 (longest prerequisite chain); slack 1 term(s). On-time graduation needs 6.0 credits per regular term on average (allowed 3-12).",
+    "Offering mostly unknown: regular-term offering known for 0% of courses, summer history for 0%. Solvers must assume courses are open."
+   ]
+  }
+ },
+ "students": {
+  "toy-demo": {
+   "students": 1,
+   "sources": {
+    "simulated": 1
+   },
+   "attempts": 6,
+   "attempts_per_student": {
+    "6": 1
+   },
+   "outcomes": {
+    "passed": 3,
+    "failed": 1,
+    "in_progress": 2
+   },
+   "attempts_without_term": 6,
+   "attempts_with_grade": 0,
+   "retaken_courses": 0,
+   "highest_fail_rate": [
+    {
+     "course": "MA102",
+     "fail_rate": 1.0
+    }
+   ],
+   "has_expected_answers": false,
+   "remarks": [
+    "No attempt has a term: the history gives what was passed, not when.",
+    "No grades: GPA-based rules (standing, retakes for grade) cannot be checked on this data."
+   ]
+  }
+ },
+ "catalog": null
+}

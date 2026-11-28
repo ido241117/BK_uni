@@ -1,0 +1,1038 @@
+{
+ "university": "hcmut",
+ "curricula": {
+  "CS-2023-KHMT": {
+   "id": "CS-2023-KHMT",
+   "name": "Khoa học Máy tính (Computer Science) - khóa 2023",
+   "size": {
+    "courses": 96,
+    "condition_courses": 2,
+    "listed_credits": 254,
+    "degree_credits": 128,
+    "course_credits": {
+     "min": 0,
+     "median": 3.0,
+     "max": 4
+    },
+    "levels": {
+     "1": 27,
+     "2": 8,
+     "3": 51,
+     "4": 8
+    }
+   },
+   "choice": {
+    "mandatory_credits": 99,
+    "elective_groups": [
+     {
+      "id": "G2",
+      "name": "Tự chọn nhóm A (học kỳ 5)",
+      "pool_courses": 5,
+      "pool_credits": 5,
+      "required_credits": 1,
+      "slack": 5.0
+     },
+     {
+      "id": "G3",
+      "name": "Tự chọn nhóm B (học kỳ 6)",
+      "pool_courses": 3,
+      "pool_credits": 3,
+      "required_credits": 1,
+      "slack": 3.0
+     },
+     {
+      "id": "G4",
+      "name": "Tự chọn nhóm C (học kỳ 7 và 8)",
+      "pool_courses": 44,
+      "pool_credits": 132,
+      "required_credits": 15,
+      "slack": 8.8
+     },
+     {
+      "id": "G5",
+      "name": "Tự chọn nhóm D (học kỳ 7)",
+      "pool_courses": 5,
+      "pool_credits": 15,
+      "required_credits": 3,
+      "slack": 5.0
+     }
+    ],
+    "free_elective_credits": 9,
+    "chosen_credit_share": 0.227
+   },
+   "relations": {
+    "by_type": {
+     "prerequisite": 11,
+     "recommended": 18,
+     "prior": 2,
+     "corequisite": 1
+    },
+    "by_source": {
+     "curriculum": 32
+    },
+    "hard": 12,
+    "hard_per_course": 0.128,
+    "share_of_courses_in_hard_relation": 0.17,
+    "or_clauses": 0,
+    "longest_prerequisite_chain": 4,
+    "longest_chain_example": [
+     "LA1003",
+     "LA1005",
+     "LA1007",
+     "LA1009"
+    ],
+    "top_dependents": [
+     {
+      "course": "CO1027",
+      "dependents": 3
+     },
+     {
+      "course": "LA1003",
+      "dependents": 3
+     },
+     {
+      "course": "LA1005",
+      "dependents": 2
+     },
+     {
+      "course": "CO1005",
+      "dependents": 1
+     },
+     {
+      "course": "CO2003",
+      "dependents": 1
+     }
+    ]
+   },
+   "calendar_fit": {
+    "nominal_regular_terms": 8,
+    "terms_needed_by_max_load": 6,
+    "terms_needed_by_chain": 4,
+    "slack_terms": 2,
+    "mean_load_needed": 16.0,
+    "min_load": 11,
+    "max_load": 25
+   },
+   "offering": {
+    "offered_terms_known": 0.0,
+    "summer_history_known": 1.0,
+    "summer_ever_offered": 0.925531914893617,
+    "summer_forbidden_by_rule": 10,
+    "typical_term_known": 0.39361702127659576
+   },
+   "majors": {
+    "count": 5,
+    "sizes": {
+     "CNDL": 13,
+     "CNPM": 9,
+     "MMANM": 8,
+     "TTNT": 16,
+     "XLA": 8
+    },
+    "mean_jaccard_overlap": 0.104,
+    "max_jaccard_overlap": 0.333
+   },
+   "milestones": [
+    {
+     "course": "CO3335",
+     "min_credit_percent": 65,
+     "kind": "internship"
+    },
+    {
+     "course": "CO4337",
+     "min_credit_percent": 85,
+     "kind": "thesis"
+    },
+    {
+     "course": "CO4029",
+     "min_credit_percent": 70,
+     "kind": "specialized_project"
+    }
+   ],
+   "quality": {
+    "courses_in_no_group": [],
+    "courses_in_several_groups": [],
+    "groups_needing_more_than_their_pool": [],
+    "prerequisite_cycles": [],
+    "typical_term_contradicts_prerequisite": [],
+    "milestones_without_threshold": []
+   },
+   "remarks": [
+    "Sparse ordering: 12 prerequisite/corequisite relations for 96 courses (0.128 per course); only 17% of courses take part in one. Plans will differ mainly through load limits, groups, offering and the objective, not through course order.",
+    "Calendar has room: 8 nominal regular terms; lower bounds 6 (degree credits / max load) and 4 (longest prerequisite chain); slack 2 term(s). On-time graduation needs 16.0 credits per regular term on average (allowed 11-25)."
+   ]
+  },
+  "cs_2023": {
+   "id": "cs_2023",
+   "name": "Computer Science 2023",
+   "size": {
+    "courses": 93,
+    "condition_courses": 0,
+    "listed_credits": 254,
+    "degree_credits": 128,
+    "course_credits": {
+     "min": 0,
+     "median": 3,
+     "max": 4
+    },
+    "levels": {}
+   },
+   "choice": {
+    "mandatory_credits": 99,
+    "elective_groups": [
+     {
+      "id": "B3.2",
+      "name": null,
+      "pool_courses": 5,
+      "pool_credits": 5,
+      "required_credits": 1,
+      "slack": 5.0
+     },
+     {
+      "id": "B3.3",
+      "name": null,
+      "pool_courses": 3,
+      "pool_credits": 3,
+      "required_credits": 1,
+      "slack": 3.0
+     },
+     {
+      "id": "B3.4",
+      "name": null,
+      "pool_courses": 44,
+      "pool_credits": 132,
+      "required_credits": 15,
+      "slack": 8.8
+     },
+     {
+      "id": "B3.5",
+      "name": null,
+      "pool_courses": 5,
+      "pool_credits": 15,
+      "required_credits": 3,
+      "slack": 5.0
+     },
+     {
+      "id": "C",
+      "name": null,
+      "pool_courses": 44,
+      "pool_credits": 132,
+      "required_credits": 9,
+      "slack": 14.67
+     }
+    ],
+    "free_elective_credits": 0,
+    "chosen_credit_share": 0.227
+   },
+   "relations": {
+    "by_type": {
+     "prerequisite": 31,
+     "corequisite": 1
+    },
+    "by_source": {
+     "curriculum": 32
+    },
+    "hard": 32,
+    "hard_per_course": 0.344,
+    "share_of_courses_in_hard_relation": 0.419,
+    "or_clauses": 0,
+    "longest_prerequisite_chain": 5,
+    "longest_chain_example": [
+     "SP1031",
+     "SP1033",
+     "SP1035",
+     "SP1039",
+     "SP1037"
+    ],
+    "top_dependents": [
+     {
+      "course": "CO1027",
+      "dependents": 7
+     },
+     {
+      "course": "CO1007",
+      "dependents": 4
+     },
+     {
+      "course": "CO2013",
+      "dependents": 4
+     },
+     {
+      "course": "SP1031",
+      "dependents": 4
+     },
+     {
+      "course": "LA1003",
+      "dependents": 3
+     }
+    ]
+   },
+   "calendar_fit": {
+    "nominal_regular_terms": null,
+    "terms_needed_by_max_load": 7,
+    "terms_needed_by_chain": 5,
+    "slack_terms": null,
+    "mean_load_needed": null,
+    "min_load": 14,
+    "max_load": 21
+   },
+   "offering": {
+    "offered_terms_known": 1.0,
+    "summer_history_known": 0.0,
+    "summer_ever_offered": 0.989247311827957,
+    "summer_forbidden_by_rule": 0,
+    "typical_term_known": 0.11827956989247312
+   },
+   "majors": {
+    "count": 5,
+    "sizes": {
+     "DSE": 13,
+     "ASE": 9,
+     "CYB": 8,
+     "AI": 16,
+     "IPCV": 8
+    },
+    "mean_jaccard_overlap": 0.104,
+    "max_jaccard_overlap": 0.333
+   },
+   "milestones": [
+    {
+     "course": "CO3335",
+     "min_credit_percent": 65,
+     "kind": null
+    },
+    {
+     "course": "CO4029",
+     "min_credit_percent": 70,
+     "kind": null
+    },
+    {
+     "course": "CO4337",
+     "min_credit_percent": 85,
+     "kind": null
+    }
+   ],
+   "quality": {
+    "courses_in_no_group": [],
+    "courses_in_several_groups": [
+     "CO3011",
+     "CO3013",
+     "CO3015",
+     "CO3017",
+     "CO3021",
+     "CO3023",
+     "CO3027",
+     "CO3029",
+     "CO3031",
+     "CO3033",
+     "CO3035",
+     "CO3037",
+     "CO3041",
+     "CO3043",
+     "CO3045",
+     "CO3047",
+     "CO3049",
+     "CO3051",
+     "CO3057",
+     "CO3059",
+     "CO3061",
+     "CO3065",
+     "CO3067",
+     "CO3069",
+     "CO3071",
+     "CO3083",
+     "CO3085",
+     "CO3089",
+     "CO3115",
+     "CO3117",
+     "CO3129",
+     "CO3131",
+     "CO3133",
+     "CO3135",
+     "CO3137",
+     "CO3139",
+     "CO3151",
+     "CO3153",
+     "CO4025",
+     "CO4031",
+     "CO4033",
+     "CO4035",
+     "CO4037",
+     "CO4039"
+    ],
+    "groups_needing_more_than_their_pool": [],
+    "prerequisite_cycles": [],
+    "typical_term_contradicts_prerequisite": [],
+    "milestones_without_threshold": []
+   },
+   "remarks": []
+  }
+ },
+ "students": {
+  "cs_2023-oracle": {
+   "students": 7,
+   "sources": {
+    "unknown": 7
+   },
+   "attempts": 25,
+   "attempts_per_student": {
+    "3": 5,
+    "4": 1,
+    "6": 1
+   },
+   "outcomes": {
+    "passed": 23,
+    "failed": 2
+   },
+   "attempts_without_term": 0,
+   "attempts_with_grade": 24,
+   "retaken_courses": 4,
+   "highest_fail_rate": [
+    {
+     "course": "CO2003",
+     "fail_rate": 0.5
+    },
+    {
+     "course": "CO1027",
+     "fail_rate": 0.167
+    }
+   ],
+   "has_expected_answers": true,
+   "remarks": [
+    "Has expected answers (oracle) for testing GPA and credit computations."
+   ]
+  },
+  "khmt2023-demo": {
+   "students": 1,
+   "sources": {
+    "simulated": 1
+   },
+   "attempts": 32,
+   "attempts_per_student": {
+    "32": 1
+   },
+   "outcomes": {
+    "passed": 29,
+    "in_progress": 3
+   },
+   "attempts_without_term": 32,
+   "attempts_with_grade": 0,
+   "retaken_courses": 0,
+   "highest_fail_rate": [],
+   "has_expected_answers": false,
+   "remarks": [
+    "No attempt has a term: the history gives what was passed, not when.",
+    "No grades: GPA-based rules (standing, retakes for grade) cannot be checked on this data."
+   ]
+  }
+ },
+ "catalog": {
+  "programs": 96,
+  "courses_per_program": {
+   "min": 44,
+   "p25": 48,
+   "median": 50.0,
+   "p75": 65,
+   "max": 98
+  },
+  "relation_types": {
+   "prior": 50,
+   "prerequisite": 503,
+   "recommended": 1284,
+   "corequisite": 175
+  },
+  "hard_per_course": {
+   "min": 0.0,
+   "p25": 0.0,
+   "median": 0.12132043734230447,
+   "p75": 0.16,
+   "max": 0.8297872340425532
+  },
+  "programs_without_hard_relations": 36,
+  "hard_relations_seen_in_2plus_programs": 158,
+  "mean_agreement": 0.334,
+  "relations_stated_by_under_half": 114,
+  "per_program": [
+   {
+    "id": "AR-2019-KT",
+    "courses": 46,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "AR-2020-KT",
+    "courses": 46,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "AR-2021-KT",
+    "courses": 50,
+    "hard": 5,
+    "hard_per_course": 0.1
+   },
+   {
+    "id": "AR-2022-KT",
+    "courses": 50,
+    "hard": 5,
+    "hard_per_course": 0.1
+   },
+   {
+    "id": "AR-2023-KT",
+    "courses": 50,
+    "hard": 5,
+    "hard_per_course": 0.1
+   },
+   {
+    "id": "AR-2024-KT",
+    "courses": 59,
+    "hard": 11,
+    "hard_per_course": 0.1864406779661017
+   },
+   {
+    "id": "AR-2026-KT",
+    "courses": 76,
+    "hard": 14,
+    "hard_per_course": 0.18421052631578946
+   },
+   {
+    "id": "BT-2019-CNSH",
+    "courses": 50,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "BT-2020-CNSH",
+    "courses": 50,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "BT-2021-CNSH",
+    "courses": 50,
+    "hard": 8,
+    "hard_per_course": 0.16
+   },
+   {
+    "id": "BT-2022-CNSH",
+    "courses": 50,
+    "hard": 8,
+    "hard_per_course": 0.16
+   },
+   {
+    "id": "BT-2023-CNSH",
+    "courses": 50,
+    "hard": 8,
+    "hard_per_course": 0.16
+   },
+   {
+    "id": "BT-2024-CNSH",
+    "courses": 55,
+    "hard": 26,
+    "hard_per_course": 0.4727272727272727
+   },
+   {
+    "id": "BT-2026-CNSH",
+    "courses": 47,
+    "hard": 39,
+    "hard_per_course": 0.8297872340425532
+   },
+   {
+    "id": "CE-2023-KTMT",
+    "courses": 66,
+    "hard": 7,
+    "hard_per_course": 0.10606060606060606
+   },
+   {
+    "id": "CHE-2019-KTHH",
+    "courses": 72,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "CHE-2019-KTHH-TN",
+    "courses": 72,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "CHE-2020-KTHH",
+    "courses": 72,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "CHE-2020-KTHH-TN",
+    "courses": 72,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "CHE-2021-KTHH",
+    "courses": 47,
+    "hard": 7,
+    "hard_per_course": 0.14893617021276595
+   },
+   {
+    "id": "CHE-2022-KTHH",
+    "courses": 47,
+    "hard": 6,
+    "hard_per_course": 0.1276595744680851
+   },
+   {
+    "id": "CHE-2023-KTHH",
+    "courses": 47,
+    "hard": 7,
+    "hard_per_course": 0.14893617021276595
+   },
+   {
+    "id": "CHE-2024-KTHH",
+    "courses": 76,
+    "hard": 38,
+    "hard_per_course": 0.5
+   },
+   {
+    "id": "CHE-2026-KTHH",
+    "courses": 48,
+    "hard": 25,
+    "hard_per_course": 0.5208333333333334
+   },
+   {
+    "id": "CM-2023-CNVLXD",
+    "courses": 45,
+    "hard": 9,
+    "hard_per_course": 0.2
+   },
+   {
+    "id": "CS-2019-KHMT",
+    "courses": 82,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "CS-2019-KHMT-TN",
+    "courses": 82,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "CS-2019-KHMT-VLVH",
+    "courses": 81,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "CS-2020-KHMT",
+    "courses": 82,
+    "hard": 10,
+    "hard_per_course": 0.12195121951219512
+   },
+   {
+    "id": "CS-2021-KHMT",
+    "courses": 82,
+    "hard": 10,
+    "hard_per_course": 0.12195121951219512
+   },
+   {
+    "id": "CS-2022-KHMT",
+    "courses": 92,
+    "hard": 11,
+    "hard_per_course": 0.11956521739130435
+   },
+   {
+    "id": "CS-2023-KHMT",
+    "courses": 96,
+    "hard": 12,
+    "hard_per_course": 0.125
+   },
+   {
+    "id": "CS-2024-KHMT",
+    "courses": 98,
+    "hard": 10,
+    "hard_per_course": 0.10204081632653061
+   },
+   {
+    "id": "CS-2026-KHMT",
+    "courses": 86,
+    "hard": 10,
+    "hard_per_course": 0.11627906976744186
+   },
+   {
+    "id": "EE-2019-KTDIEN",
+    "courses": 63,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "EE-2019-KTDIEN-TN",
+    "courses": 63,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "EE-2019-KTDIEN-VLVH",
+    "courses": 62,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "EE-2020-KTDIEN",
+    "courses": 65,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "EE-2020-KTDIEN-TN",
+    "courses": 65,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "EE-2021-KTDIEN",
+    "courses": 65,
+    "hard": 10,
+    "hard_per_course": 0.15384615384615385
+   },
+   {
+    "id": "EE-2022-KTDIEN",
+    "courses": 65,
+    "hard": 10,
+    "hard_per_course": 0.15384615384615385
+   },
+   {
+    "id": "EE-2023-KTDIEN",
+    "courses": 65,
+    "hard": 10,
+    "hard_per_course": 0.15384615384615385
+   },
+   {
+    "id": "EE-2024-KTDIEN",
+    "courses": 64,
+    "hard": 15,
+    "hard_per_course": 0.234375
+   },
+   {
+    "id": "EE-2026-KTDIEN",
+    "courses": 46,
+    "hard": 26,
+    "hard_per_course": 0.5652173913043478
+   },
+   {
+    "id": "ET-2019-DTVT",
+    "courses": 63,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ET-2019-DTVT-TN",
+    "courses": 63,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ET-2019-DTVT-VLVH",
+    "courses": 62,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ET-2020-DTVT",
+    "courses": 63,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ET-2020-DTVT-TN",
+    "courses": 63,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ET-2020-DTVT-VLVH",
+    "courses": 62,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ET-2021-DTVT",
+    "courses": 63,
+    "hard": 12,
+    "hard_per_course": 0.19047619047619047
+   },
+   {
+    "id": "ET-2022-DTVT",
+    "courses": 63,
+    "hard": 12,
+    "hard_per_course": 0.19047619047619047
+   },
+   {
+    "id": "ET-2023-DTVT",
+    "courses": 63,
+    "hard": 12,
+    "hard_per_course": 0.19047619047619047
+   },
+   {
+    "id": "ET-2024-DTVT",
+    "courses": 61,
+    "hard": 35,
+    "hard_per_course": 0.5737704918032787
+   },
+   {
+    "id": "ET-2026-DTVT",
+    "courses": 46,
+    "hard": 28,
+    "hard_per_course": 0.6086956521739131
+   },
+   {
+    "id": "IE-2023-KTCSHT",
+    "courses": 45,
+    "hard": 8,
+    "hard_per_course": 0.17777777777777778
+   },
+   {
+    "id": "IM-2023-QLCN",
+    "courses": 74,
+    "hard": 18,
+    "hard_per_course": 0.24324324324324326
+   },
+   {
+    "id": "LSC-2019-LQLCCU",
+    "courses": 44,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "LSC-2020-LQLCCU",
+    "courses": 44,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "LSC-2021-LQLCCU",
+    "courses": 44,
+    "hard": 7,
+    "hard_per_course": 0.1590909090909091
+   },
+   {
+    "id": "LSC-2022-LQLCCU",
+    "courses": 44,
+    "hard": 7,
+    "hard_per_course": 0.1590909090909091
+   },
+   {
+    "id": "LSC-2023-LQLCCU",
+    "courses": 44,
+    "hard": 7,
+    "hard_per_course": 0.1590909090909091
+   },
+   {
+    "id": "LSC-2024-LQLCCU",
+    "courses": 44,
+    "hard": 6,
+    "hard_per_course": 0.13636363636363635
+   },
+   {
+    "id": "LSC-2026-LQLCCU",
+    "courses": 48,
+    "hard": 13,
+    "hard_per_course": 0.2708333333333333
+   },
+   {
+    "id": "ME-2019-KTCK",
+    "courses": 50,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ME-2019-KTCK-TN",
+    "courses": 50,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ME-2019-KTCK-VLVH",
+    "courses": 49,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ME-2020-KTCK",
+    "courses": 50,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ME-2020-KTCK-TN",
+    "courses": 50,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ME-2020-KTCK-VLVH",
+    "courses": 49,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "ME-2021-KTCK",
+    "courses": 50,
+    "hard": 10,
+    "hard_per_course": 0.2
+   },
+   {
+    "id": "ME-2022-KTCK",
+    "courses": 50,
+    "hard": 8,
+    "hard_per_course": 0.16
+   },
+   {
+    "id": "ME-2023-KTCK",
+    "courses": 50,
+    "hard": 8,
+    "hard_per_course": 0.16
+   },
+   {
+    "id": "ME-2024-KTCK",
+    "courses": 50,
+    "hard": 11,
+    "hard_per_course": 0.22
+   },
+   {
+    "id": "ME-2026-KTCK",
+    "courses": 65,
+    "hard": 13,
+    "hard_per_course": 0.2
+   },
+   {
+    "id": "NR-2019-QLTNMT",
+    "courses": 71,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "NR-2020-QLTNMT",
+    "courses": 68,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "NR-2021-QLTNMT",
+    "courses": 68,
+    "hard": 7,
+    "hard_per_course": 0.10294117647058823
+   },
+   {
+    "id": "NR-2022-QLTNMT",
+    "courses": 68,
+    "hard": 7,
+    "hard_per_course": 0.10294117647058823
+   },
+   {
+    "id": "NR-2023-QLTNMT",
+    "courses": 68,
+    "hard": 7,
+    "hard_per_course": 0.10294117647058823
+   },
+   {
+    "id": "NR-2024-QLTNMT",
+    "courses": 58,
+    "hard": 7,
+    "hard_per_course": 0.1206896551724138
+   },
+   {
+    "id": "NR-2026-QLTNMT",
+    "courses": 47,
+    "hard": 12,
+    "hard_per_course": 0.2553191489361702
+   },
+   {
+    "id": "TC-2019-CNDM",
+    "courses": 49,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "TC-2020-CNDM",
+    "courses": 49,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "TC-2021-CNDM",
+    "courses": 49,
+    "hard": 6,
+    "hard_per_course": 0.12244897959183673
+   },
+   {
+    "id": "TC-2022-CNDM",
+    "courses": 49,
+    "hard": 6,
+    "hard_per_course": 0.12244897959183673
+   },
+   {
+    "id": "TC-2023-CNDM",
+    "courses": 49,
+    "hard": 6,
+    "hard_per_course": 0.12244897959183673
+   },
+   {
+    "id": "TC-2024-CNDM",
+    "courses": 49,
+    "hard": 6,
+    "hard_per_course": 0.12244897959183673
+   },
+   {
+    "id": "TC-2026-CNDM",
+    "courses": 51,
+    "hard": 7,
+    "hard_per_course": 0.13725490196078433
+   },
+   {
+    "id": "TE-2019-KTD",
+    "courses": 48,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "TE-2020-KTD",
+    "courses": 48,
+    "hard": 0,
+    "hard_per_course": 0.0
+   },
+   {
+    "id": "TE-2021-KTD",
+    "courses": 48,
+    "hard": 6,
+    "hard_per_course": 0.125
+   },
+   {
+    "id": "TE-2022-KTD",
+    "courses": 48,
+    "hard": 6,
+    "hard_per_course": 0.125
+   },
+   {
+    "id": "TE-2023-KTD",
+    "courses": 48,
+    "hard": 6,
+    "hard_per_course": 0.125
+   },
+   {
+    "id": "TE-2024-KTD",
+    "courses": 48,
+    "hard": 6,
+    "hard_per_course": 0.125
+   },
+   {
+    "id": "TE-2026-KTD",
+    "courses": 51,
+    "hard": 6,
+    "hard_per_course": 0.11764705882352941
+   }
+  ],
+  "remarks": [
+   "Across 96 programs the median is 0.12 hard relations per course (max 0.83); 36 programs state none at all.",
+   "Of 158 hard relations whose two courses appear together in two or more programs, programs agree 33% of the time on average; 114 are stated by fewer than half of those programs. Missing relations are more likely omissions than different rules."
+  ]
+ }
+}

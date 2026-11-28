@@ -4,14 +4,14 @@
 3b: one remaining plan per cut record (a record truncated after k finished main
     semesters, DESIGN.md B3).
 
-Solver-agnostic: the solver is ``[solver] name`` (``solvers.py``: ``asp``, ``cpsat`` or
+Solver-agnostic: the solver is ``[solver] name`` (``planner/solvers/registry.py``: ``asp``, ``cpsat`` or
 a plugged-in ``module:factory``). What the solver sees from a student (DESIGN.md B2):
 specialization, summer opt-in (every summer from the cut on), interests, the state
 (passed, failed, current semester) and, for a cut whose next main semester is a
 suspension in the record, that semester as ``skip_semesters``. The preferred load is
 passed only with ``load_mapping = "max_credits"``.
 
-Cache: ``data/cache/<solver>/<sha256>.json``, the key hashing the fixture, the scenario,
+Cache: ``evaluation/cache/<solver>/<sha256>.json``, the key hashing the fixture, the scenario,
 the solver settings and the solver's fingerprint (its source files).
 """
 
@@ -27,9 +27,9 @@ import numpy as np
 import pandas as pd
 
 from synthetic.curriculum import FREE_PREFIX, Curriculum
-from synthetic.solvers import common_result, get_solver, solver_name, solver_settings, upgrade
+from planner.solvers.registry import common_result, get_solver, solver_name, solver_settings, upgrade
 
-CACHE_ROOT = Path(__file__).resolve().parent / "data" / "cache"
+CACHE_ROOT = Path(__file__).resolve().parents[1] / "cache"
 _STREAM_CUTS = 7
 
 

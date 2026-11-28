@@ -4,6 +4,7 @@ du lieu tien quyet co nhan nguon.
     cd pipeline
     .venv/Scripts/python -m instances.importers.hcmut.relations snapshot instances/hcmut/raw/relations-snapshot.json
     .venv/Scripts/python -m instances.importers.hcmut.relations report instances/hcmut/raw/relations-snapshot.json
+    .venv/Scripts/python -m instances.importers.hcmut.relations catalog instances/hcmut/raw/relations-snapshot.json instances/hcmut/catalog.json
     .venv/Scripts/python -m instances.importers.hcmut.relations coverage instances/hcmut/raw/relations-snapshot.json instances/hcmut/requests/khmt2023-demo.json
 
 Nguon cua mot quan he trong dau vao bo giai (``source``):
@@ -138,6 +139,23 @@ def coverage(fixture: dict[str, Any]) -> dict[str, Any]:
             "unverified_prerequisites": len(fixture.get("unverified_prerequisites", []))}
 
 
+def to_catalog(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
+    """Snapshot -> ``catalog.json`` entries (instances/SCHEMA.md): one per program, relations
+    in the canonical form. Relations whose courses are not in the program are dropped."""
+    out = []
+    for c in snapshot["curricula"]:
+        courses = sorted(set(c["courses"]))
+        members = set(courses)
+        out.append({
+            "id": c["code"], "cohort": c.get("cohort"), "course_ids": courses,
+            "relations": [{"course": r["course_code"], "type": r["type"], "any_of": [r["related_course_code"]],
+                           "source": "curriculum"}
+                          for r in c["relations"]
+                          if r["course_code"] in members and r["related_course_code"] in members],
+        })
+    return sorted(out, key=lambda e: e["id"])
+
+
 def load(path: str | Path) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
@@ -157,6 +175,11 @@ def main() -> None:
         print(json.dumps({k: v for k, v in rep.items() if k != "differ_detail"}, ensure_ascii=False, indent=1))
         for c, variants in list(rep["differ_detail"].items())[: int(sys.argv[3]) if len(sys.argv) > 3 else 15]:
             print(c, variants)
+    elif cmd == "catalog":
+        catalog = to_catalog(load(sys.argv[2]))
+        out = Path(sys.argv[3])
+        out.write_text(json.dumps(catalog, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        print(f"wrote {out}: {len(catalog)} programs, {sum(len(e['relations']) for e in catalog)} relations")
     elif cmd == "coverage":
         from planner.model.input import load_fixture
 

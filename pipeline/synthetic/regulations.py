@@ -1,67 +1,76 @@
-"""Academic-standing (attrition) rules of HCMUT used by the simulator.
+"""Academic-standing (attrition) rules used by the simulator.
 
-Sources (both PDFs are in the repo root):
+The numbers come from ``policy/standing.json`` of the instance (instances/SCHEMA.md;
+for HCMUT the sources are cited in that file). The rule shapes below are the model:
 
-* [QD285] "Quy dinh ve hoc vu va dao tao bac dai hoc - Phien ban hop nhat",
-  so 285/DHBK-DT, 28/7/2022 (scanned; read page images).
-  - Dieu 37.1 (p.24): academic warning (canh bao hoc tap).
-  - Dieu 37.2 (p.24): forced suspension (buoc tam dung hoc).
-  - Dieu 37.3 (p.24): forced withdrawal (buoc thoi hoc).
-  - Dieu 24 (p.17): year level (trinh do nam hoc) from accumulated credits.
-* [QD1260] "1260 QD dieu chinh_HVu Dai hoc_2933_2026.signed.pdf" (2026, text PDF),
-  amends Quy dinh 2933/QD-DHBK (= "HVu_DH" in QD285's margin notes; QD285
-  Dieu 37 is HVu_DH Dieu 14).
-  - Dieu 1.1 (p.2): max duration of regular programs = 12 main semesters.
-  - Dieu 1.7 (p.5): new text of HVu_DH 14.3 (forced withdrawal). It replaces
-    "skipping all exams of a main semester" by "not registering in a main
-    semester". We use the QD1260 version because it is the newer one.
+* warning at the end of a main term when any threshold is crossed (failed share,
+  outstanding failed credits, term GPA, cumulative GPA by year level);
+* withdrawal after more than N consecutive warnings or suspensions, or when the
+  maximum number of main terms is reached;
+* a main term registered below the minimum load triggers a suspension next term.
 
 Simplifications (each is an assumption of the synthetic model, not a rule):
 
-* Year level ignores the foreign-language and GDQP/GDTC conditions of Dieu 24;
-  it uses only accumulated credits with M = 33 (the "Ke hoach" column; 28 is for
-  course registration only).
-* "Outstanding failed credits" (tin chi no dong) = credits of courses whose
-  latest attempt failed and that were never passed.
+* Year level uses only accumulated credits (``credits_per_year``).
+* "Outstanding failed credits" = credits of courses whose latest attempt failed and
+  that were never passed.
 * GPA counts failed attempts as 0 until the course is passed again; the best
-  attempt of a course counts (retake rule of Dieu 22 not modelled).
-* A main semester registered below 11 credits triggers suspension unless it
-  contains everything the student still needs (final semester exemption).
-* Discipline, voluntary leave and the rector's deferral are not modelled.
+  attempt of a course counts (retake rules not modelled).
+* A main term below the minimum load is exempt when it contains everything the
+  student still needs (final term exemption).
+* Discipline, voluntary leave and deferrals are not modelled.
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
-
-# Dieu 24 (p.17): M for a regular program, "Ke hoach" column.
-CREDITS_PER_YEAR = 33
-# QD1260 Dieu 1.1 (p.2): regular program, max 12 main semesters.
-MAX_MAIN_SEMESTERS = 12
-# QD1260 Dieu 1.2b (p.3): min credits of a main semester for regular students.
-MIN_MAIN_CREDITS = 11
-# Dieu 37.1 (p.24): warning thresholds.
-FAILED_SHARE_LIMIT = 0.5          # failed credits > 50% of registered
-OUTSTANDING_LIMIT = 24            # outstanding failed credits > 24
-SEM_GPA_FIRST, SEM_GPA_LATER = 0.8, 1.0
-CPA_MIN_BY_YEAR = {1: 1.2, 2: 1.4, 3: 1.6}
-CPA_MIN_LATER = 1.8
-# Dieu 37.3 (p.24) / QD1260 Dieu 1.7 (p.5): withdrawal after warnings in more
-# than 2 consecutive main semesters, or suspension over more than 2.
-MAX_CONSECUTIVE_WARNINGS = 2
-MAX_CONSECUTIVE_SUSPENSIONS = 2
+from pathlib import Path
+from typing import Any
 
 
-def year_level(accumulated_credits: int) -> int:
-    """Dieu 24: year N for M*(N-1) <= credits < M*N, capped at 5 (credits only)."""
-    return min(5, accumulated_credits // CREDITS_PER_YEAR + 1)
+@dataclass(frozen=True)
+class Rules:
+    credits_per_year: int
+    max_year: int
+    max_main_terms: int
+    min_main_load: int
+    failed_share_above: float
+    outstanding_above: int
+    term_gpa_first: float
+    term_gpa_later: float
+    cpa_by_year: dict[int, float]
+    cpa_later: float
+    max_consecutive_warnings: int
+    max_consecutive_suspensions: int
+
+    @classmethod
+    def from_json(cls, doc: dict[str, Any]) -> "Rules":
+        w, wd = doc["warning"], doc["withdraw_after_consecutive"]
+        by_year = dict(w["cumulative_gpa_below_by_year"])
+        later = by_year.pop("later")
+        return cls(
+            credits_per_year=doc["credits_per_year"], max_year=doc["max_year"],
+            max_main_terms=doc["max_main_terms"], min_main_load=doc["min_main_load"],
+            failed_share_above=w["failed_share_above"], outstanding_above=w["outstanding_failed_credits_above"],
+            term_gpa_first=w["term_gpa_below"]["first"], term_gpa_later=w["term_gpa_below"]["later"],
+            cpa_by_year={int(k): v for k, v in by_year.items()}, cpa_later=later,
+            max_consecutive_warnings=wd["warnings"], max_consecutive_suspensions=wd["suspensions"])
+
+    def year_level(self, accumulated_credits: int) -> int:
+        """Year N for M*(N-1) <= credits < M*N, capped at ``max_year`` (credits only)."""
+        return min(self.max_year, accumulated_credits // self.credits_per_year + 1)
+
+    def cpa_threshold(self, year: int) -> float:
+        return self.cpa_by_year.get(year, self.cpa_later)
 
 
-def cpa_threshold(year: int) -> float:
-    return CPA_MIN_BY_YEAR.get(year, CPA_MIN_LATER)
+def load_rules(path: str | Path) -> Rules:
+    return Rules.from_json(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
 def warning_reasons(
+    rules: Rules,
     *,
     registered_credits: int,
     failed_credits: int,
@@ -71,29 +80,30 @@ def warning_reasons(
     cpa: float | None,
     accumulated_credits: int,
 ) -> list[str]:
-    """Dieu 37.1: reasons for an academic warning at the end of a main semester.
+    """Reasons for an academic warning at the end of a main semester.
 
     ``semester_gpa`` / ``cpa`` are None when no credit-bearing course was graded.
     """
     reasons = []
-    if registered_credits > 0 and failed_credits > FAILED_SHARE_LIMIT * registered_credits:
-        reasons.append("failed>50%")
-    if outstanding_credits > OUTSTANDING_LIMIT:
-        reasons.append("outstanding>24")
-    limit = SEM_GPA_FIRST if first_semester else SEM_GPA_LATER
+    if registered_credits > 0 and failed_credits > rules.failed_share_above * registered_credits:
+        reasons.append(f"failed>{rules.failed_share_above:.0%}")
+    if outstanding_credits > rules.outstanding_above:
+        reasons.append(f"outstanding>{rules.outstanding_above}")
+    limit = rules.term_gpa_first if first_semester else rules.term_gpa_later
     if semester_gpa is not None and semester_gpa < limit:
         reasons.append(f"semester_gpa<{limit}")
     if cpa is not None:
-        year = year_level(accumulated_credits)
-        if cpa < cpa_threshold(year):
-            reasons.append(f"cpa<{cpa_threshold(year)}")
+        threshold = rules.cpa_threshold(rules.year_level(accumulated_credits))
+        if cpa < threshold:
+            reasons.append(f"cpa<{threshold}")
     return reasons
 
 
 @dataclass
 class Standing:
-    """Counters needed by Dieu 37.2/37.3 across main semesters."""
+    """Counters for suspension and withdrawal across main semesters."""
 
+    rules: Rules
     main_semesters: int = 0            # main semesters elapsed (suspended ones included)
     consecutive_warnings: int = 0
     consecutive_suspensions: int = 0
@@ -103,7 +113,7 @@ class Standing:
     def close_main_semester(
         self, semester: str, reasons: list[str], under_min_load: bool
     ) -> str | None:
-        """Apply Dieu 37 after a studied main semester. Returns a withdrawal reason or None."""
+        """Apply the standing rules after a studied main semester. Returns a withdrawal reason or None."""
         self.main_semesters += 1
         self.consecutive_suspensions = 0
         if reasons:
@@ -111,18 +121,18 @@ class Standing:
             self.warnings.append((semester, reasons))
         else:
             self.consecutive_warnings = 0
-        if self.consecutive_warnings > MAX_CONSECUTIVE_WARNINGS:
-            return "warned>2_consecutive"
+        if self.consecutive_warnings > self.rules.max_consecutive_warnings:
+            return f"warned>{self.rules.max_consecutive_warnings}_consecutive"
         self.suspended_next = under_min_load
         return self._duration_check()
 
     def serve_suspension(self) -> str | None:
-        """A main semester spent suspended (Dieu 37.2). Counts toward the duration."""
+        """A main semester spent suspended. Counts toward the duration."""
         self.main_semesters += 1
         self.consecutive_suspensions += 1
         self.suspended_next = False
-        if self.consecutive_suspensions > MAX_CONSECUTIVE_SUSPENSIONS:
-            return "suspended>2_consecutive"
+        if self.consecutive_suspensions > self.rules.max_consecutive_suspensions:
+            return f"suspended>{self.rules.max_consecutive_suspensions}_consecutive"
         return self._duration_check()
 
     def internship_semester(self) -> str | None:
@@ -136,4 +146,4 @@ class Standing:
         return self._duration_check()
 
     def _duration_check(self) -> str | None:
-        return "max_duration" if self.main_semesters >= MAX_MAIN_SEMESTERS else None
+        return "max_duration" if self.main_semesters >= self.rules.max_main_terms else None
